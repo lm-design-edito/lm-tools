@@ -4,7 +4,6 @@ import { exec } from 'node:child_process'
 import esbuild from 'esbuild'
 import { COMPONENTS, AGNOSTIC, NODE, LIB } from '../_config/index.js'
 import * as Files from '../../src/node/files/index'
-import chalk from 'chalk'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -29,7 +28,7 @@ const entryPoints = (await Promise.all(rootDirs.map(async dirPath => {
   })
 }))).flat()
 
-entryPoints.forEach(entryPoint => console.log(chalk.green.bold(entryPoint)))
+console.log(entryPoints)
 
 await new Promise((resolve, reject) => {
   esbuild.build({
@@ -46,10 +45,6 @@ await new Promise((resolve, reject) => {
     format: 'esm',
     target: ['esnext'],
     external: [
-      'fs-extra',
-      'get-image-colors',
-      'jsdom',
-      'node-fetch',
       '@aws-sdk/client-s3',
       '@aws-sdk/lib-storage',
       '@google-cloud/storage',
