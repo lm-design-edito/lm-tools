@@ -15,7 +15,6 @@ import {
   Nullish as NullishType
 } from './is-nullish'
 import { Logs as LogsNamespace } from './logs'
-import { Tennis as TennisNamespace } from './tennis'
 import { LoremIpsum as LoremIpsumNamespace } from './lorem-ipsum'
 import { Outcome as OutcomeNamespace } from './outcome'
 
@@ -38,8 +37,6 @@ export namespace Misc {
   export const isNotNullish = isNotNullishFunc
   // Logs
   export import Logs = LogsNamespace
-  // Tennis
-  export import Tennis = TennisNamespace
   // Crawler
   export import Crawler = CrawlerNamespace
   // DataSize

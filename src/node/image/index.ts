@@ -1,6 +1,6 @@
 import path from 'node:path'
 import fetch from 'node-fetch'
-import getColors from 'get-image-colors'
+// import getColors from 'get-image-colors' // [WIP] get-image-colors is unsafe, fing replacement
 import fse from 'fs-extra'
 import sharp from 'sharp'
 
@@ -10,14 +10,16 @@ import sharp from 'sharp'
  * 
  * * * * * * * * * * * * * * */
 
+// [WIP] get-image-colors is unsafe, fing replacement
 export async function getImageColorsFromUrl (url: string) {
-  const data = await fetch(url)
-  const blob = await data.blob()
-  const arrayBuffer = await blob.arrayBuffer()
-  const buffer = Buffer.from(arrayBuffer)
-  const colors = await getColors(buffer, blob.type)
-  const result = colors.map(color => color.hex())
-  return result
+  console.warn('get-image-colors lib is unsafe')
+  // const data = await fetch(url)
+  // const blob = await data.blob()
+  // const arrayBuffer = await blob.arrayBuffer()
+  // const buffer = Buffer.from(arrayBuffer)
+  // const colors = await getColors(buffer, blob.type)
+  // const result = colors.map(color => color.hex())
+  // return result
 }
 
 /* * * * * * * * * * * * * * * 
