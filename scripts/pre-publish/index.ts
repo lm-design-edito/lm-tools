@@ -65,7 +65,7 @@ const { upgradeType } = await prompts({
   choices: [
     { title: 'Patch', description: `(${targetVersionNumbers.patch})`, value: 'patch' },
     { title: 'Minor', description: `(${targetVersionNumbers.minor})`, value: 'minor' },
-    { title: 'Minor', description: `(${targetVersionNumbers.major})`, value: 'major' }
+    { title: 'Major', description: `(${targetVersionNumbers.major})`, value: 'major' }
   ]
 })
 
