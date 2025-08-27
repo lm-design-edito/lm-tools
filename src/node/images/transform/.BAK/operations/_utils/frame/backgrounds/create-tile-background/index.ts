@@ -1,8 +1,8 @@
 import sharp from 'sharp';
-import { shuffle } from '../../../../../../../../agnostic/arrays/shuffle';
-import { clamp } from '../../../../../../../../agnostic/numbers/clamp';
-import { randomInt } from '../../../../../../../../agnostic/random/random';
-import { Transitions } from '../../../../../../../../agnostic/time/transitions';
+import { shuffle } from '../../../../../../../../../agnostic/arrays/shuffle';
+import { clamp } from '../../../../../../../../../agnostic/numbers/clamp';
+import { randomInt } from '../../../../../../../../../agnostic/random/random';
+import { Transitions } from '../../../../../../../../../agnostic/time/transitions';
 import { CreateTileBackground } from '../../../../../frame/backgrounds/create-tile-background';
 
 type Coordinates = { 

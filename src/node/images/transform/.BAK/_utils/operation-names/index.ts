@@ -18,4 +18,3 @@ export const OperationNames = {
   Saturate: 'saturate',
   Scale: 'scale'
 } as const
-

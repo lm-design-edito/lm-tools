@@ -1,16 +1,15 @@
 import zod from 'zod'
 
-export type Position = string | number;
+export type Position = string | number
 
 export type Positions = {
-    top?: Position,
-    left?: Position,
-    right?:  Position,
-    bottom?:  Position,
-    translateX?: Position,
-    translateY?: Position,
+    top?: Position
+    left?: Position
+    right?:  Position
+    bottom?:  Position
+    translateX?: Position
+    translateY?: Position
 }
-
 
 export const positionSchema = zod.union([
     zod.number().min(0),

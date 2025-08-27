@@ -2,7 +2,7 @@ import { FrameOperationParams } from "../../../frame";
 import sharp from "sharp";
 import { createLineBackground } from "./backgrounds/create-line-background";
 import { createColorPalette } from "./create-color-palette";
-import { clamp } from "../../../../../../agnostic/numbers/clamp";
+import { clamp } from "../../../../../../../agnostic/numbers/clamp";
 import { createTileBackground } from "./backgrounds/create-tile-background";
 import { getRelativePxPositionsInWrapperFor } from "../positions";
 

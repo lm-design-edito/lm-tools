@@ -1,7 +1,7 @@
 import sharp from "sharp"
-import { setColorSaturation, saturateColor } from '../../../../../../../../agnostic/colors/saturate-color'
-import { setColorLuminance, lightenColor } from '../../../../../../../../agnostic/colors/lighten-color'
-import { complementColor } from '../../../../../../../../agnostic/colors/complement-color'
+import { setColorSaturation, saturateColor } from '../../../../../../../../../agnostic/colors/saturate-color'
+import { setColorLuminance, lightenColor } from '../../../../../../../../../agnostic/colors/lighten-color'
+import { complementColor } from '../../../../../../../../../agnostic/colors/complement-color'
 import { CreateLineBackground, ColorTransformation } from '../../../../../frame/backgrounds/create-line-background'
 
 export async function createLineBackground(

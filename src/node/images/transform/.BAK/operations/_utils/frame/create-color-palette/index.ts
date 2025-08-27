@@ -1,8 +1,8 @@
-import { complementColor } from "../../../../../../../agnostic/colors/complement-color";
-import { lightenColor } from "../../../../../../../agnostic/colors/lighten-color";
-import { saturateColor } from "../../../../../../../agnostic/colors/saturate-color";
-import { clamp } from "../../../../../../../agnostic/numbers/clamp";
-import { shuffle } from "../../../../../../../agnostic/arrays/shuffle";
+import { complementColor } from "../../../../../../../../agnostic/colors/complement-color";
+import { lightenColor } from "../../../../../../../../agnostic/colors/lighten-color";
+import { saturateColor } from "../../../../../../../../agnostic/colors/saturate-color";
+import { clamp } from "../../../../../../../../agnostic/numbers/clamp";
+import { shuffle } from "../../../../../../../../agnostic/arrays/shuffle";
 import { FrameCreateBackground } from "../../../../frame";
 import { extractColorsFromImage } from "../extract-colors-from-image";
 

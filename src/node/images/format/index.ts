@@ -3,38 +3,10 @@ import zod from 'zod'
 import { clamp } from '../../../agnostic/numbers/clamp'
 import { Outcome } from '../../../agnostic/misc/outcome'
 
+/* * * * * * * * * * * * * * * 
+ * TYPES
+ * * * * * * * * * * * * * * */
 export type ImageFileType = keyof sharp.FormatEnum
-
-export type OutputOptions = {
-  format: ImageFileType, 
-  width: number, 
-  height: number, 
-  quality: number
-}
-
-export async function formatImage (
-  imageBuffer: Buffer,
-  outputOptions: OutputOptions
-): Promise<Buffer> {
-  const { width, height, quality, format } = outputOptions
-  const sharpInstance = sharp(imageBuffer).resize({
-    width,
-    height,
-    fit: sharp.fit.cover
-  })
-  let withQuality = sharpInstance
-  if (format === 'png') { withQuality = withQuality.png({ quality }) }
-  else if (format === 'jpeg') { withQuality = withQuality.jpeg({ quality }) }
-  else if (format === 'webp') { withQuality = withQuality.webp({ quality }) }
-  else if (format === 'avif') { withQuality = withQuality.avif({ quality }) }
-  let buffer: Buffer<ArrayBufferLike> = Buffer.from([])
-  try {
-    buffer = await withQuality.toBuffer()
-  } catch(e) {
-    console.log('Images:Exports:Error', { e })
-  }
-  return buffer
-}
 
 export type FormatCommonOptions = {
   width?: number
@@ -55,6 +27,10 @@ export type FormatTiffOptions = FormatCommonOptions & {
 export type FormatHeifOptions = FormatCommonOptions & { quality?: number }
 export type FormatKeepOptions = FormatCommonOptions
 export type FormatOptions = FormatJpgOptions | FormatPngOptions | FormatWebpOptions | FormatAvifOptions | FormatTiffOptions | FormatHeifOptions
+
+/* * * * * * * * * * * * * * * 
+ * SCHEMAS
+ * * * * * * * * * * * * * * */
 
 const formatCommonOptionsSchema = zod.object({
   width: zod.number().optional(),
@@ -84,6 +60,10 @@ const formatOptionsSchema = zod.union([
   formatKeepOptionsSchema
 ])
 
+/* * * * * * * * * * * * * * * 
+ * TYPECHECKS
+ * * * * * * * * * * * * * * */
+
 export const isFormatCommonOptions = (options: unknown): options is FormatCommonOptions => formatCommonOptionsSchema.safeParse(options).success
 export const isFormatJpgOptions = (options: unknown): options is FormatJpgOptions => formatJpgOptionsSchema.safeParse(options).success
 export const isFormatPngOptions = (options: unknown): options is FormatPngOptions => formatPngOptionsSchema.safeParse(options).success
@@ -93,6 +73,10 @@ export const isFormatTiffOptions = (options: unknown): options is FormatTiffOpti
 export const isFormatHeifOptions = (options: unknown): options is FormatHeifOptions => formatHeifOptionsSchema.safeParse(options).success
 export const isFormatKeepOptions = (options: unknown): options is FormatKeepOptions => formatKeepOptionsSchema.safeParse(options).success
 export const isFormatOptions = (options: unknown): options is FormatOptions => formatOptionsSchema.safeParse(options).success
+
+/* * * * * * * * * * * * * * * 
+ * FUNCTIONS
+ * * * * * * * * * * * * * * */
 
 export async function format (input: Buffer, type: 'jpg' | 'jpeg', options: FormatJpgOptions): Promise<Outcome.Either<Buffer, string>>
 export async function format (input: Buffer, type: 'png', options: FormatPngOptions): Promise<Outcome.Either<Buffer, string>>
@@ -118,60 +102,11 @@ export async function format (
   return Outcome.makeFailure(`Invalid image format: ${type}`)
 }
 
-export const toWidth = async (
-  input: Buffer,
-  width: number
-): Promise<Buffer> => sharp(input)
-  .resize({ width })
-  .toBuffer()
-
-export const toHeight = async (
-  input: Buffer,
-  height: number
-): Promise<Buffer> => sharp(input)
-  .resize({ height })
-  .toBuffer()
-
-export const toJpg = async (
-  input: Buffer,
-  quality?: number
-): Promise<Buffer> => sharp(input)
-  .jpeg({ quality: clamp(quality ?? 100, 1, 100) })
-  .toBuffer()
-
-export const toPng = async (
-  input: Buffer,
-  quality?: number,
-  compressionLevel?: sharp.PngOptions['compressionLevel']
-): Promise<Buffer> => sharp(input)
-  .png({ quality: clamp(quality ?? 100, 1, 100), compressionLevel })
-  .toBuffer()
-
-export const toWebp = async (
-  input: Buffer,
-  quality?: number
-): Promise<Buffer> => sharp(input)
-  .webp({ quality: clamp(quality ?? 100, 1, 100) })
-  .toBuffer()
-
-export const toAvif = async (
-  input: Buffer,
-  quality?: number
-): Promise<Buffer> => sharp(input)
-  .avif({ quality: clamp(quality ?? 100, 1, 100) })
-  .toBuffer()
-
-export const toTiff = async (
-  input: Buffer,
-  quality?: number,
-  compression?: sharp.TiffOptions['compression']
-): Promise<Buffer> => sharp(input)
-  .tiff({ quality: clamp(quality ?? 100, 1, 100), compression })
-  .toBuffer()
-
-export const toHeif = async (
-  input: Buffer,
-  quality?: number
-): Promise<Buffer> => sharp(input)
-  .heif({ quality: clamp(quality ?? 100, 1, 100) })
-  .toBuffer()
+export const toWidth = async (input: Buffer, width: number): Promise<Buffer> => sharp(input).resize({ width }).toBuffer()
+export const toHeight = async (input: Buffer, height: number): Promise<Buffer> => sharp(input).resize({ height }).toBuffer()
+export const toJpg = async (input: Buffer, quality?: number): Promise<Buffer> => sharp(input).jpeg({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+export const toPng = async (input: Buffer, quality?: number, compressionLevel?: sharp.PngOptions['compressionLevel']): Promise<Buffer> => sharp(input).png({ quality: clamp(quality ?? 100, 1, 100), compressionLevel }).toBuffer()
+export const toWebp = async (input: Buffer, quality?: number): Promise<Buffer> => sharp(input).webp({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+export const toAvif = async (input: Buffer, quality?: number): Promise<Buffer> => sharp(input).avif({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+export const toTiff = async (input: Buffer, quality?: number, compression?: sharp.TiffOptions['compression']): Promise<Buffer> => sharp(input).tiff({ quality: clamp(quality ?? 100, 1, 100), compression }).toBuffer()
+export const toHeif = async (input: Buffer, quality?: number): Promise<Buffer> => sharp(input).heif({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
