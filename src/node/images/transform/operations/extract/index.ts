@@ -1,5 +1,6 @@
 import sharp from 'sharp'
 import z from 'zod'
+import { Outcome } from '../../../../../agnostic/misc/outcome'
 
 export type ExtractOperationParams = {
   left: number
@@ -8,13 +9,16 @@ export type ExtractOperationParams = {
   height: number
 }
 
-export function isExtractOperationParams (obj: unknown): obj is ExtractOperationParams {
-  return z.object({
+export function isExtractOperationParams (obj: unknown): Outcome.Either<ExtractOperationParams, string> {
+  const schema = z.object({
     left: z.number(),
     top: z.number(),
     width: z.number(),
     height: z.number()
-  }).safeParse(obj).success
+  })
+  const result = schema.safeParse(obj)
+  if (!result.success) return Outcome.makeFailure(result.error.message)
+  return Outcome.makeSuccess(result.data)
 }
 
 export async function extract (

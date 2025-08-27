@@ -1,14 +1,18 @@
 import sharp from 'sharp'
 import z from 'zod'
+import { Outcome } from '../../../../../agnostic/misc/outcome'
 
 export type LightenOperationParams = {
   amount?: number
 }
 
-export function isLightenOperationParams (obj: unknown): obj is LightenOperationParams {
-  return z.object({
+export function isLightenOperationParams (obj: unknown): Outcome.Either<LightenOperationParams, string> {
+  const schema = z.object({
     amount: z.number().optional()
-  }).safeParse(obj).success
+  })
+  const result = schema.safeParse(obj)
+  if (!result.success) return Outcome.makeFailure(result.error.message)
+  return Outcome.makeSuccess(result.data)
 }
 
 export async function lighten (

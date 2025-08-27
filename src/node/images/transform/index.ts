@@ -1,4 +1,5 @@
 import sharp from 'sharp'
+import { Outcome } from '../../../agnostic/misc/outcome'
 import { blur, BlurOperationParams, isBlurOperationParams } from './operations/blur'
 import { brighten, BrightenOperationParams, isBrightenOperationParams } from './operations/brighten'
 import { extend, ExtendOperationParams, isExtendOperationParams } from './operations/extend'
@@ -65,24 +66,34 @@ export type OperationDescriptor = BlurOperationDescriptor
   | RotateOperationDescriptor
   | SaturateOperationDescriptor
 
-export function isOperationDescriptor (obj: unknown): obj is OperationDescriptor {
-  if (typeof obj !== 'object' || obj === null) return false
-  if (!('name' in obj)) return false
-  if (obj.name === OpName.BLUR) return isBlurOperationParams(obj)
-  if (obj.name === OpName.BRIGHTEN) return isBrightenOperationParams(obj)
-  if (obj.name === OpName.EXTEND) return isExtendOperationParams(obj)
-  if (obj.name === OpName.EXTRACT) return isExtractOperationParams(obj)
-  if (obj.name === OpName.FLATTEN) return isFlattenOperationParams(obj)
-  if (obj.name === OpName.FLIP) return true
-  if (obj.name === OpName.FLOP) return true
-  if (obj.name === OpName.HUE) return isHueOperationParams(obj)
-  if (obj.name === OpName.LEVEL) return isLevelOperationParams(obj)
-  if (obj.name === OpName.LIGHTEN) return isLightenOperationParams(obj)
-  if (obj.name === OpName.NORMALIZE) return isNormalizeOperationParams(obj)
-  if (obj.name === OpName.RESIZE) return isResizeOperationParams(obj)
-  if (obj.name === OpName.ROTATE) return isRotateOperationParams(obj)
-  if (obj.name === OpName.SATURATE) return isSaturateOperationParams(obj)
-  return false
+export function isOperationDescriptor(obj: unknown): Outcome.Either<OperationDescriptor, string> {
+  if (typeof obj !== 'object' || obj === null) return Outcome.makeFailure('Invalid operation descriptor')
+  if (!('name' in obj) || typeof obj.name !== 'string') return Outcome.makeFailure('Field named \'name\' in operation descriptor is required and must be a string')
+  const name = obj.name as OpName
+  const validateOperation = (validatorFn: (obj: unknown) => any) => {
+    const result = validatorFn(obj)
+    if (result.success) return Outcome.makeSuccess({ name: obj.name, ...result.payload })
+    return Outcome.makeFailure(result.error)
+  }
+  const validators = {
+    [OpName.BLUR]: isBlurOperationParams,
+    [OpName.BRIGHTEN]: isBrightenOperationParams,
+    [OpName.EXTEND]: isExtendOperationParams,
+    [OpName.EXTRACT]: isExtractOperationParams,
+    [OpName.FLATTEN]: isFlattenOperationParams,
+    [OpName.HUE]: isHueOperationParams,
+    [OpName.LEVEL]: isLevelOperationParams,
+    [OpName.LIGHTEN]: isLightenOperationParams,
+    [OpName.NORMALIZE]: isNormalizeOperationParams,
+    [OpName.RESIZE]: isResizeOperationParams,
+    [OpName.ROTATE]: isRotateOperationParams,
+    [OpName.SATURATE]: isSaturateOperationParams,
+  }
+  const simpleOperations = new Set([OpName.FLIP, OpName.FLOP] as const)
+  if (simpleOperations.has(name as any)) return Outcome.makeSuccess({ name: name as OpName.FLIP | OpName.FLOP })
+  const validator = validators[name as keyof typeof validators]
+  if (validator) return validateOperation(validator)
+  return Outcome.makeFailure('Invalid operation descriptor')
 }
 
 export async function transform (input: Buffer, operationsSequence: OperationDescriptor[]): Promise<sharp.Sharp>

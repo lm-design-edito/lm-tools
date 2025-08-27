@@ -1,16 +1,20 @@
 import sharp from 'sharp'
 import z from 'zod'
+import { Outcome } from '../../../../../agnostic/misc/outcome'
 
-export type LevelOperationParams = {
+export type LevelOperationParams = {  
   multiplier?: number
   offset?: number
 }
 
-export function isLevelOperationParams (obj: unknown): obj is LevelOperationParams {
-  return z.object({
+export function isLevelOperationParams (obj: unknown): Outcome.Either<LevelOperationParams, string> {
+  const schema = z.object({
     multiplier: z.number().optional(),
     offset: z.number().optional()
-  }).safeParse(obj).success
+  })
+  const result = schema.safeParse(obj)
+  if (!result.success) return Outcome.makeFailure(result.error.message)
+  return Outcome.makeSuccess(result.data)
 }
 
 export async function level (

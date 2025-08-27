@@ -1,14 +1,18 @@
 import sharp from 'sharp'
 import z from 'zod'
+import { Outcome } from '../../../../../agnostic/misc/outcome'
 
 export type SaturateOperationParams = {
   saturation?: number
 }
 
-export function isSaturateOperationParams (obj: unknown): obj is SaturateOperationParams {
-  return z.object({
+export function isSaturateOperationParams (obj: unknown): Outcome.Either<SaturateOperationParams, string> {
+  const schema = z.object({
     saturation: z.number().optional()
-  }).safeParse(obj).success
+  })
+  const result = schema.safeParse(obj)
+  if (!result.success) return Outcome.makeFailure(result.error.message)
+  return Outcome.makeSuccess(result.data)
 }
 
 export async function saturate (

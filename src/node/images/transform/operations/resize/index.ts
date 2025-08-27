@@ -1,5 +1,6 @@
 import sharp from 'sharp'
 import z from 'zod'
+import { Outcome } from '../../../../../agnostic/misc/outcome'
 import { isSharpColor } from '../../utils'
 
 export type ResizeOperationParams = {
@@ -14,8 +15,8 @@ export type ResizeOperationParams = {
   fastShrinkOnLoad?: boolean
 }
 
-export function isResizeOperationParams (obj: unknown): obj is ResizeOperationParams {
-  return z.object({
+export function isResizeOperationParams (obj: unknown): Outcome.Either<ResizeOperationParams, string> {
+  const schema = z.object({
     width: z.number().optional(),
     height: z.number().optional(),
     fit: z.enum([
@@ -39,7 +40,10 @@ export function isResizeOperationParams (obj: unknown): obj is ResizeOperationPa
       'mks2013',
       'mks2021',
     ]).optional(),
-  }).safeParse(obj).success
+  })
+  const result = schema.safeParse(obj)
+  if (!result.success) return Outcome.makeFailure(result.error.message)
+  return Outcome.makeSuccess(result.data)
 }
 
 export async function resize (
