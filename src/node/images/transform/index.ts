@@ -14,6 +14,7 @@ import { normalize, NormalizeOperationParams, isNormalizeOperationParams } from 
 import { resize, ResizeOperationParams, isResizeOperationParams } from './operations/resize'
 import { rotate, RotateOperationParams, isRotateOperationParams } from './operations/rotate'
 import { saturate, SaturateOperationParams, isSaturateOperationParams } from './operations/saturate'
+import { unknownToString } from 'agnostic/errors/unknown-to-string'
 
 export enum OpName {
   BLUR = 'blur',
@@ -96,43 +97,140 @@ export function isOperationDescriptor(obj: unknown): Outcome.Either<OperationDes
   return Outcome.makeFailure('Invalid operation descriptor')
 }
 
-export async function transform (input: Buffer, operationsSequence: OperationDescriptor[]): Promise<sharp.Sharp>
-export async function transform (input: sharp.Sharp, operationsSequence: OperationDescriptor[]): Promise<sharp.Sharp>
-export async function transform (input: sharp.Sharp | Buffer, operationsSequence: OperationDescriptor[]): Promise<sharp.Sharp> {
-  if (Buffer.isBuffer(input)) return transformBuffer(input, operationsSequence)
-  return transformSharpInstance(input, operationsSequence)
+export type TransformLimits = {
+  timeoutMs?: number
+  opTimeoutMs?: number
+  width?: number
+  height?: number
+}
+
+export enum TransformErrCodes {
+  PROCESS_TIMEOUT = 'process-timeout',
+  OP_TIMEOUT = 'op-timeout',
+  WIDTH_LIMIT_EXCEEDED = 'width-limit-exceeded',
+  HEIGHT_LIMIT_EXCEEDED = 'height-limit-exceeded',
+  UNKNOWN_ERROR = 'unknown-error'
+}
+
+export type TransformErr = {
+  code: TransformErrCodes,
+  details: string
+}
+
+export async function transform (
+  input: Buffer,
+  operationsSequence: OperationDescriptor[],
+  limits?: TransformLimits): Promise<Outcome.Either<sharp.Sharp, TransformErr>>
+export async function transform (
+  input: sharp.Sharp,
+  operationsSequence: OperationDescriptor[],
+  limits?: TransformLimits): Promise<Outcome.Either<sharp.Sharp, TransformErr>>
+export async function transform (
+  input: sharp.Sharp | Buffer,
+  operationsSequence: OperationDescriptor[],
+  limits?: TransformLimits): Promise<Outcome.Either<sharp.Sharp, TransformErr>> {
+  if (Buffer.isBuffer(input)) return transformBuffer(input, operationsSequence, limits)
+  return transformSharpInstance(input, operationsSequence, limits)
 }
 
 async function transformSharpInstance (
   sharpInstance: sharp.Sharp,
-  operationsSequence: OperationDescriptor[]
-): Promise<sharp.Sharp> {
+  operationsSequence: OperationDescriptor[],
+  limits?: TransformLimits
+): Promise<Outcome.Either<sharp.Sharp, TransformErr>> {
+  const start = Date.now()
+  const deadline = limits?.timeoutMs ? start + limits.timeoutMs : undefined
+
+  // Wrap op with per-operation timeout
+  const runWithOpTimeout = async <T>(op: () => Promise<T>): Promise<T | TransformErrCodes.OP_TIMEOUT> => {
+    if (!limits?.opTimeoutMs) return op()
+    const opTimeout = new Promise<TransformErrCodes.OP_TIMEOUT>(resolve =>
+      setTimeout(() => resolve(TransformErrCodes.OP_TIMEOUT), limits.opTimeoutMs)
+    )
+    return Promise.race([op(), opTimeout])
+  }
+
   for (const operation of operationsSequence) {
-    switch (operation.name) {
-      case OpName.BLUR: sharpInstance = await blur(sharpInstance, operation); break;
-      case OpName.BRIGHTEN: sharpInstance = await brighten(sharpInstance, operation); break;
-      case OpName.EXTEND: sharpInstance = await extend(sharpInstance, operation); break;
-      case OpName.EXTRACT: sharpInstance = await extract(sharpInstance, operation); break;
-      case OpName.FLATTEN: sharpInstance = await flatten(sharpInstance, operation); break;
-      case OpName.FLIP: sharpInstance = await flip(sharpInstance); break;
-      case OpName.FLOP: sharpInstance = await flop(sharpInstance); break;
-      case OpName.HUE: sharpInstance = await hue(sharpInstance, operation); break;
-      case OpName.LEVEL: sharpInstance = await level(sharpInstance, operation); break;
-      case OpName.LIGHTEN: sharpInstance = await lighten(sharpInstance, operation); break;
-      case OpName.NORMALIZE: sharpInstance = await normalize(sharpInstance, operation); break;
-      case OpName.RESIZE: sharpInstance = await resize(sharpInstance, operation); break;
-      case OpName.ROTATE: sharpInstance = await rotate(sharpInstance, operation); break;
-      case OpName.SATURATE: sharpInstance = await saturate(sharpInstance, operation); break;
-      default: sharpInstance = sharpInstance;
+    // Check global process timeout
+    if (deadline !== undefined && Date.now() > deadline) return Outcome.makeFailure({
+      code: TransformErrCodes.PROCESS_TIMEOUT,
+      details: 'Process timed out'
+    })
+    let result: sharp.Sharp | TransformErrCodes.OP_TIMEOUT
+    try {
+      result = await runWithOpTimeout(async () => {
+        switch (operation.name) {
+          case OpName.BLUR: return blur(sharpInstance, operation)
+          case OpName.BRIGHTEN: return brighten(sharpInstance, operation)
+          case OpName.EXTEND: return extend(sharpInstance, operation)
+          case OpName.EXTRACT: return extract(sharpInstance, operation)
+          case OpName.FLATTEN: return flatten(sharpInstance, operation)
+          case OpName.FLIP: return flip(sharpInstance)
+          case OpName.FLOP: return flop(sharpInstance)
+          case OpName.HUE: return hue(sharpInstance, operation)
+          case OpName.LEVEL: return level(sharpInstance, operation)
+          case OpName.LIGHTEN: return lighten(sharpInstance, operation)
+          case OpName.NORMALIZE: return normalize(sharpInstance, operation)
+          case OpName.RESIZE: return resize(sharpInstance, operation)
+          case OpName.ROTATE: return rotate(sharpInstance, operation)
+          case OpName.SATURATE: return saturate(sharpInstance, operation)
+          default: return sharpInstance
+        }
+      })
+    } catch (err) {
+      return Outcome.makeFailure({
+        code: TransformErrCodes.UNKNOWN_ERROR,
+        details: unknownToString(err)
+      })
+    }
+
+    // Per-operation timeout handling
+    if (result === TransformErrCodes.OP_TIMEOUT) return Outcome.makeFailure({
+      code: TransformErrCodes.OP_TIMEOUT,
+      details: 'Operation timed out'
+    })
+    else { sharpInstance = result }
+
+    // Check width/height limits *only after operations that can change size*
+    if (
+      limits &&
+      (operation.name === OpName.RESIZE ||
+       operation.name === OpName.EXTEND ||
+       operation.name === OpName.EXTRACT ||
+       operation.name === OpName.ROTATE)
+    ) {
+      try {
+        const meta = await sharpInstance.metadata()
+        if (limits.width !== undefined && meta.width && meta.width > limits.width) {
+          return Outcome.makeFailure({
+            code: TransformErrCodes.WIDTH_LIMIT_EXCEEDED,
+            details: `Image width exceeded the limit (${meta.width}px)`
+          })
+        }
+        if (limits.height !== undefined && meta.height && meta.height > limits.height) {
+          return Outcome.makeFailure({
+            code: TransformErrCodes.HEIGHT_LIMIT_EXCEEDED,
+            details: `Image height exceeded the limit (${meta.height}px)`
+          })
+        }
+      } catch (err) {
+        // metadata() can throw for invalid images
+        return Outcome.makeFailure({
+          code: TransformErrCodes.UNKNOWN_ERROR,
+          details: `Failed to read metadata: ${unknownToString(err)}`
+        })
+      }
     }
   }
-  return sharpInstance
+  return Outcome.makeSuccess(sharpInstance)
 }
+
 
 async function transformBuffer (
   fileBuffer: Buffer,
-  operationsSequence: OperationDescriptor[]
-): Promise<sharp.Sharp> {
+  operationsSequence: OperationDescriptor[],
+  limits?: TransformLimits
+): Promise<Outcome.Either<sharp.Sharp, TransformErr>> {
   const sharpInstance = sharp(fileBuffer)
-  return transformSharpInstance(sharpInstance, operationsSequence)
+  return transformSharpInstance(sharpInstance, operationsSequence, limits)
 }
