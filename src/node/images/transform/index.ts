@@ -1,5 +1,6 @@
 import sharp from 'sharp'
 import { Outcome } from '../../../agnostic/misc/outcome'
+import { unknownToString } from '../../../agnostic/errors/unknown-to-string'
 import { blur, BlurOperationParams, isBlurOperationParams } from './operations/blur'
 import { brighten, BrightenOperationParams, isBrightenOperationParams } from './operations/brighten'
 import { extend, ExtendOperationParams, isExtendOperationParams } from './operations/extend'
@@ -14,7 +15,6 @@ import { normalize, NormalizeOperationParams, isNormalizeOperationParams } from 
 import { resize, ResizeOperationParams, isResizeOperationParams } from './operations/resize'
 import { rotate, RotateOperationParams, isRotateOperationParams } from './operations/rotate'
 import { saturate, SaturateOperationParams, isSaturateOperationParams } from './operations/saturate'
-import { unknownToString } from 'agnostic/errors/unknown-to-string'
 
 export enum OpName {
   BLUR = 'blur',
