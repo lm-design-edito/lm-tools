@@ -4,6 +4,7 @@ import {
   matchesSome as matchesSomeFunc,
   matchesEvery as matchesEveryFunc
 } from './matches'
+import { readTable as readTableFunc } from './read-table'
 import { replaceAll as replaceAllFunc } from './replace-all'
 import { normalizeIndent as normalizeIndentFunc } from './normalize-indent'
 import { toAlphanum as toAlphanumFunc } from './to-alphanum'
@@ -21,6 +22,8 @@ export namespace Strings {
   export const matchesEvery = matchesEveryFunc
   // Normalize indent
   export const normalizeIndent = normalizeIndentFunc
+  // Read table
+  export const readTable = readTableFunc
   // Replace all
   export const replaceAll = replaceAllFunc
   // To alphanum
