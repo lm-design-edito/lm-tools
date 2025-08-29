@@ -18,6 +18,12 @@ export const defaultOptions: ReadTableOptions<any> = {
   schema: i => i
 }
 
+/* * * * * * * * * * * * * * * * * * * * * 
+ *
+ * WIP - Should also be able to split 'vertically' under the header labels
+ *
+ * * * * * * * * * * * * * * * * * * * * */
+
 /**
  * Parses a tabular string input into an array of objects, where each object represents a row in the table.
  *
