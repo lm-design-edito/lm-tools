@@ -1,6 +1,6 @@
 import { Outcome } from '../../misc/outcome'
 
-type ParseTableOptionsDelimiterBased<T extends Record<string, string>> = {
+export type ParseTableLineModeOptions<T extends Record<string, string>> = {
   inputToLines: (input: string) => string[]
   headLinePos: number
   headLineToHeaders: (input: string) => string[]
@@ -9,7 +9,7 @@ type ParseTableOptionsDelimiterBased<T extends Record<string, string>> = {
   schema: (obj: unknown) => T
 }
 
-type ParseTableOptionsColumnSlice<T extends Record<string, string>> = {
+export type ParseTableColumnModeOptions<T extends Record<string, string>> = {
   inputToLines: (input: string) => string[]
   headLinePos: number
   bodyLinesBounds: [number, number] // [start, end]
@@ -19,7 +19,26 @@ type ParseTableOptionsColumnSlice<T extends Record<string, string>> = {
   schema: (obj: unknown) => T
 }
 
-export type ParseTableOptions<T extends Record<string, string>> = ParseTableOptionsDelimiterBased<T> | ParseTableOptionsColumnSlice<T>
+export type ParseTableOptions<T extends Record<string, string>> = ParseTableLineModeOptions<T> | ParseTableColumnModeOptions<T>
+
+const defaultLineModeOptions: ParseTableLineModeOptions<any> = {
+  inputToLines: i => i.split('\n'),
+  headLinePos: 0,
+  headLineToHeaders: h => h.split('\t'),
+  bodyLinesBounds: [0, Infinity],
+  bodyLineToCellValue: i => i.split('\t'),
+  schema: i => i
+}
+
+const defaultColumnModeOptions: ParseTableColumnModeOptions<any> = {
+  inputToLines: i => i.split('\n'),
+  headLinePos: 0,
+  bodyLinesBounds: [1, Infinity],
+  columns: [],
+  headerRefine: h => h,
+  valueRefine: v => v,
+  schema: i => i
+}
 
 /**
  * Parses a tabular string input into an array of objects, where each object represents a row in the table.
@@ -91,27 +110,9 @@ export function parseTable<T extends Record<string, string>> (
   table: string,
   _options: Partial<ParseTableOptions<T>> & { schema: (obj: unknown) => T }
 ): Outcome.Either<T[], string> {
-  let options: ParseTableOptions<T>
-  if ('columns' in _options) {
-    options = {
-      inputToLines: i => i.split('\n'),
-      headLinePos: 0,
-      bodyLinesBounds: [1, Infinity],
-      columns: [],
-      headerRefine: h => h,
-      valueRefine: v => v,
-      ..._options
-    }
-  } else {
-    options = {
-      inputToLines: i => i.split('\n'),
-      headLinePos: 0,
-      headLineToHeaders: h => h.split('\t'),
-      bodyLinesBounds: [0, Infinity],
-      bodyLineToCellValue: i => i.split('\t'),
-      ..._options
-    }
-  }
+  const options: ParseTableOptions<T> = 'columns' in _options
+    ? { ...defaultColumnModeOptions, ..._options }
+    : { ...defaultLineModeOptions, ..._options }
   const lines = options.inputToLines(table)
   const headLine = lines.at(options.headLinePos)
   if (headLine === undefined) return Outcome.makeFailure('Head line not found')
