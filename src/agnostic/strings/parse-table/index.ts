@@ -1,13 +1,15 @@
 import { Outcome } from '../../misc/outcome'
 
-export type ParseTableOptions<T extends Record<string, string>> = {
+type ParseTableOptionsDelimiterBased<T extends Record<string, string>> = {
   inputToLines: (input: string) => string[]
   headLinePos: number
   headLineToHeaders: (input: string) => string[]
   bodyLinesBounds: [number, number] // [start, end]
   bodyLineToCellValue: (input: string) => string[]
   schema: (obj: unknown) => T
-} | {
+}
+
+type ParseTableOptionsColumnSlice<T extends Record<string, string>> = {
   inputToLines: (input: string) => string[]
   headLinePos: number
   bodyLinesBounds: [number, number] // [start, end]
@@ -16,6 +18,8 @@ export type ParseTableOptions<T extends Record<string, string>> = {
   valueRefine: (value: string) => string
   schema: (obj: unknown) => T
 }
+
+export type ParseTableOptions<T extends Record<string, string>> = ParseTableOptionsDelimiterBased<T> | ParseTableOptionsColumnSlice<T>
 
 export const defaultOptions: ParseTableOptions<any> = {
   inputToLines: i => i.split('\n'),
@@ -91,8 +95,29 @@ export const defaultOptions: ParseTableOptions<any> = {
  */
 export function parseTable<T extends Record<string, string>> (
   table: string,
-  options: ParseTableOptions<T> = defaultOptions
+  _options: Partial<ParseTableOptions<T>> & { schema: (obj: unknown) => T }
 ): Outcome.Either<T[], string> {
+  let options: ParseTableOptions<T>
+  if ('columns' in _options) {
+    options = {
+      inputToLines: i => i.split('\n'),
+      headLinePos: 0,
+      bodyLinesBounds: [1, Infinity],
+      columns: [],
+      headerRefine: h => h,
+      valueRefine: v => v,
+      ..._options
+    }
+  } else {
+    options = {
+      inputToLines: i => i.split('\n'),
+      headLinePos: 0,
+      headLineToHeaders: h => h.split('\t'),
+      bodyLinesBounds: [0, Infinity],
+      bodyLineToCellValue: i => i.split('\t'),
+      ..._options
+    }
+  }
   const lines = options.inputToLines(table)
   const headLine = lines.at(options.headLinePos)
   if (headLine === undefined) return Outcome.makeFailure('Head line not found')
