@@ -25,7 +25,7 @@ const defaultLineModeOptions: ParseTableLineModeOptions<any> = {
   inputToLines: i => i.split('\n'),
   headLinePos: 0,
   headLineToHeaders: h => h.split('\t'),
-  bodyLinesBounds: [0, Infinity],
+  bodyLinesBounds: [1, Infinity],
   bodyLineToCellValue: i => i.split('\t'),
   schema: i => i
 }
