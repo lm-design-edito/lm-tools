@@ -6,7 +6,7 @@ export type ParseTableLineModeOptions<T extends Record<string, string>> = {
   headLineToHeaders: (input: string) => string[]
   bodyLinesBounds: [number, number] // [start, end]
   bodyLineToCellValue: (input: string) => string[]
-  schema: (obj: unknown) => T
+  schema: (obj: unknown) => T | undefined
 }
 
 export type ParseTableColumnModeOptions<T extends Record<string, string>> = {
@@ -16,7 +16,7 @@ export type ParseTableColumnModeOptions<T extends Record<string, string>> = {
   columns: number[]
   headerRefine: (header: string) => string
   valueRefine: (value: string) => string
-  schema: (obj: unknown) => T
+  schema: (obj: unknown) => T | undefined
 }
 
 export type ParseTableOptions<T extends Record<string, string>> = ParseTableLineModeOptions<T> | ParseTableColumnModeOptions<T>
@@ -120,7 +120,8 @@ export function parseTable<T extends Record<string, string>> (
     const headers = options.headLineToHeaders(headLine)
     const bodyLines = lines.slice(options.bodyLinesBounds[0], options.bodyLinesBounds[1])
     const bodyLinesSplit = bodyLines.map(options.bodyLineToCellValue)
-    const rows: T[] = bodyLinesSplit.map(line => {
+    const rows: T[] = []
+    bodyLinesSplit.forEach(line => {
       const row: Record<string, string> = {}
       line.forEach((cell, cellPos) => {
         const cellName = headers.at(cellPos)
@@ -129,7 +130,8 @@ export function parseTable<T extends Record<string, string>> (
         row[cellName] = cellValue as any
       })
       const checked = options.schema(row)
-      return checked
+      if (checked === undefined) return
+      rows.push(checked)
     })
     return Outcome.makeSuccess(rows)
   } else {
@@ -140,7 +142,8 @@ export function parseTable<T extends Record<string, string>> (
     }, [] as [number, number][])
     const bodyLines = lines.slice(options.bodyLinesBounds[0], options.bodyLinesBounds[1])
     const headers = colBounds.map(([start, end]) => options.headerRefine(headLine.slice(start, end)))
-    const rows: T[] = bodyLines.map(line => {
+    const rows: T[] = []
+    bodyLines.forEach(line => {
       const row: Record<string, string> = {}
       colBounds.forEach(([start, end], colIndex) => {
         const header = headers.at(colIndex)
@@ -149,7 +152,8 @@ export function parseTable<T extends Record<string, string>> (
         row[header] = cellValue as any
       })
       const checked = options.schema(row)
-      return checked
+      if (checked === undefined) return
+      rows.push(checked)
     })
     return Outcome.makeSuccess(rows)
   }
