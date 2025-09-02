@@ -30,6 +30,8 @@ export const defaultOptions: ParseTableOptions<any> = {
   schema: i => i
 }
 
+// [WIP] update the docs after options fields are made optional
+
 /**
  * Parses a tabular string input into an array of objects, where each object represents a row in the table.
  *
