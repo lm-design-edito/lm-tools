@@ -225,7 +225,6 @@ async function transformSharpInstance (
   return Outcome.makeSuccess(sharpInstance)
 }
 
-
 async function transformBuffer (
   fileBuffer: Buffer,
   operationsSequence: OperationDescriptor[],

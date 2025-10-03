@@ -2,7 +2,7 @@ import sharp from 'sharp'
 import z from 'zod'
 import { Outcome } from '../../../../../agnostic/misc/outcome'
 
-export type LevelOperationParams = {  
+export type LevelOperationParams = {
   multiplier?: number
   offset?: number
 }

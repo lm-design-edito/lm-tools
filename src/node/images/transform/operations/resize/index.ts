@@ -36,10 +36,11 @@ export function isResizeOperationParams (obj: unknown): Outcome.Either<ResizeOpe
       'cubic',
       'mitchell',
       'lanczos2',
-      'lanczos3',
-      'mks2013',
-      'mks2021',
+      'lanczos3'
     ]).optional(),
+    withoutEnlargement: z.boolean().optional(),
+    withoutReduction: z.boolean().optional(),
+    fastShrinkOnLoad: z.boolean().optional()
   })
   const result = schema.safeParse(obj)
   if (!result.success) return Outcome.makeFailure(result.error.message)
