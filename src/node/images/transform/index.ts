@@ -15,11 +15,12 @@ import { normalize, NormalizeOperationParams, isNormalizeOperationParams } from 
 import { resize, ResizeOperationParams, isResizeOperationParams } from './operations/resize'
 import { rotate, RotateOperationParams, isRotateOperationParams } from './operations/rotate'
 import { saturate, SaturateOperationParams, isSaturateOperationParams } from './operations/saturate'
+import { composite, CompositeOperationParams, isCompositeOperationParams } from './operations/composite'
 
 export enum OpName {
   BLUR = 'blur',
   BRIGHTEN = 'brighten',
-  // [WIP] Compose ?
+  COMPOSITE = 'composite',
   EXTEND = 'extend',
   EXTRACT = 'extract',
   FLATTEN = 'flatten',
@@ -51,9 +52,11 @@ export type NormalizeOperationDescriptor = { name: OpName.NORMALIZE } & Normaliz
 export type ResizeOperationDescriptor = { name: OpName.RESIZE } & ResizeOperationParams
 export type RotateOperationDescriptor = { name: OpName.ROTATE } & RotateOperationParams
 export type SaturateOperationDescriptor = { name: OpName.SATURATE } & SaturateOperationParams
+export type CompositeOperationDescriptor = { name: OpName.COMPOSITE } & CompositeOperationParams
 
 export type OperationDescriptor = BlurOperationDescriptor
   | BrightenOperationDescriptor
+  | CompositeOperationDescriptor
   | ExtendOperationDescriptor
   | ExtractOperationDescriptor
   | FlattenOperationDescriptor
@@ -89,6 +92,7 @@ export function isOperationDescriptor(obj: unknown): Outcome.Either<OperationDes
     [OpName.RESIZE]: isResizeOperationParams,
     [OpName.ROTATE]: isRotateOperationParams,
     [OpName.SATURATE]: isSaturateOperationParams,
+    [OpName.COMPOSITE]: isCompositeOperationParams,
   }
   const simpleOperations = new Set([OpName.FLIP, OpName.FLOP] as const)
   if (simpleOperations.has(name as any)) return Outcome.makeSuccess({ name: name as OpName.FLIP | OpName.FLOP })
@@ -117,8 +121,8 @@ export type TransformErr = {
   details: string
 }
 
-export async function transform (
-  input: Buffer,
+export async function transform(
+  input: Buffer | { create: sharp.SharpOptions['create'] },
   operationsSequence: OperationDescriptor[],
   limits?: TransformLimits): Promise<Outcome.Either<sharp.Sharp, TransformErr>>
 export async function transform (
@@ -126,11 +130,14 @@ export async function transform (
   operationsSequence: OperationDescriptor[],
   limits?: TransformLimits): Promise<Outcome.Either<sharp.Sharp, TransformErr>>
 export async function transform (
-  input: sharp.Sharp | Buffer,
+  input: sharp.Sharp | Buffer | { create: sharp.SharpOptions['create'] },
   operationsSequence: OperationDescriptor[],
   limits?: TransformLimits): Promise<Outcome.Either<sharp.Sharp, TransformErr>> {
+  if (typeof input === 'object' && 'create' in input && input.create !== null) {
+    return transformSharpInstance(sharp(input), operationsSequence, limits)
+  }
   if (Buffer.isBuffer(input)) return transformBuffer(input, operationsSequence, limits)
-  return transformSharpInstance(input, operationsSequence, limits)
+  return transformSharpInstance(input as sharp.Sharp, operationsSequence, limits)
 }
 
 async function transformSharpInstance (
@@ -174,6 +181,7 @@ async function transformSharpInstance (
           case OpName.RESIZE: return resize(sharpInstance, operation)
           case OpName.ROTATE: return rotate(sharpInstance, operation)
           case OpName.SATURATE: return saturate(sharpInstance, operation)
+          case OpName.COMPOSITE: return composite(sharpInstance, operation)
           default: return sharpInstance
         }
       })
