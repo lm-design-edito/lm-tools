@@ -8,22 +8,35 @@ export type CompositeOperationParams = {
 }
 
 const isSharpCreate = z.object({
-  width: z.number(),
-  height: z.number(),
-  channels: z.number().optional(),
-  background: z.custom<sharp.Color>((val) => isSharpColor(val)).optional()
+  create: z.object({
+    width: z.number(),
+    height: z.number(),
+    channels: z.literal(3).or(z.literal(4)),
+    background: z.custom<sharp.Color>((val) => isSharpColor(val))
+  })
 })
-const isSharpCreateText = z.object({
-  text: z.string(),
-  width: z.number(),
-  height: z.number(),
-  background: z.custom<sharp.Color>((val) => isSharpColor(val)).optional()
+const isSharpText = z.object({
+  text: z.object({
+    text: z.string(),
+    font: z.string().optional(),
+    fontfile: z.string().optional(),
+    width: z.number(),
+    height: z.number(),
+    align: z.enum(['left', 'center', 'right']).optional(),
+    justify: z.boolean().optional(),
+    dpi: z.number().optional(),
+    rgba: z.boolean().optional(),
+    spacing: z.number().optional(),
+  })
 })
 const isSharpCreateRaw = z.object({
-  width: z.number(),
-  height: z.number(),
-  channels: z.number(),
-  data: z.instanceof(Buffer)
+  raw: z.object({
+    width: z.number(),
+    height: z.number(),
+    channels: z.literal(3).or(z.literal(4)),
+    data: z.instanceof(Buffer),
+    animated : z.boolean().optional(),
+  })
 })
 
 export function isCompositeOperationParams (obj: unknown): Outcome.Either<CompositeOperationParams, string> {
@@ -33,17 +46,38 @@ export function isCompositeOperationParams (obj: unknown): Outcome.Either<Compos
         z.string(), 
         z.instanceof(Buffer),
         isSharpCreate,
-        isSharpCreateText,
+        isSharpText,
         isSharpCreateRaw,
-      ]).optional(),
+      ]),
       top: z.number().optional(),
       left: z.number().optional(),
       blend: z.enum([
-        'clear', 'dest', 'dest-atop', 'dest-in', 'dest-out', 'dest-over',
-        'source-atop', 'source-in', 'source-out', 'source-over',
-        'over', 'atop', 'in', 'out', 'xor', 'add', 'saturate', 'multiply',
-        'screen', 'overlay', 'darken', 'lighten', 'colour-dodge', 'color-dodge',
-        'colour-burn', 'color-burn', 'hard-light', 'soft-light', 'difference',
+        'clear',
+        'source',
+        'over',
+        'in',
+        'out',
+        'atop',
+        'dest',
+        'dest-over',
+        'dest-in',
+        'dest-out',
+        'dest-atop',
+        'xor',
+        'add',
+        'saturate',
+        'multiply',
+        'screen',
+        'overlay',
+        'darken',
+        'lighten',
+        'color-dodge',
+        'colour-dodge',
+        'color-burn',
+        'colour-burn',
+        'hard-light',
+        'soft-light',
+        'difference',
         'exclusion'
       ]).optional(),
       tile: z.boolean().optional(),
@@ -57,26 +91,8 @@ export function isCompositeOperationParams (obj: unknown): Outcome.Either<Compos
   })
   const result = schema.safeParse(obj)
   if (!result.success) return Outcome.makeFailure(result.error.message)
-
-  // @todo: TS ma soulée j'avoue : Transform input fields to match OverlayOptions type
-  const composite = result.data.composite.map((item) => {
-    if (item.input && typeof item.input === 'object' && 'width' in item.input && 'height' in item.input) {
-      if ('channels' in item.input || 'background' in item.input) {
-        // { width, height, channels?, background? } => { create: ... }
-        return { ...item, input: { create: item.input } }
-      }
-      if ('text' in item.input) {
-        // { text, width, height, background? } => { text: ... }
-        return { ...item, input: { text: item.input } }
-      }
-      if ('data' in item.input && 'channels' in item.input) {
-        // { width, height, channels, data } => { raw: ... }
-        return { ...item, input: { raw: item.input } }
-      }
-    }
-    return item
-  })
-  return Outcome.makeSuccess({ composite } as CompositeOperationParams)
+    
+  return Outcome.makeSuccess(result.data);
 }
 
 export async function composite (
