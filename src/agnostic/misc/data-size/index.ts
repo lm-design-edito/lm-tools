@@ -127,17 +127,17 @@ export class DataSize {
   }
 }
 
-export function bits (value: number): DataSize { return bytes(value, 'bit') }
-export function bytes (value: number, unit: Unit | UnitShort): DataSize { return new DataSize(value, unit) }
-export function kiloBytes (value: number): DataSize { return bytes(value, 'kilobyte') }
-export function megaBytes (value: number): DataSize { return bytes(value, 'megabyte') }
-export function gigabytes (value: number): DataSize { return bytes(value, 'gigabyte') }
-export function terabytes (value: number): DataSize { return bytes(value, 'terabyte') }
-export function petabytes (value: number): DataSize { return bytes(value, 'petabyte') }
-export function exabytes (value: number): DataSize { return bytes(value, 'exabyte') }
-export function kibibytes (value: number): DataSize { return bytes(value, 'kibibyte') }
-export function mebibytes (value: number): DataSize { return bytes(value, 'mebibyte') }
-export function gibibytes (value: number): DataSize { return bytes(value, 'gibibyte') }
-export function tebibytes (value: number): DataSize { return bytes(value, 'tebibyte') }
-export function pebibytes (value: number): DataSize { return bytes(value, 'pebibyte') }
-export function exbibytes (value: number): DataSize { return bytes(value, 'exbibyte') }
+export function bits (value: number): DataSize { return new DataSize(value, 'bit') }
+export function bytes (value: number): DataSize { return new DataSize(value, 'byte') }
+export function kiloBytes (value: number): DataSize { return new DataSize(value, 'kilobyte') }
+export function megaBytes (value: number): DataSize { return new DataSize(value, 'megabyte') }
+export function gigabytes (value: number): DataSize { return new DataSize(value, 'gigabyte') }
+export function terabytes (value: number): DataSize { return new DataSize(value, 'terabyte') }
+export function petabytes (value: number): DataSize { return new DataSize(value, 'petabyte') }
+export function exabytes (value: number): DataSize { return new DataSize(value, 'exabyte') }
+export function kibibytes (value: number): DataSize { return new DataSize(value, 'kibibyte') }
+export function mebibytes (value: number): DataSize { return new DataSize(value, 'mebibyte') }
+export function gibibytes (value: number): DataSize { return new DataSize(value, 'gibibyte') }
+export function tebibytes (value: number): DataSize { return new DataSize(value, 'tebibyte') }
+export function pebibytes (value: number): DataSize { return new DataSize(value, 'pebibyte') }
+export function exbibytes (value: number): DataSize { return new DataSize(value, 'exbibyte') }
