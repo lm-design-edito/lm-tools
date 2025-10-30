@@ -4,7 +4,7 @@ import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
 import { isSharpColor } from '../../utils/index.js'
 
 export type FlattenOperationParams = {
-  background?: sharp.Color
+  background?: sharp.Color // [WIP] use own types, not those from sharp
 }
 
 export function isFlattenOperationParams (obj: unknown): Outcome.Either<FlattenOperationParams, string> {

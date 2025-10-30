@@ -5,7 +5,7 @@ import { isSharpColor } from '../../utils/index.js'
 
 export type RotateOperationParams = {
   angleDeg?: number
-  background?: sharp.Color
+  background?: sharp.Color // [WIP] use own types, not those from sharp
 }
 
 export function isRotateOperationParams (obj: unknown): Outcome.Either<RotateOperationParams, string> {

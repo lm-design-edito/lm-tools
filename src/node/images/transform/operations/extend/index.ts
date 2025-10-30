@@ -8,8 +8,8 @@ export type ExtendOperationParams = {
   right?: number
   top?: number
   bottom?: number
-  extendWith?: sharp.ExtendWith
-  background?: sharp.Color
+  extendWith?: sharp.ExtendWith // [WIP] not sure it's safe to use directly the types from sharp
+  background?: sharp.Color // [WIP] same
 }
 
 export function isExtendOperationParams (obj: unknown): Outcome.Either<ExtendOperationParams, string> {

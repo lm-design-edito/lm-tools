@@ -6,10 +6,10 @@ import { isSharpColor } from '../../utils/index.js'
 export type ResizeOperationParams = {
   width?: number
   height?: number
-  fit?: keyof sharp.FitEnum
+  fit?: keyof sharp.FitEnum // [WIP] use own types, not those from sharp
   position?: number | string
-  background?: sharp.Color
-  kernel?: keyof sharp.KernelEnum
+  background?: sharp.Color // [WIP] use own types, not those from sharp
+  kernel?: keyof sharp.KernelEnum // [WIP] use own types, not those from sharp
   withoutEnlargement?: boolean
   withoutReduction?: boolean
   fastShrinkOnLoad?: boolean
