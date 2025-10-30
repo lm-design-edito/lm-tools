@@ -1,4 +1,4 @@
-import { isFalsy } from '../../booleans/is-falsy'
+import { isFalsy } from '../../booleans/is-falsy/index.js'
 
 export namespace Cast {
   export function toBoolean (value: unknown) {

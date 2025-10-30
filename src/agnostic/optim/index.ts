@@ -1,8 +1,8 @@
-import { memoize as memoizeFunc } from './memoize'
+import { memoize as memoizeFunc } from './memoize/index.js'
 import {
   throttle as throttleFunc,
   debounce as debounceFunc
-} from './throttle-debounce'
+} from './throttle-debounce/index.js'
 
 export namespace Optim {
   // Memoize

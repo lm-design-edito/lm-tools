@@ -1,6 +1,6 @@
 import { Client } from 'basic-ftp'
-import { Outcome } from '../../../../agnostic/misc/outcome'
-import { unknownToString } from '../../../../agnostic/errors/unknown-to-string'
+import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
+import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 
 export type MoveDirOptions = {
   /** If false and `targetDir` exists, the operation is aborted. Defaults to false. */

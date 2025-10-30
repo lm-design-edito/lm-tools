@@ -1,10 +1,10 @@
-import { Window } from '../../../../../misc/crossenv/window'
-import { insertNode } from '../../../../../html/insert-node'
-import { Outcome } from '../../../../../misc/outcome'
-import { Cast } from '../../../cast'
-import { Utils } from '../../../utils'
-import { Types } from '../../../types'
-import { SmartTags } from '../..'
+import { Window } from '../../../../../misc/crossenv/window/index.js'
+import { insertNode } from '../../../../../html/insert-node/index.js'
+import { Outcome } from '../../../../../misc/outcome/index.js'
+import { Cast } from '../../../cast/index.js'
+import { Utils } from '../../../utils/index.js'
+import { Types } from '../../../types/index.js'
+import { SmartTags } from '../../index.js'
 
 type Main = Element | NodeListOf<Element | Text>
 type Args = [

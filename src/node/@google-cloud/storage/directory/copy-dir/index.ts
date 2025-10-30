@@ -3,8 +3,8 @@ import {
   GetFileOptions,
   CopyOptions as GCSCopyOptions
 } from '@google-cloud/storage'
-import { Outcome } from '../../../../../agnostic/misc/outcome'
-import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string'
+import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 
 export type CopyDirOptions = {
   getFileOptions?: GetFileOptions

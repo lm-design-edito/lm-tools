@@ -1,5 +1,5 @@
-import { Arrays } from '../../arrays'
-import { Random } from '../../random'
+import { Arrays } from '../../arrays/index.js'
+import { Random } from '../../random/index.js'
 
 export namespace LoremIpsum {
   export const words = [

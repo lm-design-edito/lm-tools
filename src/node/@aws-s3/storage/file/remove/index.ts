@@ -1,6 +1,10 @@
-import { S3Client, HeadObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
-import { Outcome } from '../../../../../agnostic/misc/outcome'
-import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string'
+import {
+  S3Client,
+  HeadObjectCommand,
+  DeleteObjectCommand
+} from '@aws-sdk/client-s3'
+import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 
 export type RemoveOptions = {
   ignoreMissing?: boolean // defaults to true

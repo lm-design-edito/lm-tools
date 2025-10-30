@@ -1,6 +1,6 @@
 import sharp from 'sharp'
 import z from 'zod'
-import { Outcome } from '../../../../../agnostic/misc/outcome'
+import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
 
 export type HueOperationParams = {
   rotateDeg?: number

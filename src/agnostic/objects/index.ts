@@ -1,14 +1,14 @@
-import { deepGetProperty as deepGetPropertyFunc } from './deep-get-property'
-import { Enums as EnumsNamespace } from './enums'
-import { flattenGetters as flattenGettersFunc } from './flatten-getters'
+import { deepGetProperty as deepGetPropertyFunc } from './deep-get-property/index.js'
+import { Enums as EnumsNamespace } from './enums/index.js'
+import { flattenGetters as flattenGettersFunc } from './flatten-getters/index.js'
 import {
   isObject as isObjectFunc,
   isNonNullObject as isNonNullObjectFunc
-} from './is-object'
-import { isRecord as isRecordFunc } from './is-record'
-import { recordFormat as recordFormatFunc } from './record-format'
-import { recordMap as recordMapFunc } from './record-map'
-import { Validation as ValidationNamespace } from './validation'
+} from './is-object/index.js'
+import { isRecord as isRecordFunc } from './is-record/index.js'
+import { recordFormat as recordFormatFunc } from './record-format/index.js'
+import { recordMap as recordMapFunc } from './record-map/index.js'
+import { Validation as ValidationNamespace } from './validation/index.js'
 
 export namespace Objects {
   // Deep get property

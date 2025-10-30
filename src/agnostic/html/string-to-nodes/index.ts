@@ -1,5 +1,5 @@
-import { Sanitize } from '../../html/sanitize'
-import * as ERR from '../../../shared/errors'
+import { Sanitize } from '../../html/sanitize/index.js'
+import * as ERR from '../../../shared/errors/index.js'
 
 type Options = {
   sanitize?: Sanitize.Options,

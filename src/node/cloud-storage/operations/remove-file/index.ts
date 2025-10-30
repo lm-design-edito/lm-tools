@@ -1,4 +1,7 @@
-import { Outcome } from '../../../../agnostic/misc/outcome'
+import { Bucket as GCSBucket } from '@google-cloud/storage'
+import { Client as FtpClient } from 'basic-ftp'
+import SftpClient from 'ssh2-sftp-client'
+import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
 import {
   AnyClient,
   isFtpClient,
@@ -6,14 +9,11 @@ import {
   isS3ClientWithBucket,
   isSftpClient,
   S3ClientWithBucket
-} from '../../clients'
-import { Bucket as GCSBucket } from '@google-cloud/storage'
-import { Client as FtpClient } from 'basic-ftp'
-import SftpClient from 'ssh2-sftp-client'
-import { RemoveOptions as FtpRemoveOptions, remove as ftpRemove } from '../../../ftps/file/remove'
-import { RemoveOptions as SftpRemoveOptions, remove as sftpRemove } from '../../../sftp/file/remove'
-import { RemoveOptions as S3RemoveOptions, remove as s3Remove } from '../../../@aws-s3/storage/file/remove'
-import { RemoveOptions as GcsRemoveOptions, remove as gcsRemove } from '../../../@google-cloud/storage/file/remove'
+} from '../../clients/index.js'
+import { RemoveOptions as FtpRemoveOptions, remove as ftpRemove } from '../../../ftps/file/remove/index.js'
+import { RemoveOptions as SftpRemoveOptions, remove as sftpRemove } from '../../../sftp/file/remove/index.js'
+import { RemoveOptions as S3RemoveOptions, remove as s3Remove } from '../../../@aws-s3/storage/file/remove/index.js'
+import { RemoveOptions as GcsRemoveOptions, remove as gcsRemove } from '../../../@google-cloud/storage/file/remove/index.js'
 
 type Returned = Outcome.Either<true, string>
 

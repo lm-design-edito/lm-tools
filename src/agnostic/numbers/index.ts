@@ -1,11 +1,11 @@
-import { absoluteModulo as absoluteModuloFunc } from './absolute-modulo'
-import { clamp as clampFunc } from './clamp'
-import { interpolate as interpolateFunc } from './interpolate'
+import { absoluteModulo as absoluteModuloFunc } from './absolute-modulo/index.js'
+import { clamp as clampFunc } from './clamp/index.js'
+import { interpolate as interpolateFunc } from './interpolate/index.js'
 import {
   getHarmonic as getHarmonicFunc,
   createScale as createScaleFunc
-} from './responsive-harmonics'
-import { round as roundFunc } from './round'
+} from './responsive-harmonics/index.js'
+import { round as roundFunc } from './round/index.js'
 
 export namespace Numbers {
   // Absolute modulo

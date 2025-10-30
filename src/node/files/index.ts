@@ -1,6 +1,6 @@
-import { isInDirectory as isInDirectoryFunc } from './is-in-directory'
-import { ReadWriteEditorFunc as ReadWriteEditorFuncType, readWrite as readWriteFunc } from './read-write'
-import { Subpaths as SubpathsNamespace } from './subpaths'
+import { isInDirectory as isInDirectoryFunc } from './is-in-directory/index.js'
+import { ReadWriteEditorFunc as ReadWriteEditorFuncType, readWrite as readWriteFunc } from './read-write/index.js'
+import { Subpaths as SubpathsNamespace } from './subpaths/index.js'
 
 // Is in directory
 export const isInDirectory = isInDirectoryFunc

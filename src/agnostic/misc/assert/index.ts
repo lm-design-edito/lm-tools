@@ -1,5 +1,5 @@
-import { Errors } from '../../errors'
-import { Outcome } from '../outcome'
+import { Errors } from '../../errors/index.js'
+import { Outcome } from '../outcome/index.js'
 
 export namespace Assert {
   type Assertion = (() => boolean) | (() => Promise<boolean>) | boolean

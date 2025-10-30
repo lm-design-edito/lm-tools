@@ -1,9 +1,9 @@
-import { Outcome } from '../../../../../misc/outcome'
-import { Window } from '../../../../../misc/crossenv/window'
-import { Types } from '../../../types'
-import { Utils } from '../../../utils'
-import { Cast } from '../../../cast'
-import { SmartTags } from '../..'
+import { Outcome } from '../../../../../misc/outcome/index.js'
+import { Window } from '../../../../../misc/crossenv/window/index.js'
+import { Types } from '../../../types/index.js'
+import { Utils } from '../../../utils/index.js'
+import { Cast } from '../../../cast/index.js'
+import { SmartTags } from '../../index.js'
 
 type Main = Types.Tree.RestingValue
 type Args = Types.Tree.RestingArrayValue

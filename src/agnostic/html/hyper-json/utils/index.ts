@@ -1,12 +1,12 @@
-import { Window } from '../../../misc/crossenv/window'
-import { isRecord } from '../../../objects/is-record'
-import { recordMap } from '../../../objects/record-map'
-import { Outcome } from '../../../misc/outcome'
-import { isInEnum } from '../../../objects/enums/is-in-enum'
-import { Method } from '../method'
-import { Transformer } from '../transformer'
-import { Tree as TreeNamespace } from '../tree'
-import { Types } from '../types'
+import { Window } from '../../../misc/crossenv/window/index.js'
+import { isRecord } from '../../../objects/is-record/index.js'
+import { recordMap } from '../../../objects/record-map/index.js'
+import { Outcome } from '../../../misc/outcome/index.js'
+import { isInEnum } from '../../../objects/enums/is-in-enum/index.js'
+import { Method } from '../method/index.js'
+import { Transformer } from '../transformer/index.js'
+import { Tree as TreeNamespace } from '../tree/index.js'
+import { Types } from '../types/index.js'
 
 export namespace Utils {
   export function clone<T extends Types.Tree.Value = Types.Tree.Value> (value: T): T {

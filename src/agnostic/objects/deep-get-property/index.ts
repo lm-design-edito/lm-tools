@@ -1,4 +1,4 @@
-import { isRecord } from '../is-record'
+import { isRecord } from '../is-record/index.js'
 
 export function deepGetProperty (
   anythingThatHasProperties: unknown,

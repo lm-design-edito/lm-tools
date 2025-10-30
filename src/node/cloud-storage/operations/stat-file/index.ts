@@ -1,4 +1,7 @@
-import { Outcome } from '../../../../agnostic/misc/outcome'
+import { Bucket as GCSBucket } from '@google-cloud/storage'
+import { Client as FtpClient } from 'basic-ftp'
+import SftpClient from 'ssh2-sftp-client'
+import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
 import {
   AnyClient,
   isFtpClient,
@@ -6,14 +9,11 @@ import {
   isS3ClientWithBucket,
   isSftpClient,
   S3ClientWithBucket
-} from '../../clients'
-import { Bucket as GCSBucket } from '@google-cloud/storage'
-import { Client as FtpClient } from 'basic-ftp'
-import SftpClient from 'ssh2-sftp-client'
-import { Stat as FtpStat, stat as ftpStat } from '../../../ftps/file/stat'
-import { Stat as SftpStat, stat as sftpStat } from '../../../sftp/file/stat'
-import { Stat as S3Stat, StatOptions as S3StatOptions, stat as s3Stat } from '../../../@aws-s3/storage/file/stat'
-import { Stat as GcsStat, StatOptions as GcsStatOptions, stat as gcsStat } from '../../../@google-cloud/storage/file/stat'
+} from '../../clients/index.js'
+import { Stat as FtpStat, stat as ftpStat } from '../../../ftps/file/stat/index.js'
+import { Stat as SftpStat, stat as sftpStat } from '../../../sftp/file/stat/index.js'
+import { Stat as S3Stat, StatOptions as S3StatOptions, stat as s3Stat } from '../../../@aws-s3/storage/file/stat/index.js'
+import { Stat as GcsStat, StatOptions as GcsStatOptions, stat as gcsStat } from '../../../@google-cloud/storage/file/stat/index.js'
 
 type Returned<K extends FtpStat | SftpStat | S3Stat | GcsStat> = Outcome.Either<K, string>
 

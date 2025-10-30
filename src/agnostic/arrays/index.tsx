@@ -1,11 +1,11 @@
-import { findDuplicates as findDuplicatesFunc } from './find-duplicates'
-import { isArrayOf as isArrayOfFunc } from './is-array-of'
-import { make as makeFunc } from './make'
+import { findDuplicates as findDuplicatesFunc } from './find-duplicates/index.js'
+import { isArrayOf as isArrayOfFunc } from './is-array-of/index.js'
+import { make as makeFunc } from './make/index.js'
 import {
   randomPick as randomPickFunc,
   randomPickMany as randomPickManyFunc
-} from './random-pick'
-import { shuffle as shuffleFunc } from './shuffle'
+} from './random-pick/index.js'
+import { shuffle as shuffleFunc } from './shuffle/index.js'
 
 export namespace Arrays {
   export const findDuplicates = findDuplicatesFunc

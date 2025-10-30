@@ -1,8 +1,8 @@
-import { Outcome } from '../../../../../misc/outcome'
-import { Window } from '../../../../../misc/crossenv/window'
-import { Cast } from '../../../cast'
-import { Utils } from '../../../utils'
-import { SmartTags } from '../..'
+import { Outcome } from '../../../../../misc/outcome/index.js'
+import { Window } from '../../../../../misc/crossenv/window/index.js'
+import { Cast } from '../../../cast/index.js'
+import { Utils } from '../../../utils/index.js'
+import { SmartTags } from '../../index.js'
 
 type Main = NodeListOf<Element | Text> | Element
 type Args = Array<string | Text>

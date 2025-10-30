@@ -1,7 +1,7 @@
 // ftp/stat.ts
 import { Client as FtpClient, FileInfo } from 'basic-ftp'
-import { Outcome } from '../../../../agnostic/misc/outcome'
-import { unknownToString } from '../../../../agnostic/errors/unknown-to-string'
+import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
+import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 
 export interface Stat {
   size?: number

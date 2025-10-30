@@ -1,6 +1,6 @@
-import { Outcome } from '../../../../../misc/outcome'
-import { Utils } from '../../../utils'
-import { SmartTags } from '../..'
+import { Outcome } from '../../../../../misc/outcome/index.js'
+import { Utils } from '../../../utils/index.js'
+import { SmartTags } from '../../index.js'
 
 type Main = boolean
 type Args = []

@@ -1,8 +1,8 @@
-import { Dates as DatesNamespace } from './dates'
-import { Duration as DurationNamespace } from './duration'
-import { timeout as timeoutFunc } from './timeout'
-import { Transitions as TransitionsNamespace } from './transitions'
-import { wait as waitFunc } from './wait'
+import { Dates as DatesNamespace } from './dates/index.js'
+import { Duration as DurationNamespace } from './duration/index.js'
+import { timeout as timeoutFunc } from './timeout/index.js'
+import { Transitions as TransitionsNamespace } from './transitions/index.js'
+import { wait as waitFunc } from './wait/index.js'
 
 export namespace Time {
   export import Dates = DatesNamespace

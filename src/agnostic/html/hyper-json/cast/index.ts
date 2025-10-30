@@ -1,8 +1,8 @@
-import { isRecord } from '../../../objects/is-record'
-import { Window } from '../../../misc/crossenv/window'
-import { Types } from '../types'
-import { Utils } from '../utils'
-import { Method } from '../method'
+import { isRecord } from '../../../objects/is-record/index.js'
+import { Window } from '../../../misc/crossenv/window/index.js'
+import { Types } from '../types/index.js'
+import { Utils } from '../utils/index.js'
+import { Method } from '../method/index.js'
 
 export namespace Cast {
   export const toNull = (): null => null

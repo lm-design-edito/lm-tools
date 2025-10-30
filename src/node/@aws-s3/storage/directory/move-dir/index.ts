@@ -8,8 +8,8 @@ import {
   DeleteObjectCommandInput,
   HeadObjectCommand
 } from '@aws-sdk/client-s3'
-import { Outcome } from '../../../../../agnostic/misc/outcome'
-import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string'
+import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 
 export type MoveDirOptions = {
   /** Extra parameters forwarded to every `ListObjectsV2Command` call. */

@@ -1,4 +1,4 @@
-import { Cast } from '../../misc/cast'
+import { Cast } from '../../misc/cast/index.js'
 
 export function flattenGetters (obj: unknown): Record<string, unknown> {
   try {

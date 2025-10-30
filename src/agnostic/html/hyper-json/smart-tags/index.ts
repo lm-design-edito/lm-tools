@@ -1,6 +1,6 @@
-import { Method } from '../method'
-import { Transformer } from '../transformer'
-import { Types } from '../types'
+import { Method } from '../method/index.js'
+import { Transformer } from '../transformer/index.js'
+import { Types } from '../types/index.js'
 
 export namespace SmartTags {
   export function makeSmartTag <

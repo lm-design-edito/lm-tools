@@ -1,5 +1,8 @@
 import { Readable } from 'node:stream'
-import { Outcome } from '../../../../agnostic/misc/outcome'
+import { Bucket as GCSBucket } from '@google-cloud/storage'
+import { Client as FtpClient } from 'basic-ftp'
+import SftpClient from 'ssh2-sftp-client'
+import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
 import {
   AnyClient,
   isFtpClient,
@@ -7,14 +10,11 @@ import {
   isS3ClientWithBucket,
   isSftpClient,
   S3ClientWithBucket
-} from '../../clients'
-import { Bucket as GCSBucket } from '@google-cloud/storage'
-import { Client as FtpClient } from 'basic-ftp'
-import SftpClient from 'ssh2-sftp-client'
-import { UploadOptions as FtpUploadOptions, upload as ftpUpload } from '../../../ftps/file/upload'
-import { UploadOptions as SftpUploadOptions, upload as sftpUpload } from '../../../sftp/file/upload'
-import { UploadOptions as S3UploadOptions, upload as s3Upload } from '../../../@aws-s3/storage/file/upload'
-import { UploadOptions as GcsUploadOptions, upload as gcsUpload } from '../../../@google-cloud/storage/file/upload'
+} from '../../clients/index.js'
+import { UploadOptions as FtpUploadOptions, upload as ftpUpload } from '../../../ftps/file/upload/index.js'
+import { UploadOptions as SftpUploadOptions, upload as sftpUpload } from '../../../sftp/file/upload/index.js'
+import { UploadOptions as S3UploadOptions, upload as s3Upload } from '../../../@aws-s3/storage/file/upload/index.js'
+import { UploadOptions as GcsUploadOptions, upload as gcsUpload } from '../../../@google-cloud/storage/file/upload/index.js'
 
 type Returned = Outcome.Either<true, string>
 

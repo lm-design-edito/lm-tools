@@ -1,4 +1,4 @@
-import { round } from '../../numbers/round'
+import { round } from '../../numbers/round/index.js'
 
 export function getHarmonic (
   min: number,

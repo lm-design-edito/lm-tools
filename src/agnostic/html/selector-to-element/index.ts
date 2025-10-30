@@ -1,4 +1,4 @@
-import * as ERR from '../../../shared/errors'
+import * as ERR from '../../../shared/errors/index.js'
 
 export function selectorToElement (selector: string, documentObj?: Document) {
   const actualDocument = documentObj ?? window.document

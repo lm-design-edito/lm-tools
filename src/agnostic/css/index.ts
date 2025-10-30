@@ -1,18 +1,18 @@
-import { Bem as BemNamespace } from './bem'
+import { Bem as BemNamespace } from './bem/index.js'
 import {
   niceColors as niceColorsConst,
   generateNiceColor as generateNiceColorFunc
-} from './generate-nice-color'
+} from './generate-nice-color/index.js'
 import {
   classNameRegex as classNameRegexConst,
   isValidClassName as isValidClassNameFunc
-} from './is-valid-css-class-name'
+} from './is-valid-css-class-name/index.js'
 import {
   StylesSetItem as StylesSetItemType,
   StylesSet as StylesSetClass,
   StylesSetCompProps as StylesSetCompPropsFype,
   StylesSetComp as StylesSetCompFunc
-} from './styles-set'
+} from './styles-set/index.js'
 
 export namespace Css {
   // Bem

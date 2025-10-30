@@ -1,6 +1,6 @@
-import * as Bucket from './bucket'
-import * as Directory from './directory'
-import * as File from './file'
+import * as Bucket from './bucket/index.js'
+import * as Directory from './directory/index.js'
+import * as File from './file/index.js'
 
 export {
   Bucket,

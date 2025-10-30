@@ -1,9 +1,9 @@
-import { Outcome } from '../../../../../misc/outcome'
-import { isRecord } from '../../../../../objects/is-record'
-import { Cast } from '../../../cast'
-import { Utils } from '../../../utils'
-import { Types } from '../../../types'
-import { SmartTags } from '../..'
+import { Outcome } from '../../../../../misc/outcome/index.js'
+import { isRecord } from '../../../../../objects/is-record/index.js'
+import { Cast } from '../../../cast/index.js'
+import { Utils } from '../../../utils/index.js'
+import { Types } from '../../../types/index.js'
+import { SmartTags } from '../../index.js'
 
 type Main = Types.Tree.RestingRecordValue
 type Args = Array<string | Text>

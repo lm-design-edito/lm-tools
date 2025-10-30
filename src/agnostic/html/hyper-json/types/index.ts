@@ -1,8 +1,8 @@
-import { Outcome } from '../../../misc/outcome'
-import { Logger } from '../../../misc/logs/logger'
-import { Tree as TreeNamespace } from '../tree'
-import { Transformer } from '../transformer'
-import { Method } from '../method'
+import { Outcome } from '../../../misc/outcome/index.js'
+import { Logger } from '../../../misc/logs/logger/index.js'
+import { Tree as TreeNamespace } from '../tree/index.js'
+import { Transformer } from '../transformer/index.js'
+import { Method } from '../method/index.js'
 
 export namespace Types {
   /* * * * * * * * * * * * * * * * * * * * * * 

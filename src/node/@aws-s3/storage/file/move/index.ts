@@ -6,8 +6,8 @@ import {
   CopyObjectCommandInput,
   DeleteObjectCommandInput
 } from '@aws-sdk/client-s3'
-import { Outcome } from '../../../../../agnostic/misc/outcome'
-import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string'
+import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 
 export type MoveOptions = {
   /** Extra parameters forwarded to `CopyObjectCommand` (`Bucket`, `Key`, `CopySource` are filled internally). */

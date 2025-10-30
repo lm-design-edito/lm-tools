@@ -3,8 +3,8 @@ import {
   ListObjectsV2Command,
   ListObjectsV2CommandInput
 } from '@aws-sdk/client-s3'
-import { Outcome } from '../../../../../agnostic/misc/outcome'
-import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string'
+import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 
 /** Extra parameters forwarded to each `ListObjectsV2Command`. */
 export type ListOptions = Omit<ListObjectsV2CommandInput, 'Bucket' | 'Prefix' | 'Delimiter'>

@@ -1,8 +1,8 @@
 import sharp from 'sharp'
 import zod from 'zod'
-import { clamp } from '../../../agnostic/numbers/clamp'
-import { Outcome } from '../../../agnostic/misc/outcome'
-import { isSharpColor } from '../transform/utils'
+import { clamp } from '../../../agnostic/numbers/clamp/index.js'
+import { Outcome } from '../../../agnostic/misc/outcome/index.js'
+import { isSharpColor } from '../transform/utils/index.js'
 
 /* * * * * * * * * * * * * * * 
  * TYPES

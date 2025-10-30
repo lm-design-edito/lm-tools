@@ -1,5 +1,5 @@
-import chalk from 'chalk'
-import { makeTextBlock } from '../make-text-block'
+import chalk from 'chalk' // [WIP] replace chalk and do my own implementation ?
+import { makeTextBlock } from '../make-text-block/index.js'
 
 export const styles = {
   regular: (text: string) => text,

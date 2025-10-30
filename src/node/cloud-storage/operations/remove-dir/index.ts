@@ -1,4 +1,7 @@
-import { Outcome } from '../../../../agnostic/misc/outcome'
+import { Bucket as GCSBucket } from '@google-cloud/storage'
+import { Client as FtpClient } from 'basic-ftp'
+import SftpClient from 'ssh2-sftp-client'
+import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
 import {
   AnyClient,
   isFtpClient,
@@ -6,14 +9,11 @@ import {
   isS3ClientWithBucket,
   isSftpClient,
   S3ClientWithBucket
-} from '../../clients'
-import { Bucket as GCSBucket } from '@google-cloud/storage'
-import { Client as FtpClient } from 'basic-ftp'
-import SftpClient from 'ssh2-sftp-client'
-import { removeDir as ftpRemoveDir, RemoveDirOptions as FtpsRemoveDirOptions } from '../../../ftps/directory/remove-dir'
-import { removeDir as sftpRemoveDir, RemoveDirOptions as SftpRemoveDirOptions } from '../../../sftp/directory/remove-dir'
-import { RemoveDirOptions as S3RemoveDirOptions, removeDir as s3RemoveDir } from '../../../@aws-s3/storage/directory/remove-dir'
-import { RemoveDirOptions as GcsRemoveDirOptions, removeDir as gcsRemoveDir } from '../../../@google-cloud/storage/directory/remove-dir'
+} from '../../clients/index.js'
+import { removeDir as ftpRemoveDir, RemoveDirOptions as FtpsRemoveDirOptions } from '../../../ftps/directory/remove-dir/index.js'
+import { removeDir as sftpRemoveDir, RemoveDirOptions as SftpRemoveDirOptions } from '../../../sftp/directory/remove-dir/index.js'
+import { RemoveDirOptions as S3RemoveDirOptions, removeDir as s3RemoveDir } from '../../../@aws-s3/storage/directory/remove-dir/index.js'
+import { RemoveDirOptions as GcsRemoveDirOptions, removeDir as gcsRemoveDir } from '../../../@google-cloud/storage/directory/remove-dir/index.js'
 
 type Returned = Outcome.Either<true, string>
 

@@ -1,7 +1,7 @@
 import sharp from 'sharp'
 import z from 'zod'
-import { Outcome } from '../../../../../agnostic/misc/outcome'
-import { isSharpColor } from '../../utils'
+import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import { isSharpColor } from '../../utils/index.js'
 
 export type CompositeOperationParams = {
   composite: sharp.OverlayOptions[]

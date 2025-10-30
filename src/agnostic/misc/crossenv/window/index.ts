@@ -1,4 +1,4 @@
-import { Types } from '../types'
+import { Types } from '../types/index.js'
 
 export namespace Window {
   export function exists () {

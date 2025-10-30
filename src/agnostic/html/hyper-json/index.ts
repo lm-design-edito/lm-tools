@@ -1,11 +1,11 @@
-import { Cast as CastNamespace } from './cast'
-import { Method as MethodClass } from './method'
-import { Serialize as SerializeNamespace } from './serialize'
-import { SmartTags as SmartTagsNamespace } from './smart-tags'
-import { Transformer as TransformerClass } from './transformer'
-import { Tree as TreeNamespace } from './tree'
-import { Types as TypesNamespace } from './types'
-import { Utils as UtilsNamespace } from './utils'
+import { Cast as CastNamespace } from './cast/index.js'
+import { Method as MethodClass } from './method/index.js'
+import { Serialize as SerializeNamespace } from './serialize/index.js'
+import { SmartTags as SmartTagsNamespace } from './smart-tags/index.js'
+import { Transformer as TransformerClass } from './transformer/index.js'
+import { Tree as TreeNamespace } from './tree/index.js'
+import { Types as TypesNamespace } from './types/index.js'
+import { Utils as UtilsNamespace } from './utils/index.js'
 
 export namespace HyperJson {
   export import Cast = CastNamespace

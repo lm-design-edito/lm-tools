@@ -1,8 +1,8 @@
-import { Outcome } from '../../../../../misc/outcome'
-import { Window } from '../../../../../misc/crossenv/window'
-import { Types } from '../../../types'
-import { Utils } from '../../../utils'
-import { SmartTags } from '../..'
+import { Outcome } from '../../../../../misc/outcome/index.js'
+import { Window } from '../../../../../misc/crossenv/window/index.js'
+import { Types } from '../../../types/index.js'
+import { Utils } from '../../../utils/index.js'
+import { SmartTags } from '../../index.js'
 
 type Main = string | Text | NodeListOf<Element | Text> | Element | Types.Tree.RestingArrayValue | Types.Tree.RestingRecordValue
 type Args = []

@@ -1,13 +1,13 @@
-import { getNodeAncestors as getNodeAncestorsFunc } from './get-node-ancestors'
-import { getPositionInsideParent as getPositionInsideParentFunc } from './get-position-inside-parent'
-import { HyperJson as HyperJsonNamespace } from './hyper-json'
+import { getNodeAncestors as getNodeAncestorsFunc } from './get-node-ancestors/index.js'
+import { getPositionInsideParent as getPositionInsideParentFunc } from './get-position-inside-parent/index.js'
+import { HyperJson as HyperJsonNamespace } from './hyper-json/index.js'
 import {
   InsertNodePosition as InsertNodePositionType,
-  insertNode as insertNodeFunc } from './insert-node'
-import { Placeholders as PlaceholdersNamespace } from './placeholders'
-import { Sanitize as SanitizeNamespace } from './sanitize'
-import { selectorToElement as selectorToElementFunc } from './selector-to-element'
-import { stringToNodes as stringToNodesFunc } from './string-to-nodes'
+  insertNode as insertNodeFunc } from './insert-node/index.js'
+import { Placeholders as PlaceholdersNamespace } from './placeholders/index.js'
+import { Sanitize as SanitizeNamespace } from './sanitize/index.js'
+import { selectorToElement as selectorToElementFunc } from './selector-to-element/index.js'
+import { stringToNodes as stringToNodesFunc } from './string-to-nodes/index.js'
 
 export namespace Html {
   // Get node ancestors

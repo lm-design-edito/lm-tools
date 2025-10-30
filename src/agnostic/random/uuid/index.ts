@@ -1,4 +1,4 @@
-import { randomHexChar } from '../hex-char'
+import { randomHexChar } from '../hex-char/index.js'
 
 export function randomHash (length: number = 4) {
   return new Array(length)

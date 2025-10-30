@@ -1,6 +1,6 @@
 import { Client, FileType } from 'basic-ftp'
-import { unknownToString } from '../../../../agnostic/errors/unknown-to-string'
-import { Outcome } from '../../../../agnostic/misc/outcome'
+import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
+import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
 
 /**
  * Checks if a *file* (not a directory) exists on a specified FTP server.

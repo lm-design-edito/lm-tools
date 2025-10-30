@@ -1,4 +1,7 @@
-import { Outcome } from '../../../../agnostic/misc/outcome'
+import { Bucket as GCSBucket } from '@google-cloud/storage'
+import { Client as FtpClient } from 'basic-ftp'
+import SftpClient from 'ssh2-sftp-client'
+import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
 import {
   AnyClient,
   isFtpClient,
@@ -6,14 +9,11 @@ import {
   isS3ClientWithBucket,
   isSftpClient,
   S3ClientWithBucket
-} from '../../clients'
-import { Bucket as GCSBucket } from '@google-cloud/storage'
-import { Client as FtpClient } from 'basic-ftp'
-import SftpClient from 'ssh2-sftp-client'
-import { exists as ftpExists } from '../../../ftps/file/exists'
-import { exists as sftpExists } from '../../../sftp/file/exists'
-import { ExistsOptions as S3ExistsOptions, exists as s3Exists } from '../../../@aws-s3/storage/file/exists'
-import { ExistsOptions as GcsExistsOptions, exists as gcsExists } from '../../../@google-cloud/storage/file/exists'
+} from '../../clients/index.js'
+import { exists as ftpExists } from '../../../ftps/file/exists/index.js'
+import { exists as sftpExists } from '../../../sftp/file/exists/index.js'
+import { ExistsOptions as S3ExistsOptions, exists as s3Exists } from '../../../@aws-s3/storage/file/exists/index.js'
+import { ExistsOptions as GcsExistsOptions, exists as gcsExists } from '../../../@google-cloud/storage/file/exists/index.js'
 
 type Returned = Outcome.Either<boolean, string>
 

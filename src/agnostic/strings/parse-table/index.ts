@@ -1,4 +1,4 @@
-import { Outcome } from '../../misc/outcome'
+import { Outcome } from '../../misc/outcome/index.js'
 
 export type ParseTableLineModeOptions<T extends Record<string, string>> = {
   inputToLines: (input: string) => string[]

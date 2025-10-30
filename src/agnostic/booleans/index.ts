@@ -4,7 +4,7 @@ import {
   falsyValues as falsyValuesFunc,
   isFalsy as isFalsyFunc,
   isNotFalsy as isNotFalsyFunc
-} from './is-falsy'
+} from './is-falsy/index.js'
 
 export namespace Booleans {
   export type Falsy = FalsyType

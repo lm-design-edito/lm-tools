@@ -1,4 +1,7 @@
-import { Outcome } from '../../../../agnostic/misc/outcome'
+import { Bucket as GCSBucket } from '@google-cloud/storage'
+import { Client as FtpClient } from 'basic-ftp'
+import SftpClient from 'ssh2-sftp-client'
+import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
 import {
   AnyClient,
   isFtpClient,
@@ -6,14 +9,11 @@ import {
   isS3ClientWithBucket,
   isSftpClient,
   S3ClientWithBucket
-} from '../../clients'
-import { Bucket as GCSBucket } from '@google-cloud/storage'
-import { Client as FtpClient } from 'basic-ftp'
-import SftpClient from 'ssh2-sftp-client'
-import { moveDir as ftpMoveDir, MoveDirOptions as FtpsMoveDirOptions } from '../../../ftps/directory/move-dir'
-import { moveDir as sftpMoveDir, MoveDirOptions as SftpMoveDirOptions } from '../../../sftp/directory/move-dir'
-import { MoveDirOptions as S3MoveDirOptions, moveDir as s3MoveDir } from '../../../@aws-s3/storage/directory/move-dir'
-import { MoveDirOptions as GcsMoveDirOptions, moveDir as gcsMoveDir } from '../../../@google-cloud/storage/directory/move-dir'
+} from '../../clients/index.js'
+import { moveDir as ftpMoveDir, MoveDirOptions as FtpsMoveDirOptions } from '../../../ftps/directory/move-dir/index.js'
+import { moveDir as sftpMoveDir, MoveDirOptions as SftpMoveDirOptions } from '../../../sftp/directory/move-dir/index.js'
+import { MoveDirOptions as S3MoveDirOptions, moveDir as s3MoveDir } from '../../../@aws-s3/storage/directory/move-dir/index.js'
+import { MoveDirOptions as GcsMoveDirOptions, moveDir as gcsMoveDir } from '../../../@google-cloud/storage/directory/move-dir/index.js'
 
 type Returned = Outcome.Either<true, string>
 

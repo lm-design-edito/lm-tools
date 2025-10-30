@@ -1,4 +1,4 @@
-import { wait } from '../../time/wait'
+import { wait } from '../../time/wait/index.js'
 
 export namespace Crawler {
   export function create<T extends any> (

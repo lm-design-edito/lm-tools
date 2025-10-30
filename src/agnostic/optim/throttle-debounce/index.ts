@@ -1,4 +1,4 @@
-import { Timeout } from './types'
+import type { Timeout } from './types.js'
 
 type BasicFunction = (...args: any[]) => any
 

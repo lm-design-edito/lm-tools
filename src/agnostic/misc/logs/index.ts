@@ -1,6 +1,6 @@
-import { Logger as LoggerClass } from './logger'
-import { makeTextBlock as makeTextBlockFunc } from './make-text-block'
-import { styles as stylesObj } from './styles'
+import { Logger as LoggerClass } from './logger/index.js'
+import { makeTextBlock as makeTextBlockFunc } from './make-text-block/index.js'
+import { styles as stylesObj } from './styles/index.js'
 
 export namespace Logs {
   export const makeTextBlock = makeTextBlockFunc

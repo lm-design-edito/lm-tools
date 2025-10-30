@@ -1,5 +1,5 @@
-import BEMClass from './BEM'
-import getNamesArrFunc from './getNamesArr'
+import BEMClass from './BEM.js'
+import getNamesArrFunc from './getNamesArr.js'
 
 export namespace Bem {
   export const BEM = BEMClass

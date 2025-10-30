@@ -1,4 +1,4 @@
-import * as Storage from './storage'
+import * as Storage from './storage/index.js'
 
 export {
   Storage

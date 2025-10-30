@@ -1,5 +1,5 @@
-import * as Directory from './directory'
-import * as File from './file'
+import * as Directory from './directory/index.js'
+import * as File from './file/index.js'
 
 export {
   Directory,

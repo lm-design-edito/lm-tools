@@ -1,7 +1,7 @@
-import { Outcome } from '../../../misc/outcome'
-import { Method } from '../method'
-import { Tree as TreeNamespace } from '../tree'
-import { Types } from '../types'
+import { Outcome } from '../../../misc/outcome/index.js'
+import { Method } from '../method/index.js'
+import { Tree as TreeNamespace } from '../tree/index.js'
+import { Types } from '../types/index.js'
 
 export class Transformer<
   Main extends Types.Tree.RestingValue = Types.Tree.RestingValue,

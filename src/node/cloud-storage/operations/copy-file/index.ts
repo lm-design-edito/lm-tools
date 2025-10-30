@@ -1,4 +1,7 @@
-import { Outcome } from '../../../../agnostic/misc/outcome'
+import { Bucket as GCSBucket } from '@google-cloud/storage'
+import { Client as FtpClient } from 'basic-ftp'
+import SftpClient from 'ssh2-sftp-client'
+import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
 import {
   AnyClient,
   isFtpClient,
@@ -6,14 +9,11 @@ import {
   isS3ClientWithBucket,
   isSftpClient,
   S3ClientWithBucket
-} from '../../clients'
-import { Bucket as GCSBucket } from '@google-cloud/storage'
-import { Client as FtpClient } from 'basic-ftp'
-import SftpClient from 'ssh2-sftp-client'
-import { copy as ftpCopy, CopyOptions as FtpsCopyOptions } from '../../../ftps/file/copy'
-import { copy as sftpCopy, CopyOptions as SftpCopyOptions } from '../../../sftp/file/copy'
-import { CopyOptions as S3CopyOptions, copy as s3Copy } from '../../../@aws-s3/storage/file/copy'
-import { CopyOptions as GcsCopyOptions, copy as gcsCopy } from '../../../@google-cloud/storage/file/copy'
+} from '../../clients/index.js'
+import { copy as ftpCopy, CopyOptions as FtpsCopyOptions } from '../../../ftps/file/copy/index.js'
+import { copy as sftpCopy, CopyOptions as SftpCopyOptions } from '../../../sftp/file/copy/index.js'
+import { CopyOptions as S3CopyOptions, copy as s3Copy } from '../../../@aws-s3/storage/file/copy/index.js'
+import { CopyOptions as GcsCopyOptions, copy as gcsCopy } from '../../../@google-cloud/storage/file/copy/index.js'
 
 type Returned = Outcome.Either<true, string>
 

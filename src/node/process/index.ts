@@ -4,7 +4,7 @@ import {
   beforeExit as beforeExitFunc,
   onExit as onExitFunc,
   onAllExits as onAllExitsFunc
-} from './on-exit'
+} from './on-exit/index.js'
 
 // On exit
 export const forceExitEvents = forceExitEventsConst

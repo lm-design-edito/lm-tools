@@ -1,7 +1,7 @@
 import { Readable, PassThrough } from 'node:stream'
 import { Client } from 'basic-ftp'
-import { unknownToString } from '../../../../agnostic/errors/unknown-to-string'
-import { Outcome } from '../../../../agnostic/misc/outcome'
+import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
+import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
 
 export type DownloadOptions = {
   startAt?: number

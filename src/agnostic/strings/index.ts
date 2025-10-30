@@ -1,17 +1,17 @@
-import { CharCodes as CharCodesNamespace } from './char-codes'
+import { CharCodes as CharCodesNamespace } from './char-codes/index.js'
 import {
   matches as matchesFunc,
   matchesSome as matchesSomeFunc,
   matchesEvery as matchesEveryFunc
-} from './matches'
-import { parseTable as parseTableFunc } from './parse-table'
-import { replaceAll as replaceAllFunc } from './replace-all'
-import { normalizeIndent as normalizeIndentFunc } from './normalize-indent'
-import { toAlphanum as toAlphanumFunc } from './to-alphanum'
+} from './matches/index.js'
+import { parseTable as parseTableFunc } from './parse-table/index.js'
+import { replaceAll as replaceAllFunc } from './replace-all/index.js'
+import { normalizeIndent as normalizeIndentFunc } from './normalize-indent/index.js'
+import { toAlphanum as toAlphanumFunc } from './to-alphanum/index.js'
 import {
   trimStart as trimStartFunc,
   trimEnd as trimEndFunc
-} from './trim'
+} from './trim/index.js'
 
 export namespace Strings {
   // CharCodes

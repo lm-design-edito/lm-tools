@@ -1,7 +1,7 @@
 import { Client } from 'basic-ftp'
 import { PassThrough } from 'node:stream'
-import { Outcome } from '../../../../agnostic/misc/outcome'
-import { unknownToString } from '../../../../agnostic/errors/unknown-to-string'
+import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
+import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 
 export type CopyDirOptions = {
   /**

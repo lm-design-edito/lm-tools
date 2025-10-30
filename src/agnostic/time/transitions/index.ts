@@ -1,4 +1,4 @@
-import { wait } from '../../time/wait'
+import { wait } from '../../time/wait/index.js'
 
 export namespace Transitions {
   export type Callback = (val: number, timeMs: number) => void
@@ -69,7 +69,7 @@ export namespace Transitions {
     }
   }
 
-  // Easing functions taken from https://easings.net/
+  // Easing functions taken from https://easings.net/index.js/
   const pow = Math.pow
   const sqrt = Math.sqrt
   const sin = Math.sin

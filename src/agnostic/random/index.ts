@@ -1,16 +1,16 @@
 import {
   random as randomFunc,
   randomInt as randomIntFunc
-} from './random'
+} from './random/index.js'
 import {
   hexChars as hexCharsObj,
   randomHexChar as randomHexCharFunc
-} from './hex-char'
+} from './hex-char/index.js'
 import {
   randomHash as randomHashFunc,
   randomHashPattern as randomHashPatternFunc,
   randomUUID as randomUUIDFunc
-} from './uuid'
+} from './uuid/index.js'
 
 export namespace Random {
   export const random = randomFunc

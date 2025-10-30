@@ -1,11 +1,11 @@
-import { Outcome } from '../../../../../misc/outcome'
-import { replaceAll } from '../../../../../strings/replace-all'
-import { Window } from '../../../../../misc/crossenv/window'
-import { Cast } from '../../../cast'
-import { Utils } from '../../../utils'
-import { Types } from '../../../types'
-import { SmartTags } from '../..'
-import { deepGetProperty } from '../getproperty'
+import { Outcome } from '../../../../../misc/outcome/index.js'
+import { replaceAll } from '../../../../../strings/replace-all/index.js'
+import { Window } from '../../../../../misc/crossenv/window/index.js'
+import { Cast } from '../../../cast/index.js'
+import { Utils } from '../../../utils/index.js'
+import { Types } from '../../../types/index.js'
+import { SmartTags } from '../../index.js'
+import { deepGetProperty } from '../getproperty/index.js'
 
 type Main = Types.Tree.RestingRecordValue
 type FirstArg = string | Text | NodeListOf<Element | Text> | Element

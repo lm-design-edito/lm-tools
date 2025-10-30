@@ -1,4 +1,4 @@
-import { Types } from '../types'
+import { Types } from '../types/index.js'
 
 declare var Deno: any
 declare var AWS: any

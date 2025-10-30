@@ -1,6 +1,6 @@
 import { Client } from 'basic-ftp'
-import { Outcome } from '../../../../agnostic/misc/outcome'
-import { unknownToString } from '../../../../agnostic/errors/unknown-to-string'
+import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
+import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 
 /**
  * Lists all direct children files under a given directory on an FTP server.

@@ -1,8 +1,8 @@
 import { Bucket } from '@google-cloud/storage'
-import { Outcome } from '../../../../../agnostic/misc/outcome'
-import { download, DownloadOptions } from '../download'
-import { remove, RemoveOptions } from '../remove'
-import { upload, UploadOptions } from '../upload'
+import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import { download, DownloadOptions } from '../download/index.js'
+import { remove, RemoveOptions } from '../remove/index.js'
+import { upload, UploadOptions } from '../upload/index.js'
 
 export type RevokeSignedUrlsOptions = {
   downloadOptions?: DownloadOptions

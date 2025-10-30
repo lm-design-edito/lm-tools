@@ -1,6 +1,6 @@
-import { Outcome } from '../../../../../misc/outcome'
-import { Types } from '../../../types'
-import { SmartTags } from '../..'
+import { Outcome } from '../../../../../misc/outcome/index.js'
+import { Types } from '../../../types/index.js'
+import { SmartTags } from '../../index.js'
 
 type Main = Types.Tree.RestingValue
 type Args = Types.Tree.RestingArrayValue
