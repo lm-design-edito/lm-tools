@@ -1,6 +1,6 @@
 import { isNonNullObject } from '../objects/is-object/index.js'
 import { absoluteModulo } from '../numbers/absolute-modulo'
-import { clamp } from 'agnostic/numbers/clamp'
+import { clamp } from '../numbers/clamp'
 
 export type Hex = string
 
@@ -15,14 +15,43 @@ export type Hsla = {
   h: number // 0-360
   s: number // 0-100
   l: number // 0-100
-  a?: number
+  a?: number // 0-1
 }
 
 export type Hsba = {
   h: number // 0-360
   s: number // 0-100
   b: number // 0-100
-  a?: number
+  a?: number // 0-1
+}
+
+export type Laba = {
+  l: number // 0–100
+  a: number // env. -128–127
+  b: number // env. -128–127
+  al?: number // 0-1
+}
+
+export type Lcha = {
+  l: number // 0–100
+  c: number // 0–~150
+  h: number // 0–360
+  a?: number // 0-1
+}
+
+export type Cmyka = {
+  c: number // 0–100
+  m: number // 0–100
+  y: number // 0–100
+  k: number // 0–100
+  a?: number // 0-1
+}
+
+export type Xyza = {
+  x: number // env. 0–95.047
+  y: number // env. 0–100
+  z: number // env. 0–108.883
+  a?: number // 0-1
 }
 
 export type CssColor = 'aliceblue'
@@ -329,7 +358,7 @@ export const cssColors: CssColorMap = {
   yellowgreen: { r: 154, g: 205, b: 50 }
 }
 
-export type Color = Hex | Rgba | Hsla | Hsba | CssColor
+export type Color = Hex | Rgba | Hsla | Hsba | Laba | Lcha | Cmyka | Xyza | CssColor
 
 /* * * * * * * * * * * * * * * * * *
  * Typechecks
@@ -375,15 +404,59 @@ export const isHsb = (color: unknown): color is Hsba => {
   return true
 }
 
+export const isLab = (color: unknown): color is Laba => {
+  if (!isNonNullObject(color)) return false
+  const { l, a, b, al } = color as any
+  if (typeof l !== 'number') return false
+  if (typeof a !== 'number') return false
+  if (typeof b !== 'number') return false
+  if (al !== undefined && typeof al !== 'number') return false
+  return true
+}
+
+export const isLch = (color: unknown): color is Lcha => {
+  if (!isNonNullObject(color)) return false
+  const { l, c, h, a } = color as any
+  if (typeof l !== 'number') return false
+  if (typeof c !== 'number') return false
+  if (typeof h !== 'number') return false
+  if (a !== undefined && typeof a !== 'number') return false
+  return true
+}
+
+export const isCmyk = (color: unknown): color is Cmyka => {
+  if (!isNonNullObject(color)) return false
+  const { c, m, y, k, a } = color as any
+  if (typeof c !== 'number') return false
+  if (typeof m !== 'number') return false
+  if (typeof y !== 'number') return false
+  if (typeof k !== 'number') return false
+  if (a !== undefined && typeof a !== 'number') return false
+  return true
+}
+
+export const isXyz = (color: unknown): color is Xyza => {
+  if (!isNonNullObject(color)) return false
+  const { x, y, z, a } = color as any
+  if (typeof x !== 'number') return false
+  if (typeof y !== 'number') return false
+  if (typeof z !== 'number') return false
+  if (a !== undefined && typeof a !== 'number') return false
+  return true
+}
+
 export const isCssColor = (color: unknown): color is CssColor => typeof color === 'string'
   && (cssColors as any)[color] !== undefined
 
+
 /* * * * * * * * * * * * * * * * * *
- * To RGB
+ * Convertion building blocks
  * * * * * * * * * * * * * * * * * */
 
+// RGB ↔ Hex
 // [WIP] maybe use absoluteModulo where needed?
-export function hex2rgb (hex: Hex): Rgba {
+// needs rewrite, hex char checks, etc
+function _hex2rgb (hex: Hex): Rgba {
   const inputHex = hex
   const startsWithHash = hex.startsWith('#')
   if (!startsWithHash) throw new Error(`invalid hex color ${inputHex}`)
@@ -400,9 +473,38 @@ export function hex2rgb (hex: Hex): Rgba {
   return { r, g, b, a }
 }
 
-export function hsl2rgb (hsl: Hsla): Rgba {
+function _rgb2hex (rgb: Rgba): Hex {
+  const { r, g, b, a = 1 } = rgb
+  const rHex = Math.round(r).toString(16).padStart(2, '0')
+  const gHex = Math.round(g).toString(16).padStart(2, '0')
+  const bHex = Math.round(b).toString(16).padStart(2, '0')
+  const aHex = Math.round(a * 255).toString(16).padStart(2, '0')
+  return `#${rHex}${gHex}${bHex}${aHex}`
+}
+
+// RGB ↔ CSS
+function _css2rgb (color: CssColor): Rgba
+function _css2rgb (color: string): Rgba | undefined
+function _css2rgb (color: string | CssColor): Rgba | undefined {
+  if (color in cssColors) return cssColors[color as CssColor]
+  return undefined
+}
+
+const cssColorsWithHex = Object.entries(cssColors).map(([cssColor, rgba]) => ({
+  name: cssColor as CssColor,
+  hex: _rgb2hex(rgba),
+  rgba
+}))
+
+function _rgb2css (rgb: Rgba): CssColor | undefined {
+  const hexTarget = _rgb2hex(rgb)
+  return cssColorsWithHex.find(c => c.hex === hexTarget)?.name
+}
+
+// RGB ↔ HSL
+function _hsl2rgb (hsl: Hsla): Rgba {
   const { h, s, l, a = 1 } = hsl
-  const H = (((h % 360) + 360) % 360) / 360
+  const H = absoluteModulo(h, 360) / 360
   const S = Math.max(0, Math.min(1, s / 100))
   const L = Math.max(0, Math.min(1, l / 100))
   const A = Math.max(0, Math.min(1, a))
@@ -434,58 +536,7 @@ export function hsl2rgb (hsl: Hsla): Rgba {
   }
 }
 
-export function hsb2rgb (hsb: Hsba): Rgba {
-  const { h, s, b, a = 1 } = hsb
-  const H = (((h % 360) + 360) % 360) / 360
-  const S = Math.max(0, Math.min(1, s / 100))
-  const B = Math.max(0, Math.min(1, b / 100))
-  const A = Math.max(0, Math.min(1, a))
-  const i = Math.floor(H * 6)
-  const f = H * 6 - i
-  const p = B * (1 - S)
-  const q = B * (1 - f * S)
-  const t = B * (1 - (1 - f) * S)
-  let r: number
-  let g: number
-  let blue: number
-  switch (i % 6) {
-    case 0: r = B; g = t; blue = p; break
-    case 1: r = q; g = B; blue = p; break
-    case 2: r = p; g = B; blue = t; break
-    case 3: r = p; g = q; blue = B; break
-    case 4: r = t; g = p; blue = B; break
-    case 5: r = B; g = p; blue = q; break
-    default: r = g = blue = 0
-  }
-  return {
-    r: Math.round(r * 255),
-    g: Math.round(g * 255),
-    b: Math.round(blue * 255),
-    a: A
-  }
-}
-
-export function css2rgb (color: CssColor): Rgba
-export function css2rgb (color: string): Rgba | undefined
-export function css2rgb (color: string | CssColor): Rgba | undefined {
-  if (color in cssColors) return cssColors[color as CssColor]
-  return undefined
-}
-
-/* * * * * * * * * * * * * * * * * *
- * From RGB
- * * * * * * * * * * * * * * * * * */
-
-export function rgb2hex (rgb: Rgba): Hex {
-  const { r, g, b, a = 1 } = rgb
-  const rHex = r.toString(16).padStart(2, '0')
-  const gHex = g.toString(16).padStart(2, '0')
-  const bHex = b.toString(16).padStart(2, '0')
-  const aHex = Math.round(a * 255).toString(16).padStart(2, '0')
-  return `#${rHex}${gHex}${bHex}${aHex}`
-}
-
-export function rgb2hsl (rgb: Rgba): Hsla {
+function _rgb2hsl (rgb: Rgba): Hsla {
   const { r, g, b, a = 1 } = rgb
   const R = r / 255
   const G = g / 255
@@ -510,7 +561,39 @@ export function rgb2hsl (rgb: Rgba): Hsla {
   }
 }
 
-export function rgb2hsb (rgb: Rgba): Hsba {
+// RGB ↔ HSB
+function _hsb2rgb (hsb: Hsba): Rgba {
+  const { h, s, b, a = 1 } = hsb
+  const H = absoluteModulo(h, 360) / 360
+  const S = Math.max(0, Math.min(1, s / 100))
+  const B = Math.max(0, Math.min(1, b / 100))
+  const A = Math.max(0, Math.min(1, a))
+  const i = Math.floor(H * 6)
+  const f = H * 6 - i
+  const p = B * (1 - S)
+  const q = B * (1 - f * S)
+  const t = B * (1 - (1 - f) * S)
+  let r: number
+  let g: number
+  let blue: number
+  switch (absoluteModulo(i, 6)) {
+    case 0: r = B; g = t; blue = p; break
+    case 1: r = q; g = B; blue = p; break
+    case 2: r = p; g = B; blue = t; break
+    case 3: r = p; g = q; blue = B; break
+    case 4: r = t; g = p; blue = B; break
+    case 5: r = B; g = p; blue = q; break
+    default: r = g = blue = 0
+  }
+  return {
+    r: Math.round(r * 255),
+    g: Math.round(g * 255),
+    b: Math.round(blue * 255),
+    a: A
+  }
+}
+
+function _rgb2hsb (rgb: Rgba): Hsba {
   const { r, g, b, a = 1 } = rgb
   const R = r / 255
   const G = g / 255
@@ -535,84 +618,255 @@ export function rgb2hsb (rgb: Rgba): Hsba {
   }
 }
 
-const cssColorsWithHex = Object.entries(cssColors).map(([cssColor, rgba]) => ({
-  name: cssColor as CssColor,
-  hex: rgb2hex(rgba),
-  rgba
-}))
+// RGB ↔ CMYK
+function _cmyk2rgb (cmyka: Cmyka): Rgba {
+  const { c, m, y, k, a = 1 } = cmyka
+  // Clamp input to 0–100
+  const C = Math.max(0, Math.min(100, c)) / 100
+  const M = Math.max(0, Math.min(100, m)) / 100
+  const Y = Math.max(0, Math.min(100, y)) / 100
+  const K = Math.max(0, Math.min(100, k)) / 100
+  const A = Math.max(0, Math.min(1, a))
+  // CMYK → RGB formula
+  const R = 1 - Math.min(1, C * (1 - K) + K)
+  const G = 1 - Math.min(1, M * (1 - K) + K)
+  const B = 1 - Math.min(1, Y * (1 - K) + K)
+  return {
+    r: Math.round(R * 255),
+    g: Math.round(G * 255),
+    b: Math.round(B * 255),
+    a: A
+  }
+}
 
-export function rgb2css (rgb: Rgba): CssColor | undefined {
-  const hexTarget = rgb2hex(rgb)
-  return cssColorsWithHex.find(c => c.hex === hexTarget)?.name
+function _rgb2cmyk (rgb: Rgba): Cmyka {
+  const { r, g, b, a = 1 } = rgb
+  // Normalize RGB to 0–1
+  const R = Math.max(0, Math.min(1, r / 255))
+  const G = Math.max(0, Math.min(1, g / 255))
+  const B = Math.max(0, Math.min(1, b / 255))
+  const A = Math.max(0, Math.min(1, a))
+  // Compute K (black)
+  const K = 1 - Math.max(R, G, B)
+  // Avoid division by zero
+  const denom = 1 - K || 1
+  // Compute C, M, Y
+  const C = (1 - R - K) / denom
+  const M = (1 - G - K) / denom
+  const Y = (1 - B - K) / denom
+  return {
+    c: Math.round(C * 100),
+    m: Math.round(M * 100),
+    y: Math.round(Y * 100),
+    k: Math.round(K * 100),
+    a: A
+  }
+}
+
+// Rgb ↔ XYZ
+function _xyz2rgb (xyza: Xyza): Rgba {
+  const { x, y, z, a = 1 } = xyza
+  // Normalize XYZ to 0–1
+  const X = x / 100
+  const Y = y / 100
+  const Z = z / 100
+  const A = Math.max(0, Math.min(1, a))
+  // XYZ → linear RGB (D65)
+  let R =  X *  3.2404542 + Y * -1.5371385 + Z * -0.4985314
+  let G =  X * -0.9692660 + Y *  1.8760108 + Z *  0.0415560
+  let B =  X *  0.0556434 + Y * -0.2040259 + Z *  1.0572252
+  // Apply gamma correction
+  const GAMMA_THRESHOLD = 0.0031308
+  const GAMMA_EXPONENT = 1 / 2.4
+  const GAMMA_MULT = 1.055
+  const GAMMA_OFFSET = 0.055
+  const LINEAR_DIVISOR = 12.92
+  const gammaCorrect = (c: number) => c <= GAMMA_THRESHOLD
+    ? c * LINEAR_DIVISOR
+    : GAMMA_MULT * Math.pow(c, GAMMA_EXPONENT) - GAMMA_OFFSET
+  R = gammaCorrect(R)
+  G = gammaCorrect(G)
+  B = gammaCorrect(B)
+  return {
+    r: Math.round(Math.max(0, Math.min(1, R)) * 255),
+    g: Math.round(Math.max(0, Math.min(1, G)) * 255),
+    b: Math.round(Math.max(0, Math.min(1, B)) * 255),
+    a: A
+  }
+}
+
+function _rgb2xyz (rgb: Rgba): Xyza {
+  const { r, g, b, a = 1 } = rgb
+  // Normalize RGB to 0–1
+  let R = Math.max(0, Math.min(1, r / 255))
+  let G = Math.max(0, Math.min(1, g / 255))
+  let B = Math.max(0, Math.min(1, b / 255))
+  const A = Math.max(0, Math.min(1, a))
+  // Apply inverse gamma correction (sRGB → linear)
+  const SRGB_THRESHOLD = 0.04045
+  const SRGB_OFFSET = 0.055
+  const SRGB_DIVISOR = 1.055
+  const SRGB_EXPONENT = 2.4
+  const SRGB_LINEAR_DIVISOR = 12.92
+  const linearize = (c: number) => c > SRGB_THRESHOLD
+    ? Math.pow((c + SRGB_OFFSET) / SRGB_DIVISOR, SRGB_EXPONENT)
+    : c / SRGB_LINEAR_DIVISOR
+  R = linearize(R)
+  G = linearize(G)
+  B = linearize(B)
+  // Linear RGB → XYZ (D65)
+  const X = R * 0.4124564 + G * 0.3575761 + B * 0.1804375
+  const Y = R * 0.2126729 + G * 0.7151522 + B * 0.0721750
+  const Z = R * 0.0193339 + G * 0.1191920 + B * 0.9503041
+  return {
+    x: X * 100,
+    y: Y * 100,
+    z: Z * 100,
+    a: A
+  }
+}
+
+// XYZ ↔ LAB
+function _lab2xyz (lab: Laba): Xyza {
+  const { l, a: A = 0, b: B = 0, al: alpha = 1 } = lab
+  // D65 reference white
+  const REF_X = 95.047
+  const REF_Y = 100.0
+  const REF_Z = 108.883
+  const fy = (l + 16) / 116
+  const fx = fy + A / 500
+  const fz = fy - B / 200
+  const fx3 = Math.pow(fx, 3)
+  const fz3 = Math.pow(fz, 3)
+  const fy3 = Math.pow(fy, 3)
+  const epsilon = 0.008856 // CIE standard
+  const kappa = 903.3      // CIE standard
+  const X = fx3 > epsilon ? fx3 : (116 * fx - 16) / kappa
+  const Y = l > (kappa * epsilon) ? fy3 : l / kappa
+  const Z = fz3 > epsilon ? fz3 : (116 * fz - 16) / kappa
+  return {
+    x: X * REF_X,
+    y: Y * REF_Y,
+    z: Z * REF_Z,
+    a: Math.max(0, Math.min(1, alpha))
+  }
+}
+
+function _xyz2lab (xyza: Xyza): Laba {
+  const { x, y, z, a: alpha = 1 } = xyza
+  // D65 reference white
+  const REF_X = 95.047
+  const REF_Y = 100.0
+  const REF_Z = 108.883
+  const X = x / REF_X
+  const Y = y / REF_Y
+  const Z = z / REF_Z
+  const epsilon = 0.008856 // CIE standard
+  const kappa = 903.3      // CIE standard
+  const fx = X > epsilon ? Math.cbrt(X) : (kappa * X + 16) / 116
+  const fy = Y > epsilon ? Math.cbrt(Y) : (kappa * Y + 16) / 116
+  const fz = Z > epsilon ? Math.cbrt(Z) : (kappa * Z + 16) / 116
+  const L = 116 * fy - 16
+  const A = 500 * (fx - fy)
+  const B = 200 * (fy - fz)
+  return {
+    l: L,
+    a: A,
+    b: B,
+    al: Math.max(0, Math.min(1, alpha))
+  }
+}
+
+// LAB ↔ LCH
+function _lab2lch (lab: Laba): Lcha {
+  const { l, a, b, al = 1 } = lab
+  const c = Math.sqrt(a * a + b * b)
+  let h = Math.atan2(b, a) * (180 / Math.PI) // convert to degrees
+  if (h < 0) h += 360
+  return { l, c, h, a: al }
+}
+
+function _lch2lab (lch: Lcha): Laba {
+  const { l, c, h, a = 1 } = lch
+  const hRad = (h * Math.PI) / 180
+  const A = c * Math.cos(hRad)
+  const B = c * Math.sin(hRad)
+  return { l, a: A, b: B, al: a }
 }
 
 /* * * * * * * * * * * * * * * * * *
- * Other conversions
+ * Converters
  * * * * * * * * * * * * * * * * * */
 
-// hex
-export const hex2css = (hex: Hex) => rgb2css(hex2rgb(hex))
-export const hex2hsb = (hex: Hex) => rgb2hsb(hex2rgb(hex))
-export const hex2hsl = (hex: Hex) => rgb2hsl(hex2rgb(hex))
-
-// css
-export const css2hex = (css: CssColor) => rgb2hex(css2rgb(css))
-export const css2hsb = (css: CssColor) => rgb2hsb(css2rgb(css))
-export const css2hsl = (css: CssColor) => rgb2hsl(css2rgb(css))
-
-// hsb
-export const hsb2hex = (hsb: Hsba) => rgb2hex(hsb2rgb(hsb))
-export const hsb2css = (hsb: Hsba) => rgb2css(hsb2rgb(hsb))
-export const hsb2hsl = (hsb: Hsba) => rgb2hsl(hsb2rgb(hsb))
-
-// hsl
-export const hsl2hex = (hsl: Hsla) => rgb2hex(hsl2rgb(hsl))
-export const hsl2css = (hsl: Hsla) => rgb2css(hsl2rgb(hsl))
-export const hsl2hsb = (hsl: Hsla) => rgb2hsb(hsl2rgb(hsl))
-
-export const toRgb = (color: Color): Rgba => {
+export function toRgb (color: Color): Rgba {
   if (isRgb(color)) return color
-  if (isHsl(color)) return hsl2rgb(color)
-  if (isHsb(color)) return hsb2rgb(color)
-  if (isHex(color)) return hex2rgb(color)
-  if (isCssColor(color)) return css2rgb(color)
+  if (isHsl(color)) return _hsl2rgb(color)
+  if (isHsb(color)) return _hsb2rgb(color)
+  if (isCmyk(color)) return _cmyk2rgb(color)
+  if (isCssColor(color)) return _css2rgb(color)
+  if (isHex(color)) return _hex2rgb(color)
+  if (isXyz(color)) return _xyz2rgb(color)
+  if (isLab(color)) return _xyz2rgb(_lab2xyz(color))
+  if (isLch(color)) return _xyz2rgb(_lab2xyz(_lch2lab(color))) 
   throw new Error(`Invalid color input: ${color}`)
 }
 
-export const toHsl = (color: Color): Hsla => {
+export function toXyz (color: Color): Xyza {
+  if (isXyz(color)) return color
+  if (isLab(color)) return _lab2xyz(color)
+  if (isLch(color)) return _lab2xyz(_lch2lab(color))
+  if (isRgb(color)) return _rgb2xyz(color)
+  if (isHsl(color)) return _rgb2xyz(_hsl2rgb(color))
+  if (isHsb(color)) return _rgb2xyz(_hsb2rgb(color))
+  if (isCmyk(color)) return _rgb2xyz(_cmyk2rgb(color))
+  if (isCssColor(color)) return _rgb2xyz(_css2rgb(color))
+  if (isHex(color)) return _rgb2xyz(_hex2rgb(color))
+  throw new Error(`Invalid color input: ${color}`)
+}
+
+export function toLab (color: Color): Laba {
+  if (isLab(color)) return color
+  if (isLch(color)) return _lch2lab(color)
+  const xyzColor = toXyz(color)
+  return _xyz2lab(xyzColor)
+}
+
+export function toLch (color: Color): Lcha {
+  if (isLch(color)) return color
+  const labColor = toLab(color)
+  return _lab2lch(labColor)
+}
+
+export function toHsl (color: Color): Hsla {
   if (isHsl(color)) return color
-  if (isRgb(color)) return rgb2hsl(color)
-  if (isHsb(color)) return hsb2hsl(color)
-  if (isHex(color)) return hex2hsl(color)
-  if (isCssColor(color)) return css2hsl(color)
-  throw new Error(`Invalid color input: ${color}`)
+  const rgbColor = toRgb(color)
+  return _rgb2hsl(rgbColor)
 }
 
-export const toHsb = (color: Color): Hsba => {
+export function toHsb (color: Color): Hsba {
   if (isHsb(color)) return color
-  if (isRgb(color)) return rgb2hsb(color)
-  if (isHsl(color)) return hsl2hsb(color)
-  if (isHex(color)) return hex2hsb(color)
-  if (isCssColor(color)) return css2hsb(color)
-  throw new Error(`Invalid color input: ${color}`)
+  const rgbColor = toRgb(color)
+  return _rgb2hsb(rgbColor)
 }
 
-export const toCss = (color: Color): CssColor | undefined => {
+export function toCmyk (color: Color): Cmyka {
+  if (isCmyk(color)) return color
+  const rgbColor = toRgb(color)
+  return _rgb2cmyk(rgbColor)
+}
+
+export function toCss (color: CssColor): CssColor
+export function toCss (color: Color): CssColor | undefined // [WIP] this overload may be unnecessary?
+export function toCss (color: Color): CssColor | undefined {
   if (isCssColor(color)) return color
-  if (isRgb(color)) return rgb2css(color)
-  if (isHsl(color)) return hsl2css(color)
-  if (isHsb(color)) return hsb2css(color)
-  if (isHex(color)) return hex2css(color)
-  throw new Error(`Invalid color input: ${color}`)
+  const rgbColor = toRgb(color)
+  return _rgb2css(rgbColor)
 }
 
-export const toHex = (color: Color): Hex => {
+export function toHex (color: Color): Hex {
   if (isHex(color)) return color
-  if (isRgb(color)) return rgb2hex(color)
-  if (isHsl(color)) return hsl2hex(color)
-  if (isHsb(color)) return hsb2hex(color)
-  if (isCssColor(color)) return css2hex(color)
-  throw new Error(`Invalid color input: ${color}`)
+  const rgbColor = toRgb(color)
+  return _rgb2hex(rgbColor)
 }
 
 /* * * * * * * * * * * * * * * * * *
@@ -624,15 +878,24 @@ export function viaRgb (color: Hex, transformer: (rgb: Rgba) => Rgba): Hex
 export function viaRgb (color: Rgba, transformer: (rgb: Rgba) => Rgba): Rgba
 export function viaRgb (color: Hsla, transformer: (rgb: Rgba) => Rgba): Hsla
 export function viaRgb (color: Hsba, transformer: (rgb: Rgba) => Rgba): Hsba
+export function viaRgb (color: Cmyka, transformer: (rgb: Rgba) => Rgba): Cmyka
+export function viaRgb (color: Xyza, transformer: (rgb: Rgba) => Rgba): Xyza
+export function viaRgb (color: Laba, transformer: (rgb: Rgba) => Rgba): Laba
+export function viaRgb (color: Lcha, transformer: (rgb: Rgba) => Rgba): Lcha
 export function viaRgb (color: Color, transformer: (rgb: Rgba) => Rgba): Color
 export function viaRgb (color: Color, transformer: (rgb: Rgba) => Rgba): Color {
   const rgb = toRgb(color)
   const transformedRgb = transformer(rgb)
   if (isRgb(color)) return transformedRgb
-  if (isHsl(color)) return rgb2hsl(transformedRgb)
-  if (isHsb(color)) return rgb2hsb(transformedRgb)
-  if (isHex(color)) return rgb2hex(transformedRgb)
+  if (isHsl(color)) return toHsl(transformedRgb)
+  if (isHsb(color)) return toHsb(transformedRgb)
+  if (isCmyk(color)) return toCmyk(transformedRgb)
+  if (isXyz(color)) return toXyz(transformedRgb)
+  if (isLab(color)) return toLab(transformedRgb)
+  if (isLch(color)) return toLch(transformedRgb)
+  if (isHex(color)) return toRgb(transformedRgb)
   if (isCssColor(color)) return transformedRgb
+  const _typecheck: typeof color extends never ? true : false = true
   throw new Error(`Invalid color input: ${color}`)
 }
 
@@ -641,15 +904,24 @@ export function viaHsl (color: Hex, transformer: (hsl: Hsla) => Hsla): Hex
 export function viaHsl (color: Rgba, transformer: (hsl: Hsla) => Hsla): Rgba
 export function viaHsl (color: Hsla, transformer: (hsl: Hsla) => Hsla): Hsla
 export function viaHsl (color: Hsba, transformer: (hsl: Hsla) => Hsla): Hsba
+export function viaHsl (color: Cmyka, transformer: (hsl: Hsla) => Hsla): Cmyka
+export function viaHsl (color: Xyza, transformer: (hsl: Hsla) => Hsla): Xyza
+export function viaHsl (color: Laba, transformer: (hsl: Hsla) => Hsla): Laba
+export function viaHsl (color: Lcha, transformer: (hsl: Hsla) => Hsla): Lcha
 export function viaHsl (color: Color, transformer: (hsl: Hsla) => Hsla): Color
 export function viaHsl (color: Color, transformer: (hsl: Hsla) => Hsla): Color {
   const hsl = toHsl(color)
   const transformedHsl = transformer(hsl)
   if (isHsl(color)) return transformedHsl
-  if (isRgb(color)) return hsl2rgb(transformedHsl)
-  if (isHsb(color)) return hsl2hsb(transformedHsl)
-  if (isHex(color)) return hsl2hex(transformedHsl)
+  if (isRgb(color)) return toRgb(transformedHsl)
+  if (isHsb(color)) return toHsb(transformedHsl)
+  if (isCmyk(color)) return toCmyk(transformedHsl)
+  if (isXyz(color)) return toXyz(transformedHsl)
+  if (isLab(color)) return toLab(transformedHsl)
+  if (isLch(color)) return toLch(transformedHsl)
+  if (isHex(color)) return toHex(transformedHsl)
   if (isCssColor(color)) return transformedHsl
+  const _typecheck: typeof color extends never ? true : false = true
   throw new Error(`Invalid color input: ${color}`)
 }
 
@@ -658,27 +930,143 @@ export function viaHsb (color: Hex, transformer: (hsb: Hsba) => Hsba): Hex
 export function viaHsb (color: Rgba, transformer: (hsb: Hsba) => Hsba): Rgba
 export function viaHsb (color: Hsla, transformer: (hsb: Hsba) => Hsba): Hsla
 export function viaHsb (color: Hsba, transformer: (hsb: Hsba) => Hsba): Hsba
+export function viaHsb (color: Cmyka, transformer: (hsb: Hsba) => Hsba): Cmyka
+export function viaHsb (color: Xyza, transformer: (hsb: Hsba) => Hsba): Xyza
+export function viaHsb (color: Laba, transformer: (hsb: Hsba) => Hsba): Laba
+export function viaHsb (color: Lcha, transformer: (hsb: Hsba) => Hsba): Lcha
 export function viaHsb (color: Color, transformer: (hsb: Hsba) => Hsba): Color
 export function viaHsb (color: Color, transformer: (hsb: Hsba) => Hsba): Color {
   const hsb = toHsb(color)
   const transformedHsb = transformer(hsb)
   if (isHsb(color)) return transformedHsb
-  if (isRgb(color)) return hsb2rgb(transformedHsb)
-  if (isHsl(color)) return hsb2hsl(transformedHsb)
-  if (isHex(color)) return hsb2hex(transformedHsb)
+  if (isRgb(color)) return toRgb(transformedHsb)
+  if (isHsl(color)) return toHsl(transformedHsb)
+  if (isCmyk(color)) return toCmyk(transformedHsb)
+  if (isXyz(color)) return toXyz(transformedHsb)
+  if (isLab(color)) return toLab(transformedHsb)
+  if (isLch(color)) return toLch(transformedHsb)
+  if (isHex(color)) return toHex(transformedHsb)
   if (isCssColor(color)) return transformedHsb
+  const _typecheck: typeof color extends never ? true : false = true
+  throw new Error(`Invalid color input: ${color}`)
+}
+
+export function viaCmyk (color: CssColor, transformer: (cmyk: Cmyka) => Cmyka): Rgba
+export function viaCmyk (color: Hex, transformer: (cmyk: Cmyka) => Cmyka): Hex
+export function viaCmyk (color: Rgba, transformer: (cmyk: Cmyka) => Cmyka): Rgba
+export function viaCmyk (color: Hsla, transformer: (cmyk: Cmyka) => Cmyka): Hsla
+export function viaCmyk (color: Hsba, transformer: (cmyk: Cmyka) => Cmyka): Hsba
+export function viaCmyk (color: Cmyka, transformer: (cmyk: Cmyka) => Cmyka): Cmyka
+export function viaCmyk (color: Xyza, transformer: (cmyk: Cmyka) => Cmyka): Xyza
+export function viaCmyk (color: Laba, transformer: (cmyk: Cmyka) => Cmyka): Laba
+export function viaCmyk (color: Lcha, transformer: (cmyk: Cmyka) => Cmyka): Lcha
+export function viaCmyk (color: Color, transformer: (cmyk: Cmyka) => Cmyka): Color
+export function viaCmyk (color: Color, transformer: (cmyk: Cmyka) => Cmyka): Color {
+  const cmyk = toCmyk(color)
+  const transformedCmyk = transformer(cmyk)
+  if (isHsb(color)) return transformedCmyk
+  if (isRgb(color)) return toRgb(transformedCmyk)
+  if (isHsl(color)) return toHsl(transformedCmyk)
+  if (isCmyk(color)) return toCmyk(transformedCmyk)
+  if (isXyz(color)) return toXyz(transformedCmyk)
+  if (isLab(color)) return toLab(transformedCmyk)
+  if (isLch(color)) return toLch(transformedCmyk)
+  if (isHex(color)) return toHex(transformedCmyk)
+  if (isCssColor(color)) return transformedCmyk
+  const _typecheck: typeof color extends never ? true : false = true
+  throw new Error(`Invalid color input: ${color}`)
+}
+
+export function viaXyz (color: CssColor, transformer: (xyz: Xyza) => Xyza): Rgba
+export function viaXyz (color: Hex, transformer: (xyz: Xyza) => Xyza): Hex
+export function viaXyz (color: Rgba, transformer: (xyz: Xyza) => Xyza): Rgba
+export function viaXyz (color: Hsla, transformer: (xyz: Xyza) => Xyza): Hsla
+export function viaXyz (color: Hsba, transformer: (xyz: Xyza) => Xyza): Hsba
+export function viaXyz (color: Cmyka, transformer: (xyz: Xyza) => Xyza): Cmyka
+export function viaXyz (color: Xyza, transformer: (xyz: Xyza) => Xyza): Xyza
+export function viaXyz (color: Laba, transformer: (xyz: Xyza) => Xyza): Laba
+export function viaXyz (color: Lcha, transformer: (xyz: Xyza) => Xyza): Lcha
+export function viaXyz (color: Color, transformer: (xyz: Xyza) => Xyza): Color
+export function viaXyz (color: Color, transformer: (xyz: Xyza) => Xyza): Color {
+  const xyz = toXyz(color)
+  const transformedXyz = transformer(xyz)
+  if (isHsb(color)) return transformedXyz
+  if (isRgb(color)) return toRgb(transformedXyz)
+  if (isHsl(color)) return toHsl(transformedXyz)
+  if (isCmyk(color)) return toCmyk(transformedXyz)
+  if (isXyz(color)) return toXyz(transformedXyz)
+  if (isLab(color)) return toLab(transformedXyz)
+  if (isLch(color)) return toLch(transformedXyz)
+  if (isHex(color)) return toHex(transformedXyz)
+  if (isCssColor(color)) return transformedXyz
+  const _typecheck: typeof color extends never ? true : false = true
+  throw new Error(`Invalid color input: ${color}`)
+}
+
+export function viaLab (color: CssColor, transformer: (lab: Laba) => Laba): Rgba
+export function viaLab (color: Hex, transformer: (lab: Laba) => Laba): Hex
+export function viaLab (color: Rgba, transformer: (lab: Laba) => Laba): Rgba
+export function viaLab (color: Hsla, transformer: (lab: Laba) => Laba): Hsla
+export function viaLab (color: Hsba, transformer: (lab: Laba) => Laba): Hsba
+export function viaLab (color: Cmyka, transformer: (lab: Laba) => Laba): Cmyka
+export function viaLab (color: Xyza, transformer: (lab: Laba) => Laba): Xyza
+export function viaLab (color: Laba, transformer: (lab: Laba) => Laba): Laba
+export function viaLab (color: Lcha, transformer: (lab: Laba) => Laba): Lcha
+export function viaLab (color: Color, transformer: (lab: Laba) => Laba): Color
+export function viaLab (color: Color, transformer: (lab: Laba) => Laba): Color {
+  const lab = toLab(color)
+  const transformedLab = transformer(lab)
+  if (isHsb(color)) return transformedLab
+  if (isRgb(color)) return toRgb(transformedLab)
+  if (isHsl(color)) return toHsl(transformedLab)
+  if (isCmyk(color)) return toCmyk(transformedLab)
+  if (isXyz(color)) return toXyz(transformedLab)
+  if (isLab(color)) return toLab(transformedLab)
+  if (isLch(color)) return toLch(transformedLab)
+  if (isHex(color)) return toHex(transformedLab)
+  if (isCssColor(color)) return transformedLab
+  const _typecheck: typeof color extends never ? true : false = true
+  throw new Error(`Invalid color input: ${color}`)
+}
+
+export function viaLch (color: CssColor, transformer: (lch: Lcha) => Lcha): Rgba
+export function viaLch (color: Hex, transformer: (lch: Lcha) => Lcha): Hex
+export function viaLch (color: Rgba, transformer: (lch: Lcha) => Lcha): Rgba
+export function viaLch (color: Hsla, transformer: (lch: Lcha) => Lcha): Hsla
+export function viaLch (color: Hsba, transformer: (lch: Lcha) => Lcha): Hsba
+export function viaLch (color: Cmyka, transformer: (lch: Lcha) => Lcha): Cmyka
+export function viaLch (color: Xyza, transformer: (lch: Lcha) => Lcha): Xyza
+export function viaLch (color: Laba, transformer: (lch: Lcha) => Lcha): Laba
+export function viaLch (color: Lcha, transformer: (lch: Lcha) => Lcha): Lcha
+export function viaLch (color: Color, transformer: (lch: Lcha) => Lcha): Color
+export function viaLch (color: Color, transformer: (lch: Lcha) => Lcha): Color {
+  const lch = toLch(color)
+  const transformedLch = transformer(lch)
+  if (isHsb(color)) return transformedLch
+  if (isRgb(color)) return toRgb(transformedLch)
+  if (isHsl(color)) return toHsl(transformedLch)
+  if (isCmyk(color)) return toCmyk(transformedLch)
+  if (isXyz(color)) return toXyz(transformedLch)
+  if (isLab(color)) return toLab(transformedLch)
+  if (isLch(color)) return toLch(transformedLch)
+  if (isHex(color)) return toHex(transformedLch)
+  if (isCssColor(color)) return transformedLch
+  const _typecheck: typeof color extends never ? true : false = true
   throw new Error(`Invalid color input: ${color}`)
 }
 
 /* * * * * * * * * * * * * * * * * *
  * Tidy
  * * * * * * * * * * * * * * * * * */
-
 export function tidy (color: CssColor): Rgba
 export function tidy (color: Hex): Hex
 export function tidy (color: Rgba): Rgba
 export function tidy (color: Hsla): Hsla
 export function tidy (color: Hsba): Hsba
+export function tidy (color: Cmyka): Cmyka
+export function tidy (color: Xyza): Xyza
+export function tidy (color: Laba): Laba
+export function tidy (color: Lcha): Lcha
 export function tidy (color: Color): Color
 export function tidy (color: Color): Color {
   if (isRgb(color)) return {
@@ -699,194 +1087,747 @@ export function tidy (color: Color): Color {
     b: clamp(color.b, 0, 100),
     a: clamp(color.a ?? 1, 0, 1)
   }
+  if (isCmyk(color)) return {
+    c: clamp(color.c, 0, 100),
+    m: clamp(color.m, 0, 100),
+    y: clamp(color.y, 0, 100),
+    k: clamp(color.k, 0, 100),
+    a: clamp(color.a ?? 1, 0, 1)
+  }
+  if (isXyz(color)) return {
+    x: color.x,
+    y: color.y,
+    z: color.z,
+    a: clamp(color.a ?? 1, 0, 1)
+  }
+  if (isLab(color)) return {
+    l: clamp(color.l, 0, 100),
+    a: color.a,
+    b: color.b,
+    al: clamp(color.al ?? 1, 0, 1)
+  }
+  if (isLch(color)) return {
+    l: clamp(color.l, 0, 100),
+    c: color.c,
+    h: clamp(color.h, 0, 360),
+    a: clamp(color.a ?? 1, 0, 1)
+  }
   if (isCssColor(color)) return tidy(toRgb(color))
   if (isHex(color)) return toHex(tidy(toRgb(color)))
+  const _typecheck: typeof color extends never ? true : false = true
   throw new Error(`Invalid color input: ${color}`)
-}
-
-/* * * * * * * * * * * * * * * * * *
- * Complementary
- * * * * * * * * * * * * * * * * * */
-
-// [WIP] THIS IS INVERSE, NOT COMPLEMENTARY
-export function getComplementary (color: CssColor): Rgba
-export function getComplementary (color: Hex): Hex
-export function getComplementary (color: Rgba): Rgba
-export function getComplementary (color: Hsla): Hsla
-export function getComplementary (color: Hsba): Hsba
-export function getComplementary (color: Color): Color
-export function getComplementary (color: Color): Color {
-  return viaRgb(color, (rgb: Rgba): Rgba => ({
-    r: clamp(255 - rgb.r, 0, 255),
-    g: clamp(255 - rgb.g, 0, 255),
-    b: clamp(255 - rgb.b, 0, 255),
-    a: clamp(rgb.a ?? 1, 0, 1)
-  }))
 }
 
 /* * * * * * * * * * * * * * * * * *
  * Set channel
  * * * * * * * * * * * * * * * * * */
 
-export type ColorChannel = 'red' | 'green' | 'blue' | 'alpha' | 'hue' | 'saturation' | 'lightness' | 'brightness'
+export type Channel = 'red'
+  | 'green'
+  | 'blue'
+  | 'alpha'
+  | 'hue'
+  | 'saturation'
+  | 'lightness'
+  | 'brightness'
+  | 'cyan'
+  | 'magenta'
+  | 'yellow'
+  | 'black'
+  | 'x'
+  | 'y'
+  | 'z'
+  | 'lightnessLab'
+  | 'aLab'
+  | 'bLab'
+  | 'chroma'
+  | 'hueLch'
 
-export function setChannel (color: CssColor, channel: ColorChannel, value: number): Rgba
-export function setChannel (color: Hex, channel: ColorChannel, value: number): Hex
-export function setChannel (color: Rgba, channel: ColorChannel, value: number): Rgba
-export function setChannel (color: Hsla, channel: ColorChannel, value: number): Hsla
-export function setChannel (color: Hsba, channel: ColorChannel, value: number): Hsba
-export function setChannel (color: Color, channel: ColorChannel, value: number): Color
-export function setChannel (color: Color, channel: ColorChannel, value: number): Color {
-  if (channel === 'red') return viaRgb(color, rgb => ({ ...rgb, r: clamp(value, 0, 255) }))
-  if (channel === 'green') return viaRgb(color, rgb => ({ ...rgb, g: clamp(value, 0, 255) }))
-  if (channel === 'blue') return viaRgb(color, rgb => ({ ...rgb, b: clamp(value, 0, 255) }))
-  if (channel === 'hue') {
-    if (isHsl(color)) return { ...color, h: absoluteModulo(value, 360) }
-    if (isHsb(color)) return { ...color, h: absoluteModulo(value, 360) }
-    return viaHsl(color, hsl => ({ ...hsl, h: absoluteModulo(value, 360) }))
+export function setChannel (color: CssColor, channel: Channel, value: number): Rgba
+export function setChannel (color: Hex, channel: Channel, value: number): Hex
+export function setChannel (color: Rgba, channel: Channel, value: number): Rgba
+export function setChannel (color: Hsla, channel: Channel, value: number): Hsla
+export function setChannel (color: Hsba, channel: Channel, value: number): Hsba
+export function setChannel (color: Cmyka, channel: Channel, value: number): Cmyka
+export function setChannel (color: Xyza, channel: Channel, value: number): Xyza
+export function setChannel (color: Laba, channel: Channel, value: number): Laba
+export function setChannel (color: Lcha, channel: Channel, value: number): Lcha
+export function setChannel (color: Color, channel: Channel, value: number): Color
+export function setChannel (color: Color, channel: Channel, value: number): Color {
+  switch (channel) {
+    case 'red': return viaRgb(color, rgb => ({ ...rgb, r: clamp(value, 0, 255) }))
+    case 'green': return viaRgb(color, rgb => ({ ...rgb, g: clamp(value, 0, 255) }))
+    case 'blue': return viaRgb(color, rgb => ({ ...rgb, b: clamp(value, 0, 255) }))
+    case 'hue': return viaHsl(color, hsl => ({ ...hsl, h: absoluteModulo(value, 360) }))
+    case 'saturation': return viaHsl(color, hsl => ({ ...hsl, s: clamp(value, 0, 100) }))
+    case 'lightness': return viaHsl(color, hsl => ({ ...hsl, l: clamp(value, 0, 100) }))
+    case 'brightness': return viaHsb(color, hsb => ({ ...hsb, b: clamp(value, 0, 100) }))
+    case 'alpha': return viaRgb(color, rgb => ({ ...rgb, a: clamp(value, 0, 1) }))
+    case 'cyan': return viaCmyk(color, cmyk => ({ ...cmyk, c: clamp(value, 0, 100) }))
+    case 'magenta': return viaCmyk(color, cmyk => ({ ...cmyk, m: clamp(value, 0, 100) }))
+    case 'yellow': return viaCmyk(color, cmyk => ({ ...cmyk, y: clamp(value, 0, 100) }))
+    case 'black': return viaCmyk(color, cmyk => ({ ...cmyk, k: clamp(value, 0, 100) }))
+    case 'x': return viaXyz(color, xyz => ({ ...xyz, x: value }))
+    case 'y': return viaXyz(color, xyz => ({ ...xyz, y: value }))
+    case 'z': return viaXyz(color, xyz => ({ ...xyz, z: value }))
+    case 'lightnessLab': return viaLab(color, lab => ({ ...lab, a: clamp(value, 0, 100) }))
+    case 'aLab': return viaLab(color, lab => ({ ...lab, a: value }))
+    case 'bLab': return viaLab(color, lab => ({ ...lab, b: value }))
+    case 'chroma': return viaLch(color, lch => ({ ...lch, c: value }))
+    case 'hueLch': return viaLch(color, lch => ({ ...lch, h: clamp(value, 0, 360) }))  
   }
-  if (channel === 'saturation') {
-    if (isHsl(color)) return { ...color, s: clamp(value, 0, 100) }
-    if (isHsb(color)) return { ...color, s: clamp(value, 0, 100) }
-    return viaHsl(color, hsl => ({ ...hsl, s: clamp(value, 0, 100) }))
-  }
-  if (channel === 'lightness') return viaHsl(color, hsl => ({ ...hsl, l: clamp(value, 0, 100) }))
-  if (channel == 'brightness') return viaHsb(color, hsb => ({ ...hsb, b: clamp(value, 0, 100) }))
-  if (channel === 'alpha') {
-    if (isRgb(color)) return { ...color, a: clamp(value, 0, 1) }
-    if (isHsl(color)) return { ...color, a: clamp(value, 0, 1) }
-    if (isHsb(color)) return { ...color, a: clamp(value, 0, 1) }
-    return viaRgb(color, rgb => ({ ...rgb, a: clamp(value, 0, 1) }))
-  }
-  throw new Error(`Invalid color channel: ${channel}`)
 }
 
 /* * * * * * * * * * * * * * * * * *
  * Get channel
  * * * * * * * * * * * * * * * * * */
-
-export function getChannel (color: CssColor, channel: ColorChannel): number
-export function getChannel (color: Hex, channel: ColorChannel): number
-export function getChannel (color: Rgba, channel: ColorChannel): number
-export function getChannel (color: Hsla, channel: ColorChannel): number
-export function getChannel (color: Hsba, channel: ColorChannel): number
-export function getChannel (color: Color, channel: ColorChannel): number
-export function getChannel (color: Color, channel: ColorChannel): number {
-  if (channel === 'red') return toRgb(color).r
-  if (channel === 'green') return toRgb(color).g
-  if (channel === 'blue') return toRgb(color).b
-  if (channel === 'hue') {
-    if (isHsl(color)) return color.h
-    if (isHsb(color)) return color.h
-    return toHsl(color).h
+export function getChannel (color: CssColor, channel: Channel): number
+export function getChannel (color: Hex, channel: Channel): number
+export function getChannel (color: Rgba, channel: Channel): number
+export function getChannel (color: Hsla, channel: Channel): number
+export function getChannel (color: Hsba, channel: Channel): number
+export function getChannel (color: Cmyka, channel: Channel): number
+export function getChannel (color: Xyza, channel: Channel): number
+export function getChannel (color: Laba, channel: Channel): number
+export function getChannel (color: Lcha, channel: Channel): number
+export function getChannel (color: Color, channel: Channel): number
+export function getChannel (color: Color, channel: Channel): number {
+  switch (channel) {
+    case 'red': return toRgb(color).r
+    case 'green': return toRgb(color).g
+    case 'blue': return toRgb(color).b
+    case 'hue': return toHsl(color).h
+    case 'saturation': return toHsl(color).s
+    case 'lightness': return toHsl(color).l
+    case 'brightness': return toHsb(color).b
+    case 'alpha': return toRgb(color).a ?? 1
+    case 'cyan': return toCmyk(color).c
+    case 'magenta': return toCmyk(color).m
+    case 'yellow': return toCmyk(color).y
+    case 'black': return toCmyk(color).k
+    case 'x': return toXyz(color).x
+    case 'y': return toXyz(color).y
+    case 'z': return toXyz(color).z
+    case 'lightnessLab': return toLab(color).l
+    case 'aLab': return toLab(color).a
+    case 'bLab': return toLab(color).b
+    case 'chroma': return toLch(color).c
+    case 'hueLch': return toLch(color).h 
   }
-  if (channel === 'saturation') {
-    if (isHsl(color)) return color.s
-    if (isHsb(color)) return color.s
-    return toHsl(color).s
-  }
-  if (channel === 'lightness') return toHsl(color).l
-  if (channel == 'brightness') return toHsb(color).b
-  if (channel === 'alpha') {
-    if (isRgb(color)) return color.a ?? 1
-    if (isHsl(color)) return color.a ?? 1
-    if (isHsb(color)) return color.a ?? 1
-    return toRgb(color).a ?? 1
-  }
-  throw new Error(`Invalid color channel: ${channel}`)
 }
 
 /* * * * * * * * * * * * * * * * * *
- * Get channel
+ * Add channel
  * * * * * * * * * * * * * * * * * */
-
-export function addChannel (color: CssColor, channel: ColorChannel, amount: number): CssColor
-export function addChannel (color: Hex, channel: ColorChannel, amount: number): Hex
-export function addChannel (color: Rgba, channel: ColorChannel, amount: number): Rgba
-export function addChannel (color: Hsla, channel: ColorChannel, amount: number): Hsla
-export function addChannel (color: Hsba, channel: ColorChannel, amount: number): Hsba
-export function addChannel (color: Color, channel: ColorChannel, amount: number): Color
-export function addChannel (color: Color, channel: ColorChannel, amount: number): Color {
-  if (channel === 'red') return viaRgb(color, rgb => ({ ...rgb, r: clamp(rgb.r + amount, 0, 255) }))
-  if (channel === 'green') return viaRgb(color, rgb => ({ ...rgb, g: clamp(rgb.g + amount, 0, 255) }))
-  if (channel === 'blue') return viaRgb(color, rgb => ({ ...rgb, b: clamp(rgb.b + amount, 0, 255) }))
-  if (channel === 'hue') {
-    if (isHsl(color)) return { ...color, h: absoluteModulo(color.h + amount, 360) }
-    if (isHsb(color)) return { ...color, h: absoluteModulo(color.h + amount, 360) }
-    return viaHsl(color, hsl => ({ ...hsl, h: absoluteModulo(hsl.h + amount, 360) }))
+export function addChannel (color: CssColor, channel: Channel, amount: number): CssColor
+export function addChannel (color: Hex, channel: Channel, amount: number): Hex
+export function addChannel (color: Rgba, channel: Channel, amount: number): Rgba
+export function addChannel (color: Hsla, channel: Channel, amount: number): Hsla
+export function addChannel (color: Hsba, channel: Channel, amount: number): Hsba
+export function addChannel (color: Cmyka, channel: Channel, amount: number): Cmyka
+export function addChannel (color: Xyza, channel: Channel, amount: number): Xyza
+export function addChannel (color: Laba, channel: Channel, amount: number): Laba
+export function addChannel (color: Lcha, channel: Channel, amount: number): Lcha
+export function addChannel (color: Color, channel: Channel, amount: number): Color
+export function addChannel (color: Color, channel: Channel, amount: number): Color {
+  switch (channel) {
+    case 'red': return viaRgb(color, rgb => ({ ...rgb, r: clamp(rgb.r + amount, 0, 255) }))
+    case 'green': return viaRgb(color, rgb => ({ ...rgb, g: clamp(rgb.g + amount, 0, 255) }))
+    case 'blue': return viaRgb(color, rgb => ({ ...rgb, b: clamp(rgb.b + amount, 0, 255) }))
+    case 'hue': return viaHsl(color, hsl => ({ ...hsl, h: absoluteModulo(hsl.h + amount, 360) }))
+    case 'saturation': return viaHsl(color, hsl => ({ ...hsl, s: clamp(hsl.s + amount, 0, 100) }))
+    case 'lightness': return viaHsl(color, hsl => ({ ...hsl, l: clamp(hsl.l + amount, 0, 100) }))
+    case 'brightness': return viaHsb(color, hsb => ({ ...hsb, b: clamp(hsb.b + amount, 0, 100) }))
+    case 'alpha': return viaRgb(color, rgb => ({ ...rgb, a: clamp(rgb.a ?? 1 + amount, 0, 1) }))
+    case 'cyan': return viaCmyk(color, cmyk => ({ ...cmyk, c: clamp(cmyk.c + amount, 0, 100) }))
+    case 'magenta': return viaCmyk(color, cmyk => ({ ...cmyk, m: clamp(cmyk.m + amount, 0, 100) }))
+    case 'yellow': return viaCmyk(color, cmyk => ({ ...cmyk, y: clamp(cmyk.y + amount, 0, 100) }))
+    case 'black': return viaCmyk(color, cmyk => ({ ...cmyk, k: clamp(cmyk.k + amount, 0, 100) }))
+    case 'x': return viaXyz(color, xyz => ({ ...xyz, x: xyz.x + amount }))
+    case 'y': return viaXyz(color, xyz => ({ ...xyz, y: xyz.y + amount }))
+    case 'z': return viaXyz(color, xyz => ({ ...xyz, z: xyz.z + amount }))
+    case 'lightnessLab': return viaLab(color, lab => ({ ...lab, l: clamp(lab.l + amount, 0, 100) }))
+    case 'aLab': return viaLab(color, lab => ({ ...lab, a: lab.a + amount }))
+    case 'bLab': return viaLab(color, lab => ({ ...lab, b: lab.b + amount }))
+    case 'chroma': return viaLch(color, lch => ({ ...lch, c: lch.c + amount }))
+    case 'hueLch': return viaLch(color, lch => ({ ...lch, h: clamp(lch.h + amount, 0, 360) }))
   }
-  if (channel === 'saturation') {
-    if (isHsl(color)) return { ...color, s: clamp(color.s + amount, 0, 100) }
-    if (isHsb(color)) return { ...color, s: clamp(color.s + amount, 0, 100) }
-    return viaHsl(color, hsl => ({ ...hsl, s: clamp(hsl.s + amount, 0, 100) }))
-  }
-  if (channel === 'lightness') return viaHsl(color, hsl => ({ ...hsl, l: clamp(hsl.l + amount, 0, 100) }))
-  if (channel == 'brightness') return viaHsb(color, hsb => ({ ...hsb, b: clamp(hsb.b + amount, 0, 100) }))
-  if (channel === 'alpha') {
-    if (isRgb(color)) return { ...color, a: clamp((color.a ?? 1) + amount, 0, 1) }
-    if (isHsl(color)) return { ...color, a: clamp(color.a ?? 1 + amount, 0, 1) }
-    if (isHsb(color)) return { ...color, a: clamp(color.a ?? 1 + amount, 0, 1) }
-    return viaRgb(color, rgb => ({ ...rgb, a: clamp(rgb.a ?? 1 + amount, 0, 1) }))
-  }
-  throw new Error(`Invalid color channel: ${channel}`)
 }
 
 /* * * * * * * * * * * * * * * * * *
  * Mult channel
  * * * * * * * * * * * * * * * * * */
-
-export function multChannel (color: CssColor, channel: ColorChannel, factor: number): CssColor
-export function multChannel (color: Hex, channel: ColorChannel, factor: number): Hex
-export function multChannel (color: Rgba, channel: ColorChannel, factor: number): Rgba
-export function multChannel (color: Hsla, channel: ColorChannel, factor: number): Hsla
-export function multChannel (color: Hsba, channel: ColorChannel, factor: number): Hsba
-export function multChannel (color: Color, channel: ColorChannel, factor: number): Color
-export function multChannel (color: Color, channel: ColorChannel, factor: number): Color {
-  if (channel === 'red') return viaRgb(color, rgb => ({ ...rgb, r: clamp(rgb.r * factor, 0, 255) }))
-  if (channel === 'green') return viaRgb(color, rgb => ({ ...rgb, g: clamp(rgb.g * factor, 0, 255) }))
-  if (channel === 'blue') return viaRgb(color, rgb => ({ ...rgb, b: clamp(rgb.b * factor, 0, 255) }))
-  if (channel === 'hue') {
-    if (isHsl(color)) return { ...color, h: absoluteModulo(color.h * factor, 360) }
-    if (isHsb(color)) return { ...color, h: absoluteModulo(color.h * factor, 360) }
-    return viaHsl(color, hsl => ({ ...hsl, h: absoluteModulo(hsl.h * factor, 360) }))
+export function multChannel (color: CssColor, channel: Channel, factor: number): CssColor
+export function multChannel (color: Hex, channel: Channel, factor: number): Hex
+export function multChannel (color: Rgba, channel: Channel, factor: number): Rgba
+export function multChannel (color: Hsla, channel: Channel, factor: number): Hsla
+export function multChannel (color: Hsba, channel: Channel, factor: number): Hsba
+export function multChannel (color: Cmyka, channel: Channel, factor: number): Cmyka
+export function multChannel (color: Xyza, channel: Channel, factor: number): Xyza
+export function multChannel (color: Laba, channel: Channel, factor: number): Laba
+export function multChannel (color: Lcha, channel: Channel, factor: number): Lcha
+export function multChannel (color: Color, channel: Channel, factor: number): Color
+export function multChannel (color: Color, channel: Channel, factor: number): Color {
+  switch (channel) {
+    case 'red': return viaRgb(color, rgb => ({ ...rgb, r: clamp(rgb.r * factor, 0, 255) }))
+    case 'green': return viaRgb(color, rgb => ({ ...rgb, g: clamp(rgb.g * factor, 0, 255) }))
+    case 'blue': return viaRgb(color, rgb => ({ ...rgb, b: clamp(rgb.b * factor, 0, 255) }))
+    case 'hue': return viaHsl(color, hsl => ({ ...hsl, h: absoluteModulo(hsl.h * factor, 360) }))
+    case 'saturation': return viaHsl(color, hsl => ({ ...hsl, s: clamp(hsl.s * factor, 0, 100) }))
+    case 'lightness': return viaHsl(color, hsl => ({ ...hsl, l: clamp(hsl.l * factor, 0, 100) }))
+    case 'brightness': return viaHsb(color, hsb => ({ ...hsb, b: clamp(hsb.b * factor, 0, 100) }))
+    case 'alpha': return viaRgb(color, rgb => ({ ...rgb, a: clamp(rgb.a ?? 1 * factor, 0, 1) }))
+    case 'cyan': return viaCmyk(color, cmyk => ({ ...cmyk, c: clamp(cmyk.c * factor, 0, 100) }))
+    case 'magenta': return viaCmyk(color, cmyk => ({ ...cmyk, m: clamp(cmyk.m * factor, 0, 100) }))
+    case 'yellow': return viaCmyk(color, cmyk => ({ ...cmyk, y: clamp(cmyk.y * factor, 0, 100) }))
+    case 'black': return viaCmyk(color, cmyk => ({ ...cmyk, k: clamp(cmyk.k * factor, 0, 100) }))
+    case 'x': return viaXyz(color, xyz => ({ ...xyz, x: xyz.x * factor }))
+    case 'y': return viaXyz(color, xyz => ({ ...xyz, y: xyz.y * factor }))
+    case 'z': return viaXyz(color, xyz => ({ ...xyz, z: xyz.z * factor }))
+    case 'lightnessLab': return viaLab(color, lab => ({ ...lab, l: clamp(lab.l * factor, 0, 100) }))
+    case 'aLab': return viaLab(color, lab => ({ ...lab, a: lab.a * factor }))
+    case 'bLab': return viaLab(color, lab => ({ ...lab, b: lab.b * factor }))
+    case 'chroma': return viaLch(color, lch => ({ ...lch, c: lch.c * factor }))
+    case 'hueLch': return viaLch(color, lch => ({ ...lch, h: clamp(lch.h * factor, 0, 360) })) 
   }
-  if (channel === 'saturation') {
-    if (isHsl(color)) return { ...color, s: clamp(color.s * factor, 0, 100) }
-    if (isHsb(color)) return { ...color, s: clamp(color.s * factor, 0, 100) }
-    return viaHsl(color, hsl => ({ ...hsl, s: clamp(hsl.s * factor, 0, 100) }))
-  }
-  if (channel === 'lightness') return viaHsl(color, hsl => ({ ...hsl, l: clamp(hsl.l * factor, 0, 100) }))
-  if (channel == 'brightness') return viaHsb(color, hsb => ({ ...hsb, b: clamp(hsb.b * factor, 0, 100) }))
-  if (channel === 'alpha') {
-    if (isRgb(color)) return { ...color, a: clamp((color.a ?? 1) * factor, 0, 1) }
-    if (isHsl(color)) return { ...color, a: clamp(color.a ?? 1 * factor, 0, 1) }
-    if (isHsb(color)) return { ...color, a: clamp(color.a ?? 1 * factor, 0, 1) }
-    return viaRgb(color, rgb => ({ ...rgb, a: clamp(rgb.a ?? 1 * factor, 0, 1) }))
-  }
-  throw new Error(`Invalid color channel: ${channel}`)
 }
 
-// [WIP] the idea of multiplication does not really apply the same way
-// to all channels :
-// - red : mult by 2 should mean divide by 2 the gap between current and 255 ?
-// - green : same
-// - blue : same
-// - hue : does it make any sense at all?
-// 
-// let's think of it later
+/* * * * * * * * * * * * * * * * * *
+ * Invert
+ * * * * * * * * * * * * * * * * * */
+export function invert (color: CssColor): Rgba
+export function invert (color: Hex): Hex
+export function invert (color: Rgba): Rgba
+export function invert (color: Hsla): Hsla
+export function invert (color: Hsba): Hsba
+export function invert (color: Cmyka): Cmyka
+export function invert (color: Xyza): Xyza
+export function invert (color: Laba): Laba
+export function invert (color: Lcha): Lcha
+export function invert (color: Color): Color
+export function invert (color: Color): Color {
+  return viaRgb(color, rgb => ({
+    ...rgb,
+    r: 255 - rgb.r,
+    g: 255 - rgb.g,
+    b: 255 - rgb.b
+  }))
+}
+export function invertLab (color: CssColor): Rgba
+export function invertLab (color: Hex): Hex
+export function invertLab (color: Rgba): Rgba
+export function invertLab (color: Hsla): Hsla
+export function invertLab (color: Hsba): Hsba
+export function invertLab (color: Cmyka): Cmyka
+export function invertLab (color: Xyza): Xyza
+export function invertLab (color: Laba): Laba
+export function invertLab (color: Lcha): Lcha
+export function invertLab (color: Color): Color
+export function invertLab (color: Color): Color {
+  return viaLab(color, lab => ({
+    ...lab,
+    l: 100 - lab.l,
+    a: -1 * lab.a,
+    b: -1 * lab.b
+  }))
+}
+
+export function invertLch (color: CssColor): Rgba
+export function invertLch (color: Hex): Hex
+export function invertLch (color: Rgba): Rgba
+export function invertLch (color: Hsla): Hsla
+export function invertLch (color: Hsba): Hsba
+export function invertLch (color: Cmyka): Cmyka
+export function invertLch (color: Xyza): Xyza
+export function invertLch (color: Laba): Laba
+export function invertLch (color: Lcha): Lcha
+export function invertLch (color: Color): Color
+export function invertLch (color: Color): Color {
+  return viaLch(color, lch => ({
+    ...lch,
+    l: 100 - lch.l,
+    h: absoluteModulo(lch.h + 180, 360)
+  }))
+}
+
+/* * * * * * * * * * * * * * * * * *
+ * Rotate
+ * * * * * * * * * * * * * * * * * */
+export function rotate (color: CssColor, degrees: number): Rgba
+export function rotate (color: Hex, degrees: number): Hex
+export function rotate (color: Rgba, degrees: number): Rgba
+export function rotate (color: Hsla, degrees: number): Hsla
+export function rotate (color: Hsba, degrees: number): Hsba
+export function rotate (color: Cmyka, degrees: number): Cmyka
+export function rotate (color: Xyza, degrees: number): Xyza
+export function rotate (color: Laba, degrees: number): Laba
+export function rotate (color: Lcha, degrees: number): Lcha
+export function rotate (color: Color, degrees: number): Color
+export function rotate (color: Color, degrees: number): Color {
+  return addChannel(color, 'hue', degrees)
+}
+
+export function rotateLab (color: CssColor, degrees: number): Rgba
+export function rotateLab (color: Hex, degrees: number): Hex
+export function rotateLab (color: Rgba, degrees: number): Rgba
+export function rotateLab (color: Hsla, degrees: number): Hsla
+export function rotateLab (color: Hsba, degrees: number): Hsba
+export function rotateLab (color: Cmyka, degrees: number): Cmyka
+export function rotateLab (color: Xyza, degrees: number): Xyza
+export function rotateLab (color: Laba, degrees: number): Laba
+export function rotateLab (color: Lcha, degrees: number): Lcha
+export function rotateLab (color: Color, degrees: number): Color
+export function rotateLab (color: Color, degrees: number): Color {
+  return viaLab(color, lab => {
+    const hue = Math.atan2(lab.b, lab.a) * (180 / Math.PI)
+    const chroma = Math.sqrt(lab.a ** 2 + lab.b ** 2)
+    const newHue = absoluteModulo(hue + degrees, 360)
+    const rad = newHue * (Math.PI / 180)
+    return {
+      ...lab,
+      a: chroma * Math.cos(rad),
+      b: chroma * Math.sin(rad)
+    }
+  })
+}
+
+export function rotateLch (color: CssColor, degrees: number): Rgba
+export function rotateLch (color: Hex, degrees: number): Hex
+export function rotateLch (color: Rgba, degrees: number): Rgba
+export function rotateLch (color: Hsla, degrees: number): Hsla
+export function rotateLch (color: Hsba, degrees: number): Hsba
+export function rotateLch (color: Cmyka, degrees: number): Cmyka
+export function rotateLch (color: Xyza, degrees: number): Xyza
+export function rotateLch (color: Laba, degrees: number): Laba
+export function rotateLch (color: Lcha, degrees: number): Lcha
+export function rotateLch (color: Color, degrees: number): Color
+export function rotateLch (color: Color, degrees: number): Color {
+  return viaLch(color, lch => ({
+    ...lch,
+    h: absoluteModulo(lch.h + degrees, 360)
+  }))
+}
+
+/* * * * * * * * * * * * * * * * * *
+ * Rotations
+ * * * * * * * * * * * * * * * * * */
+export function rotations<A extends readonly number[]> (color: CssColor, angles: A): { [K in keyof A]: Rgba };
+export function rotations<A extends readonly number[]> (color: Hex, angles: A): { [K in keyof A]: Hex };
+export function rotations<A extends readonly number[]> (color: Rgba, angles: A): { [K in keyof A]: Rgba };
+export function rotations<A extends readonly number[]> (color: Hsla, angles: A): { [K in keyof A]: Hsla };
+export function rotations<A extends readonly number[]> (color: Hsba, angles: A): { [K in keyof A]: Hsba };
+export function rotations<A extends readonly number[]> (color: Cmyka, angles: A): { [K in keyof A]: Cmyka };
+export function rotations<A extends readonly number[]> (color: Xyza, angles: A): { [K in keyof A]: Xyza };
+export function rotations<A extends readonly number[]> (color: Laba, angles: A): { [K in keyof A]: Laba };
+export function rotations<A extends readonly number[]> (color: Lcha, angles: A): { [K in keyof A]: Lcha };
+export function rotations<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: Color };
+export function rotations<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: Color } {
+  const result = angles.map(a => rotate(color, a)) as { [K in keyof A]: Color }
+  return result
+}
+
+export function rotationsLab<A extends readonly number[]> (color: CssColor, angles: A): { [K in keyof A]: Rgba };
+export function rotationsLab<A extends readonly number[]> (color: Hex, angles: A): { [K in keyof A]: Hex };
+export function rotationsLab<A extends readonly number[]> (color: Rgba, angles: A): { [K in keyof A]: Rgba };
+export function rotationsLab<A extends readonly number[]> (color: Hsla, angles: A): { [K in keyof A]: Hsla };
+export function rotationsLab<A extends readonly number[]> (color: Hsba, angles: A): { [K in keyof A]: Hsba };
+export function rotationsLab<A extends readonly number[]> (color: Cmyka, angles: A): { [K in keyof A]: Cmyka };
+export function rotationsLab<A extends readonly number[]> (color: Xyza, angles: A): { [K in keyof A]: Xyza };
+export function rotationsLab<A extends readonly number[]> (color: Laba, angles: A): { [K in keyof A]: Laba };
+export function rotationsLab<A extends readonly number[]> (color: Lcha, angles: A): { [K in keyof A]: Lcha };
+export function rotationsLab<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: Color };
+export function rotationsLab<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: Color } {
+  const result = angles.map(a => rotateLab(color, a)) as { [K in keyof A]: Color }
+  return result
+}
+
+export function rotationsLch<A extends readonly number[]> (color: CssColor, angles: A): { [K in keyof A]: Rgba };
+export function rotationsLch<A extends readonly number[]> (color: Hex, angles: A): { [K in keyof A]: Hex };
+export function rotationsLch<A extends readonly number[]> (color: Rgba, angles: A): { [K in keyof A]: Rgba };
+export function rotationsLch<A extends readonly number[]> (color: Hsla, angles: A): { [K in keyof A]: Hsla };
+export function rotationsLch<A extends readonly number[]> (color: Hsba, angles: A): { [K in keyof A]: Hsba };
+export function rotationsLch<A extends readonly number[]> (color: Cmyka, angles: A): { [K in keyof A]: Cmyka };
+export function rotationsLch<A extends readonly number[]> (color: Xyza, angles: A): { [K in keyof A]: Xyza };
+export function rotationsLch<A extends readonly number[]> (color: Laba, angles: A): { [K in keyof A]: Laba };
+export function rotationsLch<A extends readonly number[]> (color: Lcha, angles: A): { [K in keyof A]: Lcha };
+export function rotationsLch<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: Color };
+export function rotationsLch<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: Color } {
+  const result = angles.map(a => rotateLch(color, a)) as { [K in keyof A]: Color }
+  return result
+}
+
+/* * * * * * * * * * * * * * * * * *
+ * Complementary
+ * * * * * * * * * * * * * * * * * */
+export function complementary (color: CssColor): Rgba
+export function complementary (color: Hex): Hex
+export function complementary (color: Rgba): Rgba
+export function complementary (color: Hsla): Hsla
+export function complementary (color: Hsba): Hsba
+export function complementary (color: Cmyka): Cmyka
+export function complementary (color: Xyza): Xyza
+export function complementary (color: Laba): Laba
+export function complementary (color: Lcha): Lcha
+export function complementary (color: Color): Color {
+  return rotate(color, 180)
+}
+
+export function complementaryLab (color: CssColor): Rgba
+export function complementaryLab (color: Hex): Hex
+export function complementaryLab (color: Rgba): Rgba
+export function complementaryLab (color: Hsla): Hsla
+export function complementaryLab (color: Hsba): Hsba
+export function complementaryLab (color: Cmyka): Cmyka
+export function complementaryLab (color: Xyza): Xyza
+export function complementaryLab (color: Laba): Laba
+export function complementaryLab (color: Lcha): Lcha
+export function complementaryLab (color: Color): Color {
+  return rotateLab(color, 180)
+}
+
+export function complementaryLch (color: CssColor): Rgba
+export function complementaryLch (color: Hex): Hex
+export function complementaryLch (color: Rgba): Rgba
+export function complementaryLch (color: Hsla): Hsla
+export function complementaryLch (color: Hsba): Hsba
+export function complementaryLch (color: Cmyka): Cmyka
+export function complementaryLch (color: Xyza): Xyza
+export function complementaryLch (color: Laba): Laba
+export function complementaryLch (color: Lcha): Lcha
+export function complementaryLch (color: Color): Color {
+  return rotateLch(color, 180)
+}
+
+/* * * * * * * * * * * * * * * * * *
+ * Split Complementary
+ * * * * * * * * * * * * * * * * * */
+export function splitComplementary (color: CssColor): readonly [Rgba, Rgba]
+export function splitComplementary (color: Hex): readonly [Hex, Hex]
+export function splitComplementary (color: Rgba): readonly [Rgba, Rgba]
+export function splitComplementary (color: Hsla): readonly [Hsla, Hsla]
+export function splitComplementary (color: Hsba): readonly [Hsba, Hsba]
+export function splitComplementary (color: Cmyka): readonly [Cmyka, Cmyka]
+export function splitComplementary (color: Xyza): readonly [Xyza, Xyza]
+export function splitComplementary (color: Laba): readonly [Laba, Laba]
+export function splitComplementary (color: Lcha): readonly [Lcha, Lcha]
+export function splitComplementary (color: Color): readonly [Color, Color] {
+  return rotations(color, [150, 210] as const)
+}
+
+export function splitComplementaryLab (color: CssColor): readonly [Rgba, Rgba]
+export function splitComplementaryLab (color: Hex): readonly [Hex, Hex]
+export function splitComplementaryLab (color: Rgba): readonly [Rgba, Rgba]
+export function splitComplementaryLab (color: Hsla): readonly [Hsla, Hsla]
+export function splitComplementaryLab (color: Hsba): readonly [Hsba, Hsba]
+export function splitComplementaryLab (color: Cmyka): readonly [Cmyka, Cmyka]
+export function splitComplementaryLab (color: Xyza): readonly [Xyza, Xyza]
+export function splitComplementaryLab (color: Laba): readonly [Laba, Laba]
+export function splitComplementaryLab (color: Lcha): readonly [Lcha, Lcha]
+export function splitComplementaryLab (color: Color): readonly [Color, Color] {
+  return rotationsLab(color, [150, 210] as const)
+}
+
+export function splitComplementaryLch (color: CssColor): readonly [Rgba, Rgba]
+export function splitComplementaryLch (color: Hex): readonly [Hex, Hex]
+export function splitComplementaryLch (color: Rgba): readonly [Rgba, Rgba]
+export function splitComplementaryLch (color: Hsla): readonly [Hsla, Hsla]
+export function splitComplementaryLch (color: Hsba): readonly [Hsba, Hsba]
+export function splitComplementaryLch (color: Cmyka): readonly [Cmyka, Cmyka]
+export function splitComplementaryLch (color: Xyza): readonly [Xyza, Xyza]
+export function splitComplementaryLch (color: Laba): readonly [Laba, Laba]
+export function splitComplementaryLch (color: Lcha): readonly [Lcha, Lcha]
+export function splitComplementaryLch (color: Color): readonly [Color, Color] {
+  return rotationsLch(color, [150, 210] as const)
+}
+
+/* * * * * * * * * * * * * * * * * *
+ * Triadic
+ * * * * * * * * * * * * * * * * * */
+export function triadic (color: CssColor): readonly [Rgba, Rgba]
+export function triadic (color: Hex): readonly [Hex, Hex]
+export function triadic (color: Rgba): readonly [Rgba, Rgba]
+export function triadic (color: Hsla): readonly [Hsla, Hsla]
+export function triadic (color: Hsba): readonly [Hsba, Hsba]
+export function triadic (color: Cmyka): readonly [Cmyka, Cmyka]
+export function triadic (color: Xyza): readonly [Xyza, Xyza]
+export function triadic (color: Laba): readonly [Laba, Laba]
+export function triadic (color: Lcha): readonly [Lcha, Lcha]
+export function triadic (color: Color): readonly [Color, Color] {
+  return rotations(color, [120, 240] as const)
+}
+
+export function triadicLab (color: CssColor): readonly [Rgba, Rgba]
+export function triadicLab (color: Hex): readonly [Hex, Hex]
+export function triadicLab (color: Rgba): readonly [Rgba, Rgba]
+export function triadicLab (color: Hsla): readonly [Hsla, Hsla]
+export function triadicLab (color: Hsba): readonly [Hsba, Hsba]
+export function triadicLab (color: Cmyka): readonly [Cmyka, Cmyka]
+export function triadicLab (color: Xyza): readonly [Xyza, Xyza]
+export function triadicLab (color: Laba): readonly [Laba, Laba]
+export function triadicLab (color: Lcha): readonly [Lcha, Lcha]
+export function triadicLab (color: Color): readonly [Color, Color] {
+  return rotationsLab(color, [120, 240] as const)
+}
+
+export function triadicLch (color: CssColor): readonly [Rgba, Rgba]
+export function triadicLch (color: Hex): readonly [Hex, Hex]
+export function triadicLch (color: Rgba): readonly [Rgba, Rgba]
+export function triadicLch (color: Hsla): readonly [Hsla, Hsla]
+export function triadicLch (color: Hsba): readonly [Hsba, Hsba]
+export function triadicLch (color: Cmyka): readonly [Cmyka, Cmyka]
+export function triadicLch (color: Xyza): readonly [Xyza, Xyza]
+export function triadicLch (color: Laba): readonly [Laba, Laba]
+export function triadicLch (color: Lcha): readonly [Lcha, Lcha]
+export function triadicLch (color: Color): readonly [Color, Color] {
+  return rotationsLch(color, [120, 240] as const)
+}
+
+/* * * * * * * * * * * * * * * * * *
+ * Tetradic
+ * * * * * * * * * * * * * * * * * */
+export function tetradic (color: CssColor): readonly [Rgba, Rgba, Rgba]
+export function tetradic (color: Hex): readonly [Hex, Hex, Hex]
+export function tetradic (color: Rgba): readonly [Rgba, Rgba, Rgba]
+export function tetradic (color: Hsla): readonly [Hsla, Hsla, Hsla]
+export function tetradic (color: Hsba): readonly [Hsba, Hsba, Hsba]
+export function tetradic (color: Cmyka): readonly [Cmyka, Cmyka, Cmyka]
+export function tetradic (color: Xyza): readonly [Xyza, Xyza, Xyza]
+export function tetradic (color: Laba): readonly [Laba, Laba, Laba]
+export function tetradic (color: Lcha): readonly [Lcha, Lcha, Lcha]
+export function tetradic (color: Color): readonly [Color, Color, Color] {
+  return rotations(color, [90, 180, 270] as const)
+}
+
+export function tetradicLab (color: CssColor): readonly [Rgba, Rgba, Rgba]
+export function tetradicLab (color: Hex): readonly [Hex, Hex, Hex]
+export function tetradicLab (color: Rgba): readonly [Rgba, Rgba, Rgba]
+export function tetradicLab (color: Hsla): readonly [Hsla, Hsla, Hsla]
+export function tetradicLab (color: Hsba): readonly [Hsba, Hsba, Hsba]
+export function tetradicLab (color: Cmyka): readonly [Cmyka, Cmyka, Cmyka]
+export function tetradicLab (color: Xyza): readonly [Xyza, Xyza, Xyza]
+export function tetradicLab (color: Laba): readonly [Laba, Laba, Laba]
+export function tetradicLab (color: Lcha): readonly [Lcha, Lcha, Lcha]
+export function tetradicLab (color: Color): readonly [Color, Color, Color] {
+  return rotationsLab(color, [90, 180, 270] as const)
+}
+
+export function tetradicLch (color: CssColor): readonly [Rgba, Rgba, Rgba]
+export function tetradicLch (color: Hex): readonly [Hex, Hex, Hex]
+export function tetradicLch (color: Rgba): readonly [Rgba, Rgba, Rgba]
+export function tetradicLch (color: Hsla): readonly [Hsla, Hsla, Hsla]
+export function tetradicLch (color: Hsba): readonly [Hsba, Hsba, Hsba]
+export function tetradicLch (color: Cmyka): readonly [Cmyka, Cmyka, Cmyka]
+export function tetradicLch (color: Xyza): readonly [Xyza, Xyza, Xyza]
+export function tetradicLch (color: Laba): readonly [Laba, Laba, Laba]
+export function tetradicLch (color: Lcha): readonly [Lcha, Lcha, Lcha]
+export function tetradicLch (color: Color): readonly [Color, Color, Color] {
+  return rotationsLch(color, [90, 180, 270] as const)
+}
+
+// [WIP] maybe implement palette(color, 'tetradic' | 'triadic' | readonly number[] ...) ?
+
+/* * * * * * * * * * * * * * * * * *
+ * Grayscales
+ * * * * * * * * * * * * * * * * * */
+
+// RGB
+function avgGrayscaleRgb (rgb: Rgba): Rgba {
+  const { r, g, b } = rgb
+  const avg = (r + g + b) / 3
+  return { ...rgb, r: avg, g: avg, b: avg }
+}
+
+function weightedAvgGrayscaleRgb (rgb: Rgba): Rgba {
+  const { r, g, b } = rgb
+  const avg = (r * 0.2126 + g * 0.7152 + b * 0.0722)
+  return { ...rgb, r: avg, g: avg, b: avg }
+}
+
+function minChannelGrayscaleRgb (rgb: Rgba): Rgba {
+  const { r, g, b } = rgb
+  const min = Math.min(r, g, b)
+  return { ...rgb, r: min, g: min, b: min }
+}
+
+function maxChannelGrayscaleRgb (rgb: Rgba): Rgba {
+  const { r, g, b } = rgb
+  const max = Math.max(r, g, b)
+  return { ...rgb, r: max, g: max, b: max }
+}
+
+function grayscaleRgbVia (rgb: Rgba, channel: 'red' | 'green' | 'blue'): Rgba {
+  const { r, g, b } = rgb
+  switch (channel) {
+    case 'red': return { ...rgb, r, g: r, b: r }
+    case 'green': return { ...rgb, r: g, g, b: g }
+    case 'blue': return { ...rgb, r: b, g: b, b }
+  }
+}
+
+// CMYK
+function avgGrayscaleCmyk (cmyk: Cmyka): Cmyka {
+  const { c, m, y, k } = cmyk
+  const avg = (c + m + y + k) / 4
+  return { ...cmyk, c: avg, m: avg, y: avg, k: avg }
+}
+
+function avgNoBlackGrayscaleCmyk (cmyk: Cmyka): Cmyka {
+  // this grayscale approach is probably not necessary
+  const { c, m, y } = cmyk
+  const avg = (c + m + y) / 3
+  return { ...cmyk, c: avg, m: avg, y: avg, k: avg }
+}
+
+function minChannelGrayscaleCmyk (cmyk: Cmyka): Cmyka {
+  const { c, m, y, k } = cmyk
+  const min = Math.min(c, m, y, k)
+  return { ...cmyk, c: min, m: min, y: min, k: min }
+}
+
+function minNoBlackChannelGrayscaleCmyk (cmyk: Cmyka): Cmyka {
+  const { c, m, y } = cmyk
+  const min = Math.min(c, m, y)
+  return { ...cmyk, c: min, m: min, y: min, k: min }
+}
+
+function maxChannelGrayscaleCmyk (cmyk: Cmyka): Cmyka {
+  const { c, m, y, k } = cmyk
+  const max = Math.max(c, m, y, k)
+  return { ...cmyk, c: max, m: max, y: max, k: max }
+}
+
+function maxNoBlackChannelGrayscaleCmyk (cmyk: Cmyka): Cmyka {
+  const { c, m, y } = cmyk
+  const max = Math.max(c, m, y)
+  return { ...cmyk, c: max, m: max, y: max, k: max }
+}
+
+function grayscaleCmykVia (cmyk: Cmyka, channel: 'cyan' | 'magenta' | 'yellow' | 'black'): Cmyka {
+  const { c, m, y, k } = cmyk
+  switch (channel) {
+    case 'cyan': return { ...cmyk, c, m: c, y: c, k: c }
+    case 'magenta': return { ...cmyk, c: m, m, y: m, k: m }
+    case 'yellow': return { ...cmyk, c: y, m: y, y, k: y }
+    case 'black': return { ...cmyk, c: k, m: k, y: k, k: k }
+  }
+}
+
+function perceptualGrayscaleCmyk (cmyk: Cmyka): Cmyka {
+  return { ...cmyk, c: 0, m: 0, y: 0 }
+}
+
+// HSL & HSB
+function grayscaleHsl (hsl: Hsla): Hsla { return { ...hsl, s: 0 } }
+function grayscaleHsb (hsb: Hsba): Hsba { return { ...hsb, s: 0 } }
+
+// XYZ
+function grayscaleXyz (xyz: Xyza): Xyza { return { ...xyz, x: xyz.y, z: xyz.y } }
+
+// LAB
+function grayscaleLab (lab: Laba): Laba { return { ...lab, a: 0, b: 0 } }
+
+// LCH
+function grayscaleLch (lch: Lcha): Lcha { return { ...lch, c: 0 } }
+
+type GrayscaleMethod = 'rgb-avg'
+  | 'rgb-weighted-avg'
+  | 'rgb-min-channel'
+  | 'rgb-max-channel'
+  | 'rgb-via-red'
+  | 'rgb-via-green'
+  | 'rgb-via-blue'
+  | 'cmyk-avg'
+  | 'cmyk-no-black-avg'
+  | 'cmyk-min-channel'
+  | 'cmyk-min-no-black-channel'
+  | 'cmyk-max-channel'
+  | 'cmyk-max-no-black-channel'
+  | 'cmyk-via-cyan'
+  | 'cmyk-via-magenta'
+  | 'cmyk-via-yellow'
+  | 'cmyk-via-black'
+  | 'cmyk-perceptual'
+  | 'hsl'
+  | 'hsb'
+  | 'xyz'
+  | 'lab'
+  | 'lch'
+
+export function grayscale (color: CssColor, method: GrayscaleMethod): CssColor
+export function grayscale (color: Hex, method: GrayscaleMethod): Hex
+export function grayscale (color: Rgba, method: GrayscaleMethod): Rgba
+export function grayscale (color: Hsla, method: GrayscaleMethod): Hsla
+export function grayscale (color: Hsba, method: GrayscaleMethod): Hsba
+export function grayscale (color: Cmyka, method: GrayscaleMethod): Cmyka
+export function grayscale (color: Xyza, method: GrayscaleMethod): Xyza
+export function grayscale (color: Laba, method: GrayscaleMethod): Laba
+export function grayscale (color: Lcha, method: GrayscaleMethod): Lcha
+export function grayscale (color: Color, method: GrayscaleMethod): Color
+export function grayscale (color: Color, method: GrayscaleMethod = 'lab'): Color {
+  switch (method) {
+    case 'rgb-avg': return viaRgb(color, avgGrayscaleRgb)
+    case 'rgb-weighted-avg': return viaRgb(color, weightedAvgGrayscaleRgb)
+    case 'rgb-min-channel': return viaRgb(color, minChannelGrayscaleRgb)
+    case 'rgb-max-channel': return viaRgb(color, maxChannelGrayscaleRgb)
+    case 'rgb-via-red': return viaRgb(color, rgb => grayscaleRgbVia(rgb, 'red'))
+    case 'rgb-via-green': return viaRgb(color, rgb => grayscaleRgbVia(rgb, 'green'))
+    case 'rgb-via-blue': return viaRgb(color, rgb => grayscaleRgbVia(rgb, 'blue'))
+    
+    case 'cmyk-avg': return viaCmyk(color, avgGrayscaleCmyk)
+    case 'cmyk-no-black-avg': return viaCmyk(color, avgNoBlackGrayscaleCmyk)
+    case 'cmyk-min-channel': return viaCmyk(color, minChannelGrayscaleCmyk)
+    case 'cmyk-min-no-black-channel': return viaCmyk(color, minNoBlackChannelGrayscaleCmyk)
+    case 'cmyk-max-channel': return viaCmyk(color, maxChannelGrayscaleCmyk)
+    case 'cmyk-max-no-black-channel': return viaCmyk(color, maxNoBlackChannelGrayscaleCmyk)
+    case 'cmyk-via-cyan': return viaCmyk(color, cmyk => grayscaleCmykVia(cmyk, 'cyan'))
+    case 'cmyk-via-magenta': return viaCmyk(color, cmyk => grayscaleCmykVia(cmyk, 'magenta'))
+    case 'cmyk-via-yellow': return viaCmyk(color, cmyk => grayscaleCmykVia(cmyk, 'yellow'))
+    case 'cmyk-via-black': return viaCmyk(color, cmyk => grayscaleCmykVia(cmyk, 'black'))
+    case 'cmyk-perceptual': return viaCmyk(color, perceptualGrayscaleCmyk)
+
+    case 'hsl': return viaHsl(color, grayscaleHsl)
+    case 'hsb': return viaHsb(color, grayscaleHsb)
+    case 'xyz': return viaXyz(color, grayscaleXyz)
+    case 'lab': return viaLab(color, grayscaleLab)
+    case 'lch': return viaLch(color, grayscaleLch)
+  }
+}
+
+/* * * * * * * * * * * * * * * * * *
+ * Luminance
+ * * * * * * * * * * * * * * * * * */
+
+function luminanceRgb (rgb: Rgba): number {
+  const { r, g, b } = rgb
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+}
+
+type LuminanceMethod = 'rgb' | 'xyz' | 'lab'
+
+export function luminance (color: CssColor, method: LuminanceMethod): number
+export function luminance (color: Hex, method: LuminanceMethod): number
+export function luminance (color: Rgba, method: LuminanceMethod): number
+export function luminance (color: Hsla, method: LuminanceMethod): number
+export function luminance (color: Hsba, method: LuminanceMethod): number
+export function luminance (color: Cmyka, method: LuminanceMethod): number
+export function luminance (color: Xyza, method: LuminanceMethod): number
+export function luminance (color: Laba, method: LuminanceMethod): number
+export function luminance (color: Lcha, method: LuminanceMethod): number
+export function luminance (color: Color, method: LuminanceMethod): number
+export function luminance (color: Color, method: LuminanceMethod = 'lab'): number {
+  switch (method) {
+    case 'rgb': return luminanceRgb(toRgb(color))
+    case 'xyz': return toXyz(color).y
+    case 'lab': return toLab(color).l
+  }
+}
 
 
 
 
 //  * 
 //  * 
-//  * grayscale(color) 
-//  * invert(color)
 //  * 
-//  * getTriadic(color)
-//  * getTetradic(color)
-//  * getAnalogous(color)
-//  * getSplitComplementary(color)
 //  * 
 //  * getLuminance(color)
 //  * getContrast(color1, color2)
@@ -896,7 +1837,6 @@ export function multChannel (color: Color, channel: ColorChannel, factor: number
 //  * mix(color1, color2, weight?)
 //  * blend(color1, color2, mode)
 //  * 
-//  * rotate(color, degrees)
 //  * fade(color, amount) => you suggested that this lowers the alpha, right ? what difference from setAlpha then?
 //  * 
 //  * * * * * * * * * * * * * * * * * */
