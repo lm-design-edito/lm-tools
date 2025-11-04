@@ -6,7 +6,7 @@
 // import { lightenColor as lightenColorFunc } from './lighten-color/index.js'
 // import { saturateColor as saturateColorFunc } from './saturate-color/index.js'
 
-import type { Hex, Rgb } from './types.js'
+import type { Hex, Rgba } from './types.js'
 
 // export namespace Colors {
 //   export const complementColor = complementColorFunc
@@ -18,13 +18,14 @@ import type { Hex, Rgb } from './types.js'
 //   export const saturateColor = saturateColorFunc
 // }
 
-export function hexToRgb (hexColor: Hex): Rgb {
-  hexColor = hexColor.replace('#', '')
-  const [a, b, c, d, e, f] = hexColor.split('')
+export function hexToRgb (hexColor: Hex): Rgba {
+  // hexColor = hexColor.replace('#', '')
+  // const [a, b, c, d, e, f] = hexColor.split('')
   
   
-  const r = Math.max(0, Math.min(255, parseInt(hexColor.substring(0, 2), 16))),
-  g = Math.max(0, Math.min(255, parseInt(hexColor.substring(2, 4), 16))),
-  b = Math.max(0, Math.min(255, parseInt(hexColor.substring(4, 6), 16)));
-  return [r, g, b];
+  // const r = Math.max(0, Math.min(255, parseInt(hexColor.substring(0, 2), 16))),
+  // g = Math.max(0, Math.min(255, parseInt(hexColor.substring(2, 4), 16))),
+  // b = Math.max(0, Math.min(255, parseInt(hexColor.substring(4, 6), 16)));
+  // return [r, g, b];
+  return 0 as any
 }

@@ -2,10 +2,10 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "lib": ["ESNext", "DOM"],
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "target": "ESNext",
-    "isolatedModules": true
+    "isolatedModules": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ESNext"
   },
   "include": ["**/*"]
 }

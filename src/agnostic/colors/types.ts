@@ -1,44 +1,39 @@
 import { isNonNullObject } from '../objects/is-object/index.js'
-import { absoluteModulo } from '../numbers/absolute-modulo'
-import { clamp } from '../numbers/clamp'
+import { absoluteModulo } from '../numbers/absolute-modulo/index.js'
+import { clamp } from '../numbers/clamp/index.js'
 
-export type Hex = string
-
+// export type Hex = string
+export type Hex = `#${string}`
 export type Rgba = {
   r: number // 0-255
   g: number // 0-255
   b: number // 0-255
   a?: number // 0-1
 }
-
 export type Hsla = {
   h: number // 0-360
   s: number // 0-100
   l: number // 0-100
   a?: number // 0-1
 }
-
 export type Hsba = {
   h: number // 0-360
   s: number // 0-100
   b: number // 0-100
   a?: number // 0-1
 }
-
 export type Laba = {
   l: number // 0–100
   a: number // env. -128–127
   b: number // env. -128–127
   al?: number // 0-1
 }
-
 export type Lcha = {
   l: number // 0–100
   c: number // 0–~150
   h: number // 0–360
   a?: number // 0-1
 }
-
 export type Cmyka = {
   c: number // 0–100
   m: number // 0–100
@@ -46,14 +41,12 @@ export type Cmyka = {
   k: number // 0–100
   a?: number // 0-1
 }
-
 export type Xyza = {
   x: number // env. 0–95.047
   y: number // env. 0–100
   z: number // env. 0–108.883
   a?: number // 0-1
 }
-
 export type CssColor = 'aliceblue'
   | 'antiquewhite'
   | 'aqua'
@@ -360,6 +353,17 @@ export const cssColors: CssColorMap = {
 
 export type Color = Hex | Rgba | Hsla | Hsba | Laba | Lcha | Cmyka | Xyza | CssColor
 
+export type TransformedColor<C extends Color> = C extends CssColor ? Rgba
+  : C extends Hex ? Hex
+    : C extends Rgba ? Rgba
+      : C extends Hsla ? Hsla
+        : C extends Hsba ? Hsba
+          : C extends Cmyka ? Cmyka
+            : C extends Xyza ? Xyza
+              : C extends Laba ? Laba
+                : C extends Lcha ? Lcha
+                  : never
+
 /* * * * * * * * * * * * * * * * * *
  * Typechecks
  * * * * * * * * * * * * * * * * * */
@@ -371,7 +375,7 @@ export const isHex = (color: unknown): color is Hex => {
   const withoutHashLength = withoutHash.length
   const allowedLengths = [3, 4, 6, 8]
   if (!allowedLengths.includes(withoutHashLength)) return false
-  return /^[0-9a-fA-F]+$/.test(withoutHash)
+  return /^[0-9a-f]+$/igm.test(withoutHash)
 }
 
 export const isRgb = (color: unknown): color is Rgba => {
@@ -457,19 +461,21 @@ export const isCssColor = (color: unknown): color is CssColor => typeof color ==
 // [WIP] maybe use absoluteModulo where needed?
 // needs rewrite, hex char checks, etc
 function _hex2rgb (hex: Hex): Rgba {
-  const inputHex = hex
-  const startsWithHash = hex.startsWith('#')
+  if (!isHex(hex)) throw new Error(`invalid hex color ${hex}`)
+  let hexString: string = hex
+  const inputHex = hexString
+  const startsWithHash = hexString.startsWith('#')
   if (!startsWithHash) throw new Error(`invalid hex color ${inputHex}`)
-  hex = hex.slice(1)
-  if (hex.length === 3) { hex = hex.split('').map(c => c + c).join('') + 'ff' }
-  else if (hex.length === 4) { hex = hex.split('').map(c => c + c).join('') }
-  else if (hex.length === 6) { hex = hex + 'ff' }
-  else if (hex.length === 8) { hex = hex }
+  hexString = hexString.slice(1)
+  if (hexString.length === 3) { hexString = hexString.split('').map(c => c + c).join('') + 'ff' }
+  else if (hexString.length === 4) { hexString = hexString.split('').map(c => c + c).join('') }
+  else if (hexString.length === 6) { hexString = hexString + 'ff' }
+  else if (hexString.length === 8) { hexString = hexString }
   else throw new Error(`invalid hex color ${inputHex}`)
-  const r = parseInt(hex.slice(0, 2), 16)
-  const g = parseInt(hex.slice(2, 4), 16)
-  const b = parseInt(hex.slice(4, 6), 16)
-  const a = parseInt(hex.slice(6, 8), 16) / 255
+  const r = parseInt(hexString.slice(0, 2), 16)
+  const g = parseInt(hexString.slice(2, 4), 16)
+  const b = parseInt(hexString.slice(4, 6), 16)
+  const a = parseInt(hexString.slice(6, 8), 16) / 255
   return { r, g, b, a }
 }
 
@@ -479,7 +485,14 @@ function _rgb2hex (rgb: Rgba): Hex {
   const gHex = Math.round(g).toString(16).padStart(2, '0')
   const bHex = Math.round(b).toString(16).padStart(2, '0')
   const aHex = Math.round(a * 255).toString(16).padStart(2, '0')
-  return `#${rHex}${gHex}${bHex}${aHex}`
+  const returned: Hex = `#${rHex}${gHex}${bHex}${aHex}`
+  if (!isHex(returned)) {
+    // Here typescript says returned is 'never' but this is because
+    // isHex function is more strict than Hex type, so technically
+    // isHex(hex) can return false, for instance if hex === '#zzz'
+    throw new Error(`invalid hex color output ${returned}`)
+  }
+  return returned
 }
 
 // RGB ↔ CSS
@@ -882,8 +895,8 @@ export function viaRgb (color: Cmyka, transformer: (rgb: Rgba) => Rgba): Cmyka
 export function viaRgb (color: Xyza, transformer: (rgb: Rgba) => Rgba): Xyza
 export function viaRgb (color: Laba, transformer: (rgb: Rgba) => Rgba): Laba
 export function viaRgb (color: Lcha, transformer: (rgb: Rgba) => Rgba): Lcha
-export function viaRgb (color: Color, transformer: (rgb: Rgba) => Rgba): Color
-export function viaRgb (color: Color, transformer: (rgb: Rgba) => Rgba): Color {
+export function viaRgb (color: Color, transformer: (rgb: Rgba) => Rgba): TransformedColor<Color>
+export function viaRgb (color: Color, transformer: (rgb: Rgba) => Rgba): TransformedColor<Color> {
   const rgb = toRgb(color)
   const transformedRgb = transformer(rgb)
   if (isRgb(color)) return transformedRgb
@@ -908,8 +921,8 @@ export function viaHsl (color: Cmyka, transformer: (hsl: Hsla) => Hsla): Cmyka
 export function viaHsl (color: Xyza, transformer: (hsl: Hsla) => Hsla): Xyza
 export function viaHsl (color: Laba, transformer: (hsl: Hsla) => Hsla): Laba
 export function viaHsl (color: Lcha, transformer: (hsl: Hsla) => Hsla): Lcha
-export function viaHsl (color: Color, transformer: (hsl: Hsla) => Hsla): Color
-export function viaHsl (color: Color, transformer: (hsl: Hsla) => Hsla): Color {
+export function viaHsl (color: Color, transformer: (hsl: Hsla) => Hsla): TransformedColor<Color>
+export function viaHsl (color: Color, transformer: (hsl: Hsla) => Hsla): TransformedColor<Color> {
   const hsl = toHsl(color)
   const transformedHsl = transformer(hsl)
   if (isHsl(color)) return transformedHsl
@@ -934,8 +947,8 @@ export function viaHsb (color: Cmyka, transformer: (hsb: Hsba) => Hsba): Cmyka
 export function viaHsb (color: Xyza, transformer: (hsb: Hsba) => Hsba): Xyza
 export function viaHsb (color: Laba, transformer: (hsb: Hsba) => Hsba): Laba
 export function viaHsb (color: Lcha, transformer: (hsb: Hsba) => Hsba): Lcha
-export function viaHsb (color: Color, transformer: (hsb: Hsba) => Hsba): Color
-export function viaHsb (color: Color, transformer: (hsb: Hsba) => Hsba): Color {
+export function viaHsb (color: Color, transformer: (hsb: Hsba) => Hsba): TransformedColor<Color>
+export function viaHsb (color: Color, transformer: (hsb: Hsba) => Hsba): TransformedColor<Color> {
   const hsb = toHsb(color)
   const transformedHsb = transformer(hsb)
   if (isHsb(color)) return transformedHsb
@@ -960,8 +973,8 @@ export function viaCmyk (color: Cmyka, transformer: (cmyk: Cmyka) => Cmyka): Cmy
 export function viaCmyk (color: Xyza, transformer: (cmyk: Cmyka) => Cmyka): Xyza
 export function viaCmyk (color: Laba, transformer: (cmyk: Cmyka) => Cmyka): Laba
 export function viaCmyk (color: Lcha, transformer: (cmyk: Cmyka) => Cmyka): Lcha
-export function viaCmyk (color: Color, transformer: (cmyk: Cmyka) => Cmyka): Color
-export function viaCmyk (color: Color, transformer: (cmyk: Cmyka) => Cmyka): Color {
+export function viaCmyk (color: Color, transformer: (cmyk: Cmyka) => Cmyka): TransformedColor<Color>
+export function viaCmyk (color: Color, transformer: (cmyk: Cmyka) => Cmyka): TransformedColor<Color> {
   const cmyk = toCmyk(color)
   const transformedCmyk = transformer(cmyk)
   if (isHsb(color)) return transformedCmyk
@@ -986,8 +999,8 @@ export function viaXyz (color: Cmyka, transformer: (xyz: Xyza) => Xyza): Cmyka
 export function viaXyz (color: Xyza, transformer: (xyz: Xyza) => Xyza): Xyza
 export function viaXyz (color: Laba, transformer: (xyz: Xyza) => Xyza): Laba
 export function viaXyz (color: Lcha, transformer: (xyz: Xyza) => Xyza): Lcha
-export function viaXyz (color: Color, transformer: (xyz: Xyza) => Xyza): Color
-export function viaXyz (color: Color, transformer: (xyz: Xyza) => Xyza): Color {
+export function viaXyz (color: Color, transformer: (xyz: Xyza) => Xyza): TransformedColor<Color>
+export function viaXyz (color: Color, transformer: (xyz: Xyza) => Xyza): TransformedColor<Color> {
   const xyz = toXyz(color)
   const transformedXyz = transformer(xyz)
   if (isHsb(color)) return transformedXyz
@@ -1012,8 +1025,8 @@ export function viaLab (color: Cmyka, transformer: (lab: Laba) => Laba): Cmyka
 export function viaLab (color: Xyza, transformer: (lab: Laba) => Laba): Xyza
 export function viaLab (color: Laba, transformer: (lab: Laba) => Laba): Laba
 export function viaLab (color: Lcha, transformer: (lab: Laba) => Laba): Lcha
-export function viaLab (color: Color, transformer: (lab: Laba) => Laba): Color
-export function viaLab (color: Color, transformer: (lab: Laba) => Laba): Color {
+export function viaLab (color: Color, transformer: (lab: Laba) => Laba): TransformedColor<Color>
+export function viaLab (color: Color, transformer: (lab: Laba) => Laba): TransformedColor<Color> {
   const lab = toLab(color)
   const transformedLab = transformer(lab)
   if (isHsb(color)) return transformedLab
@@ -1038,8 +1051,8 @@ export function viaLch (color: Cmyka, transformer: (lch: Lcha) => Lcha): Cmyka
 export function viaLch (color: Xyza, transformer: (lch: Lcha) => Lcha): Xyza
 export function viaLch (color: Laba, transformer: (lch: Lcha) => Lcha): Laba
 export function viaLch (color: Lcha, transformer: (lch: Lcha) => Lcha): Lcha
-export function viaLch (color: Color, transformer: (lch: Lcha) => Lcha): Color
-export function viaLch (color: Color, transformer: (lch: Lcha) => Lcha): Color {
+export function viaLch (color: Color, transformer: (lch: Lcha) => Lcha): TransformedColor<Color>
+export function viaLch (color: Color, transformer: (lch: Lcha) => Lcha): TransformedColor<Color> {
   const lch = toLch(color)
   const transformedLch = transformer(lch)
   if (isHsb(color)) return transformedLch
@@ -1067,8 +1080,8 @@ export function tidy (color: Cmyka): Cmyka
 export function tidy (color: Xyza): Xyza
 export function tidy (color: Laba): Laba
 export function tidy (color: Lcha): Lcha
-export function tidy (color: Color): Color
-export function tidy (color: Color): Color {
+export function tidy (color: Color): TransformedColor<Color>
+export function tidy (color: Color): TransformedColor<Color> {
   if (isRgb(color)) return {
     r: clamp(color.r, 0, 255),
     g: clamp(color.g, 0, 255),
@@ -1108,7 +1121,7 @@ export function tidy (color: Color): Color {
   }
   if (isLch(color)) return {
     l: clamp(color.l, 0, 100),
-    c: color.c,
+    c: Math.max(0, color.c),
     h: clamp(color.h, 0, 360),
     a: clamp(color.a ?? 1, 0, 1)
   }
@@ -1152,8 +1165,8 @@ export function setChannel (color: Cmyka, channel: Channel, value: number): Cmyk
 export function setChannel (color: Xyza, channel: Channel, value: number): Xyza
 export function setChannel (color: Laba, channel: Channel, value: number): Laba
 export function setChannel (color: Lcha, channel: Channel, value: number): Lcha
-export function setChannel (color: Color, channel: Channel, value: number): Color
-export function setChannel (color: Color, channel: Channel, value: number): Color {
+export function setChannel (color: Color, channel: Channel, value: number): TransformedColor<Color>
+export function setChannel (color: Color, channel: Channel, value: number): TransformedColor<Color> {
   switch (channel) {
     case 'red': return viaRgb(color, rgb => ({ ...rgb, r: clamp(value, 0, 255) }))
     case 'green': return viaRgb(color, rgb => ({ ...rgb, g: clamp(value, 0, 255) }))
@@ -1173,7 +1186,7 @@ export function setChannel (color: Color, channel: Channel, value: number): Colo
     case 'lightnessLab': return viaLab(color, lab => ({ ...lab, a: clamp(value, 0, 100) }))
     case 'aLab': return viaLab(color, lab => ({ ...lab, a: value }))
     case 'bLab': return viaLab(color, lab => ({ ...lab, b: value }))
-    case 'chroma': return viaLch(color, lch => ({ ...lch, c: value }))
+    case 'chroma': return viaLch(color, lch => ({ ...lch, c: Math.max(0, value) }))
     case 'hueLch': return viaLch(color, lch => ({ ...lch, h: clamp(value, 0, 360) }))  
   }
 }
@@ -1219,7 +1232,7 @@ export function getChannel (color: Color, channel: Channel): number {
 /* * * * * * * * * * * * * * * * * *
  * Add channel
  * * * * * * * * * * * * * * * * * */
-export function addChannel (color: CssColor, channel: Channel, amount: number): CssColor
+export function addChannel (color: CssColor, channel: Channel, amount: number): Rgba
 export function addChannel (color: Hex, channel: Channel, amount: number): Hex
 export function addChannel (color: Rgba, channel: Channel, amount: number): Rgba
 export function addChannel (color: Hsla, channel: Channel, amount: number): Hsla
@@ -1228,8 +1241,8 @@ export function addChannel (color: Cmyka, channel: Channel, amount: number): Cmy
 export function addChannel (color: Xyza, channel: Channel, amount: number): Xyza
 export function addChannel (color: Laba, channel: Channel, amount: number): Laba
 export function addChannel (color: Lcha, channel: Channel, amount: number): Lcha
-export function addChannel (color: Color, channel: Channel, amount: number): Color
-export function addChannel (color: Color, channel: Channel, amount: number): Color {
+export function addChannel (color: Color, channel: Channel, amount: number): TransformedColor<Color>
+export function addChannel (color: Color, channel: Channel, amount: number): TransformedColor<Color> {
   switch (channel) {
     case 'red': return viaRgb(color, rgb => ({ ...rgb, r: clamp(rgb.r + amount, 0, 255) }))
     case 'green': return viaRgb(color, rgb => ({ ...rgb, g: clamp(rgb.g + amount, 0, 255) }))
@@ -1249,7 +1262,7 @@ export function addChannel (color: Color, channel: Channel, amount: number): Col
     case 'lightnessLab': return viaLab(color, lab => ({ ...lab, l: clamp(lab.l + amount, 0, 100) }))
     case 'aLab': return viaLab(color, lab => ({ ...lab, a: lab.a + amount }))
     case 'bLab': return viaLab(color, lab => ({ ...lab, b: lab.b + amount }))
-    case 'chroma': return viaLch(color, lch => ({ ...lch, c: lch.c + amount }))
+    case 'chroma': return viaLch(color, lch => ({ ...lch, c: Math.max(0, lch.c + amount) }))
     case 'hueLch': return viaLch(color, lch => ({ ...lch, h: clamp(lch.h + amount, 0, 360) }))
   }
 }
@@ -1257,7 +1270,7 @@ export function addChannel (color: Color, channel: Channel, amount: number): Col
 /* * * * * * * * * * * * * * * * * *
  * Mult channel
  * * * * * * * * * * * * * * * * * */
-export function multChannel (color: CssColor, channel: Channel, factor: number): CssColor
+export function multChannel (color: CssColor, channel: Channel, factor: number): Rgba
 export function multChannel (color: Hex, channel: Channel, factor: number): Hex
 export function multChannel (color: Rgba, channel: Channel, factor: number): Rgba
 export function multChannel (color: Hsla, channel: Channel, factor: number): Hsla
@@ -1266,8 +1279,8 @@ export function multChannel (color: Cmyka, channel: Channel, factor: number): Cm
 export function multChannel (color: Xyza, channel: Channel, factor: number): Xyza
 export function multChannel (color: Laba, channel: Channel, factor: number): Laba
 export function multChannel (color: Lcha, channel: Channel, factor: number): Lcha
-export function multChannel (color: Color, channel: Channel, factor: number): Color
-export function multChannel (color: Color, channel: Channel, factor: number): Color {
+export function multChannel (color: Color, channel: Channel, factor: number): TransformedColor<Color>
+export function multChannel (color: Color, channel: Channel, factor: number): TransformedColor<Color> {
   switch (channel) {
     case 'red': return viaRgb(color, rgb => ({ ...rgb, r: clamp(rgb.r * factor, 0, 255) }))
     case 'green': return viaRgb(color, rgb => ({ ...rgb, g: clamp(rgb.g * factor, 0, 255) }))
@@ -1287,7 +1300,7 @@ export function multChannel (color: Color, channel: Channel, factor: number): Co
     case 'lightnessLab': return viaLab(color, lab => ({ ...lab, l: clamp(lab.l * factor, 0, 100) }))
     case 'aLab': return viaLab(color, lab => ({ ...lab, a: lab.a * factor }))
     case 'bLab': return viaLab(color, lab => ({ ...lab, b: lab.b * factor }))
-    case 'chroma': return viaLch(color, lch => ({ ...lch, c: lch.c * factor }))
+    case 'chroma': return viaLch(color, lch => ({ ...lch, c: Math.max(0, lch.c * factor) }))
     case 'hueLch': return viaLch(color, lch => ({ ...lch, h: clamp(lch.h * factor, 0, 360) })) 
   }
 }
@@ -1304,8 +1317,8 @@ export function invert (color: Cmyka): Cmyka
 export function invert (color: Xyza): Xyza
 export function invert (color: Laba): Laba
 export function invert (color: Lcha): Lcha
-export function invert (color: Color): Color
-export function invert (color: Color): Color {
+export function invert (color: Color): TransformedColor<Color>
+export function invert (color: Color): TransformedColor<Color> {
   return viaRgb(color, rgb => ({
     ...rgb,
     r: 255 - rgb.r,
@@ -1313,6 +1326,7 @@ export function invert (color: Color): Color {
     b: 255 - rgb.b
   }))
 }
+
 export function invertLab (color: CssColor): Rgba
 export function invertLab (color: Hex): Hex
 export function invertLab (color: Rgba): Rgba
@@ -1322,8 +1336,8 @@ export function invertLab (color: Cmyka): Cmyka
 export function invertLab (color: Xyza): Xyza
 export function invertLab (color: Laba): Laba
 export function invertLab (color: Lcha): Lcha
-export function invertLab (color: Color): Color
-export function invertLab (color: Color): Color {
+export function invertLab (color: Color): TransformedColor<Color>
+export function invertLab (color: Color): TransformedColor<Color> {
   return viaLab(color, lab => ({
     ...lab,
     l: 100 - lab.l,
@@ -1341,8 +1355,8 @@ export function invertLch (color: Cmyka): Cmyka
 export function invertLch (color: Xyza): Xyza
 export function invertLch (color: Laba): Laba
 export function invertLch (color: Lcha): Lcha
-export function invertLch (color: Color): Color
-export function invertLch (color: Color): Color {
+export function invertLch (color: Color): TransformedColor<Color>
+export function invertLch (color: Color): TransformedColor<Color> {
   return viaLch(color, lch => ({
     ...lch,
     l: 100 - lch.l,
@@ -1362,8 +1376,8 @@ export function rotate (color: Cmyka, degrees: number): Cmyka
 export function rotate (color: Xyza, degrees: number): Xyza
 export function rotate (color: Laba, degrees: number): Laba
 export function rotate (color: Lcha, degrees: number): Lcha
-export function rotate (color: Color, degrees: number): Color
-export function rotate (color: Color, degrees: number): Color {
+export function rotate (color: Color, degrees: number): TransformedColor<Color>
+export function rotate (color: Color, degrees: number): TransformedColor<Color> {
   return addChannel(color, 'hue', degrees)
 }
 
@@ -1376,8 +1390,8 @@ export function rotateLab (color: Cmyka, degrees: number): Cmyka
 export function rotateLab (color: Xyza, degrees: number): Xyza
 export function rotateLab (color: Laba, degrees: number): Laba
 export function rotateLab (color: Lcha, degrees: number): Lcha
-export function rotateLab (color: Color, degrees: number): Color
-export function rotateLab (color: Color, degrees: number): Color {
+export function rotateLab (color: Color, degrees: number): TransformedColor<Color>
+export function rotateLab (color: Color, degrees: number): TransformedColor<Color> {
   return viaLab(color, lab => {
     const hue = Math.atan2(lab.b, lab.a) * (180 / Math.PI)
     const chroma = Math.sqrt(lab.a ** 2 + lab.b ** 2)
@@ -1400,8 +1414,8 @@ export function rotateLch (color: Cmyka, degrees: number): Cmyka
 export function rotateLch (color: Xyza, degrees: number): Xyza
 export function rotateLch (color: Laba, degrees: number): Laba
 export function rotateLch (color: Lcha, degrees: number): Lcha
-export function rotateLch (color: Color, degrees: number): Color
-export function rotateLch (color: Color, degrees: number): Color {
+export function rotateLch (color: Color, degrees: number): TransformedColor<Color>
+export function rotateLch (color: Color, degrees: number): TransformedColor<Color> {
   return viaLch(color, lch => ({
     ...lch,
     h: absoluteModulo(lch.h + degrees, 360)
@@ -1420,9 +1434,9 @@ export function rotations<A extends readonly number[]> (color: Cmyka, angles: A)
 export function rotations<A extends readonly number[]> (color: Xyza, angles: A): { [K in keyof A]: Xyza };
 export function rotations<A extends readonly number[]> (color: Laba, angles: A): { [K in keyof A]: Laba };
 export function rotations<A extends readonly number[]> (color: Lcha, angles: A): { [K in keyof A]: Lcha };
-export function rotations<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: Color };
-export function rotations<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: Color } {
-  const result = angles.map(a => rotate(color, a)) as { [K in keyof A]: Color }
+export function rotations<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: TransformedColor<Color> };
+export function rotations<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: TransformedColor<Color> } {
+  const result = angles.map(a => rotate(color, a)) as { [K in keyof A]: TransformedColor<Color> }
   return result
 }
 
@@ -1435,9 +1449,9 @@ export function rotationsLab<A extends readonly number[]> (color: Cmyka, angles:
 export function rotationsLab<A extends readonly number[]> (color: Xyza, angles: A): { [K in keyof A]: Xyza };
 export function rotationsLab<A extends readonly number[]> (color: Laba, angles: A): { [K in keyof A]: Laba };
 export function rotationsLab<A extends readonly number[]> (color: Lcha, angles: A): { [K in keyof A]: Lcha };
-export function rotationsLab<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: Color };
-export function rotationsLab<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: Color } {
-  const result = angles.map(a => rotateLab(color, a)) as { [K in keyof A]: Color }
+export function rotationsLab<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: TransformedColor<Color> };
+export function rotationsLab<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: TransformedColor<Color> } {
+  const result = angles.map(a => rotateLab(color, a)) as { [K in keyof A]: TransformedColor<Color> }
   return result
 }
 
@@ -1450,181 +1464,225 @@ export function rotationsLch<A extends readonly number[]> (color: Cmyka, angles:
 export function rotationsLch<A extends readonly number[]> (color: Xyza, angles: A): { [K in keyof A]: Xyza };
 export function rotationsLch<A extends readonly number[]> (color: Laba, angles: A): { [K in keyof A]: Laba };
 export function rotationsLch<A extends readonly number[]> (color: Lcha, angles: A): { [K in keyof A]: Lcha };
-export function rotationsLch<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: Color };
-export function rotationsLch<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: Color } {
-  const result = angles.map(a => rotateLch(color, a)) as { [K in keyof A]: Color }
+export function rotationsLch<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: TransformedColor<Color> };
+export function rotationsLch<A extends readonly number[]> (color: Color, angles: A): { [K in keyof A]: TransformedColor<Color> } {
+  const result = angles.map(a => rotateLch(color, a)) as { [K in keyof A]: TransformedColor<Color> }
   return result
 }
 
 /* * * * * * * * * * * * * * * * * *
  * Complementary
  * * * * * * * * * * * * * * * * * */
-export function complementary (color: CssColor): Rgba
-export function complementary (color: Hex): Hex
-export function complementary (color: Rgba): Rgba
-export function complementary (color: Hsla): Hsla
-export function complementary (color: Hsba): Hsba
-export function complementary (color: Cmyka): Cmyka
-export function complementary (color: Xyza): Xyza
-export function complementary (color: Laba): Laba
-export function complementary (color: Lcha): Lcha
-export function complementary (color: Color): Color {
+function complementary (color: CssColor): Rgba
+function complementary (color: Hex): Hex
+function complementary (color: Rgba): Rgba
+function complementary (color: Hsla): Hsla
+function complementary (color: Hsba): Hsba
+function complementary (color: Cmyka): Cmyka
+function complementary (color: Xyza): Xyza
+function complementary (color: Laba): Laba
+function complementary (color: Lcha): Lcha
+function complementary (color: Color): TransformedColor<Color>
+function complementary (color: Color): TransformedColor<Color> {
   return rotate(color, 180)
 }
 
-export function complementaryLab (color: CssColor): Rgba
-export function complementaryLab (color: Hex): Hex
-export function complementaryLab (color: Rgba): Rgba
-export function complementaryLab (color: Hsla): Hsla
-export function complementaryLab (color: Hsba): Hsba
-export function complementaryLab (color: Cmyka): Cmyka
-export function complementaryLab (color: Xyza): Xyza
-export function complementaryLab (color: Laba): Laba
-export function complementaryLab (color: Lcha): Lcha
-export function complementaryLab (color: Color): Color {
+function complementaryLab (color: CssColor): Rgba
+function complementaryLab (color: Hex): Hex
+function complementaryLab (color: Rgba): Rgba
+function complementaryLab (color: Hsla): Hsla
+function complementaryLab (color: Hsba): Hsba
+function complementaryLab (color: Cmyka): Cmyka
+function complementaryLab (color: Xyza): Xyza
+function complementaryLab (color: Laba): Laba
+function complementaryLab (color: Lcha): Lcha
+function complementaryLab (color: Color): TransformedColor<Color>
+function complementaryLab (color: Color): TransformedColor<Color> {
   return rotateLab(color, 180)
 }
 
-export function complementaryLch (color: CssColor): Rgba
-export function complementaryLch (color: Hex): Hex
-export function complementaryLch (color: Rgba): Rgba
-export function complementaryLch (color: Hsla): Hsla
-export function complementaryLch (color: Hsba): Hsba
-export function complementaryLch (color: Cmyka): Cmyka
-export function complementaryLch (color: Xyza): Xyza
-export function complementaryLch (color: Laba): Laba
-export function complementaryLch (color: Lcha): Lcha
-export function complementaryLch (color: Color): Color {
+function complementaryLch (color: CssColor): Rgba
+function complementaryLch (color: Hex): Hex
+function complementaryLch (color: Rgba): Rgba
+function complementaryLch (color: Hsla): Hsla
+function complementaryLch (color: Hsba): Hsba
+function complementaryLch (color: Cmyka): Cmyka
+function complementaryLch (color: Xyza): Xyza
+function complementaryLch (color: Laba): Laba
+function complementaryLch (color: Lcha): Lcha
+function complementaryLch (color: Color): TransformedColor<Color>
+function complementaryLch (color: Color): TransformedColor<Color> {
   return rotateLch(color, 180)
 }
 
 /* * * * * * * * * * * * * * * * * *
  * Split Complementary
  * * * * * * * * * * * * * * * * * */
-export function splitComplementary (color: CssColor): readonly [Rgba, Rgba]
-export function splitComplementary (color: Hex): readonly [Hex, Hex]
-export function splitComplementary (color: Rgba): readonly [Rgba, Rgba]
-export function splitComplementary (color: Hsla): readonly [Hsla, Hsla]
-export function splitComplementary (color: Hsba): readonly [Hsba, Hsba]
-export function splitComplementary (color: Cmyka): readonly [Cmyka, Cmyka]
-export function splitComplementary (color: Xyza): readonly [Xyza, Xyza]
-export function splitComplementary (color: Laba): readonly [Laba, Laba]
-export function splitComplementary (color: Lcha): readonly [Lcha, Lcha]
-export function splitComplementary (color: Color): readonly [Color, Color] {
+function splitComplementary (color: CssColor): readonly [Rgba, Rgba]
+function splitComplementary (color: Hex): readonly [Hex, Hex]
+function splitComplementary (color: Rgba): readonly [Rgba, Rgba]
+function splitComplementary (color: Hsla): readonly [Hsla, Hsla]
+function splitComplementary (color: Hsba): readonly [Hsba, Hsba]
+function splitComplementary (color: Cmyka): readonly [Cmyka, Cmyka]
+function splitComplementary (color: Xyza): readonly [Xyza, Xyza]
+function splitComplementary (color: Laba): readonly [Laba, Laba]
+function splitComplementary (color: Lcha): readonly [Lcha, Lcha]
+function splitComplementary (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>]
+function splitComplementary (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>] {
   return rotations(color, [150, 210] as const)
 }
 
-export function splitComplementaryLab (color: CssColor): readonly [Rgba, Rgba]
-export function splitComplementaryLab (color: Hex): readonly [Hex, Hex]
-export function splitComplementaryLab (color: Rgba): readonly [Rgba, Rgba]
-export function splitComplementaryLab (color: Hsla): readonly [Hsla, Hsla]
-export function splitComplementaryLab (color: Hsba): readonly [Hsba, Hsba]
-export function splitComplementaryLab (color: Cmyka): readonly [Cmyka, Cmyka]
-export function splitComplementaryLab (color: Xyza): readonly [Xyza, Xyza]
-export function splitComplementaryLab (color: Laba): readonly [Laba, Laba]
-export function splitComplementaryLab (color: Lcha): readonly [Lcha, Lcha]
-export function splitComplementaryLab (color: Color): readonly [Color, Color] {
+function splitComplementaryLab (color: CssColor): readonly [Rgba, Rgba]
+function splitComplementaryLab (color: Hex): readonly [Hex, Hex]
+function splitComplementaryLab (color: Rgba): readonly [Rgba, Rgba]
+function splitComplementaryLab (color: Hsla): readonly [Hsla, Hsla]
+function splitComplementaryLab (color: Hsba): readonly [Hsba, Hsba]
+function splitComplementaryLab (color: Cmyka): readonly [Cmyka, Cmyka]
+function splitComplementaryLab (color: Xyza): readonly [Xyza, Xyza]
+function splitComplementaryLab (color: Laba): readonly [Laba, Laba]
+function splitComplementaryLab (color: Lcha): readonly [Lcha, Lcha]
+function splitComplementaryLab (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>]
+function splitComplementaryLab (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>] {
   return rotationsLab(color, [150, 210] as const)
 }
 
-export function splitComplementaryLch (color: CssColor): readonly [Rgba, Rgba]
-export function splitComplementaryLch (color: Hex): readonly [Hex, Hex]
-export function splitComplementaryLch (color: Rgba): readonly [Rgba, Rgba]
-export function splitComplementaryLch (color: Hsla): readonly [Hsla, Hsla]
-export function splitComplementaryLch (color: Hsba): readonly [Hsba, Hsba]
-export function splitComplementaryLch (color: Cmyka): readonly [Cmyka, Cmyka]
-export function splitComplementaryLch (color: Xyza): readonly [Xyza, Xyza]
-export function splitComplementaryLch (color: Laba): readonly [Laba, Laba]
-export function splitComplementaryLch (color: Lcha): readonly [Lcha, Lcha]
-export function splitComplementaryLch (color: Color): readonly [Color, Color] {
+function splitComplementaryLch (color: CssColor): readonly [Rgba, Rgba]
+function splitComplementaryLch (color: Hex): readonly [Hex, Hex]
+function splitComplementaryLch (color: Rgba): readonly [Rgba, Rgba]
+function splitComplementaryLch (color: Hsla): readonly [Hsla, Hsla]
+function splitComplementaryLch (color: Hsba): readonly [Hsba, Hsba]
+function splitComplementaryLch (color: Cmyka): readonly [Cmyka, Cmyka]
+function splitComplementaryLch (color: Xyza): readonly [Xyza, Xyza]
+function splitComplementaryLch (color: Laba): readonly [Laba, Laba]
+function splitComplementaryLch (color: Lcha): readonly [Lcha, Lcha]
+function splitComplementaryLch (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>]
+function splitComplementaryLch (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>] {
   return rotationsLch(color, [150, 210] as const)
 }
 
 /* * * * * * * * * * * * * * * * * *
  * Triadic
  * * * * * * * * * * * * * * * * * */
-export function triadic (color: CssColor): readonly [Rgba, Rgba]
-export function triadic (color: Hex): readonly [Hex, Hex]
-export function triadic (color: Rgba): readonly [Rgba, Rgba]
-export function triadic (color: Hsla): readonly [Hsla, Hsla]
-export function triadic (color: Hsba): readonly [Hsba, Hsba]
-export function triadic (color: Cmyka): readonly [Cmyka, Cmyka]
-export function triadic (color: Xyza): readonly [Xyza, Xyza]
-export function triadic (color: Laba): readonly [Laba, Laba]
-export function triadic (color: Lcha): readonly [Lcha, Lcha]
-export function triadic (color: Color): readonly [Color, Color] {
+function triadic (color: CssColor): readonly [Rgba, Rgba]
+function triadic (color: Hex): readonly [Hex, Hex]
+function triadic (color: Rgba): readonly [Rgba, Rgba]
+function triadic (color: Hsla): readonly [Hsla, Hsla]
+function triadic (color: Hsba): readonly [Hsba, Hsba]
+function triadic (color: Cmyka): readonly [Cmyka, Cmyka]
+function triadic (color: Xyza): readonly [Xyza, Xyza]
+function triadic (color: Laba): readonly [Laba, Laba]
+function triadic (color: Lcha): readonly [Lcha, Lcha]
+function triadic (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>]
+function triadic (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>] {
   return rotations(color, [120, 240] as const)
 }
 
-export function triadicLab (color: CssColor): readonly [Rgba, Rgba]
-export function triadicLab (color: Hex): readonly [Hex, Hex]
-export function triadicLab (color: Rgba): readonly [Rgba, Rgba]
-export function triadicLab (color: Hsla): readonly [Hsla, Hsla]
-export function triadicLab (color: Hsba): readonly [Hsba, Hsba]
-export function triadicLab (color: Cmyka): readonly [Cmyka, Cmyka]
-export function triadicLab (color: Xyza): readonly [Xyza, Xyza]
-export function triadicLab (color: Laba): readonly [Laba, Laba]
-export function triadicLab (color: Lcha): readonly [Lcha, Lcha]
-export function triadicLab (color: Color): readonly [Color, Color] {
+function triadicLab (color: CssColor): readonly [Rgba, Rgba]
+function triadicLab (color: Hex): readonly [Hex, Hex]
+function triadicLab (color: Rgba): readonly [Rgba, Rgba]
+function triadicLab (color: Hsla): readonly [Hsla, Hsla]
+function triadicLab (color: Hsba): readonly [Hsba, Hsba]
+function triadicLab (color: Cmyka): readonly [Cmyka, Cmyka]
+function triadicLab (color: Xyza): readonly [Xyza, Xyza]
+function triadicLab (color: Laba): readonly [Laba, Laba]
+function triadicLab (color: Lcha): readonly [Lcha, Lcha]
+function triadicLab (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>]
+function triadicLab (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>] {
   return rotationsLab(color, [120, 240] as const)
 }
 
-export function triadicLch (color: CssColor): readonly [Rgba, Rgba]
-export function triadicLch (color: Hex): readonly [Hex, Hex]
-export function triadicLch (color: Rgba): readonly [Rgba, Rgba]
-export function triadicLch (color: Hsla): readonly [Hsla, Hsla]
-export function triadicLch (color: Hsba): readonly [Hsba, Hsba]
-export function triadicLch (color: Cmyka): readonly [Cmyka, Cmyka]
-export function triadicLch (color: Xyza): readonly [Xyza, Xyza]
-export function triadicLch (color: Laba): readonly [Laba, Laba]
-export function triadicLch (color: Lcha): readonly [Lcha, Lcha]
-export function triadicLch (color: Color): readonly [Color, Color] {
+function triadicLch (color: CssColor): readonly [Rgba, Rgba]
+function triadicLch (color: Hex): readonly [Hex, Hex]
+function triadicLch (color: Rgba): readonly [Rgba, Rgba]
+function triadicLch (color: Hsla): readonly [Hsla, Hsla]
+function triadicLch (color: Hsba): readonly [Hsba, Hsba]
+function triadicLch (color: Cmyka): readonly [Cmyka, Cmyka]
+function triadicLch (color: Xyza): readonly [Xyza, Xyza]
+function triadicLch (color: Laba): readonly [Laba, Laba]
+function triadicLch (color: Lcha): readonly [Lcha, Lcha]
+function triadicLch (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>]
+function triadicLch (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>] {
   return rotationsLch(color, [120, 240] as const)
 }
 
 /* * * * * * * * * * * * * * * * * *
  * Tetradic
  * * * * * * * * * * * * * * * * * */
-export function tetradic (color: CssColor): readonly [Rgba, Rgba, Rgba]
-export function tetradic (color: Hex): readonly [Hex, Hex, Hex]
-export function tetradic (color: Rgba): readonly [Rgba, Rgba, Rgba]
-export function tetradic (color: Hsla): readonly [Hsla, Hsla, Hsla]
-export function tetradic (color: Hsba): readonly [Hsba, Hsba, Hsba]
-export function tetradic (color: Cmyka): readonly [Cmyka, Cmyka, Cmyka]
-export function tetradic (color: Xyza): readonly [Xyza, Xyza, Xyza]
-export function tetradic (color: Laba): readonly [Laba, Laba, Laba]
-export function tetradic (color: Lcha): readonly [Lcha, Lcha, Lcha]
-export function tetradic (color: Color): readonly [Color, Color, Color] {
+function tetradic (color: CssColor): readonly [Rgba, Rgba, Rgba]
+function tetradic (color: Hex): readonly [Hex, Hex, Hex]
+function tetradic (color: Rgba): readonly [Rgba, Rgba, Rgba]
+function tetradic (color: Hsla): readonly [Hsla, Hsla, Hsla]
+function tetradic (color: Hsba): readonly [Hsba, Hsba, Hsba]
+function tetradic (color: Cmyka): readonly [Cmyka, Cmyka, Cmyka]
+function tetradic (color: Xyza): readonly [Xyza, Xyza, Xyza]
+function tetradic (color: Laba): readonly [Laba, Laba, Laba]
+function tetradic (color: Lcha): readonly [Lcha, Lcha, Lcha]
+function tetradic (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>, TransformedColor<Color>]
+function tetradic (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>, TransformedColor<Color>] {
   return rotations(color, [90, 180, 270] as const)
 }
 
-export function tetradicLab (color: CssColor): readonly [Rgba, Rgba, Rgba]
-export function tetradicLab (color: Hex): readonly [Hex, Hex, Hex]
-export function tetradicLab (color: Rgba): readonly [Rgba, Rgba, Rgba]
-export function tetradicLab (color: Hsla): readonly [Hsla, Hsla, Hsla]
-export function tetradicLab (color: Hsba): readonly [Hsba, Hsba, Hsba]
-export function tetradicLab (color: Cmyka): readonly [Cmyka, Cmyka, Cmyka]
-export function tetradicLab (color: Xyza): readonly [Xyza, Xyza, Xyza]
-export function tetradicLab (color: Laba): readonly [Laba, Laba, Laba]
-export function tetradicLab (color: Lcha): readonly [Lcha, Lcha, Lcha]
-export function tetradicLab (color: Color): readonly [Color, Color, Color] {
+function tetradicLab (color: CssColor): readonly [Rgba, Rgba, Rgba]
+function tetradicLab (color: Hex): readonly [Hex, Hex, Hex]
+function tetradicLab (color: Rgba): readonly [Rgba, Rgba, Rgba]
+function tetradicLab (color: Hsla): readonly [Hsla, Hsla, Hsla]
+function tetradicLab (color: Hsba): readonly [Hsba, Hsba, Hsba]
+function tetradicLab (color: Cmyka): readonly [Cmyka, Cmyka, Cmyka]
+function tetradicLab (color: Xyza): readonly [Xyza, Xyza, Xyza]
+function tetradicLab (color: Laba): readonly [Laba, Laba, Laba]
+function tetradicLab (color: Lcha): readonly [Lcha, Lcha, Lcha]
+function tetradicLab (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>, TransformedColor<Color>]
+function tetradicLab (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>, TransformedColor<Color>] {
   return rotationsLab(color, [90, 180, 270] as const)
 }
 
-export function tetradicLch (color: CssColor): readonly [Rgba, Rgba, Rgba]
-export function tetradicLch (color: Hex): readonly [Hex, Hex, Hex]
-export function tetradicLch (color: Rgba): readonly [Rgba, Rgba, Rgba]
-export function tetradicLch (color: Hsla): readonly [Hsla, Hsla, Hsla]
-export function tetradicLch (color: Hsba): readonly [Hsba, Hsba, Hsba]
-export function tetradicLch (color: Cmyka): readonly [Cmyka, Cmyka, Cmyka]
-export function tetradicLch (color: Xyza): readonly [Xyza, Xyza, Xyza]
-export function tetradicLch (color: Laba): readonly [Laba, Laba, Laba]
-export function tetradicLch (color: Lcha): readonly [Lcha, Lcha, Lcha]
-export function tetradicLch (color: Color): readonly [Color, Color, Color] {
+function tetradicLch (color: CssColor): readonly [Rgba, Rgba, Rgba]
+function tetradicLch (color: Hex): readonly [Hex, Hex, Hex]
+function tetradicLch (color: Rgba): readonly [Rgba, Rgba, Rgba]
+function tetradicLch (color: Hsla): readonly [Hsla, Hsla, Hsla]
+function tetradicLch (color: Hsba): readonly [Hsba, Hsba, Hsba]
+function tetradicLch (color: Cmyka): readonly [Cmyka, Cmyka, Cmyka]
+function tetradicLch (color: Xyza): readonly [Xyza, Xyza, Xyza]
+function tetradicLch (color: Laba): readonly [Laba, Laba, Laba]
+function tetradicLch (color: Lcha): readonly [Lcha, Lcha, Lcha]
+function tetradicLch (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>, TransformedColor<Color>]
+function tetradicLch (color: Color): readonly [TransformedColor<Color>, TransformedColor<Color>, TransformedColor<Color>] {
   return rotationsLch(color, [90, 180, 270] as const)
 }
 
-// [WIP] maybe implement palette(color, 'tetradic' | 'triadic' | readonly number[] ...) ?
+type PaletteMap<C extends Color> = {
+  'complementary': readonly [TransformedColor<C>]
+  'complementary-lab': readonly [TransformedColor<C>]
+  'complementary-lch': readonly [TransformedColor<C>]
+  'split-complementary': readonly [TransformedColor<C>, TransformedColor<C>]
+  'split-complementary-lab': readonly [TransformedColor<C>, TransformedColor<C>]
+  'split-complementary-lch': readonly [TransformedColor<C>, TransformedColor<C>]
+  'triadic': readonly [TransformedColor<C>, TransformedColor<C>]
+  'triadic-lab': readonly [TransformedColor<C>, TransformedColor<C>]
+  'triadic-lch': readonly [TransformedColor<C>, TransformedColor<C>]
+  'tetradic': readonly [TransformedColor<C>, TransformedColor<C>, TransformedColor<C>]
+  'tetradic-lab': readonly [TransformedColor<C>, TransformedColor<C>, TransformedColor<C>]
+  'tetradic-lch': readonly [TransformedColor<C>, TransformedColor<C>, TransformedColor<C>]
+}
+
+type Palette<C extends Color, T extends keyof PaletteMap<C>> = PaletteMap<C>[T]
+
+export function palette<C extends Color, T extends keyof PaletteMap<C>>(color: C, type: T): Palette<C, T> {
+  switch (type) {
+    case 'complementary': return [complementary(color)] as const as Palette<C, T>
+    case 'complementary-lab': return [complementaryLab(color)] as const as Palette<C, T>
+    case 'complementary-lch': return [complementaryLch(color)] as const as Palette<C, T>
+    case 'split-complementary': return splitComplementary(color) as Palette<C, T>
+    case 'split-complementary-lab': return splitComplementaryLab(color)as Palette<C, T>
+    case 'split-complementary-lch': return splitComplementaryLch(color)as Palette<C, T>
+    case 'triadic': return triadic(color)as Palette<C, T>
+    case 'triadic-lab': return triadicLab(color)as Palette<C, T>
+    case 'triadic-lch': return triadicLch(color)as Palette<C, T>
+    case 'tetradic': return tetradic(color)as Palette<C, T>
+    case 'tetradic-lab': return tetradicLab(color)as Palette<C, T>
+    case 'tetradic-lch': return tetradicLch(color)as Palette<C, T>
+  }
+}
 
 /* * * * * * * * * * * * * * * * * *
  * Grayscales
@@ -1753,7 +1811,7 @@ type GrayscaleMethod = 'rgb-avg'
   | 'lab'
   | 'lch'
 
-export function grayscale (color: CssColor, method: GrayscaleMethod): CssColor
+export function grayscale (color: CssColor, method: GrayscaleMethod): Rgba
 export function grayscale (color: Hex, method: GrayscaleMethod): Hex
 export function grayscale (color: Rgba, method: GrayscaleMethod): Rgba
 export function grayscale (color: Hsla, method: GrayscaleMethod): Hsla
@@ -1762,8 +1820,8 @@ export function grayscale (color: Cmyka, method: GrayscaleMethod): Cmyka
 export function grayscale (color: Xyza, method: GrayscaleMethod): Xyza
 export function grayscale (color: Laba, method: GrayscaleMethod): Laba
 export function grayscale (color: Lcha, method: GrayscaleMethod): Lcha
-export function grayscale (color: Color, method: GrayscaleMethod): Color
-export function grayscale (color: Color, method: GrayscaleMethod = 'lab'): Color {
+export function grayscale (color: Color, method: GrayscaleMethod): TransformedColor<Color>
+export function grayscale (color: Color, method: GrayscaleMethod = 'lab'): TransformedColor<Color> {
   switch (method) {
     case 'rgb-avg': return viaRgb(color, avgGrayscaleRgb)
     case 'rgb-weighted-avg': return viaRgb(color, weightedAvgGrayscaleRgb)
@@ -1794,12 +1852,51 @@ export function grayscale (color: Color, method: GrayscaleMethod = 'lab'): Color
 }
 
 /* * * * * * * * * * * * * * * * * *
+ * sRGB linearization / delinearization
+ * * * * * * * * * * * * * * * * * */
+
+type Srgba = {
+  linearR: number // 0-1
+  linearG: number // 0-1
+  linearB: number // 0-1
+  a?: number // 0-1
+}
+
+export function linearizeToSRgb (rgb: Rgba): Srgba {
+  const cleanRgb = tidy(rgb)
+  const linearChannel = (v: number) => {
+    const n = v / 255
+    if (n <= 0.04045) return n / 12.92
+    else return Math.pow((n + 0.055) / 1.055, 2.4)
+  }
+  return {
+    linearR: linearChannel(cleanRgb.r),
+    linearG: linearChannel(cleanRgb.g),
+    linearB: linearChannel(cleanRgb.b),
+    a: cleanRgb.a
+  }
+}
+
+export function delinearizeToRgb (srgb: Srgba): Rgba {
+  const gammaChannel = (v: number) => {
+    if (v <= 0.0031308) return v * 12.92
+    else return 1.055 * Math.pow(v, 1 / 2.4) - 0.055
+  }
+  return tidy({
+    r: gammaChannel(srgb.linearR) * 255,
+    g: gammaChannel(srgb.linearG) * 255,
+    b: gammaChannel(srgb.linearB) * 255,
+    a: srgb.a
+  })
+}
+
+/* * * * * * * * * * * * * * * * * *
  * Luminance
  * * * * * * * * * * * * * * * * * */
 
 function luminanceRgb (rgb: Rgba): number {
-  const { r, g, b } = rgb
-  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+  const { linearR, linearG, linearB } = linearizeToSRgb(rgb)
+  return (0.2126 * linearR + 0.7152 * linearG + 0.0722 * linearB) / 255
 }
 
 type LuminanceMethod = 'rgb' | 'xyz' | 'lab'
@@ -1817,9 +1914,119 @@ export function luminance (color: Color, method: LuminanceMethod): number
 export function luminance (color: Color, method: LuminanceMethod = 'lab'): number {
   switch (method) {
     case 'rgb': return luminanceRgb(toRgb(color))
-    case 'xyz': return toXyz(color).y
-    case 'lab': return toLab(color).l
+    case 'xyz': return toXyz(color).y / 100
+    case 'lab': return toLab(color).l / 100
   }
+}
+
+/* * * * * * * * * * * * * * * * * *
+ * Distance
+ * * * * * * * * * * * * * * * * * */
+
+// Lab distance (ΔE00)
+// Hard bounds: theoretically unbounded (ΔE00 can grow extremely if a/b/L are extreme)
+// Soft bounds: 0 → ~100 for typical colors (white vs black ≈ 100)
+export function distanceLab(c1: Laba, c2: Laba): number {
+  const deg2rad = (deg: number) => (Math.PI / 180) * deg
+  const rad2deg = (rad: number) => (180 / Math.PI) * rad
+
+  // Step 1: Compute C* and mean C*
+  const C1 = Math.sqrt(c1.a * c1.a + c1.b * c1.b)
+  const C2 = Math.sqrt(c2.a * c2.a + c2.b * c2.b)
+  const meanC = (C1 + C2) / 2
+
+  // Step 2: Compute G
+  const meanC7 = Math.pow(meanC, 7)
+  const G = 0.5 * (1 - Math.sqrt(meanC7 / (meanC7 + Math.pow(25, 7))))
+
+  // Step 3: a' values
+  const a1p = (1 + G) * c1.a
+  const a2p = (1 + G) * c2.a
+
+  // Step 4: C' and h'
+  const C1p = Math.sqrt(a1p * a1p + c1.b * c1.b)
+  const C2p = Math.sqrt(a2p * a2p + c2.b * c2.b)
+  const h1p = Math.atan2(c1.b, a1p)
+  const h2p = Math.atan2(c2.b, a2p)
+
+  // Step 5: ΔL', ΔC', ΔH'
+  const dLp = c2.l - c1.l
+  const dCp = C2p - C1p
+  let dhp = h2p - h1p
+  if (dhp > Math.PI) dhp -= 2 * Math.PI
+  if (dhp < -Math.PI) dhp += 2 * Math.PI
+  const dHp = 2 * Math.sqrt(C1p * C2p) * Math.sin(dhp / 2)
+
+  // Step 6: mean L', mean C', mean h'
+  const meanLp = (c1.l + c2.l) / 2
+  let meanHp = (h1p + h2p) / 2
+  if (Math.abs(h1p - h2p) > Math.PI) { meanHp += Math.PI }
+
+  // Step 7: T
+  const T = 1
+    - 0.17 * Math.cos(meanHp - deg2rad(30))
+    + 0.24 * Math.cos(2 * meanHp)
+    + 0.32 * Math.cos(3 * meanHp + deg2rad(6))
+    - 0.20 * Math.cos(4 * meanHp - deg2rad(63))
+
+  // Step 8: SL, SC, SH
+  const SL = 1 + (0.015 * (meanLp - 50) * (meanLp - 50)) / Math.sqrt(20 + (meanLp - 50) * (meanLp - 50))
+  const SC = 1 + 0.045 * meanC
+  const SH = 1 + 0.015 * meanC * T
+
+  // Step 9: RT
+  const deltaTheta = deg2rad(60) * Math.exp(-((rad2deg(meanHp) - 275) / 25) * ((rad2deg(meanHp) - 275) / 25))
+  const RC = Math.sqrt(Math.pow(meanC, 7) / (Math.pow(meanC, 7) + Math.pow(25, 7)))
+  const RT = -2 * RC * Math.sin(deltaTheta)
+
+  // Step 10: return ΔE00
+  return Math.sqrt(
+    (dLp / SL) * (dLp / SL) +
+      (dCp / SC) * (dCp / SC) +
+      (dHp / SH) * (dHp / SH) +
+      RT * (dCp / SC) * (dHp / SH)
+  )
+}
+
+// LCh distance (lightness–chroma)
+// Hard bounds: theoretically unbounded if L or C go outside typical ranges
+// Soft bounds: 0 → ~180 (L 0–100, C 0–150 typical range gives √(100²+150²) ≈ 180)
+export function distanceLch(c1: Lcha, c2: Lcha): number {
+  const dL = c1.l - c2.l
+  const dC = c1.c - c2.c
+  return Math.sqrt(dL * dL + dC * dC)
+}
+
+// CAM16-UCS distance (approximation)
+// Hard bounds: unbounded mathematically
+// Soft bounds: 0 → ~173 (assuming J, a, b roughly 0–100 in normal perceptual colors)
+export function distanceCam16(c1: Laba, c2: Laba): number {
+  const cam1 = toCam16(c1)
+  const cam2 = toCam16(c2)
+  const dJ = cam1.J - cam2.J
+  const da = cam1.a - cam2.a
+  const db = cam1.b - cam2.b
+  return Math.sqrt(dJ * dJ + da * da + db * db)
+}
+
+// HSV distance (lightness/value)
+// Hard bounds: 0 → 100 (B channel physically constrained)
+// Soft bounds: 0 → 100 (matches hard bounds)
+export function distanceHsv(c1: Hsba, c2: Hsba): number {
+  return Math.abs(c1.b - c2.b)
+}
+
+/* * * * * * * * * * * * * * * * * *
+ * Contrast
+ * * * * * * * * * * * * * * * * * */
+
+// RGB (WCAG 2.x) using linearized sRGB
+export function getContrastRgb (c1: Rgba, c2: Rgba): number {
+  const L1 = luminanceRgb(c1)
+  const L2 = luminanceRgb(c2)
+  const bright = L1 > L2 ? L1 : L2
+  const dark = L1 > L2 ? L2 : L1
+  return (bright + 0.05) / (dark + 0.05)
 }
 
 
