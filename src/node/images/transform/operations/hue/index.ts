@@ -1,10 +1,7 @@
 import sharp from 'sharp'
 import z from 'zod'
 import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
-
-export type HueOperationParams = {
-  rotateDeg?: number
-}
+import type { HueOperationParams } from '../../../types.js'
 
 export function isHueOperationParams (obj: unknown): Outcome.Either<HueOperationParams, string> {
   const schema = z.object({

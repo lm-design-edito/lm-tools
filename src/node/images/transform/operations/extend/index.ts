@@ -1,16 +1,10 @@
 import sharp from 'sharp'
 import z from 'zod'
 import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
-import { isSharpColor } from '../../utils/index.js'
-
-export type ExtendOperationParams = {
-  left?: number
-  right?: number
-  top?: number
-  bottom?: number
-  extendWith?: sharp.ExtendWith // [WIP] not sure it's safe to use directly the types from sharp
-  background?: sharp.Color // [WIP] same
-}
+import { isColor } from '../../../../../agnostic/colors/index.js'
+import { Color } from '../../../../../agnostic/colors/types.js'
+import { toSharpColor } from '../../../utils/index.js'
+import type { ExtendOperationParams } from '../../../types.js'
 
 export function isExtendOperationParams (obj: unknown): Outcome.Either<ExtendOperationParams, string> {
   const schema = z.object({
@@ -19,7 +13,7 @@ export function isExtendOperationParams (obj: unknown): Outcome.Either<ExtendOpe
     top: z.number().optional(),
     bottom: z.number().optional(),
     extendWith: z.optional(z.enum(['background', 'copy', 'repeat', 'mirror'])),
-    background: z.custom<sharp.Color>((val) => isSharpColor(val)).optional()
+    background: z.custom<Color>(isColor).optional()
   })
   const result = schema.safeParse(obj)
   if (!result.success) return Outcome.makeFailure(result.error.message)
@@ -30,5 +24,10 @@ export async function extend (
   sharpInstance: sharp.Sharp,
   params: ExtendOperationParams
 ): Promise<sharp.Sharp> {
-  return sharpInstance.extend(params)
+  return sharpInstance.extend({
+    ...params,
+    background: params.background !== undefined
+      ? toSharpColor(params.background)
+      : undefined
+  })
 }

@@ -1,5 +1,5 @@
-import { clamp } from '../../../numbers/clamp/index.js'
-import { absoluteModulo } from '../../../numbers/absolute-modulo/index.js'
+import { clamp } from '../../numbers/clamp/index.js'
+import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
 import {
   Color,
   TransformedColor,

@@ -1,31 +1,87 @@
-// import { complementColor as complementColorFunc} from './complement-color/index.js'
-// import { HEXToRGB as HEXToRGBFunc } from './hex-to-rgb/index.js'
-// import { RGBToHEX as RGBToHEXFunc } from './rgb-to-hex/index.js'
-// import { RGBToHSL as RGBToHSLFunc } from './rgb-to-hsl/index.js'
-// import { HSLToRGB as HSLToRGBFunc } from './hsl-to-rgb/index.js'
-// import { lightenColor as lightenColorFunc } from './lighten-color/index.js'
-// import { saturateColor as saturateColorFunc } from './saturate-color/index.js'
+import * as Types from './types.js'
+import {
+  setChannel,
+  getChannel,
+  addChannel,
+  multChannel
+} from './channels/index.js'
+import { contrast } from './contrast/index.js'
+import {
+  toRgb,
+  toHsl,
+  toHsb,
+  toCmyk,
+  toXyz,
+  toLab,
+  toLch,
+  viaRgb,
+  viaHsl,
+  viaHsb,
+  viaCmyk,
+  viaXyz,
+  viaLab,
+  viaLch
+} from './convert/index.js'
+import { distance } from './distance/index.js'
+import { grayscale } from './grayscale/index.js'
+import { invert } from './invert/index.js'
+import { lerp } from './lerp/index.js'
+import { luminance } from './luminance/index.js'
+import { palette } from './palette/index.js'
+import { rotate } from './rotate/index.js'
+import { tidy } from './tidy/index.js'
+import {
+  isHex,
+  isRgb,
+  isHsl,
+  isHsb,
+  isCmyk,
+  isXyz,
+  isLab,
+  isLch,
+  isCssColor,
+  isColor
+} from './typechecks/index.js'
 
-import type { Hex, Rgba } from './types.js'
+// [WIP] non linear interpolations ? Blend modes ?
 
-// export namespace Colors {
-//   export const complementColor = complementColorFunc
-//   export const HEXToRGB = HEXToRGBFunc
-//   export const RGBToHEX = RGBToHEXFunc
-//   export const RGBToHSL = RGBToHSLFunc
-//   export const HSLToRGB = HSLToRGBFunc
-//   export const lightenColor = lightenColorFunc
-//   export const saturateColor = saturateColorFunc
-// }
-
-export function hexToRgb (hexColor: Hex): Rgba {
-  // hexColor = hexColor.replace('#', '')
-  // const [a, b, c, d, e, f] = hexColor.split('')
-  
-  
-  // const r = Math.max(0, Math.min(255, parseInt(hexColor.substring(0, 2), 16))),
-  // g = Math.max(0, Math.min(255, parseInt(hexColor.substring(2, 4), 16))),
-  // b = Math.max(0, Math.min(255, parseInt(hexColor.substring(4, 6), 16)));
-  // return [r, g, b];
-  return 0 as any
+export {
+  Types,
+  setChannel,
+  getChannel,
+  addChannel,
+  multChannel,
+  contrast,
+  toRgb,
+  toHsl,
+  toHsb,
+  toCmyk,
+  toXyz,
+  toLab,
+  toLch,
+  viaRgb,
+  viaHsl,
+  viaHsb,
+  viaCmyk,
+  viaXyz,
+  viaLab,
+  viaLch,
+  distance,
+  grayscale,
+  invert,
+  lerp,
+  luminance,
+  palette,
+  rotate,
+  tidy,
+  isHex,
+  isRgb,
+  isHsl,
+  isHsb,
+  isCmyk,
+  isXyz,
+  isLab,
+  isLch,
+  isCssColor,
+  isColor
 }

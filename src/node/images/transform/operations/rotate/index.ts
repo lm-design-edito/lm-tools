@@ -1,17 +1,15 @@
 import sharp from 'sharp'
 import z from 'zod'
 import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
-import { isSharpColor } from '../../utils/index.js'
-
-export type RotateOperationParams = {
-  angleDeg?: number
-  background?: sharp.Color // [WIP] use own types, not those from sharp
-}
+import type { Color } from '../../../../../agnostic/colors/types.js'
+import { isColor } from '../../../../../agnostic/colors/index.js'
+import { toSharpColor } from '../../../utils/index.js'
+import type { RotateOperationParams } from '../../../types.js'
 
 export function isRotateOperationParams (obj: unknown): Outcome.Either<RotateOperationParams, string> {
   const schema = z.object({
     angleDeg: z.number().optional(),
-    background: z.custom<sharp.Color>((val) => isSharpColor(val)).optional(),
+    background: z.custom<Color>(isColor).optional(),
   })
   const result = schema.safeParse(obj)
   if (!result.success) return Outcome.makeFailure(result.error.message)
@@ -23,6 +21,8 @@ export async function rotate (
   params: RotateOperationParams
 ): Promise<sharp.Sharp> {
   return sharpInstance.rotate(params.angleDeg, {
-    background: params.background
+    background: params.background !== undefined
+      ? toSharpColor(params.background)
+      : undefined
   })
 }

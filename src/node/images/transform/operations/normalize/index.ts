@@ -1,11 +1,7 @@
 import sharp from 'sharp'
 import z from 'zod'
 import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
-
-export type NormalizeOperationParams = {
-  lower?: number
-  upper?: number
-}
+import type { NormalizeOperationParams } from '../../../types.js'
 
 export function isNormalizeOperationParams (obj: unknown): Outcome.Either<NormalizeOperationParams, string> {
   const schema = z.object({

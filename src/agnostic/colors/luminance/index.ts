@@ -1,4 +1,4 @@
-import { linearizeToSRgb, toLab, toRgb, toXyz } from 'agnostic/colors/types.js'
+import { linearizeToSRgb, toLab, toRgb, toXyz } from '../convert/index.js'
 import { Color, Rgba, LuminanceMethod } from '../types.js'
 
 function luminanceRgb (rgb: Rgba): number {

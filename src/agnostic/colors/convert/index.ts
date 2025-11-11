@@ -1,4 +1,4 @@
-import { absoluteModulo } from '../../../numbers/absolute-modulo/index.js'
+import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
 import { tidy } from '../tidy/index.js'
 import {
   Color,

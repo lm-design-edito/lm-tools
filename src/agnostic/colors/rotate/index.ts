@@ -1,4 +1,4 @@
-import { absoluteModulo } from '../../../numbers/absolute-modulo/index.js'
+import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
 import { Color, TransformedColor, RotateMethod } from '../types.js'
 import { addChannel } from '../channels/index.js'
 import { viaLab, viaLch } from '../convert/index.js'

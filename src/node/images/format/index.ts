@@ -2,38 +2,20 @@ import sharp from 'sharp'
 import zod from 'zod'
 import { clamp } from '../../../agnostic/numbers/clamp/index.js'
 import { Outcome } from '../../../agnostic/misc/outcome/index.js'
-import { isSharpColor } from '../transform/utils/index.js'
-
-/* * * * * * * * * * * * * * * 
- * TYPES
- * * * * * * * * * * * * * * */
-export type ImageFileType = keyof sharp.FormatEnum
-
-export type FormatCommonOptions = {
-  width?: number
-  height?: number
-  fit?: sharp.ResizeOptions['fit']
-  position?: number | string
-  background?: sharp.Color
-  kernel?: keyof sharp.KernelEnum
-  withoutEnlargement?: boolean
-  withoutReduction?: boolean
-  fastShrinkOnLoad?: boolean
-}
-export type FormatJpgOptions = FormatCommonOptions & { quality?: number }
-export type FormatPngOptions = FormatCommonOptions & {
-  quality?: number
-  compressionLevel?: sharp.PngOptions['compressionLevel']
-}
-export type FormatWebpOptions = FormatCommonOptions & { quality?: number }
-export type FormatAvifOptions = FormatCommonOptions & { quality?: number }
-export type FormatTiffOptions = FormatCommonOptions & {
-  quality?: number
-  compression?: sharp.TiffOptions['compression']
-}
-export type FormatHeifOptions = FormatCommonOptions & { quality?: number }
-export type FormatKeepOptions = FormatCommonOptions
-export type FormatOptions = FormatJpgOptions | FormatPngOptions | FormatWebpOptions | FormatAvifOptions | FormatTiffOptions | FormatHeifOptions
+import { toSharpColor, toSharpInstance } from '../utils/index.js'
+import type { Color } from '../../../agnostic/colors/types.js'
+import { isColor } from '../../../agnostic/colors/typechecks/index.js'
+import type {
+  FormatCommonOptions,
+  FormatJpgOptions,
+  FormatPngOptions,
+  FormatWebpOptions,
+  FormatAvifOptions,
+  FormatTiffOptions,
+  FormatHeifOptions,
+  FormatOptions,
+  ImageLike
+} from '../types.js'
 
 /* * * * * * * * * * * * * * * 
  * SCHEMAS
@@ -44,25 +26,97 @@ const formatCommonOptionsSchema = zod.object({
   height: zod.number().optional(),
   fit: zod.enum(['contain', 'cover', 'fill', 'inside', 'outside']).optional(),
   position: zod.union([zod.number(), zod.string()]).optional(),
-  background: zod.custom<sharp.Color>((val) => isSharpColor(val)).optional(),
-  kernel: zod.enum(['nearest', 'cubic', 'mitchell', 'lanczos2', 'lanczos3']).optional(),
+  background: zod.custom<Color>(isColor).optional(),
+  kernel: zod.enum(['nearest', 'cubic', 'mitchell', 'lanczos2', 'lanczos3', 'mks2013', 'mks2021']).optional(),
   withoutEnlargement: zod.boolean().optional(),
   withoutReduction: zod.boolean().optional(),
   fastShrinkOnLoad: zod.boolean().optional()
 })
-const formatJpgOptionsSchema = formatCommonOptionsSchema.extend({ quality: zod.number().optional() })
+
+const formatJpgOptionsSchema = formatCommonOptionsSchema.extend({
+  type: zod.union([zod.literal('jpg'), zod.literal('jpeg')]),
+  quality: zod.number().optional(),
+  force: zod.boolean().optional(),
+  progressive: zod.boolean().optional(),
+  chromaSubsampling: zod.string().optional(),
+  trellisQuantisation: zod.boolean().optional(),
+  overshootDeringing: zod.boolean().optional(),
+  optimizeScans: zod.boolean().optional(),
+  optimizeCoding: zod.boolean().optional(),
+  quantizationTable: zod.number().optional(),
+  mozjpeg: zod.boolean().optional()
+})
+
 const formatPngOptionsSchema = formatCommonOptionsSchema.extend({
+  type: zod.literal('png'),
   quality: zod.number().optional(),
-  compressionLevel: zod.number().min(0).max(9).optional()
+  force: zod.boolean().optional(),
+  progressive: zod.boolean().optional(),
+  compressionLevel: zod.number().min(0).max(9).optional(),
+  adaptiveFiltering: zod.boolean().optional(),
+  effort: zod.number().min(1).max(10).optional(),
+  palette: zod.boolean().optional(),
+  colors: zod.number().min(1).max(256).optional(),
+  dither: zod.number().min(0).max(1).optional()
 })
-const formatWebpOptionsSchema = formatCommonOptionsSchema.extend({ quality: zod.number().optional() })
-const formatAvifOptionsSchema = formatCommonOptionsSchema.extend({ quality: zod.number().optional() })
+
+const formatWebpOptionsSchema = formatCommonOptionsSchema.extend({
+  type: zod.literal('webp'),
+  quality: zod.number().optional(),
+  force: zod.boolean().optional(),
+  alphaQuality: zod.number().optional(),
+  lossless: zod.boolean().optional(),
+  nearLossless: zod.boolean().optional(),
+  smartSubsample: zod.boolean().optional(),
+  smartDeblock: zod.boolean().optional(),
+  effort: zod.number().optional(),
+  minSize: zod.boolean().optional(),
+  mixed: zod.boolean().optional(),
+  preset: zod.enum(['default', 'picture', 'photo', 'drawing', 'icon', 'text']).optional(),
+  loop: zod.number().optional(),
+  delay: zod.union([zod.number(), zod.array(zod.number())]).optional()
+})
+
+const formatAvifOptionsSchema = formatCommonOptionsSchema.extend({
+  type: zod.literal('avif'),
+  quality: zod.number().optional(),
+  force: zod.boolean().optional(),
+  lossless: zod.boolean().optional(),
+  effort: zod.number().optional(),
+  chromaSubsampling: zod.string().optional(),
+  bitdepth: zod.union([zod.literal(8), zod.literal(10), zod.literal(12)]).optional()
+})
+
 const formatTiffOptionsSchema = formatCommonOptionsSchema.extend({
+  type: zod.literal('tiff'),
   quality: zod.number().optional(),
-  compression: zod.enum(['none', 'jpeg', 'deflate', 'packbits', 'ccittfax4', 'lzw', 'webp', 'zstd', 'jp2k']).optional()
+  compression: zod.enum(['none', 'jpeg', 'deflate', 'packbits', 'ccittfax4', 'lzw', 'webp', 'zstd', 'jp2k']).optional(),
+  force: zod.boolean().optional(),
+  predictor: zod.enum(['none', 'horizontal', 'float']).optional(),
+  pyramid: zod.boolean().optional(),
+  tile: zod.boolean().optional(),
+  tileWidth: zod.number().optional(),
+  tileHeight: zod.number().optional(),
+  xres: zod.number().optional(),
+  yres: zod.number().optional(),
+  bitdepth: zod.union([zod.literal(1), zod.literal(2), zod.literal(4), zod.literal(8)]).optional(),
+  miniswhite: zod.boolean().optional(),
+  resolutionUnit: zod.enum(['inch', 'cm']).optional()
 })
-const formatHeifOptionsSchema = formatCommonOptionsSchema.extend({ quality: zod.number().optional() })
+
+const formatHeifOptionsSchema = formatCommonOptionsSchema.extend({
+  type: zod.literal('heif'),
+  quality: zod.number().optional(),
+  force: zod.boolean().optional(),
+  compression: zod.enum(['av1', 'hevc']).optional(),
+  lossless: zod.boolean().optional(),
+  effort: zod.number().optional(),
+  chromaSubsampling: zod.string().optional(),
+  bitdepth: zod.union([zod.literal(8), zod.literal(10), zod.literal(12)]).optional()
+})
+
 const formatKeepOptionsSchema = formatCommonOptionsSchema
+
 const formatOptionsSchema = zod.union([
   formatJpgOptionsSchema,
   formatPngOptionsSchema,
@@ -84,44 +138,138 @@ export const isFormatWebpOptions = (options: unknown): options is FormatWebpOpti
 export const isFormatAvifOptions = (options: unknown): options is FormatAvifOptions => formatAvifOptionsSchema.safeParse(options).success
 export const isFormatTiffOptions = (options: unknown): options is FormatTiffOptions => formatTiffOptionsSchema.safeParse(options).success
 export const isFormatHeifOptions = (options: unknown): options is FormatHeifOptions => formatHeifOptionsSchema.safeParse(options).success
-export const isFormatKeepOptions = (options: unknown): options is FormatKeepOptions => formatKeepOptionsSchema.safeParse(options).success
 export const isFormatOptions = (options: unknown): options is FormatOptions => formatOptionsSchema.safeParse(options).success
+
+/* * * * * * * * * * * * * * * 
+ * CONVERTERS
+ * * * * * * * * * * * * * * */
+export const toSharpResizeOptions = (options: FormatCommonOptions): sharp.ResizeOptions => {
+  return {
+    width: options.width,
+    height: options.height,
+    fit: options.fit,
+    position: options.position,
+    background: options.background
+      ? toSharpColor(options.background)
+      : undefined,
+    kernel: options.kernel,
+    withoutEnlargement: options.withoutEnlargement,
+    withoutReduction: options.withoutReduction,
+    fastShrinkOnLoad: options.fastShrinkOnLoad
+  }
+}
+
+export const toSharpJpegOptions = (options: FormatJpgOptions): sharp.JpegOptions => {
+  return {
+    quality: options.quality,
+    force: options.force,
+    progressive: options.progressive,
+    chromaSubsampling: options.chromaSubsampling,
+    trellisQuantisation: options.trellisQuantisation,
+    overshootDeringing: options.overshootDeringing,
+    optimizeScans: options.optimizeScans,
+    optimizeCoding: options.optimizeCoding,
+    quantizationTable: options.quantizationTable,
+    mozjpeg: options.mozjpeg
+  }
+}
+
+export const toSharpPngOptions = (options: FormatPngOptions): sharp.PngOptions => {
+  return {
+    quality: options.quality,
+    force: options.force,
+    progressive: options.progressive,
+    compressionLevel: options.compressionLevel,
+    adaptiveFiltering: options.adaptiveFiltering,
+    effort: options.effort,
+    palette: options.palette,
+    colors: options.colors,
+    dither: options.dither
+  }
+}
+
+export const toSharpWebpOptions = (options: FormatWebpOptions): sharp.WebpOptions => {
+  return {
+    quality: options.quality,
+    loop: options.loop,
+    delay: options.delay,
+    force: options.force,
+    alphaQuality: options.alphaQuality,
+    lossless: options.lossless,
+    nearLossless: options.nearLossless,
+    smartSubsample: options.smartSubsample,
+    smartDeblock: options.smartDeblock,
+    effort: options.effort,
+    minSize: options.minSize,
+    mixed: options.mixed,
+    preset: options.preset
+  }
+}
+
+export const toSharpAvifOptions = (options: FormatAvifOptions): sharp.AvifOptions => {
+  return {
+    force: options.force,
+    quality: options.quality,
+    lossless: options.lossless,
+    effort: options.effort,
+    chromaSubsampling: options.chromaSubsampling,
+    bitdepth: options.bitdepth
+  }
+}
+
+export const toSharpTiffOptions = (options: FormatTiffOptions): sharp.TiffOptions => {
+  return {
+    force: options.force,
+    quality: options.quality,
+    compression: options.compression,
+    predictor: options.predictor,
+    pyramid: options.pyramid,
+    tile: options.tile,
+    tileWidth: options.tileWidth,
+    tileHeight: options.tileHeight,
+    xres: options.xres,
+    yres: options.yres,
+    bitdepth: options.bitdepth,
+    miniswhite: options.miniswhite,
+    resolutionUnit: options.resolutionUnit
+  }
+}
+
+export const toSharpHeifOptions = (options: FormatHeifOptions): sharp.HeifOptions => {
+  return {
+    force: options.force,
+    quality: options.quality,
+    compression: options.compression,
+    lossless: options.lossless,
+    effort: options.effort,
+    chromaSubsampling: options.chromaSubsampling,
+    bitdepth: options.bitdepth
+  }
+}
 
 /* * * * * * * * * * * * * * * 
  * FUNCTIONS
  * * * * * * * * * * * * * * */
 
-export async function format (input: Buffer, type: 'jpg' | 'jpeg', options: FormatJpgOptions): Promise<Outcome.Either<Buffer, string>>
-export async function format (input: Buffer, type: 'png', options: FormatPngOptions): Promise<Outcome.Either<Buffer, string>>
-export async function format (input: Buffer, type: 'webp', options: FormatWebpOptions): Promise<Outcome.Either<Buffer, string>>
-export async function format (input: Buffer, type: 'avif', options: FormatAvifOptions): Promise<Outcome.Either<Buffer, string>>
-export async function format (input: Buffer, type: 'tiff', options: FormatTiffOptions): Promise<Outcome.Either<Buffer, string>>
-export async function format (input: Buffer, type: 'heif', options: FormatHeifOptions): Promise<Outcome.Either<Buffer, string>>
-export async function format (input: Buffer, type: string, options: FormatKeepOptions): Promise<Outcome.Either<Buffer, string>>
-export async function format (input: Buffer, options: FormatKeepOptions): Promise<Outcome.Either<Buffer, string>>
-export async function format (
-  input: Buffer,
-  typeOrOptions: string | FormatKeepOptions,
-  options?: FormatOptions
-): Promise<Outcome.Either<Buffer, string>> {
-  const sharpInstance = sharp(input)
-  if (typeof typeOrOptions !== 'string') return Outcome.makeSuccess(await sharpInstance.resize(typeOrOptions).toBuffer())
-  const type = typeOrOptions
-  if (type === 'jpg' || type === 'jpeg') return Outcome.makeSuccess(await sharpInstance.resize(options).jpeg(options as FormatJpgOptions).toBuffer())
-  if (type === 'png') return Outcome.makeSuccess(await sharpInstance.resize(options).png(options as FormatPngOptions).toBuffer())
-  if (type === 'webp') return Outcome.makeSuccess(await sharpInstance.resize(options).webp(options as FormatWebpOptions).toBuffer())
-  if (type === 'avif') return Outcome.makeSuccess(await sharpInstance.resize(options).avif(options as FormatAvifOptions).toBuffer())
-  if (type === 'tiff') return Outcome.makeSuccess(await sharpInstance.resize(options).tiff(options as FormatTiffOptions).toBuffer())
-  if (type === 'heif') return Outcome.makeSuccess(await sharpInstance.resize(options).heif(options as FormatHeifOptions).toBuffer())
-  return Outcome.makeFailure(`Invalid image format: ${type}`)
+export async function format (input: ImageLike, options: FormatOptions): Promise<Outcome.Either<Buffer, string>> {
+  const sharpInstance = await toSharpInstance(input)
+  const resizeOptions = toSharpResizeOptions(options)
+  const resizedInstance = sharpInstance.resize(resizeOptions)
+  if (isFormatJpgOptions(options)) return Outcome.makeSuccess(await resizedInstance.jpeg(toSharpJpegOptions(options)).toBuffer())
+  if (isFormatPngOptions(options)) return Outcome.makeSuccess(await resizedInstance.png(toSharpPngOptions(options)).toBuffer())
+  if (isFormatWebpOptions(options)) return Outcome.makeSuccess(await resizedInstance.webp(toSharpWebpOptions(options)).toBuffer())
+  if (isFormatAvifOptions(options)) return Outcome.makeSuccess(await resizedInstance.avif(toSharpAvifOptions(options)).toBuffer())
+  if (isFormatTiffOptions(options)) return Outcome.makeSuccess(await resizedInstance.tiff(toSharpTiffOptions(options)).toBuffer())
+  if (isFormatHeifOptions(options)) return Outcome.makeSuccess(await resizedInstance.heif(toSharpHeifOptions(options)).toBuffer())
+  return Outcome.makeSuccess(await resizedInstance.toBuffer())
 }
 
-// [WIP] not sure about clamp values
-export const toWidth = async (input: Buffer, width: number): Promise<Buffer> => sharp(input).resize({ width }).toBuffer()
-export const toHeight = async (input: Buffer, height: number): Promise<Buffer> => sharp(input).resize({ height }).toBuffer()
-export const toJpg = async (input: Buffer, quality?: number): Promise<Buffer> => sharp(input).jpeg({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
-export const toPng = async (input: Buffer, quality?: number, compressionLevel?: sharp.PngOptions['compressionLevel']): Promise<Buffer> => sharp(input).png({ quality: clamp(quality ?? 100, 1, 100), compressionLevel }).toBuffer()
-export const toWebp = async (input: Buffer, quality?: number): Promise<Buffer> => sharp(input).webp({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
-export const toAvif = async (input: Buffer, quality?: number): Promise<Buffer> => sharp(input).avif({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
-export const toTiff = async (input: Buffer, quality?: number, compression?: sharp.TiffOptions['compression']): Promise<Buffer> => sharp(input).tiff({ quality: clamp(quality ?? 100, 1, 100), compression }).toBuffer()
-export const toHeif = async (input: Buffer, quality?: number): Promise<Buffer> => sharp(input).heif({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+export const toWidth = async (input: ImageLike, width: number): Promise<Buffer> => (await toSharpInstance(input)).resize({ width }).toBuffer()
+export const toHeight = async (input: ImageLike, height: number): Promise<Buffer> => (await toSharpInstance(input)).resize({ height }).toBuffer()
+
+export const toJpg = async (input: ImageLike, quality?: number): Promise<Buffer> => (await toSharpInstance(input)).jpeg({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+export const toPng = async (input: ImageLike, quality?: number, compressionLevel?: FormatPngOptions['compressionLevel']): Promise<Buffer> => (await toSharpInstance(input)).png({ quality: clamp(quality ?? 100, 1, 100), compressionLevel }).toBuffer()
+export const toWebp = async (input: ImageLike, quality?: number): Promise<Buffer> => (await toSharpInstance(input)).webp({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+export const toAvif = async (input: ImageLike, quality?: number): Promise<Buffer> => (await toSharpInstance(input)).avif({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+export const toTiff = async (input: ImageLike, quality?: number, compression?: FormatTiffOptions['compression']): Promise<Buffer> => (await toSharpInstance(input)).tiff({ quality: clamp(quality ?? 100, 1, 100), compression }).toBuffer()
+export const toHeif = async (input: ImageLike, quality?: number): Promise<Buffer> => (await toSharpInstance(input)).heif({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()

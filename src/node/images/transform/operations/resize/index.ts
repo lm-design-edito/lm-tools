@@ -1,19 +1,10 @@
 import sharp from 'sharp'
 import z from 'zod'
 import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
-import { isSharpColor } from '../../utils/index.js'
-
-export type ResizeOperationParams = {
-  width?: number
-  height?: number
-  fit?: keyof sharp.FitEnum // [WIP] use own types, not those from sharp
-  position?: number | string
-  background?: sharp.Color // [WIP] use own types, not those from sharp
-  kernel?: keyof sharp.KernelEnum // [WIP] use own types, not those from sharp
-  withoutEnlargement?: boolean
-  withoutReduction?: boolean
-  fastShrinkOnLoad?: boolean
-}
+import type { Color } from '../../../../../agnostic/colors/types.js'
+import { isColor } from '../../../../../agnostic/colors/index.js'
+import { toSharpColor } from '../../../utils/index.js'
+import type { ResizeOperationParams } from '../../../types.js'
 
 export function isResizeOperationParams (obj: unknown): Outcome.Either<ResizeOperationParams, string> {
   const schema = z.object({
@@ -30,13 +21,16 @@ export function isResizeOperationParams (obj: unknown): Outcome.Either<ResizeOpe
       z.number(),
       z.string()
     ]).optional(),
-    background: z.custom<sharp.Color>((val) => isSharpColor(val)).optional(),
+    background: z.custom<Color>(isColor).optional(),
     kernel: z.enum([
       'nearest',
       'cubic',
+      'linear',
       'mitchell',
       'lanczos2',
-      'lanczos3'
+      'lanczos3',
+      'mks2013',
+      'mks2021'
     ]).optional(),
     withoutEnlargement: z.boolean().optional(),
     withoutReduction: z.boolean().optional(),
@@ -51,5 +45,10 @@ export async function resize (
   sharpInstance: sharp.Sharp,
   params: ResizeOperationParams
 ): Promise<sharp.Sharp> {
-  return sharpInstance.resize(params)
+  return sharpInstance.resize({
+    ...params,
+    background: params.background !== undefined
+      ? toSharpColor(params.background)
+      : undefined
+  })
 }

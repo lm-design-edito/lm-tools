@@ -1,4 +1,4 @@
-import { isNonNullObject } from '../../../objects/is-object/index.js'
+import { isNonNullObject } from '../../objects/is-object/index.js'
 import {
   Hex,
   Rgba,
@@ -9,7 +9,8 @@ import {
   Cmyka,
   Xyza,
   CssColor,
-  cssColors
+  cssColors,
+  Color
 } from '../types.js'
 
 export const isHex = (color: unknown): color is Hex => {
@@ -95,3 +96,16 @@ export const isXyz = (color: unknown): color is Xyza => {
 
 export const isCssColor = (color: unknown): color is CssColor => typeof color === 'string'
   && (cssColors as any)[color] !== undefined
+
+export const isColor = (color: unknown): color is Color => {
+  if (isHex(color)) return true
+  if (isCssColor(color)) return true
+  if (isRgb(color)) return true
+  if (isHsl(color)) return true
+  if (isHsb(color)) return true
+  if (isCmyk(color)) return true
+  if (isXyz(color)) return true
+  if (isLab(color)) return true
+  if (isLch(color)) return true
+  return false
+}

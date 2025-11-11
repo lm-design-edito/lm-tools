@@ -1,11 +1,7 @@
 import sharp from 'sharp'
 import z from 'zod'
 import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
-
-export type LevelOperationParams = {
-  multiplier?: number
-  offset?: number
-}
+import type { LevelOperationParams } from '../../../types.js'
 
 export function isLevelOperationParams (obj: unknown): Outcome.Either<LevelOperationParams, string> {
   const schema = z.object({

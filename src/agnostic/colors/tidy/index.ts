@@ -1,7 +1,7 @@
 import { Color, TransformedColor } from '../types.js'
 import { isRgb, isHsl, isHsb, isCmyk, isXyz, isLab, isLch, isCssColor, isHex } from '../typechecks/index.js'
-import { clamp } from '../../../numbers/clamp/index.js'
-import { absoluteModulo } from '../../../numbers/absolute-modulo/index.js'
+import { clamp } from '../../numbers/clamp/index.js'
+import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
 import { toRgb, toHex } from '../convert/index.js'
 
 export function tidy <C extends Color>(color: C): TransformedColor<C> {

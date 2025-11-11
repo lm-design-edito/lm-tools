@@ -1,10 +1,7 @@
 import sharp from 'sharp'
 import z from 'zod'
 import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
-
-export type LightenOperationParams = {
-  amount?: number
-}
+import type { LightenOperationParams } from '../../../types.js'
 
 export function isLightenOperationParams (obj: unknown): Outcome.Either<LightenOperationParams, string> {
   const schema = z.object({

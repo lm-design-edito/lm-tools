@@ -1,6 +1,6 @@
 import { Color, TransformedColor, InvertMethod } from '../types.js'
 import { viaRgb, viaLab, viaLch } from '../convert/index.js'
-import { absoluteModulo } from '../../../numbers/absolute-modulo/index.js'
+import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
 
 function invertRgb <C extends Color>(color: C): TransformedColor<C> {
   return viaRgb(color, rgb => ({

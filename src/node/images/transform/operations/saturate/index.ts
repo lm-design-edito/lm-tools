@@ -1,10 +1,7 @@
 import sharp from 'sharp'
 import z from 'zod'
 import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
-
-export type SaturateOperationParams = {
-  saturation?: number
-}
+import type { SaturateOperationParams } from '../../../types.js'
 
 export function isSaturateOperationParams (obj: unknown): Outcome.Either<SaturateOperationParams, string> {
   const schema = z.object({
@@ -19,5 +16,7 @@ export async function saturate (
   sharpInstance: sharp.Sharp,
   params: SaturateOperationParams
 ): Promise<sharp.Sharp> {
-  return sharpInstance.modulate({ saturation: params.saturation })
+  return sharpInstance.modulate({
+    saturation: params.saturation
+  })
 }

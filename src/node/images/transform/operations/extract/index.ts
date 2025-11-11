@@ -1,13 +1,7 @@
 import sharp from 'sharp'
 import z from 'zod'
 import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
-
-export type ExtractOperationParams = {
-  left: number
-  top: number
-  width: number
-  height: number
-}
+import type { ExtractOperationParams } from '../../../types.js'
 
 export function isExtractOperationParams (obj: unknown): Outcome.Either<ExtractOperationParams, string> {
   const schema = z.object({
