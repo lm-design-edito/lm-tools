@@ -196,7 +196,7 @@ export type NormalizeOperationParams = {
 }
 
 export type OverlayOperationParams = {
-  input: Sharp
+  input: ImageLike
   top?: number
   left?: number
   tile?: boolean
