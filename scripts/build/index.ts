@@ -1,5 +1,4 @@
 import process from 'node:process'
-import { promises as fs } from 'node:fs'
 import { exec } from 'node:child_process'
 import esbuild from 'esbuild'
 import { COMPONENTS, AGNOSTIC, NODE, LIB } from '../_config/index.js'
@@ -13,8 +12,8 @@ import * as Files from '../../src/node/files/index'
 const rootDirs = [COMPONENTS, AGNOSTIC, NODE]
 const entryPoints = (await Promise.all(rootDirs.map(async dirPath => {
   return await Files.Subpaths.list(dirPath, {
-    directories: true,
-    files: false,
+    directories: false,
+    files: true,
     symlinks: false,
     hidden: false,
     followSimlinks: false,
@@ -22,8 +21,10 @@ const entryPoints = (await Promise.all(rootDirs.map(async dirPath => {
     maxDepth: 100,
     returnRelative: false,
     filter: async (path: string) => {
-      const children = await fs.readdir(path)
-      return children.some(path => path === 'index.ts' || path === 'index.tsx')
+      return path.endsWith('index.ts')
+        || path.endsWith('index.tsx')
+        || path.endsWith('types.ts')
+        || path.endsWith('types.tsx')
     }
   })
 }))).flat()
@@ -33,7 +34,7 @@ console.log(entryPoints)
 await new Promise((resolve, reject) => {
   esbuild.build({
     entryPoints,
-    entryNames: '[dir]/[name]/index',
+    entryNames: '[dir]/[name]',
     chunkNames: 'chunks/[name]-[hash]',
     assetNames: 'assets/[name]-[hash]',
     outdir: LIB,
