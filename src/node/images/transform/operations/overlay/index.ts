@@ -88,8 +88,9 @@ export async function overlay (
   const inputBuffer = params.input instanceof Buffer
     ? params.input
     : await (await toSharpInstance(params.input)).toBuffer()
-  return sharpInstance.composite([{
+  /* Pour pouvoir chainer plusieurs composites à la suite, on a besoin de d'abbord "applatir" l'image courante */
+  return sharp(await sharpInstance.composite([{
     ...params,
     input: inputBuffer
-  }])
+  }]).toBuffer())
 }
