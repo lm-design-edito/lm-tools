@@ -6,7 +6,6 @@ import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
 import {
   elementItemSymbol,
-  nodelistItemSplitterSymbol,
   nodelistItemSymbol,
   textItemSymbol
 } from '../hjstringify/index.js'
@@ -60,17 +59,15 @@ function unescapeHyperJsonString (val: string): string | Text | Element | NodeLi
   }
   if (val.startsWith(nodelistItemSymbol)) {
     const trimmed = val.slice(nodelistItemSymbol.length)
-    const parsedItemsArr = JSON.parse(trimmed)
-    if (!Array.isArray(parsedItemsArr)) throw new Error(`Stringified nodelist expected to contain a stringified JSON array. Found ${unknownToString(parsedItemsArr)}`)
-    const parsedOnlyHasStrings = parsedItemsArr.every((item): item is string => typeof item === 'string')
-    if (!parsedOnlyHasStrings) throw new Error(`Stringified nodelist expected to contain a stringified JSON array OF STRINGS. Found ${unknownToString(parsedItemsArr)}`)
-    const unescapedItems = parsedItemsArr.map(unescapeHyperJsonString)
     const div = document.createElement('div')
-    unescapedItems.forEach(item => {
-      if (item instanceof NodeList) div.append(...Array.from(item))
-      else div.append(item)
+    div.innerHTML = trimmed
+    const childNodesArr = Array.from(div.childNodes)
+    const frag = document.createDocumentFragment()
+    Array.from(childNodesArr).forEach(childNode => {
+      if (childNode instanceof Text) frag.append(childNode)
+      else if (childNode instanceof Element) frag.append(childNode)
     })
-    return div.childNodes as NodeListOf<Text | Element>
+    return frag.childNodes as NodeListOf<Text | Element>
   }
   return val
 }
