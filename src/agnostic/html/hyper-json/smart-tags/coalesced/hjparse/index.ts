@@ -62,11 +62,11 @@ function unescapeHyperJsonString (val: string): string | Text | Element | NodeLi
     const trimmed = val.slice(nodelistItemSymbol.length)
     const splitted = trimmed
       .split(nodelistItemSplitterSymbol)
-      .map(unescapeHyperJsonString)
     const div = document.createElement('div')
     splitted.forEach(item => {
-      if (item instanceof NodeList) div.append(...Array.from(item))
-      else div.append(item)
+      const unescapedItem = unescapeHyperJsonString(item)
+      if (unescapedItem instanceof NodeList) div.append(...Array.from(unescapedItem))
+      else div.append(unescapedItem)
     })
     return div.childNodes as NodeListOf<Text | Element>
   }

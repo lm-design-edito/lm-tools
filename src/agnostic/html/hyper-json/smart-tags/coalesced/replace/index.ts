@@ -9,6 +9,10 @@ type Arg = string | Text | NodeListOf<Element | Text> | Element
 type Args = [Arg, Arg]
 type Output = string | Text | NodeListOf<Element | Text> | Element
 
+// [WIP] now that hjstringify/replace exist, main value can be
+// extended to any resging value and be stringified if needed
+// before replacement ?
+
 export const replace = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'replace',
   defaultMode: 'coalescion',
