@@ -10,6 +10,7 @@ type Output = string
 
 export const textItemSymbol = '%%-hyperjson-text-%%'
 export const nodelistItemSymbol = '%%-hyperjson-nodelist-%%'
+export const nodelistItemSplitterSymbol = '%%-hyperjson-nodelist-splitter-%%'
 export const elementItemSymbol = '%%-hyperjson-element-%%'
 
 function stringifier (val: Types.Tree.RestingValue): string {
@@ -21,7 +22,7 @@ function stringifier (val: Types.Tree.RestingValue): string {
   if (val instanceof Element) return `"${elementItemSymbol}${val.outerHTML}"`
   if (val instanceof NodeList) {
     const items = Array.from(val)
-    return `"${nodelistItemSymbol}${items.map(stringifier).join(', ')}"`
+    return `"${nodelistItemSymbol}${items.map(stringifier).join(nodelistItemSplitterSymbol)}"`
   }
   if (val instanceof Method) return `"[Object method]"`
   if (Array.isArray(val)) return `[${val.map(stringifier).join(', ')}]`

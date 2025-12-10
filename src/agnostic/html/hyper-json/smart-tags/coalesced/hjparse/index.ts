@@ -6,6 +6,7 @@ import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
 import {
   elementItemSymbol,
+  nodelistItemSplitterSymbol,
   nodelistItemSymbol,
   textItemSymbol
 } from '../hjstringify/index.js'
@@ -59,13 +60,15 @@ function unescapeHyperJsonString (val: string): string | Text | Element | NodeLi
   }
   if (val.startsWith(nodelistItemSymbol)) {
     const trimmed = val.slice(nodelistItemSymbol.length)
+    const splitted = trimmed
+      .split(nodelistItemSplitterSymbol)
+      .map(unescapeHyperJsonString)
     const div = document.createElement('div')
-    div.innerHTML = trimmed
-    const children = Array.from(div.childNodes)
-    const validChildren = children.filter(n => n instanceof Text || n instanceof Element)
-    const frag = document.createDocumentFragment()
-    frag.append(...validChildren)
-    return frag.childNodes as NodeListOf<Text | Element>
+    splitted.forEach(item => {
+      if (item instanceof NodeList) div.append(...Array.from(item))
+      else div.append(item)
+    })
+    return div.childNodes as NodeListOf<Text | Element>
   }
   return val
 }
