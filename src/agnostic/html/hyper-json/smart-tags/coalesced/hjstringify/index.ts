@@ -14,19 +14,23 @@ export const nodelistItemSplitterSymbol = '%%-hyperjson-nodelist-splitter-%%'
 export const elementItemSymbol = '%%-hyperjson-element-%%'
 
 function stringifier (val: Types.Tree.RestingValue): string {
-  if (typeof val === 'string') return `"${val}"`
-  if (typeof val === 'number'
+  if (typeof val === 'string'
+    || typeof val === 'number'
     || typeof val === 'boolean'
-    || val === null) return `${val}`
-  if (val instanceof Text) return `"${textItemSymbol}${val.textContent}"`
-  if (val instanceof Element) return `"${elementItemSymbol}${val.outerHTML}"`
+    || val === null) return JSON.stringify(val)
+  if (val instanceof Text) return JSON.stringify(`${textItemSymbol}${val.textContent}`)
+  if (val instanceof Element) return JSON.stringify(`${elementItemSymbol}${val.outerHTML}`)
   if (val instanceof NodeList) {
     const items = Array.from(val)
     return `"${nodelistItemSymbol}${items.map(stringifier).join(nodelistItemSplitterSymbol)}"`
   }
-  if (val instanceof Method) return `"[Object method]"`
-  if (Array.isArray(val)) return `[${val.map(stringifier).join(', ')}]`
-  return `{ ${Object.entries(val).map(([key, val]) => `"${key}": ${stringifier(val)}`).join(', ')} }`
+  if (val instanceof Method) return `[Method object: ${val.transformer.name}`
+  if (Array.isArray(val)) return JSON.stringify(val.map(stringifier))
+  return JSON.stringify(
+    Object.entries(val).reduce((acc, [key, val]) => {
+      return { ...acc, [key]: stringifier(val) }
+    }, {})
+  )
 }
 
 export const hjstringify = SmartTags.makeSmartTag<Main, Args, Output>({
