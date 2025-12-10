@@ -36,6 +36,8 @@ import { equals } from '../smart-tags/coalesced/equals/index.js'
 import { getattribute } from '../smart-tags/coalesced/getattribute/index.js'
 import { getproperties } from '../smart-tags/coalesced/getproperties/index.js'
 import { getproperty } from '../smart-tags/coalesced/getproperty/index.js'
+import { hjparse } from '../smart-tags/coalesced/hjparse/index.js'
+import { hjstringify } from '../smart-tags/coalesced/hjstringify/index.js'
 import { ifFunc } from '../smart-tags/coalesced/if/index.js'
 import { initialize } from '../smart-tags/coalesced/initialize/index.js'
 import { join } from '../smart-tags/coalesced/join/index.js'
@@ -198,8 +200,8 @@ export namespace Tree {
       // smartTagsRegister
       this.smartTagsRegister = new Map<string, Types.SmartTags.SmartTag<any, any, any>>([
         any, array, boolean, element, get, global, guess, nodelist, nullFunc, number, record, ref, string, text, add, addclass,
-        and, append, at, call, clone, deleteproperties, equals, getattribute, getproperties, getproperty, ifFunc,
-        initialize, join, length, map, negate, notrailing, or, pickrandom, print, populate, push, pusheach,
+        and, append, at, call, clone, deleteproperties, equals, getattribute, getproperties, getproperty, hjparse, hjstringify,
+        ifFunc, initialize, join, length, map, negate, notrailing, or, pickrandom, print, populate, push, pusheach,
         recordtoarray, removeattribute, removeclass, renameproperty, replace, select, set, setattribute, spread,
         setproperty, sorton, split, toarray, toboolean, toelement, toggleclass, tonodelist, tonull, tonumber, toref,
         torecord, tostring, totext, transformselected, trim
