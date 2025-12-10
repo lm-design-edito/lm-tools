@@ -22,7 +22,9 @@ function stringifier (val: Types.Tree.RestingValue): string {
   if (val instanceof Element) return JSON.stringify(`${elementItemSymbol}${val.outerHTML}`)
   if (val instanceof NodeList) {
     const items = Array.from(val)
-    return JSON.stringify(`${nodelistItemSymbol}${items.map(stringifier).join(nodelistItemSplitterSymbol)}`)
+    const strItems = items.map(stringifier)
+    const strItemsArray = JSON.stringify(strItems)
+    return JSON.stringify(`${nodelistItemSymbol}${strItemsArray}`)
   }
   if (val instanceof Method) return `[Method object: ${val.transformer.name}`
   if (Array.isArray(val)) return JSON.stringify(val.map(stringifier))

@@ -60,13 +60,15 @@ function unescapeHyperJsonString (val: string): string | Text | Element | NodeLi
   }
   if (val.startsWith(nodelistItemSymbol)) {
     const trimmed = val.slice(nodelistItemSymbol.length)
-    const splitted = trimmed
-      .split(nodelistItemSplitterSymbol)
+    const parsedItemsArr = JSON.parse(trimmed)
+    if (!Array.isArray(parsedItemsArr)) throw new Error(`Stringified nodelist expected to contain a stringified JSON array. Found ${unknownToString(parsedItemsArr)}`)
+    const parsedOnlyHasStrings = parsedItemsArr.every((item): item is string => typeof item === 'string')
+    if (!parsedOnlyHasStrings) throw new Error(`Stringified nodelist expected to contain a stringified JSON array OF STRINGS. Found ${unknownToString(parsedItemsArr)}`)
+    const unescapedItems = parsedItemsArr.map(unescapeHyperJsonString)
     const div = document.createElement('div')
-    splitted.forEach(item => {
-      const unescapedItem = unescapeHyperJsonString(item)
-      if (unescapedItem instanceof NodeList) div.append(...Array.from(unescapedItem))
-      else div.append(unescapedItem)
+    unescapedItems.forEach(item => {
+      if (item instanceof NodeList) div.append(...Array.from(item))
+      else div.append(item)
     })
     return div.childNodes as NodeListOf<Text | Element>
   }
@@ -94,7 +96,11 @@ export const hjparse = SmartTags.makeSmartTag<Main, Args, Output>({
   func: main => {
     const parsed = parse(main)
     if (parsed instanceof Error) return Outcome.makeFailure({ details: parsed }) // [WIP] details accepts any, but maybe better if string here?
-    const unescaped = unescapeHyperJson(parsed)
-    return Outcome.makeSuccess(unescaped)
+    try {
+      const unescaped = unescapeHyperJson(parsed)
+      return Outcome.makeSuccess(unescaped)
+    } catch (err) {
+      return Outcome.makeFailure({ details: err })
+    }
   }
 })
