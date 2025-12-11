@@ -15,15 +15,16 @@ export const select = SmartTags.makeSmartTag<Main, Args, Output>({
   mainValueCheck: m => Utils.Tree.TypeChecks.typeCheck(m, 'nodelist', 'element'),
   argsValueCheck: a => Utils.Tree.TypeChecks.typeCheckMany(a, 'string', 'text'),
   func: (main, args) => {
+    const { document, Element } = Window.get()
     const selectedFragment = document.createDocumentFragment()
-    if (main instanceof Window.get().Element) {
+    if (main instanceof Element) {
       for (const arg of args) {
         const selector = Cast.toString(arg)
         const found = main.querySelectorAll(selector)
         selectedFragment.append(...Array.from(found))
       }
     } else {
-      const divWrapper = Window.get().document.createElement('div')
+      const divWrapper = document.createElement('div')
       divWrapper.append(...Array.from(main))
       for (const arg of args) {
         const selector = Cast.toString(arg)

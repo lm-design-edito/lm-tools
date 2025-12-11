@@ -30,8 +30,8 @@ export const setattribute = SmartTags.makeSmartTag<Main, Args, Output>({
   func: (main, args) => {
     const argsStr = args.map(e => Cast.toString(e)) as [string, string?]
     const [name, value = ''] = argsStr
-    const { NodeList } = Window.get()
     if (main instanceof NodeList) {
+      const { document } = Window.get()
       const children = Array.from(main).map(child => {
         const cloned = Utils.clone(child)
         if (cloned instanceof Element) cloned.setAttribute(name, value)

@@ -262,7 +262,11 @@ export namespace Utils {
       export function typeCheckMany<K extends Array<Types.Tree.ValueTypeName>> (
         values: unknown[],
         ...types: K
-      ): Outcome.Either<Types.Tree.ValueTypeFromNames<K>[], { position: number, expected: string, found: string }> {
+      ): Outcome.Either<Types.Tree.ValueTypeFromNames<K>[], {
+        position: number
+        expected: string
+        found: string
+      }> {
         for (const [pos, val] of Object.entries(values)) {
           const checked = typeCheck(val, ...types)
           if (checked.success) continue
@@ -275,6 +279,7 @@ export namespace Utils {
 
   export namespace Tree {
     export function mergeNodes (nodes: Element[]) {
+      const { document, Text, Element } = Window.get()
       const clones = nodes.map(node => node.cloneNode(true)) as Element[]
       type ChildData = {
         node: Element,
@@ -290,7 +295,6 @@ export namespace Utils {
         const nodeAction = actionAttrIsValid
           ? actionAttribute as Types.Tree.Merge.Action
           : Types.Tree.Merge.Action.APPEND
-        const { Element, Text } = Window.get()
         const children: typeof allChildren = Array
           .from(node.childNodes)
           .filter(child => child instanceof Text || child instanceof Element)
@@ -397,7 +401,10 @@ export namespace Utils {
       export function typeCheck<K extends Array<Types.Tree.ValueTypeName>> (
         value: unknown,
         ...types: K
-      ): Outcome.Either<Types.Tree.ValueTypeFromNames<K>, { expected: string, found: string }> {
+      ): Outcome.Either<Types.Tree.ValueTypeFromNames<K>, {
+        expected: string
+        found: string
+      }> {
         const matchesOneType = types.some(type => singleTypeCheck(value, type))
         if (matchesOneType) return Outcome.makeSuccess(value as Types.Tree.ValueTypeFromNames<K>)
         return Outcome.makeFailure({
@@ -409,7 +416,11 @@ export namespace Utils {
       export function typeCheckMany<K extends Array<Types.Tree.ValueTypeName>> (
         values: unknown[],
         ...types: K
-      ): Outcome.Either<Types.Tree.ValueTypeFromNames<K>[], { position: number, expected: string, found: string }> {
+      ): Outcome.Either<Types.Tree.ValueTypeFromNames<K>[], {
+        position: number
+        expected: string
+        found: string
+      }> {
         for (const [pos, val] of Object.entries(values)) {
           const checked = typeCheck(val, ...types)
           if (checked.success) continue
@@ -423,7 +434,11 @@ export namespace Utils {
         minLength?: number,
         maxLength?: number,
         ...types: K
-      ): Outcome.Either<Types.Tree.ValueTypeFromNames<K>[], { position: number, expected: string, found: string }> {
+      ): Outcome.Either<Types.Tree.ValueTypeFromNames<K>[], {
+        position: number
+        expected: string
+        found: string
+      }> {
         if (minLength !== undefined && values.length < minLength) return Outcome.makeFailure({
           position: values.length + 1,
           expected: `min length: ${minLength}`,
@@ -463,8 +478,30 @@ export namespace Utils {
       })
     }
 
-    export const makeMainValueError = (expected: string, found: string, details?: any) => ({ expected, found, details }) as Types.Transformations.FunctionMainValueFailure
-    export const makeArgsValueError = (expected: string, found: string, position?: number, details?: any) => ({ expected, found, position, details }) as Types.Transformations.FunctionArgsValueFailure
-    export const makeTransformationError = (details?: any) => ({ details }) as Types.Transformations.FunctionTransformationFailure
+    export const makeMainValueError = (
+      expected: string,
+      found: string,
+      details?: any
+    ) => ({
+      expected,
+      found,
+      details
+    }) as Types.Transformations.FunctionMainValueFailure
+    
+    export const makeArgsValueError = (
+      expected: string,
+      found: string,
+      position?: number,
+      details?: any
+    ) => ({
+      expected,
+      found,
+      position,
+      details
+    }) as Types.Transformations.FunctionArgsValueFailure
+    
+    export const makeTransformationError = (details?: any) => ({
+      details
+    }) as Types.Transformations.FunctionTransformationFailure
   }
 }

@@ -30,7 +30,7 @@ export const removeattribute = SmartTags.makeSmartTag<Main, Args, Output>({
   func: (main, args) => {
     const argsStr = args.map(e => Cast.toString(e)) as [string, string?]
     const [name] = argsStr
-    const { NodeList } = Window.get()
+    const { Element, NodeList, document } = Window.get()
     if (main instanceof NodeList) {
       const children = Array.from(main).map(child => {
         const cloned = Utils.clone(child)

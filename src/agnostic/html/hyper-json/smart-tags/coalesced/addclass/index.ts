@@ -15,7 +15,7 @@ export const addclass = SmartTags.makeSmartTag<Main, Args, Output>({
   mainValueCheck: m => Utils.Tree.TypeChecks.typeCheck(m, 'element', 'nodelist'),
   argsValueCheck: a => Utils.Tree.TypeChecks.typeCheckMany(a, 'string', 'text'),
   func: (main, args) => {
-    const { Element } = Window.get()
+    const { Element, document } = Window.get()
     if (main instanceof Element) {
       main.classList.add(...args.map(arg => Cast.toString(arg)))
       return Outcome.makeSuccess(main)
