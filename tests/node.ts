@@ -11,9 +11,39 @@ import { Random } from '~/agnostic/random'
 import { Regexps } from '~/agnostic/regexps'
 import { Strings } from '~/agnostic/strings'
 import { Time } from '~/agnostic/time'
+import { Window } from '~/agnostic/misc/crossenv/window'
+import { JSDOM } from 'jsdom'
 
 import * as Files from '~/node/files'
 import * as Process from '~/node/process'
+
+import { parse, stringify } from '~/agnostic/html/hyper-json/smart-tags/coalesced/hjstringify'
+
+try {
+  const dom = new JSDOM(`<!DOCTYPE html><html></html>`)
+  Window.set(dom.window)
+  const { document } = Window.get()
+  const hjValue: Html.HyperJson.Types.Tree.RestingValue = {
+    elt: document.createElement('div'),
+    nodelist: document.createDocumentFragment().childNodes as NodeListOf<Element | Text>,
+    str: 'just a string',
+    array: [
+      document.createElement('div'),
+      document.createTextNode('just a text node'),
+      document.createDocumentFragment().childNodes as NodeListOf<Element | Text>
+    ]
+  }
+
+  const stringified = stringify(hjValue)
+  console.log(stringified)
+  console.log('———————————\n\n')
+  const parsed = parse(stringified)
+  console.log(parsed)
+  console.log('———————————\n\n')
+} catch (err) {
+  console.log(err)
+  process.exit(1)
+}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
  *
