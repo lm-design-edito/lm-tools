@@ -18,6 +18,7 @@ import * as Files from '~/node/files'
 import * as Process from '~/node/process'
 
 import { parse, stringify } from '~/agnostic/html/hyper-json/smart-tags/coalesced/hjstringify'
+import { deepSetProperty } from '~/agnostic/html/hyper-json/smart-tags/coalesced/setproperty'
 
 try {
   const dom = new JSDOM(`<!DOCTYPE html><html></html>`)
@@ -40,10 +41,30 @@ try {
   const parsed = parse(stringified)
   console.log(parsed)
   console.log('———————————\n\n')
+
+
+
+  const theDiv = document.createElement('div')
+  theDiv.innerHTML = '<p>initial</p>'
+  const toDeepSet = {
+    prop1: 'str',
+    prop2: 2,
+    prop3: {
+      a: null,
+      b: [theDiv]
+    }
+  }
+  console.log('!!!', toDeepSet.prop3.b[0]!.innerHTML)
+  const deepSet = deepSetProperty(toDeepSet, 'prop3.b.0.0', document.createElement('p'))
+  console.log('!!!', (deepSet as any).prop3.b[0].innerHTML)
+  console.log('---', toDeepSet)
+  console.log('---', deepSet)
+
 } catch (err) {
   console.log(err)
   process.exit(1)
 }
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
  *

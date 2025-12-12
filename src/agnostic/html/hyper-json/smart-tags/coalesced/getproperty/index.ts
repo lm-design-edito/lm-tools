@@ -42,7 +42,12 @@ export const getproperty = SmartTags.makeSmartTag<Main, Args, Output>({
 })
 
 // [WIP] maybe it's own util in @design-edito/tools
-export function deepGetProperty (record: Types.Tree.RestingRecordValue, pathString: string): Types.Tree.RestingValue {
+// [WIP] setproperty has been edited in order to work
+// on a broader type range than Record, this should match the behavior
+export function deepGetProperty (
+  record: Types.Tree.RestingRecordValue,
+  pathString: string
+): Types.Tree.RestingValue {
   const pathChunks = pathString
     .split('.')
     .map(e => e.trim())
