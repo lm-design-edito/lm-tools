@@ -22,8 +22,6 @@ import { deepSetProperty } from '~/agnostic/html/hyper-json/smart-tags/coalesced
 
 import { replacerFunc } from '~/agnostic/html/hyper-json/smart-tags/coalesced/replace'
 
-
-
 try {
   const dom = new JSDOM(`<!DOCTYPE html><html></html>`)
   Window.set(dom.window)
