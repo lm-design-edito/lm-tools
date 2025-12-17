@@ -3,21 +3,20 @@ import { Outcome } from '../../../../../misc/outcome/index.js'
 import { Cast } from '../../../cast/index.js'
 import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
+import { Types } from '../../../types/index.js'
+import { Method } from '../../../method/index.js'
+import { Window } from '../../../../../misc/crossenv/window/index.js'
 
-type Main = string | Text | NodeListOf<Element | Text> | Element
+type Main = Types.Tree.RestingValue
 type Arg = string | Text | NodeListOf<Element | Text> | Element
 type Args = [Arg, Arg]
-type Output = string | Text | NodeListOf<Element | Text> | Element
-
-// [WIP] now that hjstringify/replace exist, main value can be
-// extended to any resging value and be stringified if needed
-// before replacement ?
+type Output = Types.Tree.RestingValue
 
 export const replace = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'replace',
   defaultMode: 'coalescion',
   isolationInitType: 'array',
-  mainValueCheck: m => Utils.Tree.TypeChecks.typeCheck(m, 'string', 'text', 'nodelist', 'element'),
+  mainValueCheck: m => Outcome.makeSuccess(m),
   argsValueCheck: a => {
     const { makeFailure, makeSuccess } = Outcome
     const { getType, typeCheckMany } = Utils.Tree.TypeChecks
@@ -32,15 +31,36 @@ export const replace = SmartTags.makeSmartTag<Main, Args, Output>({
   },
   func: (main, args) => {
     const [toReplace, replacer] = args
-    const strMain = Cast.toString(main)
-    const strToReplace = Cast.toString(toReplace)
-    const strReplacer = Cast.toString(replacer)
-    const strReplaced = replaceAll(strMain, strToReplace, strReplacer)
-    let returned: Output
-    if (typeof main === 'string') { returned = strReplaced }
-    else if (main instanceof Text) { returned = Cast.toText(strReplaced) }
-    else if (main instanceof Element) { returned = Cast.toElement(strReplaced) }
-    else { returned = Cast.toNodeList(strReplaced) }
-    return Outcome.makeSuccess(returned)
+    return Outcome.makeSuccess(
+      replacerFunc(
+        main,
+        Cast.toString(toReplace),
+        Cast.toString(replacer)
+      )
+    )
   }
 })
+
+export function replacerFunc (
+  value: Main,
+  toReplace: string,
+  replacer: string
+): Main {
+  if (typeof value === 'number'
+    || typeof value === 'boolean'
+    || value === null
+    || value instanceof Method
+  ) return value
+  if (typeof value === 'string') return replaceAll(value, toReplace, replacer)
+  const { Text, Element, NodeList } = Window.get()
+  if (value instanceof Text) return Cast.toText(replaceAll(Cast.toString(value), toReplace, replacer))
+  if (value instanceof Element) return Cast.toElement(replaceAll(Cast.toString(value), toReplace, replacer))
+  if (value instanceof NodeList) return Cast.toNodeList(replaceAll(Cast.toString(value), toReplace, replacer))
+  if (Array.isArray(value)) return value.map(val => replacerFunc(val, toReplace, replacer))
+  return Object
+    .entries(value)
+    .reduce((acc, [key, val]) => ({
+      ...acc,
+      [key]: replacerFunc(val, toReplace, replacer)
+    }), {})
+}

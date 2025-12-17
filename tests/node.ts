@@ -20,46 +20,26 @@ import * as Process from '~/node/process'
 import { parse, stringify } from '~/agnostic/html/hyper-json/smart-tags/coalesced/hjstringify'
 import { deepSetProperty } from '~/agnostic/html/hyper-json/smart-tags/coalesced/setproperty'
 
+import { replacerFunc } from '~/agnostic/html/hyper-json/smart-tags/coalesced/replace'
+
+
+
 try {
   const dom = new JSDOM(`<!DOCTYPE html><html></html>`)
   Window.set(dom.window)
-  const { document } = Window.get()
-  const hjValue: Html.HyperJson.Types.Tree.RestingValue = {
-    elt: document.createElement('div'),
-    nodelist: document.createDocumentFragment().childNodes as NodeListOf<Element | Text>,
-    str: 'just a string',
-    array: [
-      document.createElement('div'),
-      document.createTextNode('just a text node'),
-      document.createDocumentFragment().childNodes as NodeListOf<Element | Text>
-    ]
+  const window = Window.get()
+  const div = window.document.createElement('div')
+  div.innerHTML = '<p>rep</p>reprep<span>rep</span>'
+  const obj = {
+    a: ['rep', 'rep'],
+    b: div,
+    c: 3,
+    d: null,
+    e: false,
+    f: 'rep this',
+    g: window.document.createTextNode('rep rep rep hihih')
   }
-
-  const stringified = stringify(hjValue)
-  console.log(stringified)
-  console.log('———————————\n\n')
-  const parsed = parse(stringified)
-  console.log(parsed)
-  console.log('———————————\n\n')
-
-
-
-  const theDiv = document.createElement('div')
-  theDiv.innerHTML = '<p>initial</p>'
-  const toDeepSet = {
-    prop1: 'str',
-    prop2: 2,
-    prop3: {
-      a: null,
-      b: [theDiv]
-    }
-  }
-  console.log('!!!', toDeepSet.prop3.b[0]!.innerHTML)
-  const deepSet = deepSetProperty(toDeepSet, 'prop3.b.0.0', document.createElement('p'))
-  console.log('!!!', (deepSet as any).prop3.b[0].innerHTML)
-  console.log('---', toDeepSet)
-  console.log('---', deepSet)
-
+  console.log(replacerFunc(obj, 'rep', 'REEEPPP'))
 } catch (err) {
   console.log(err)
   process.exit(1)
