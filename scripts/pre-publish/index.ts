@@ -8,6 +8,21 @@ import { PKG_JSON, LIB_PKG_JSON, LIB } from '../_config/index.js'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
+ * NPM login
+ * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * */
+const { npmLoggedIn } = await prompts({
+  name: 'npmLoggedIn',
+  type: 'confirm',
+  message: 'Did you run `npm login` ?'
+})
+if (!npmLoggedIn) {
+  console.error('Run `npm login` first.')
+  process.exit(1)
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
  * Git status
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
