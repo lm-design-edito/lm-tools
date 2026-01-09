@@ -5,6 +5,7 @@ import { toRgb, tidy } from '../../../agnostic/colors/index.js'
 import { isNonNullObject } from '../../../agnostic/objects/is-object/index.js'
 import type { CreateOptions, ImageLike } from '../types.js'
 
+/** Converts a Color to Sharp RGBA format. */
 export function toSharpColor (color: Color): sharp.RGBA {
   const rgb = tidy(toRgb(color))
   return {
@@ -15,6 +16,14 @@ export function toSharpColor (color: Color): sharp.RGBA {
   }
 }
 
+/**
+ * Type guard to check if an object is a duck-typed Sharp instance.
+ *
+ * Checks for the presence and correct types of Sharp's characteristic methods.
+ *
+ * @param obj - The object to check.
+ * @returns `true` if the object appears to be a Sharp instance, `false` otherwise.
+ */
 export function isDuckTypedSharpInstance (obj: unknown): obj is sharp.Sharp {
   if (!isNonNullObject(obj)) return false
   return 'avif' in obj
@@ -41,6 +50,7 @@ export function isDuckTypedSharpInstance (obj: unknown): obj is sharp.Sharp {
     && typeof obj.webp === 'function'
 }
 
+/** Converts CreateOptions to Sharp create options with defaults applied. */
 export function toCreateOptions (options: CreateOptions): sharp.SharpOptions['create'] {
   return {
     width: options.width ?? 100,
@@ -56,6 +66,16 @@ export function toCreateOptions (options: CreateOptions): sharp.SharpOptions['cr
   }
 }
 
+/**
+ * Converts an ImageLike input to a Sharp instance.
+ *
+ * Handles different input types: file paths (reads from disk), Buffers, existing Sharp
+ * instances, and CreateOptions (creates a new image).
+ *
+ * @param imageLike - The image input. Can be a file path, Buffer, Sharp instance, or CreateOptions.
+ * @param [clone=false] - If `true` and input is a Sharp instance, returns a cloned instance.
+ * @returns A Sharp instance ready for image operations.
+ */
 export async function toSharpInstance (imageLike: ImageLike, clone: boolean = false): Promise<sharp.Sharp> {
   if (typeof imageLike === 'string') return sharp(await readFile(imageLike))
   if (Buffer.isBuffer(imageLike)) return sharp(imageLike)

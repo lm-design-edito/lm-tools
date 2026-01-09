@@ -10,21 +10,13 @@ import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 
 export type CopyDirOptions = {
-  /**
-   * Extra parameters forwarded to each `ListObjectsV2Command`.
-   * `Bucket` and `Prefix` are supplied by this utility.
-   */
+  /** Extra parameters forwarded to each `ListObjectsV2Command`. `Bucket` and `Prefix` are supplied by this utility. */
   listObjectsOptions?: Omit<ListObjectsV2CommandInput, 'Bucket' | 'Prefix'>
 
-  /**
-   * Extra parameters forwarded to each `CopyObjectCommand`.
-   * `Bucket`, `Key` and `CopySource` are supplied by this utility.
-   */
+  /** Extra parameters forwarded to each `CopyObjectCommand`. `Bucket`, `Key` and `CopySource` are supplied by this utility. */
   copyOptions?: Omit<CopyObjectCommandInput, 'Bucket' | 'Key' | 'CopySource'>
 
-  /**
-   * If false (default), existing target files will be skipped (not overwritten).
-   */
+  /** If false (default), existing target files will be skipped (not overwritten). */
   overwrite?: boolean
 }
 

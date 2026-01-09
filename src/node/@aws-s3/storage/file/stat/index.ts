@@ -1,4 +1,3 @@
-// s3/stat.ts
 import {
   S3Client,
   HeadObjectCommand,

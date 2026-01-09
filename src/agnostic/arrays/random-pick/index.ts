@@ -1,5 +1,13 @@
 import * as ERR from '../../../shared/errors/index.js'
 
+/**
+ * Picks a random element from an array, optionally excluding certain elements.
+ *
+ * @param arr - The array to pick from.
+ * @param [exclude] - Array of elements to exclude from selection.
+ * @returns A randomly selected element from the array.
+ * @throws Throws an error if no elements are available after exclusions.
+ */
 export function randomPick<T> (arr: T[], exclude: T[] = []): T {
   const filteredArr = [...arr].filter(elt => !exclude.includes(elt))
   const length = filteredArr.length
@@ -9,6 +17,18 @@ export function randomPick<T> (arr: T[], exclude: T[] = []): T {
   return found
 }
 
+/**
+ * Picks multiple random elements from an array without replacement.
+ *
+ * Each picked element is removed from the pool before the next selection, ensuring
+ * no duplicates in the result.
+ *
+ * @param howMuch - Number of elements to pick.
+ * @param arr - The array to pick from.
+ * @param [exclude] - Array of elements to exclude from selection.
+ * @returns An array of randomly selected elements.
+ * @throws Throws an error if not enough elements are available after exclusions.
+ */
 export function randomPickMany<T> (
   howMuch: number,
   arr: T[],

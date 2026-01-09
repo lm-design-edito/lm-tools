@@ -1,6 +1,8 @@
 import { Errors } from '../../agnostic/errors/index.js'
 import { Crossenv } from '../../agnostic/misc/crossenv/index.js'
 
+// [WIP] This shared error register is a bad idea, get rid of it
+
 export enum Codes {
   NO_DOCUMENT = 'no-window-document-on-runtime',
   NO_DOCUMENT_PLEASE_PROVIDE = 'no-window-document-on-runtime-please-provide',

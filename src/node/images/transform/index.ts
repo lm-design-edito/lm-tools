@@ -44,6 +44,14 @@ const validators = {
   [OpName.SATURATE]: isSaturateOperationParams
 }
 
+/**
+ * Validates and checks if an object is a valid operation descriptor.
+ *
+ * @param obj - The object to validate.
+ * @returns
+ * - On success:  `Outcome.makeSuccess(descriptor)` with the validated operation descriptor.
+ * - On failure:  `Outcome.makeFailure(errStr)` describing the validation error.
+ */
 export function isOperationDescriptor (obj: unknown): Outcome.Either<OperationDescriptor, string> {
   if (!isNonNullObject(obj)) return Outcome.makeFailure('Invalid operation descriptor')
   if (!('name' in obj) || typeof obj.name !== 'string') return Outcome.makeFailure('Field named \'name\' in operation descriptor is required and must be a string')
@@ -60,6 +68,20 @@ export function isOperationDescriptor (obj: unknown): Outcome.Either<OperationDe
   return Outcome.makeFailure('Invalid operation descriptor')
 }
 
+/**
+ * Applies a sequence of transformations to an image.
+ *
+ * The function processes operations in order, applying each transformation to the image.
+ * Supports timeout limits for both individual operations and the entire process, as well
+ * as dimension limits to prevent excessive memory usage.
+ *
+ * @param input - The image to transform. Can be a Sharp instance, Buffer, CreateOptions, or file path.
+ * @param operationsSequence - Array of operation descriptors to apply in sequence.
+ * @param [limits] - Optional limits for timeouts and dimensions. See `TransformLimits` for details.
+ * @returns
+ * - On success:  `Outcome.makeSuccess(sharpInstance)` with the transformed Sharp instance.
+ * - On failure:  `Outcome.makeFailure(error)` with error code and details.
+ */
 export async function transform (
   input: ImageLike,
   operationsSequence: OperationDescriptor[],

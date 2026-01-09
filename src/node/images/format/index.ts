@@ -131,18 +131,27 @@ const formatOptionsSchema = zod.union([
  * TYPECHECKS
  * * * * * * * * * * * * * * */
 
+/** Type guard to check if options match FormatCommonOptions. */
 export const isFormatCommonOptions = (options: unknown): options is FormatCommonOptions => formatCommonOptionsSchema.safeParse(options).success
+/** Type guard to check if options match FormatJpgOptions. */
 export const isFormatJpgOptions = (options: unknown): options is FormatJpgOptions => formatJpgOptionsSchema.safeParse(options).success
+/** Type guard to check if options match FormatPngOptions. */
 export const isFormatPngOptions = (options: unknown): options is FormatPngOptions => formatPngOptionsSchema.safeParse(options).success
+/** Type guard to check if options match FormatWebpOptions. */
 export const isFormatWebpOptions = (options: unknown): options is FormatWebpOptions => formatWebpOptionsSchema.safeParse(options).success
+/** Type guard to check if options match FormatAvifOptions. */
 export const isFormatAvifOptions = (options: unknown): options is FormatAvifOptions => formatAvifOptionsSchema.safeParse(options).success
+/** Type guard to check if options match FormatTiffOptions. */
 export const isFormatTiffOptions = (options: unknown): options is FormatTiffOptions => formatTiffOptionsSchema.safeParse(options).success
+/** Type guard to check if options match FormatHeifOptions. */
 export const isFormatHeifOptions = (options: unknown): options is FormatHeifOptions => formatHeifOptionsSchema.safeParse(options).success
+/** Type guard to check if options match FormatOptions. */
 export const isFormatOptions = (options: unknown): options is FormatOptions => formatOptionsSchema.safeParse(options).success
 
 /* * * * * * * * * * * * * * * 
  * CONVERTERS
  * * * * * * * * * * * * * * */
+/** Converts FormatCommonOptions to Sharp resize options. */
 export const toSharpResizeOptions = (options: FormatCommonOptions): sharp.ResizeOptions => {
   return {
     width: options.width,
@@ -159,6 +168,7 @@ export const toSharpResizeOptions = (options: FormatCommonOptions): sharp.Resize
   }
 }
 
+/** Converts FormatJpgOptions to Sharp JPEG options. */
 export const toSharpJpegOptions = (options: FormatJpgOptions): sharp.JpegOptions => {
   return {
     quality: options.quality,
@@ -174,6 +184,7 @@ export const toSharpJpegOptions = (options: FormatJpgOptions): sharp.JpegOptions
   }
 }
 
+/** Converts FormatPngOptions to Sharp PNG options. */
 export const toSharpPngOptions = (options: FormatPngOptions): sharp.PngOptions => {
   return {
     quality: options.quality,
@@ -188,6 +199,7 @@ export const toSharpPngOptions = (options: FormatPngOptions): sharp.PngOptions =
   }
 }
 
+/** Converts FormatWebpOptions to Sharp WebP options. */
 export const toSharpWebpOptions = (options: FormatWebpOptions): sharp.WebpOptions => {
   return {
     quality: options.quality,
@@ -206,6 +218,7 @@ export const toSharpWebpOptions = (options: FormatWebpOptions): sharp.WebpOption
   }
 }
 
+/** Converts FormatAvifOptions to Sharp AVIF options. */
 export const toSharpAvifOptions = (options: FormatAvifOptions): sharp.AvifOptions => {
   return {
     force: options.force,
@@ -217,6 +230,7 @@ export const toSharpAvifOptions = (options: FormatAvifOptions): sharp.AvifOption
   }
 }
 
+/** Converts FormatTiffOptions to Sharp TIFF options. */
 export const toSharpTiffOptions = (options: FormatTiffOptions): sharp.TiffOptions => {
   return {
     force: options.force,
@@ -235,6 +249,7 @@ export const toSharpTiffOptions = (options: FormatTiffOptions): sharp.TiffOption
   }
 }
 
+/** Converts FormatHeifOptions to Sharp HEIF options. */
 export const toSharpHeifOptions = (options: FormatHeifOptions): sharp.HeifOptions => {
   return {
     force: options.force,
@@ -251,6 +266,18 @@ export const toSharpHeifOptions = (options: FormatHeifOptions): sharp.HeifOption
  * FUNCTIONS
  * * * * * * * * * * * * * * */
 
+/**
+ * Formats an image with the specified options.
+ *
+ * The function resizes and converts the image to the specified format (JPG, PNG, WebP,
+ * AVIF, TIFF, HEIF, or keeps the original format) based on the provided options.
+ *
+ * @param input - The image to format. Can be a Sharp instance, Buffer, CreateOptions, or file path.
+ * @param options - Format and resize options. See `FormatOptions` for details.
+ * @returns
+ * - On success:  `Outcome.makeSuccess(buffer)` containing the formatted image.
+ * - On failure:  `Outcome.makeFailure(errStr)`.
+ */
 export async function format (input: ImageLike, options: FormatOptions): Promise<Outcome.Either<Buffer, string>> {
   const sharpInstance = await toSharpInstance(input)
   const resizeOptions = toSharpResizeOptions(options)
@@ -264,12 +291,20 @@ export async function format (input: ImageLike, options: FormatOptions): Promise
   return Outcome.makeSuccess(await resizedInstance.toBuffer())
 }
 
+/** Resizes an image to a specific width while maintaining aspect ratio. */
 export const toWidth = async (input: ImageLike, width: number): Promise<Buffer> => (await toSharpInstance(input)).resize({ width }).toBuffer()
+/** Resizes an image to a specific height while maintaining aspect ratio. */
 export const toHeight = async (input: ImageLike, height: number): Promise<Buffer> => (await toSharpInstance(input)).resize({ height }).toBuffer()
 
+/** Converts an image to JPEG format. */
 export const toJpg = async (input: ImageLike, quality?: number): Promise<Buffer> => (await toSharpInstance(input)).jpeg({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+/** Converts an image to PNG format. */
 export const toPng = async (input: ImageLike, quality?: number, compressionLevel?: FormatPngOptions['compressionLevel']): Promise<Buffer> => (await toSharpInstance(input)).png({ quality: clamp(quality ?? 100, 1, 100), compressionLevel }).toBuffer()
+/** Converts an image to WebP format. */
 export const toWebp = async (input: ImageLike, quality?: number): Promise<Buffer> => (await toSharpInstance(input)).webp({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+/** Converts an image to AVIF format. */
 export const toAvif = async (input: ImageLike, quality?: number): Promise<Buffer> => (await toSharpInstance(input)).avif({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+/** Converts an image to TIFF format. */
 export const toTiff = async (input: ImageLike, quality?: number, compression?: FormatTiffOptions['compression']): Promise<Buffer> => (await toSharpInstance(input)).tiff({ quality: clamp(quality ?? 100, 1, 100), compression }).toBuffer()
+/** Converts an image to HEIF format. */
 export const toHeif = async (input: ImageLike, quality?: number): Promise<Buffer> => (await toSharpInstance(input)).heif({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
