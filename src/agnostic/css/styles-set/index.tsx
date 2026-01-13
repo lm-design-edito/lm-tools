@@ -3,8 +3,10 @@ import {
   createRoot as reactCreateRoot,
   Root as ReactRoot
 } from 'react-dom/client'
-import { Random } from '../../random/index.js'
-import * as ERR from '../../../shared/errors/index.js'
+import { randomHash } from '../../random/uuid/index.js'
+
+// [WIP] no jsdoc here + maybe wrong idea ?
+// [WIP] should at least use crossenv window
 
 export type StylesSetItem = {
   type: 'string' | 'url'
@@ -64,7 +66,7 @@ export class StylesSet {
 
   generateUniquePrivateId (): string {
     const existingIds = Array.from(this._items.keys())
-    const generated = Random.randomHash(12)
+    const generated = randomHash(12)
     if (existingIds.includes(generated)) return this.generateUniquePrivateId()
     return generated
   }
@@ -138,7 +140,7 @@ export class StylesSet {
 
   async getDomString (documentObj?: Document): Promise<string> {
     const actualDocumentObj = documentObj ?? window.document
-    if (actualDocumentObj === null) throw ERR.register.getError(ERR.Codes.NO_DOCUMENT)
+    if (actualDocumentObj === null) throw new Error('Window.document is not available')
     return new Promise(resolve => {
       const tempElt = actualDocumentObj.createElement('div')
       const tempRoot = reactCreateRoot(tempElt)

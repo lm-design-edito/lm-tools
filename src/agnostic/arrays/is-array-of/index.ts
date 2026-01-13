@@ -1,5 +1,5 @@
 import {
-  ConstructorFunction,
+  type ConstructorFunction,
   isConstructorFunction
 } from '../../misc/is-constructor-function/index.js'
 

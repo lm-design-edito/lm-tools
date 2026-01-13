@@ -1,8 +1,21 @@
-import * as ERR from '../../../shared/errors/index.js'
+import * as Window from '../../misc/crossenv/window/index.js'
 
-export function selectorToElement (selector: string, documentObj?: Document) {
-  const actualDocument = documentObj ?? window.document
-  if (actualDocument === null) throw ERR.register.getError(ERR.Codes.NO_DOCUMENT_PLEASE_PROVIDE, 'The optional second parameter expects a Document object')
+/**
+ * Creates a DOM element from a CSS-like selector string.
+ * Tag name defaults to div.
+ *
+ * Supports simple tag, ID, class, and attribute syntax:
+ * - Tag name (e.g., `"div"`)
+ * - ID (e.g., `"#myId"`)
+ * - Classes (e.g., `".class1.class2"`)
+ * - Attributes (e.g., `"[attr=value]"`)
+ *
+ * @param {string} selector - The selector string used to construct the element.
+ * @returns {Element} A newly created DOM element corresponding to the selector.
+ *
+ * @throws Will throw an error if no document object is available for element creation.
+ */
+export function selectorToElement (selector: string): Element {
   // RegExps
   const tagRegexp = /^[A-Za-z]+/
   // The dot is apparently a valid character but is prevented here
@@ -18,13 +31,13 @@ export function selectorToElement (selector: string, documentObj?: Document) {
   // Extracted
   const tag = matchedTags[matchedTags.length - 1] ?? 'div'
   const id = matchedIds[matchedIds.length - 1] ?? null
-  const classes = matchedClasses.map(matchedClass => matchedClass .replace(/^\./, ''))
+  const classes = matchedClasses.map(matchedClass => matchedClass.replace(/^\./, ''))
   const attributes = matchedAttrs.map(matchedAttr => matchedAttr
     .replace(/^\[/, '')
     .replace(/\]$/, '')
     .split('='))
   // Returning
-  const element = actualDocument.createElement(tag)
+  const element = Window.get().document.createElement(tag)
   if (id !== null) { element.id = id }
   element.classList.add(...classes)
   attributes.forEach(([name, value = '']) => {

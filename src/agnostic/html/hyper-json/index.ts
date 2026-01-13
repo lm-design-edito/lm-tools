@@ -7,6 +7,9 @@ import { Tree as TreeNamespace } from './tree/index.js'
 import { Types as TypesNamespace } from './types/index.js'
 import { Utils as UtilsNamespace } from './utils/index.js'
 
+// [WIP] missing jsdoc in all the hyper-json stuff
+// [WIP] get rid of namespaces
+
 export namespace HyperJson {
   export import Cast = CastNamespace
   export const Method = MethodClass

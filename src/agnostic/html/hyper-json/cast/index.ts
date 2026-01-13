@@ -1,5 +1,5 @@
 import { isRecord } from '../../../objects/is-record/index.js'
-import { Window } from '../../../misc/crossenv/window/index.js'
+import * as Window from '../../../misc/crossenv/window/index.js'
 import { Types } from '../types/index.js'
 import { Utils } from '../utils/index.js'
 import { Method } from '../method/index.js'

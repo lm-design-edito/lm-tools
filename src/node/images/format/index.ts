@@ -1,7 +1,7 @@
 import sharp from 'sharp'
 import zod from 'zod'
 import { clamp } from '../../../agnostic/numbers/clamp/index.js'
-import { Outcome } from '../../../agnostic/misc/outcome/index.js'
+import * as Outcome from '../../../agnostic/misc/outcome/index.js'
 import { toSharpColor, toSharpInstance } from '../utils/index.js'
 import type { Color } from '../../../agnostic/colors/types.js'
 import { isColor } from '../../../agnostic/colors/typechecks/index.js'

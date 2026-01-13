@@ -1,9 +1,17 @@
-import { Color, TransformedColor } from '../types.js'
+import type { Color, TransformedColor } from '../types.js'
 import { isRgb, isHsl, isHsb, isCmyk, isXyz, isLab, isLch, isCssColor, isHex } from '../typechecks/index.js'
 import { clamp } from '../../numbers/clamp/index.js'
 import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
 import { toRgb, toHex } from '../convert/index.js'
 
+/**
+ * Clamps and normalizes a color's channel values to their valid ranges.
+ *
+ * @template C - The input color type.
+ * @param {C} color - The color to tidy.
+ * @returns {TransformedColor<C>} The color with all channels clamped to valid ranges, in the original format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function tidy <C extends Color>(color: C): TransformedColor<C> {
   const _color: Color = color
   

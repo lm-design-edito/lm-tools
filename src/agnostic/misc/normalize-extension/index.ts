@@ -1,3 +1,9 @@
+/**
+ * Default mapping of file extensions to their canonical forms.
+ *
+ * Includes common image, audio, video, font, web, document, archive,
+ * code, configuration, and miscellaneous file extensions.
+ */
 const defaultAliases: Record<string, string> = {
   // Images
   jpeg: 'jpg',
@@ -90,6 +96,16 @@ const defaultAliases: Record<string, string> = {
   svgx: 'svg',
 }
 
+/**
+ * Normalizes a file extension to its canonical form, using an optional alias map.
+ *
+ * Converts the extension to lowercase, removes a leading dot if present,
+ * and applies alias mapping if defined.
+ *
+ * @param {string} extWithoutDot - File extension to normalize (may include or omit leading dot).
+ * @param {Record<string, string>} [aliasesWithoutDot=defaultAliases] - Optional mapping of aliases to canonical extensions.
+ * @returns {string} The normalized file extension, without leading dot.
+ */
 export function normalizeExtension (
   extWithoutDot: string,
   aliasesWithoutDot: Record<string, string> = defaultAliases

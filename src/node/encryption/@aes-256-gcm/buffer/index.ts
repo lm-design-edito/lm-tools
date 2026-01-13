@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer'
-import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
+import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import {
   encryptUint8Array,
   decryptUint8Array

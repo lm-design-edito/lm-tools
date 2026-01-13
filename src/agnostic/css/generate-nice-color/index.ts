@@ -1,3 +1,6 @@
+/**
+ * Array of aesthetically pleasing CSS named colors.
+ */
 export const niceColors = [
   'fuchsia',           'teal',               'aliceblue',      'bisque',             'blueviolet',
   'burlywood',         'chocolate',          'coral',          'cornflowerblue',     'crimson',
@@ -11,9 +14,13 @@ export const niceColors = [
   'orchid',            'palegoldenrod',      'palevioletred',  'peachpuff',          'peru',
   'plum',              'royalblue',          'sandybrown',     'springgreen',        'tan',
   'thistle',           'tomato',             'violet',         'wheat',              'yellowgreen'
-]
+] as const
 
-export const generateNiceColor = () => {
+/**
+ * Generates a random aesthetically pleasing CSS named color.
+ */
+export const generateNiceColor = (): typeof niceColors[number] => {
   const pos = Math.floor(Math.random() * niceColors.length)
-  return niceColors[pos]
+  const found = niceColors[pos]
+  return found!
 }

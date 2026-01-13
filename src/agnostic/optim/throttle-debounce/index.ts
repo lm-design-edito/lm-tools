@@ -1,4 +1,4 @@
-import type { Timeout } from './types.js'
+import type { NodeTimeout } from './types.js'
 
 type BasicFunction = (...args: any[]) => any
 
@@ -14,7 +14,7 @@ export function throttle <T extends BasicFunction = BasicFunction>(
   let lastArgs: any[] = []
   let lastExecutedOn: number = 0
   let lastReturnValue: ReturnType<T> | undefined = undefined
-  let nextExecutionTimeout: Timeout | number | null = null
+  let nextExecutionTimeout: NodeTimeout | number | null = null
   
   /** Schedules a next call according to the delay */
   function scheduleNextCall () {
@@ -82,7 +82,7 @@ export function debounce <T extends BasicFunction = BasicFunction>(
   let lastCalledOn: number = 0
   let lastExecutedOn: number = 0
   let lastReturnValue: ReturnType<T> | undefined = undefined
-  let nextExecutionTimeout: Timeout | number | null = null
+  let nextExecutionTimeout: NodeTimeout | number | null = null
 
   /** Schedules a next call according to the delay */
   function scheduleNextCall () {

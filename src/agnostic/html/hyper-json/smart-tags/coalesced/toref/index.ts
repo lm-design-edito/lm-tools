@@ -1,4 +1,4 @@
-import { Outcome } from '../../../../../misc/outcome/index.js'
+import * as Outcome from '../../../../../misc/outcome/index.js'
 import { Types } from '../../../types/index.js'
 import { Cast } from '../../../cast/index.js'
 import { Utils } from '../../../utils/index.js'

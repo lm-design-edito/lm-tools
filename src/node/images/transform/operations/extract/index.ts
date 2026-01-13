@@ -1,6 +1,6 @@
 import sharp from 'sharp'
 import z from 'zod'
-import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import type { ExtractOperationParams } from '../../../types.js'
 
 export function isExtractOperationParams (obj: unknown): Outcome.Either<ExtractOperationParams, string> {

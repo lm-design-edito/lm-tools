@@ -1,7 +1,7 @@
 import { Bucket as GCSBucket } from '@google-cloud/storage'
 import { Client as FtpClient } from 'basic-ftp'
 import SftpClient from 'ssh2-sftp-client'
-import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
+import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import {
   AnyClient,
   isFtpClient,

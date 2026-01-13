@@ -4,7 +4,7 @@ import {
   SetFileMetadataOptions
 } from '@google-cloud/storage'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
-import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 
 export type UpdateFileMetadataOptions = {
   fileOptions?: FileOptions

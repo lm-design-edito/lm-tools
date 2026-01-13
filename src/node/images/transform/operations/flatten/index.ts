@@ -1,6 +1,6 @@
 import sharp from 'sharp'
 import z from 'zod'
-import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { Color } from '../../../../../agnostic/colors/types.js'
 import { isColor } from '../../../../../agnostic/colors/typechecks/index.js'
 import { toSharpColor } from '../../../utils/index.js'

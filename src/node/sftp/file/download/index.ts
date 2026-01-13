@@ -2,7 +2,7 @@ import { Readable } from 'node:stream'
 import { ClientErrorExtensions, ReadStreamOptions } from 'ssh2'
 import Client from 'ssh2-sftp-client'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
-import { Outcome } from '../../../../agnostic/misc/outcome/index.js'
+import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 
 export type DownloadOptions = ReadStreamOptions
 

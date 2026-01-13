@@ -1,5 +1,3 @@
-import * as ERR from '../../../shared/errors/index.js'
-
 /**
  * Picks a random element from an array, optionally excluding certain elements.
  *
@@ -11,7 +9,7 @@ import * as ERR from '../../../shared/errors/index.js'
 export function randomPick<T> (arr: T[], exclude: T[] = []): T {
   const filteredArr = [...arr].filter(elt => !exclude.includes(elt))
   const length = filteredArr.length
-  if (length === 0) throw ERR.register.getError(ERR.Codes.IMPOSSIBLE_TO_PICK_IN_ARRAY, arr)
+  if (length === 0) throw new Error('Array length must be at least 1 after exclusion')
   const pos = Math.floor(Math.random() * length)
   const found = filteredArr[pos] as T
   return found

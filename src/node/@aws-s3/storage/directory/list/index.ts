@@ -3,7 +3,7 @@ import {
   ListObjectsV2Command,
   ListObjectsV2CommandInput
 } from '@aws-sdk/client-s3'
-import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 
 /** Extra parameters forwarded to each `ListObjectsV2Command`. */

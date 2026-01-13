@@ -26,6 +26,15 @@ import {
  * Set channel
  * * * * * * * * * * * * * * * * * */
 
+/**
+ * Sets a specific color channel to an absolute value.
+ *
+ * @template C - The input color type.
+ * @param {C} color - The color to modify.
+ * @param {Channel} channel - The channel to set.
+ * @param {number} value - The new value for the channel.
+ * @returns {TransformedColor<C>} The color with the updated channel, in the original format.
+ */
 export function setChannel <C extends Color>(color: C, channel: Channel, value: number): TransformedColor<C> {
   switch (channel) {
     case 'red': return viaRgb(color, rgb => ({ ...rgb, r: clamp(value, 0, 255) }))
@@ -54,6 +63,14 @@ export function setChannel <C extends Color>(color: C, channel: Channel, value: 
 /* * * * * * * * * * * * * * * * * *
  * Get channel
  * * * * * * * * * * * * * * * * * */
+
+/**
+ * Gets the value of a specific color channel.
+ *
+ * @param {Color} color - The color to read from.
+ * @param {Channel} channel - The channel to retrieve.
+ * @returns {number} The value of the specified channel.
+ */
 export function getChannel (color: Color, channel: Channel): number {
   switch (channel) {
     case 'red': return toRgb(color).r
@@ -82,6 +99,15 @@ export function getChannel (color: Color, channel: Channel): number {
 /* * * * * * * * * * * * * * * * * *
  * Add channel
  * * * * * * * * * * * * * * * * * */
+/**
+ * Adds a value to a specific color channel.
+ *
+ * @template C - The input color type.
+ * @param {C} color - The color to modify.
+ * @param {Channel} channel - The channel to modify.
+ * @param {number} amount - The amount to add to the channel.
+ * @returns {TransformedColor<C>} The color with the updated channel, in the original format.
+ */
 export function addChannel <C extends Color>(color: C, channel: Channel, amount: number): TransformedColor<C> {
   switch (channel) {
     case 'red': return viaRgb(color, rgb => ({ ...rgb, r: clamp(rgb.r + amount, 0, 255) }))
@@ -110,6 +136,15 @@ export function addChannel <C extends Color>(color: C, channel: Channel, amount:
 /* * * * * * * * * * * * * * * * * *
  * Mult channel
  * * * * * * * * * * * * * * * * * */
+/**
+ * Multiplies a specific color channel by a factor.
+ *
+ * @template C - The input color type.
+ * @param {C} color - The color to modify.
+ * @param {Channel} channel - The channel to modify.
+ * @param {number} factor - The multiplication factor.
+ * @returns {TransformedColor<C>} The color with the updated channel, in the original format.
+ */
 export function multChannel <C extends Color>(color: C, channel: Channel, factor: number): TransformedColor<C> {
   switch (channel) {
     case 'red': return viaRgb(color, rgb => ({ ...rgb, r: clamp(rgb.r * factor, 0, 255) }))

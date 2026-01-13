@@ -1,6 +1,6 @@
 import sharp from 'sharp'
 import z from 'zod'
-import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import type { NormalizeOperationParams } from '../../../types.js'
 
 export function isNormalizeOperationParams (obj: unknown): Outcome.Either<NormalizeOperationParams, string> {

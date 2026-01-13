@@ -1,5 +1,5 @@
 import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
-import { Color, TransformedColor, RotateMethod } from '../types.js'
+import type { Color, TransformedColor, RotateMethod } from '../types.js'
 import { addChannel } from '../channels/index.js'
 import { viaLab, viaLch } from '../convert/index.js'
 
@@ -28,6 +28,15 @@ function rotateLch <C extends Color>(color: C, degrees: number): TransformedColo
   }))
 }
 
+/**
+ * Rotates the hue of a color by a specified number of degrees.
+ *
+ * @template C - The input color type.
+ * @param {C} color - The color to rotate.
+ * @param {number} degrees - The number of degrees to rotate the hue (positive or negative).
+ * @param {RotateMethod} [method='hsl'] - The color space to use for rotation.
+ * @returns {TransformedColor<C>} The rotated color in the original format.
+ */
 export function rotate <C extends Color>(
   color: C,
   degrees: number,

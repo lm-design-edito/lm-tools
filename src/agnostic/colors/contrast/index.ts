@@ -15,6 +15,14 @@ function contrastWcag (c1: Rgba, c2: Rgba): number {
 
 // [WIP] maybe contrast weber, michelson, rms, etc...
 
+/**
+ * Calculates the contrast ratio between two colors using the specified method.
+ *
+ * @param {Color} c1 - The first color.
+ * @param {Color} c2 - The second color.
+ * @param {ContrastMethod} [method='wcag'] - The calculation method to use.
+ * @returns {number} The contrast ratio. For WCAG, values range from 1 (no contrast) to 21 (maximum contrast).
+ */
 export function contrast (
   c1: Color,
   c2: Color,

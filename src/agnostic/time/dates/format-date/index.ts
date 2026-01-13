@@ -1,3 +1,50 @@
+/**
+ * Formats a `Date` object into a string according to a custom template and locale.
+ *
+ * Supported tokens (placeholders must be wrapped in `{{...}}`):
+ *
+ * **Day**
+ * - `D` : Day of month (1–31)
+ * - `DD` : Day of month, padded (01–31)
+ * - `d` : Short weekday name (Mon, Tue, ...)
+ * - `dd` : Full weekday name (Monday, Tuesday, ...)
+ *
+ * **Month**
+ * - `M` : Month number (1–12)
+ * - `MM` : Month number, padded (01–12)
+ * - `MMM` : Short month name (Jan, Feb, ...)
+ * - `MMMM` : Full month name (January, February, ...)
+ *
+ * **Year**
+ * - `YY` : Two-digit year
+ * - `YYYY` : Four-digit year
+ *
+ * **Hours**
+ * - `H` : 24h format
+ * - `HH` : 24h format, padded
+ * - `h` : 12h format
+ * - `hh` : 12h format, padded
+ *
+ * **Minutes & Seconds**
+ * - `m` / `mm` : Minutes
+ * - `s` / `ss` : Seconds
+ *
+ * **AM/PM**
+ * - `A` : AM/PM
+ * - `a` : am/pm
+ *
+ * **Ordinal suffix**
+ * - `th` : Day ordinal suffix (`st`, `nd`, `rd`, `th` for English; `er` for French 1st)
+ *
+ * @param date - The `Date` object to format.
+ * @param format - The template string containing tokens.
+ * @param locale - Optional locale code (default: `'en'`).
+ * @returns Formatted date string.
+ *
+ * @example
+ * formatDate(new Date(2026, 0, 1, 15, 5), '{{YYYY}}-{{MM}}-{{DD}} {{hh}}:{{mm}} {{A}}')
+ * // => "2026-01-01 03:05 PM"
+ */
 export function formatDate (date: Date, format: string, locale: string = 'en'): string {
   try { new Intl.DateTimeFormat(locale) }
   catch { locale = 'en' }
@@ -53,7 +100,7 @@ export function formatDate (date: Date, format: string, locale: string = 'en'): 
 }
 
 // [WIP] this was removed since JavaScript's Date object don't hold timezone data
-// those templates would onli reflect the curent client's timezone, no matter what the input Date obj was
+// those templates would only reflect the curent client's timezone, no matter what the input Date obj was
 
 // 'ZZ': () => {
 //   const timezoneOffset = date.getTimezoneOffset()

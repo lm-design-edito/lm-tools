@@ -1,6 +1,28 @@
-import { Color, Rgba, Laba, Lcha, Hsla, Hsba, Xyza, LerpMethod, TransformedColor } from '../types.js'
-import { viaRgb, viaLab, viaLch, viaHsl, viaHsb, viaXyz } from '../convert/index.js'
-import { toRgb, toLab, toLch, toHsl, toHsb, toXyz } from '../convert/index.js'
+import type {
+  Color,
+  Rgba,
+  Laba,
+  Lcha,
+  Hsla,
+  Hsba,
+  Xyza,
+  LerpMethod,
+  TransformedColor
+} from '../types.js'
+import {
+  viaRgb,
+  viaLab,
+  viaLch,
+  viaHsl,
+  viaHsb,
+  viaXyz,
+  toRgb,
+  toLab,
+  toLch,
+  toHsl,
+  toHsb,
+  toXyz
+} from '../convert/index.js'
 
 function lerpRgb (rgb1: Rgba, rgb2: Rgba, amount: number): Rgba {
   const r = rgb1.r + (rgb2.r - rgb1.r) * amount
@@ -69,6 +91,17 @@ function lerpXyz (xyz1: Xyza, xyz2: Xyza, amount: number): Xyza {
   return { x, y, z, a }
 }
 
+/**
+ * Linearly interpolates between two colors using the specified method.
+ *
+ * @template C1 - The first color type.
+ * @template C2 - The second color type.
+ * @param {C1} c1 - The starting color.
+ * @param {C2} c2 - The ending color.
+ * @param {number} amount - The interpolation amount (0-1), where 0 returns c1 and 1 returns c2.
+ * @param {LerpMethod} [method='rgb'] - The interpolation method to use.
+ * @returns {TransformedColor<C1>} The interpolated color in the format of c1.
+ */
 export function lerp <C1 extends Color, C2 extends Color>(
   c1: C1,
   c2: C2,

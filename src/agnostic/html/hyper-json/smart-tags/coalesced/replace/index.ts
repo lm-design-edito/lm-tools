@@ -1,11 +1,10 @@
-import { replaceAll } from '../../../../../strings/replace-all/index.js'
-import { Outcome } from '../../../../../misc/outcome/index.js'
+import * as Outcome from '../../../../../misc/outcome/index.js'
 import { Cast } from '../../../cast/index.js'
 import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
 import { Types } from '../../../types/index.js'
 import { Method } from '../../../method/index.js'
-import { Window } from '../../../../../misc/crossenv/window/index.js'
+import * as Window from '../../../../../misc/crossenv/window/index.js'
 
 type Main = Types.Tree.RestingValue
 type Arg = string | Text | NodeListOf<Element | Text> | Element
@@ -51,11 +50,11 @@ export function replacerFunc (
     || value === null
     || value instanceof Method
   ) return value
-  if (typeof value === 'string') return replaceAll(value, toReplace, replacer)
+  if (typeof value === 'string') return value.replaceAll(toReplace, replacer)
   const { Text, Element, NodeList } = Window.get()
-  if (value instanceof Text) return Cast.toText(replaceAll(Cast.toString(value), toReplace, replacer))
-  if (value instanceof Element) return Cast.toElement(replaceAll(Cast.toString(value), toReplace, replacer))
-  if (value instanceof NodeList) return Cast.toNodeList(replaceAll(Cast.toString(value), toReplace, replacer))
+  if (value instanceof Text) return Cast.toText(Cast.toString(value).replaceAll(toReplace, replacer))
+  if (value instanceof Element) return Cast.toElement(Cast.toString(value).replaceAll(toReplace, replacer))
+  if (value instanceof NodeList) return Cast.toNodeList(Cast.toString(value).replaceAll(toReplace, replacer))
   if (Array.isArray(value)) return value.map(val => replacerFunc(val, toReplace, replacer))
   return Object
     .entries(value)

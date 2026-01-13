@@ -2,7 +2,7 @@ import process from 'node:process'
 import { exec } from 'node:child_process'
 import esbuild from 'esbuild'
 import { COMPONENTS, AGNOSTIC, NODE, LIB } from '../_config/index.js'
-import * as Files from '../../src/node/files/index'
+import * as Subpaths from '../../src/node/files/subpaths/index.js'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -11,7 +11,7 @@ import * as Files from '../../src/node/files/index'
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 const rootDirs = [COMPONENTS, AGNOSTIC, NODE]
 const entryPoints = (await Promise.all(rootDirs.map(async dirPath => {
-  return await Files.Subpaths.list(dirPath, {
+  return await Subpaths.list(dirPath, {
     directories: false,
     files: true,
     symlinks: false,
@@ -82,8 +82,7 @@ await new Promise(resolve => {
   const commands = [
     'npx tsc --jsx react-jsx -p src/agnostic/tsconfig.json --emitDeclarationOnly',
     'npx tsc --jsx react-jsx -p src/components/tsconfig.json --emitDeclarationOnly',
-    'npx tsc --jsx react-jsx -p src/node/tsconfig.json --emitDeclarationOnly',
-    'npx tsc --jsx react-jsx -p src/shared/tsconfig.json --emitDeclarationOnly'
+    'npx tsc --jsx react-jsx -p src/node/tsconfig.json --emitDeclarationOnly'
   ]
   exec(commands.join(' && '), (err, stdout, stderr) => {
     if (err !== null) console.error(err)

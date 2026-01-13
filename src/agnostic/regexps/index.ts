@@ -1,116 +1,187 @@
-// [WIP] everything should be in its own file here
+/**
+ * Merges multiple flag strings into a single string containing each flag only once.
+ * 
+ * @param {...string[]} flagStrs - Flag strings to merge.
+ * @returns {string} Merged flags string.
+ */
+export function mergeFlags (...flagStrs: string[]): string {
+  const flagsSet = new Set<string>()
+  flagStrs.forEach(flagStr => flagStr
+    .split('')
+    .forEach(char => flagsSet.add(char))
+  )
+  return Array.from(flagsSet.values()).join('')
+}
 
-export namespace Regexps {
-  export function mergeFlags (...flagStrs: string[]): string {
-    const flagsSet = new Set<string>()
-    flagStrs.forEach(flagStr => flagStr
-      .split('')
-      .forEach(char => flagsSet.add(char))
-    )
-    return Array.from(flagsSet.values()).join('')
-  }
-  
-  export function setFlags (regexp: RegExp, _flags: string): RegExp {
-    const flags = mergeFlags(regexp.flags, _flags)
-    return new RegExp(`${regexp.source}`, flags)
-  }
-  
-  export function fromStart (regexp: RegExp, _flags: string = 'g'): RegExp {
-    const flags = mergeFlags(regexp.flags, _flags)
-    return new RegExp(`^(${regexp.source})`, flags)
-  }
-  
-  export function toEnd (regexp: RegExp, _flags: string = 'g'): RegExp {
-    const flags = mergeFlags(regexp.flags, _flags)
-    return new RegExp(`(${regexp.source})$`, flags)
-  }
-  
-  export function fromStartToEnd (regexp: RegExp, _flags: string = 'g'): RegExp {
-    const flags = mergeFlags(regexp.flags, _flags)
-    return fromStart(toEnd(regexp, flags), flags)
-  }
-  
-  export function stringStartsWith (string: string, _regexp: RegExp): boolean
-  export function stringStartsWith (string: string, _regexp: RegExp, returnMatches: true): RegExpMatchArray | null
-  export function stringStartsWith (string: string, _regexp: RegExp, returnMatches: false): boolean
-  export function stringStartsWith (string: string, _regexp: RegExp, returnMatches: false, _flags: string): boolean
-  export function stringStartsWith (string: string, _regexp: RegExp, returnMatches: true, _flags: string): RegExpMatchArray | null
-  export function stringStartsWith (string: string, _regexp: RegExp, returnMatches = true, _flags: string = 'g'): RegExpMatchArray | null | boolean {
-    const regexp = fromStart(_regexp, _flags)
-    return returnMatches ? string.match(regexp) : regexp.test(string)
-  }
-  
-  export function stringEndsWith (string: string, _regexp: RegExp): boolean
-  export function stringEndsWith (string: string, _regexp: RegExp, returnMatches: true): RegExpMatchArray | null
-  export function stringEndsWith (string: string, _regexp: RegExp, returnMatches: false): boolean
-  export function stringEndsWith (string: string, _regexp: RegExp, returnMatches: false, _flags: string): boolean
-  export function stringEndsWith (string: string, _regexp: RegExp, returnMatches: true, _flags: string): RegExpMatchArray | null
-  export function stringEndsWith (string: string, _regexp: RegExp, returnMatches = true, _flags: string = 'g'): RegExpMatchArray | null | boolean {
-    const regexp = toEnd(_regexp, _flags)
-    return returnMatches ? string.match(regexp) : regexp.test(string)
-  }
-  
-  export function stringIs (string: string, _regexp: RegExp): boolean
-  export function stringIs (string: string, _regexp: RegExp, returnMatches: true): RegExpMatchArray | null
-  export function stringIs (string: string, _regexp: RegExp, returnMatches: false): boolean
-  export function stringIs (string: string, _regexp: RegExp, returnMatches: false, _flags: string): boolean
-  export function stringIs (string: string, _regexp: RegExp, returnMatches: true, _flags: string): RegExpMatchArray | null
-  export function stringIs (string: string, _regexp: RegExp, returnMatches = false, _flags: string = 'g'): RegExpMatchArray | null | boolean {
-    const regexp = fromStartToEnd(_regexp, _flags)
-    return returnMatches ? string.match(regexp) : regexp.test(string)
-  }
+/**
+ * Returns a new RegExp with combined flags.
+ * 
+ * @param {RegExp} regexp - The original regular expression.
+ * @param {string} flags - Flags to add.
+ * @returns {RegExp} New regular expression with combined flags.
+ */
+export function setFlags (regexp: RegExp, flags: string): RegExp {
+  const mergedFlags = mergeFlags(regexp.flags, flags)
+  return new RegExp(`${regexp.source}`, mergedFlags)
+}
 
-  export function fromStrings (strings: string[]): RegExp {
-    const rootsMap = stringsToRootsMap(strings)
-    const source = sourceFromRootsMap(rootsMap, false)
-    const regexp = new RegExp(source)
-    return regexp
-  }
+/**
+ * Anchors a RegExp to the start of a string.
+ * 
+ * @param {RegExp} regexp - The original regular expression.
+ * @param {string} [flags='g'] - Optional flags to apply.
+ * @returns {RegExp} Anchored RegExp.
+ */
+export function fromStart (regexp: RegExp, flags: string = 'g'): RegExp {
+  const mergedFlags = mergeFlags(regexp.flags, flags)
+  return new RegExp(`^(${regexp.source})`, mergedFlags)
+}
 
-  export function escape (string: string) {
-    return string
-      .replace(/\s/igm, '\\s')
-      .replace(/\n/igm, '\\n')
-      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  }
+/**
+ * Anchors a RegExp to the end of a string.
+ * 
+ * @param {RegExp} regexp - The original regular expression.
+ * @param {string} [flags='g'] - Optional flags to apply.
+ * @returns {RegExp} Anchored RegExp.
+ */
+export function toEnd (regexp: RegExp, flags: string = 'g'): RegExp {
+  const mergedFlags = mergeFlags(regexp.flags, flags)
+  return new RegExp(`(${regexp.source})$`, mergedFlags)
+}
 
-  type RootsMap = Map<string, { subRootsMap: RootsMap, isWordEnd: boolean }>
-  
-  function stringsToRootsMap (strings: string[], rootsMap: RootsMap = new Map()): RootsMap {
-    const lengthSorted = strings.sort((strA, strB) => strA.length - strB.length)
-    lengthSorted.forEach(string => {
-      const [firstChar, ...lastChars] = string.split('')
-      const isWordEnd = lastChars.length === 0
-      if (firstChar === undefined) return
-      const roots = Array.from(rootsMap.keys())
-      const foundRoot = roots.find(root => new RegExp(`^(${escape(root)})`).test(string))
-      const subRootsMap = foundRoot !== undefined
-        ? rootsMap.get(foundRoot)?.subRootsMap
-        : undefined
-      if (foundRoot === undefined || subRootsMap === undefined) {
-        const subRootsMap: RootsMap = new Map()
-        stringsToRootsMap([lastChars.join('')], subRootsMap)
-        return rootsMap.set(firstChar, { subRootsMap, isWordEnd })
-      }
+/**
+ * Anchors a RegExp to match the entire string.
+ * 
+ * @param {RegExp} regexp - The original regular expression.
+ * @param {string} [flags='g'] - Optional flags to apply.
+ * @returns {RegExp} Anchored RegExp.
+ */
+export function fromStartToEnd (regexp: RegExp, flags: string = 'g'): RegExp {
+  const mergedFlags = mergeFlags(regexp.flags, flags)
+  return fromStart(toEnd(regexp, mergedFlags), mergedFlags)
+}
+
+/**
+ * Checks if a string starts with a pattern.
+ *
+ * @param string - The string to test.
+ * @param regexp - The regular expression pattern.
+ * @param [returnMatches=true] - If true, returns matches; otherwise, returns boolean.
+ * @param [flags='g'] - Optional flags.
+ * @returns {boolean | RegExpMatchArray | null} Boolean or match array based on `returnMatches`.
+ */
+export function stringStartsWith (string: string, regexp: RegExp): boolean
+export function stringStartsWith (string: string, regexp: RegExp, returnMatches: true): RegExpMatchArray | null
+export function stringStartsWith (string: string, regexp: RegExp, returnMatches: false): boolean
+export function stringStartsWith (string: string, regexp: RegExp, returnMatches: false, flags: string): boolean
+export function stringStartsWith (string: string, regexp: RegExp, returnMatches: true, flags: string): RegExpMatchArray | null
+export function stringStartsWith (string: string, regexp: RegExp, returnMatches = true, flags: string = 'g'): RegExpMatchArray | null | boolean {
+  const actualRegexp = fromStart(regexp, flags)
+  return returnMatches ? string.match(actualRegexp) : actualRegexp.test(string)
+}
+
+/**
+ * Checks if a string ends with a pattern.
+ *
+ * @param string - The string to test.
+ * @param regexp - The regular expression pattern.
+ * @param [returnMatches=true] - If true, returns matches; otherwise, returns boolean.
+ * @param [flags='g'] - Optional flags.
+ * @returns {boolean | RegExpMatchArray | null} Boolean or match array based on `returnMatches`.
+ */
+export function stringEndsWith (string: string, regexp: RegExp): boolean
+export function stringEndsWith (string: string, regexp: RegExp, returnMatches: true): RegExpMatchArray | null
+export function stringEndsWith (string: string, regexp: RegExp, returnMatches: false): boolean
+export function stringEndsWith (string: string, regexp: RegExp, returnMatches: false, flags: string): boolean
+export function stringEndsWith (string: string, regexp: RegExp, returnMatches: true, flags: string): RegExpMatchArray | null
+export function stringEndsWith (string: string, regexp: RegExp, returnMatches = true, flags: string = 'g'): RegExpMatchArray | null | boolean {
+  const actualRegexp = toEnd(regexp, flags)
+  return returnMatches ? string.match(actualRegexp) : actualRegexp.test(string)
+}
+
+/**
+ * Checks if a string fully matches a pattern.
+ *
+ * @param string - The string to test.
+ * @param regexp - The regular expression pattern.
+ * @param [returnMatches=false] - If true, returns matches; otherwise, returns boolean.
+ * @param [flags='g'] - Optional flags.
+ * @returns {boolean | RegExpMatchArray | null} Boolean or match array based on `returnMatches`.
+ */
+export function stringIs (string: string, regexp: RegExp): boolean
+export function stringIs (string: string, regexp: RegExp, returnMatches: true): RegExpMatchArray | null
+export function stringIs (string: string, regexp: RegExp, returnMatches: false): boolean
+export function stringIs (string: string, regexp: RegExp, returnMatches: false, flags: string): boolean
+export function stringIs (string: string, regexp: RegExp, returnMatches: true, flags: string): RegExpMatchArray | null
+export function stringIs (string: string, regexp: RegExp, returnMatches = false, flags: string = 'g'): RegExpMatchArray | null | boolean {
+  const actualRegexp = fromStartToEnd(regexp, flags)
+  return returnMatches ? string.match(actualRegexp) : actualRegexp.test(string)
+}
+
+/**
+ * Creates a RegExp that matches any of the provided strings.
+ * 
+ * @param {string[]} strings - Strings to match.
+ * @returns {RegExp} Regular expression matching all strings.
+ */
+export function fromStrings (strings: string[]): RegExp {
+  const rootsMap = stringsToRootsMap(strings)
+  const source = sourceFromRootsMap(rootsMap, false)
+  const regexp = new RegExp(source)
+  return regexp
+}
+
+/**
+ * Escapes special RegExp characters in a string.
+ * 
+ * @param {string} string - String to escape.
+ * @returns {string} Escaped string.
+ */
+export function escape (string: string): string {
+  return string
+    .replace(/\s/igm, '\\s')
+    .replace(/\n/igm, '\\n')
+    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/* * * * * * * * * UTILS * * * * * * * * */
+
+type RootsMap = Map<string, { subRootsMap: RootsMap, isWordEnd: boolean }>
+
+function stringsToRootsMap (strings: string[], rootsMap: RootsMap = new Map()): RootsMap {
+  const lengthSorted = strings.sort((strA, strB) => strA.length - strB.length)
+  lengthSorted.forEach(string => {
+    const [firstChar, ...lastChars] = string.split('')
+    const isWordEnd = lastChars.length === 0
+    if (firstChar === undefined) return
+    const roots = Array.from(rootsMap.keys())
+    const foundRoot = roots.find(root => new RegExp(`^(${escape(root)})`).test(string))
+    const subRootsMap = foundRoot !== undefined
+      ? rootsMap.get(foundRoot)?.subRootsMap
+      : undefined
+    if (foundRoot === undefined || subRootsMap === undefined) {
+      const subRootsMap: RootsMap = new Map()
       stringsToRootsMap([lastChars.join('')], subRootsMap)
-    })
-    return rootsMap
-  }
-  
-  function sourceFromRootsMap (
-    rootsMap: RootsMap,
-    isOptional: boolean
-  ): string {
-    const rootsMapEntries = Array.from(rootsMap.entries())
-    if (rootsMapEntries.length === 0) return ''
-    const regexpBody = rootsMapEntries.map(([root, rootData]) => {
-      return `${escape(root)}${sourceFromRootsMap(
-        rootData.subRootsMap,
-        rootData.isWordEnd
-      )}`
-    }).join('|')
-    return isOptional
-      ? `(${regexpBody})?`
-      : `(${regexpBody})`
-  }  
+      return rootsMap.set(firstChar, { subRootsMap, isWordEnd })
+    }
+    stringsToRootsMap([lastChars.join('')], subRootsMap)
+  })
+  return rootsMap
+}
+
+function sourceFromRootsMap (
+  rootsMap: RootsMap,
+  isOptional: boolean
+): string {
+  const rootsMapEntries = Array.from(rootsMap.entries())
+  if (rootsMapEntries.length === 0) return ''
+  const regexpBody = rootsMapEntries.map(([root, rootData]) => {
+    return `${escape(root)}${sourceFromRootsMap(
+      rootData.subRootsMap,
+      rootData.isWordEnd
+    )}`
+  }).join('|')
+  return isOptional
+    ? `(${regexpBody})?`
+    : `(${regexpBody})`
 }

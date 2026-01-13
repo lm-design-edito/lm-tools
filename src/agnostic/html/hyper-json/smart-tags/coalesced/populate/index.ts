@@ -1,6 +1,6 @@
-import { Outcome } from '../../../../../misc/outcome/index.js'
+import * as Outcome from '../../../../../misc/outcome/index.js'
 import { replaceAll } from '../../../../../strings/replace-all/index.js'
-import { Window } from '../../../../../misc/crossenv/window/index.js'
+import * as Window from '../../../../../misc/crossenv/window/index.js'
 import { Cast } from '../../../cast/index.js'
 import { Utils } from '../../../utils/index.js'
 import { Types } from '../../../types/index.js'

@@ -385,6 +385,13 @@ function _lch2lab (lch: Lcha): Laba {
  * Converters
  * * * * * * * * * * * * * * * * * */
 
+/**
+ * Converts any supported color format to RGBA.
+ *
+ * @param {Color} color - The color to convert.
+ * @returns {Rgba} The color in RGBA format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function toRgb (color: Color): Rgba {
   if (isRgb(color)) return color
   if (isHsl(color)) return _hsl2rgb(color)
@@ -398,6 +405,13 @@ export function toRgb (color: Color): Rgba {
   throw new Error(`Invalid color input: ${color}`)
 }
 
+/**
+ * Converts any supported color format to CIE XYZ.
+ *
+ * @param {Color} color - The color to convert.
+ * @returns {Xyza} The color in CIE XYZ format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function toXyz (color: Color): Xyza {
   if (isXyz(color)) return color
   if (isLab(color)) return _lab2xyz(color)
@@ -411,6 +425,13 @@ export function toXyz (color: Color): Xyza {
   throw new Error(`Invalid color input: ${color}`)
 }
 
+/**
+ * Converts any supported color format to CIELAB.
+ *
+ * @param {Color} color - The color to convert.
+ * @returns {Laba} The color in CIELAB format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function toLab (color: Color): Laba {
   if (isLab(color)) return color
   if (isLch(color)) return _lch2lab(color)
@@ -418,30 +439,64 @@ export function toLab (color: Color): Laba {
   return _xyz2lab(xyzColor)
 }
 
+/**
+ * Converts any supported color format to CIELCh.
+ *
+ * @param {Color} color - The color to convert.
+ * @returns {Lcha} The color in CIELCh format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function toLch (color: Color): Lcha {
   if (isLch(color)) return color
   const labColor = toLab(color)
   return _lab2lch(labColor)
 }
 
+/**
+ * Converts any supported color format to HSLA.
+ *
+ * @param {Color} color - The color to convert.
+ * @returns {Hsla} The color in HSLA format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function toHsl (color: Color): Hsla {
   if (isHsl(color)) return color
   const rgbColor = toRgb(color)
   return _rgb2hsl(rgbColor)
 }
 
+/**
+ * Converts any supported color format to HSBA (HSB/HSV).
+ *
+ * @param {Color} color - The color to convert.
+ * @returns {Hsba} The color in HSBA format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function toHsb (color: Color): Hsba {
   if (isHsb(color)) return color
   const rgbColor = toRgb(color)
   return _rgb2hsb(rgbColor)
 }
 
+/**
+ * Converts any supported color format to CMYK.
+ *
+ * @param {Color} color - The color to convert.
+ * @returns {Cmyka} The color in CMYK format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function toCmyk (color: Color): Cmyka {
   if (isCmyk(color)) return color
   const rgbColor = toRgb(color)
   return _rgb2cmyk(rgbColor)
 }
 
+/**
+ * Converts any supported color format to a CSS named color.
+ *
+ * @param {Color} color - The color to convert.
+ * @returns {CssColor | undefined} The CSS named color if an exact match exists, otherwise undefined.
+ */
 export function toCss (color: CssColor): CssColor
 export function toCss (color: Color): CssColor | undefined // [WIP] this overload may be unnecessary?
 export function toCss (color: Color): CssColor | undefined {
@@ -450,6 +505,13 @@ export function toCss (color: Color): CssColor | undefined {
   return _rgb2css(rgbColor)
 }
 
+/**
+ * Converts any supported color format to hexadecimal.
+ *
+ * @param {Color} color - The color to convert.
+ * @returns {Hex} The color in hexadecimal format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function toHex (color: Color): Hex {
   if (isHex(color)) return color
   const rgbColor = toRgb(color)
@@ -459,6 +521,16 @@ export function toHex (color: Color): Hex {
 /* * * * * * * * * * * * * * * * * *
  * Transformers
  * * * * * * * * * * * * * * * * * */
+/**
+ * Transforms a color by converting it to RGBA, applying a transformation function,
+ * then converting back to the original color format.
+ *
+ * @template C - The input color type.
+ * @param {C} color - The color to transform.
+ * @param {(rgb: Rgba) => Rgba} transformer - Function that transforms the RGBA representation.
+ * @returns {TransformedColor<C>} The transformed color in the original format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function viaRgb <C extends Color>(color: C, transformer: (rgb: Rgba) => Rgba): TransformedColor<C> {
   const _color: Color = color
   const rgb = toRgb(_color)
@@ -476,6 +548,16 @@ export function viaRgb <C extends Color>(color: C, transformer: (rgb: Rgba) => R
   throw new Error(`Invalid color input: ${_color}`)
 }
 
+/**
+ * Transforms a color by converting it to HSLA, applying a transformation function,
+ * then converting back to the original color format.
+ *
+ * @template C - The input color type.
+ * @param {C} color - The color to transform.
+ * @param {(hsl: Hsla) => Hsla} transformer - Function that transforms the HSLA representation.
+ * @returns {TransformedColor<C>} The transformed color in the original format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function viaHsl <C extends Color>(color: C, transformer: (hsl: Hsla) => Hsla): TransformedColor<C> {
   const _color: Color = color
   const hsl = toHsl(_color)
@@ -493,6 +575,16 @@ export function viaHsl <C extends Color>(color: C, transformer: (hsl: Hsla) => H
   throw new Error(`Invalid color input: ${_color}`)
 }
 
+/**
+ * Transforms a color by converting it to HSBA, applying a transformation function,
+ * then converting back to the original color format.
+ *
+ * @template C - The input color type.
+ * @param {C} color - The color to transform.
+ * @param {(hsb: Hsba) => Hsba} transformer - Function that transforms the HSBA representation.
+ * @returns {TransformedColor<C>} The transformed color in the original format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function viaHsb <C extends Color>(color: C, transformer: (hsb: Hsba) => Hsba): TransformedColor<C> {
   const _color: Color = color
   const hsb = toHsb(_color)
@@ -510,6 +602,16 @@ export function viaHsb <C extends Color>(color: C, transformer: (hsb: Hsba) => H
   throw new Error(`Invalid color input: ${_color}`)
 }
 
+/**
+ * Transforms a color by converting it to CMYK, applying a transformation function,
+ * then converting back to the original color format.
+ *
+ * @template C - The input color type.
+ * @param {C} color - The color to transform.
+ * @param {(cmyk: Cmyka) => Cmyka} transformer - Function that transforms the CMYK representation.
+ * @returns {TransformedColor<C>} The transformed color in the original format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function viaCmyk <C extends Color>(color: C, transformer: (cmyk: Cmyka) => Cmyka): TransformedColor<C> {
   const _color: Color = color
   const cmyk = toCmyk(_color)
@@ -527,6 +629,16 @@ export function viaCmyk <C extends Color>(color: C, transformer: (cmyk: Cmyka) =
   throw new Error(`Invalid color input: ${_color}`)
 }
 
+/**
+ * Transforms a color by converting it to CIE XYZ, applying a transformation function,
+ * then converting back to the original color format.
+ *
+ * @template C - The input color type.
+ * @param {C} color - The color to transform.
+ * @param {(xyz: Xyza) => Xyza} transformer - Function that transforms the XYZ representation.
+ * @returns {TransformedColor<C>} The transformed color in the original format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function viaXyz <C extends Color>(color: C, transformer: (xyz: Xyza) => Xyza): TransformedColor<C> {
   const _color: Color = color
   const xyz = toXyz(_color)
@@ -544,6 +656,16 @@ export function viaXyz <C extends Color>(color: C, transformer: (xyz: Xyza) => X
   throw new Error(`Invalid color input: ${_color}`)
 }
 
+/**
+ * Transforms a color by converting it to CIELAB, applying a transformation function,
+ * then converting back to the original color format.
+ *
+ * @template C - The input color type.
+ * @param {C} color - The color to transform.
+ * @param {(lab: Laba) => Laba} transformer - Function that transforms the CIELAB representation.
+ * @returns {TransformedColor<C>} The transformed color in the original format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function viaLab <C extends Color>(color: C, transformer: (lab: Laba) => Laba): TransformedColor<C> {
   const _color: Color = color
   const lab = toLab(_color)
@@ -561,6 +683,16 @@ export function viaLab <C extends Color>(color: C, transformer: (lab: Laba) => L
   throw new Error(`Invalid color input: ${_color}`)
 }
 
+/**
+ * Transforms a color by converting it to CIELCh, applying a transformation function,
+ * then converting back to the original color format.
+ *
+ * @template C - The input color type.
+ * @param {C} color - The color to transform.
+ * @param {(lch: Lcha) => Lcha} transformer - Function that transforms the CIELCh representation.
+ * @returns {TransformedColor<C>} The transformed color in the original format.
+ * @throws {Error} If the color format is invalid or unsupported.
+ */
 export function viaLch <C extends Color>(color: C, transformer: (lch: Lcha) => Lcha): TransformedColor<C> {
   const _color: Color = color
   const lch = toLch(_color)
@@ -582,6 +714,12 @@ export function viaLch <C extends Color>(color: C, transformer: (lch: Lcha) => L
  * sRGB linearization / delinearization
  * * * * * * * * * * * * * * * * * */
 
+/**
+ * Converts an RGBA color to linear sRGB color space by applying inverse gamma correction.
+ *
+ * @param {Rgba} rgb - The RGBA color to linearize.
+ * @returns {Srgba} The linearized color in sRGB color space.
+ */
 export function linearizeToSRgb (rgb: Rgba): Srgba {
   const cleanRgb = tidy(rgb)
   const linearChannel = (v: number) => {
@@ -597,6 +735,12 @@ export function linearizeToSRgb (rgb: Rgba): Srgba {
   }
 }
 
+/**
+ * Converts a linear sRGB color to RGBA by applying gamma correction.
+ *
+ * @param {Srgba} srgb - The linear sRGB color to delinearize.
+ * @returns {Rgba} The delinearized color in RGBA format.
+ */
 export function delinearizeToRgb (srgb: Srgba): Rgba {
   const gammaChannel = (v: number) => {
     if (v <= 0.0031308) return v * 12.92

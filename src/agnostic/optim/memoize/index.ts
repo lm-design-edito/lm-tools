@@ -1,17 +1,28 @@
 type BasicFunc = (...args: any[]) => any
 
-export function memoize<T extends BasicFunc = BasicFunc> (toMemoizeFunc: T) {
-  let cachedArgs:  Parameters<T> | undefined = undefined
-  let cachedResult: ReturnType<T> | undefined = undefined
-  return function memoized (...args: Parameters<T>) {
-    const allArgsAreInCache = cachedArgs !== undefined
-      && args.every((arg, argPos) => (cachedArgs as Parameters<T>)[argPos] === arg)
-    const allCachedAreInArgs = cachedArgs !== undefined
-      && (cachedArgs as Parameters<T>).every((arg: Parameters<T>[number], argPos: number) => args[argPos] === arg)
-    const returnCache = allArgsAreInCache && allCachedAreInArgs
-    if (returnCache) return cachedResult
+/**
+ * Creates a memoized version of a function, caching the result for repeated calls with the same arguments.
+ *
+ * Only performs shallow equality checks on arguments (strict equality `===`).
+ *
+ * @template T - The type of the function to memoize.
+ * @param {T} toMemoizeFunc - The function to memoize.
+ * @returns {T} A memoized version of the input function.
+ */
+export function memoize<T extends BasicFunc>(toMemoizeFunc: T): T {
+  let cachedArgs: Parameters<T> | undefined
+  let cachedResult: { value: ReturnType<T> } | undefined
+
+  const memoizedFunc = (...args: Parameters<T>): ReturnType<T> => {
+    const argsMatch = cachedArgs !== undefined
+      && args.length === cachedArgs.length
+      && args.every((arg, i) => arg === cachedArgs![i])
+    if (argsMatch && cachedResult !== undefined) return cachedResult.value
     const result = toMemoizeFunc(...args)
-    cachedResult = result
+    cachedArgs = args
+    cachedResult = { value: result }
     return result
   }
+
+  return memoizedFunc as T
 }

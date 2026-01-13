@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer'
-import { Duration } from '../../src/agnostic/time/duration/index.js'
+import { minutes } from '../../src/agnostic/time/duration/index.js'
 import { timeout } from '../../src/agnostic/time/timeout/index.js'
 
 const PORT = process.env.PORT || '3000'
@@ -18,7 +18,7 @@ async function run () {
 }
 
 try {
-  await timeout(Duration.minutes(1).toMs(), run)
+  await timeout(minutes(1).toMs(), run)
   process.exit(0)
 } catch (error) {
   process.exit(1)

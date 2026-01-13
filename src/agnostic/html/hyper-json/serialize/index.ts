@@ -1,4 +1,4 @@
-import { Window } from '../../../misc/crossenv/window/index.js'
+import * as Window from '../../../misc/crossenv/window/index.js'
 import { Types } from '../types/index.js'
 import { Transformer } from '../transformer/index.js'
 import { Method } from '../method/index.js'

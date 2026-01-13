@@ -4,7 +4,7 @@ import {
   CopyOptions as GCSCopyOptions,
   DeleteFileOptions as GCSDeleteOptions
 } from '@google-cloud/storage'
-import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 
 export type MoveDirOptions = {

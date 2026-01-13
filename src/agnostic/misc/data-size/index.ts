@@ -1,9 +1,4 @@
-export type BinaryUnit = 'kibibyte' | 'mebibyte' | 'gibibyte' | 'tebibyte' | 'pebibyte' | 'exbibyte'
-export type BinaryUnitShort = 'KiB' | 'MiB' | 'GiB' | 'TiB' | 'PiB' | 'EiB'
-export type DecimalUnit = 'bit' | 'byte' | 'kilobyte' | 'megabyte' | 'gigabyte' | 'terabyte' | 'petabyte' | 'exabyte'
-export type DecimalUnitShort = 'b' | 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB'
-export type Unit = BinaryUnit | DecimalUnit
-export type UnitShort = BinaryUnitShort | DecimalUnitShort
+import type { Unit, UnitShort } from './types.js'
 
 export class DataSize {
   value: number
@@ -29,8 +24,7 @@ export class DataSize {
 
     this.toBits = this.toBits.bind(this)
     this.toBytes = this.toBytes.bind(this)
-
-    this.toKiloBytes = this.toKiloBytes.bind(this)
+    this.toKilobytes = this.toKilobytes.bind(this)
     this.toMegabytes = this.toMegabytes.bind(this)
     this.toGigabytes = this.toGigabytes.bind(this)
     this.toTerabytes = this.toTerabytes.bind(this)
@@ -47,124 +41,121 @@ export class DataSize {
   toBits (): number {
     if (this.unit === 'bit') return this.value
     if (this.unit === 'byte') return this.value * 8
-    if (this.unit === 'kilobyte') return this.value * 8 * 1000
-    if (this.unit === 'megabyte') return this.value * 8 * 1000 * 1000
-    if (this.unit === 'gigabyte') return this.value * 8 * 1000 * 1000 * 1000
-    if (this.unit === 'terabyte') return this.value * 8 * 1000 * 1000 * 1000 * 1000
-    if (this.unit === 'petabyte') return this.value * 8 * 1000 * 1000 * 1000 * 1000 * 1000
-    if (this.unit === 'exabyte') return this.value * 8 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000
+    if (this.unit === 'kilobyte') return this.value * 8 * 1e3
+    if (this.unit === 'megabyte') return this.value * 8 * 1e6
+    if (this.unit === 'gigabyte') return this.value * 8 * 1e9
+    if (this.unit === 'terabyte') return this.value * 8 * 1e12
+    if (this.unit === 'petabyte') return this.value * 8 * 1e15
+    if (this.unit === 'exabyte') return this.value * 8 * 1e18
     if (this.unit === 'kibibyte') return this.value * 8 * 1024
-    if (this.unit === 'mebibyte') return this.value * 8 * 1024 * 1024
-    if (this.unit === 'gibibyte') return this.value * 8 * 1024 * 1024 * 1024
-    if (this.unit === 'tebibyte') return this.value * 8 * 1024 * 1024 * 1024 * 1024
-    if (this.unit === 'pebibyte') return this.value * 8 * 1024 * 1024 * 1024 * 1024 * 1024
-    if (this.unit === 'exbibyte') return this.value * 8 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024
+    if (this.unit === 'mebibyte') return this.value * 8 * Math.pow(1024, 2)
+    if (this.unit === 'gibibyte') return this.value * 8 * Math.pow(1024, 3)
+    if (this.unit === 'tebibyte') return this.value * 8 * Math.pow(1024, 4)
+    if (this.unit === 'pebibyte') return this.value * 8 * Math.pow(1024, 5)
+    if (this.unit === 'exbibyte') return this.value * 8 * Math.pow(1024, 6)
     return this.value // defaults to bits
   }
 
-  toBytes (): number {
-    const bits = this.toBits()
-    return bits / 8
-  }
+  /* * * * * * * * * * * * * * * * * * 
+   * Decimal unit converters
+   * * * * * * * * * * * * * * * * * */
+  toBytes (): number { return this.toBits() / 8 }
   toB = this.toBytes.bind(this)
 
-  toKiloBytes (): number {
-    const bytes = this.toBytes()
-    return bytes / 1000
-  }
-  toKB = this.toKiloBytes.bind(this)
+  toKilobytes (): number { return this.toBytes() / 1e3 }
+  toKB = this.toKilobytes.bind(this)
 
-  toMegabytes (): number {
-    const bytes = this.toBytes()
-    return bytes / 1000 / 1000
-  }
+  toMegabytes (): number { return this.toBytes() / 1e6 }
   toMB = this.toMegabytes.bind(this)
 
-  toGigabytes (): number {
-    const bytes = this.toBytes()
-    return bytes / 1000 / 1000 / 1000
-  }
+  toGigabytes (): number { return this.toBytes() / 1e9 }
   toGB = this.toGigabytes.bind(this)
 
-  toTerabytes (): number {
-    const bytes = this.toBytes()
-    return bytes / 1000 / 1000 / 1000 / 1000
-  }
+  toTerabytes (): number { return this.toBytes() / 1e12 }
   toTB = this.toTerabytes.bind(this)
 
-  toPetabytes (): number {
-    const bytes = this.toBytes()
-    return bytes / 1000 / 1000 / 1000 / 1000 / 1000
-  }
+  toPetabytes (): number { return this.toBytes() / 1e15 }
   toPB = this.toPetabytes.bind(this)
 
-  toExabytes (): number {
-    const bytes = this.toBytes()
-    return bytes / 1000 / 1000 / 1000 / 1000 / 1000 / 1000
-  }
+  toExabytes (): number { return this.toBytes() / 1e18 }
   toEB = this.toExabytes.bind(this)
 
-  toKibibytes (): number {
-    const bytes = this.toBytes()
-    return bytes / 1024
-  }
+  /* * * * * * * * * * * * * * * * * * 
+   * Binary unit converters
+   * * * * * * * * * * * * * * * * * */
+  toKibibytes (): number { return this.toBytes() / 1024 }
   toKiB = this.toKibibytes.bind(this)
 
-  toMebibytes (): number {
-    const bytes = this.toBytes()
-    return bytes / 1024 / 1024
-  }
+  toMebibytes (): number { return this.toBytes() / Math.pow(1024, 2) }
   toMiB = this.toMebibytes.bind(this)
 
-  toGibibytes (): number {
-    const bytes = this.toBytes()
-    return bytes / 1024 / 1024 / 1024
-  }
+  toGibibytes (): number { return this.toBytes() / Math.pow(1024, 3) }
   toGiB = this.toGibibytes.bind(this)
 
-  toTebibytes (): number {
-    const bytes = this.toBytes()
-    return bytes / 1024 / 1024 / 1024 / 1024
-  }
+  toTebibytes (): number { return this.toBytes() / Math.pow(1024, 4) }
   toTiB = this.toTebibytes.bind(this)
 
-  toPebibytes (): number {
-    const bytes = this.toBytes()
-    return bytes / 1024 / 1024 / 1024 / 1024 / 1024
-  }
+  toPebibytes (): number { return this.toBytes() / Math.pow(1024, 5) }
   toPiB = this.toPebibytes.bind(this)
 
-  toExbibytes (): number {
-    const bytes = this.toBytes()
-    return bytes / 1024 / 1024 / 1024 / 1024 / 1024 / 1024
-  }
+  toExbibytes (): number { return this.toBytes() / Math.pow(1024, 6) }
   toEiB = this.toExbibytes.bind(this)
 }
 
 export function bits (value: number): DataSize { return new DataSize(value, 'bit') }
 export function bytes (value: number): DataSize { return new DataSize(value, 'byte') }
-export const B = bytes
-export function kiloBytes (value: number): DataSize { return new DataSize(value, 'kilobyte') }
-export const KB = kiloBytes
-export function megaBytes (value: number): DataSize { return new DataSize(value, 'megabyte') }
-export const MB = megaBytes
+export function kilobytes (value: number): DataSize { return new DataSize(value, 'kilobyte') }
+export function megabytes (value: number): DataSize { return new DataSize(value, 'megabyte') }
 export function gigabytes (value: number): DataSize { return new DataSize(value, 'gigabyte') }
-export const GB = gigabytes
 export function terabytes (value: number): DataSize { return new DataSize(value, 'terabyte') }
-export const TB = terabytes
 export function petabytes (value: number): DataSize { return new DataSize(value, 'petabyte') }
-export const PB = petabytes
 export function exabytes (value: number): DataSize { return new DataSize(value, 'exabyte') }
-export const EB = exabytes
 export function kibibytes (value: number): DataSize { return new DataSize(value, 'kibibyte') }
-export const KiB = kibibytes
 export function mebibytes (value: number): DataSize { return new DataSize(value, 'mebibyte') }
-export const MiB = mebibytes
 export function gibibytes (value: number): DataSize { return new DataSize(value, 'gibibyte') }
-export const GiB = gibibytes
 export function tebibytes (value: number): DataSize { return new DataSize(value, 'tebibyte') }
-export const TiB = tebibytes
 export function pebibytes (value: number): DataSize { return new DataSize(value, 'pebibyte') }
-export const PiB = pebibytes
 export function exbibytes (value: number): DataSize { return new DataSize(value, 'exbibyte') }
+
+export const B = bytes
+export const KB = kilobytes
+export const MB = megabytes
+export const GB = gigabytes
+export const TB = terabytes
+export const PB = petabytes
+export const EB = exabytes
+export const KiB = kibibytes
+export const MiB = mebibytes
+export const GiB = gibibytes
+export const TiB = tebibytes
+export const PiB = pebibytes
 export const EiB = exbibytes
+
+export function toBits (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toBits() }
+export function toBytes (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toBytes() }
+export function toKilobytes (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toKilobytes() }
+export function toMegabytes (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toMegabytes() }
+export function toGigabytes (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toGigabytes() }
+export function toTerabytes (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toTerabytes() }
+export function toPetabytes (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toPetabytes() }
+export function toExabytes (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toExabytes() }
+export function toKibibytes (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toKibibytes() }
+export function toMebibytes (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toMebibytes() }
+export function toGibibytes (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toGibibytes() }
+export function toTebibytes (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toTebibytes() }
+export function toPebibytes (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toPebibytes() }
+export function toExbibytes (value: number, unit: Unit | UnitShort): number { return new DataSize(value, unit).toExbibytes() }
+
+export const toB = toBytes
+export const toKB = toKilobytes
+export const toMB = toMegabytes
+export const toGB = toGigabytes
+export const toTB = toTerabytes
+export const toPB = toPetabytes
+export const toEB = toExabytes
+export const toKiB = toKibibytes
+export const toMiB = toMebibytes
+export const toGiB = toGibibytes
+export const toTiB = toTebibytes
+export const toPiB = toPebibytes
+export const toEiB = toExbibytes

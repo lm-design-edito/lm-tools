@@ -1,10 +1,22 @@
 import { round } from '../../numbers/round/index.js'
 
+// [WIP] rename, responsive harmonics is not quite right
+
+/**
+ * Computes the harmonic value at a specific level between a minimum and maximum over a number of steps.
+ *
+ * @param {number} min - The minimum value (must be non-zero).
+ * @param {number} max - The maximum value.
+ * @param {number} level - The current level (1-based).
+ * @param {number} steps - Total number of steps (must be ≥ 1).
+ * @returns {number} The computed harmonic value, or `NaN` if input is invalid.
+ */
 export function getHarmonic (
   min: number,
   max: number,
   level: number,
-  steps: number) {
+  steps: number
+): number {
   if (min === 0) {
     console.warn('Cannot generate harmonics if min value is zero')
     return NaN
@@ -49,7 +61,20 @@ type ScaleDescriptor = {
   clamp?: boolean
 }
 
-export function createScale (descriptor: ScaleDescriptor) {
+// [WIP] this should live in css helpers, not number
+
+/**
+ * Creates a scale function that maps a level to a CSS size value using harmonic interpolation.
+ *
+ * @param {ScaleDescriptor} descriptor - The scale configuration.
+ * @param {[number, number]} descriptor.screenBounds - The lower and upper bounds for screen width in pixels.
+ * @param {[number, number]} descriptor.lowLevel - Minimum and maximum values for the low level range.
+ * @param {[number, number]} descriptor.highLevel - Minimum and maximum values for the high level range.
+ * @param {number} descriptor.steps - Number of discrete steps in the scale.
+ * @param {boolean} [descriptor.clamp] - Whether to wrap the resulting CSS value in a `clamp()` function.
+ * @returns {(level: number) => string | undefined} A function mapping a level to a CSS value string.
+ */
+export function createScale (descriptor: ScaleDescriptor): (level: number) => string | undefined {
   const {
     screenBounds: [loBound, hiBound],
     lowLevel: [loLevelMin, loLevelMax],

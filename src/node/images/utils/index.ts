@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises'
 import sharp from 'sharp'
 import type { Color } from '../../../agnostic/colors/types.js'
-import { toRgb, tidy } from '../../../agnostic/colors/index.js'
+import { toRgb } from '../../../agnostic/colors/convert/index.js'
+import { tidy } from '../../../agnostic/colors/tidy/index.js'
 import { isNonNullObject } from '../../../agnostic/objects/is-object/index.js'
 import type { CreateOptions, ImageLike } from '../types.js'
 

@@ -1,6 +1,6 @@
 import sharp from 'sharp'
 import z from 'zod'
-import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import type { BrightenOperationParams } from '../../../types.js'
 
 export function isBrightenOperationParams (obj: unknown): Outcome.Either<BrightenOperationParams, string> {

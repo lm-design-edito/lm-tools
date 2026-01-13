@@ -1,4 +1,4 @@
-import { Window } from '../../../misc/crossenv/window/index.js'
+import * as Window from '../../../misc/crossenv/window/index.js'
 import { trimStart, trimEnd } from '../../../strings/trim/index.js'
 
 import { Serialize } from '../serialize/index.js'

@@ -1,4 +1,4 @@
-import { Color, TransformedColor, PaletteType, Palette } from '../types.js'
+import type { Color, TransformedColor, PaletteType, Palette } from '../types.js'
 import { rotate } from '../rotate/index.js'
 
 /* * * * * * * * * * * * * * * * * *
@@ -91,6 +91,15 @@ function tetradicLch <C extends Color>(color: C): readonly [TransformedColor<C>,
   ]
 }
 
+/**
+ * Generates a color palette based on color theory harmony rules.
+ *
+ * @template C - The input color type.
+ * @template T - The palette generation scheme type.
+ * @param {C} color - The base color for palette generation.
+ * @param {T} type - The type of palette to generate (e.g., 'complementary', 'triadic', 'tetradic').
+ * @returns {Palette<C, T>} An array of colors forming the requested palette, in the original color format.
+ */
 export function palette<
   C extends Color,
   T extends PaletteType

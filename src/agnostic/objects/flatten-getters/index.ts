@@ -1,5 +1,11 @@
-import { Cast } from '../../misc/cast/index.js'
+import * as Cast from '../../misc/cast/index.js'
 
+/**
+ * Returns a shallow copy of an object including values from its getter properties.
+ *
+ * @param {unknown} obj - The object to flatten.
+ * @returns {Record<string, unknown>} A new object containing all own properties and evaluated getter values.
+ */
 export function flattenGetters (obj: unknown): Record<string, unknown> {
   try {
     const { entries, getOwnPropertyDescriptors } = Object

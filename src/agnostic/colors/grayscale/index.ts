@@ -1,6 +1,24 @@
-import { Color, TransformedColor, GrayscaleMethod } from '../types.js'
-import { viaRgb, viaCmyk, viaHsl, viaHsb, viaXyz, viaLab, viaLch } from '../convert/index.js'
-import { Rgba, Cmyka, Hsla, Hsba, Xyza, Laba, Lcha } from '../types.js'
+import type {
+  Color,
+  TransformedColor,
+  GrayscaleMethod,
+  Rgba,
+  Cmyka,
+  Hsla,
+  Hsba,
+  Xyza,
+  Laba,
+  Lcha
+} from '../types.js'
+import {
+  viaRgb,
+  viaCmyk,
+  viaHsl,
+  viaHsb,
+  viaXyz,
+  viaLab,
+  viaLch
+} from '../convert/index.js'
 
 /* * * * * * * * * * * * * * * * * *
  * Grayscales
@@ -105,6 +123,14 @@ function grayscaleLab (lab: Laba): Laba { return { ...lab, a: 0, b: 0 } }
 // LCH
 function grayscaleLch (lch: Lcha): Lcha { return { ...lch, c: 0 } }
 
+/**
+ * Converts a color to grayscale using the specified method.
+ *
+ * @template C - The input color type.
+ * @param {C} color - The color to convert to grayscale.
+ * @param {GrayscaleMethod} [method='lab'] - The grayscale conversion method to use.
+ * @returns {TransformedColor<C>} The grayscale color in the original format.
+ */
 export function grayscale <C extends Color>(
   color: C,
   method: GrayscaleMethod = 'lab'

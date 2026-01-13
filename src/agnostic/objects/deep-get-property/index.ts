@@ -1,5 +1,13 @@
 import { isRecord } from '../is-record/index.js'
 
+/**
+ * Safely retrieves a nested property from an object using a dot-separated path string.
+ *
+ * @param {unknown} anythingThatHasProperties - The object (or record) to traverse.
+ * @param {string} pathString - Dot-separated path of the property to retrieve (e.g., `'a.b.c'`).
+ * @returns {any} The value at the specified path.
+ * @throws {string} `'PROPERTY_UNREACHABLE'` if any part of the path is inaccessible or not an object.
+ */
 export function deepGetProperty (
   anythingThatHasProperties: unknown,
   pathString: string

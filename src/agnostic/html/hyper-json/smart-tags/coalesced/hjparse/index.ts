@@ -1,5 +1,5 @@
 import { unknownToString } from '../../../../../errors/unknown-to-string/index.js'
-import { Outcome } from '../../../../../misc/outcome/index.js'
+import * as Outcome from '../../../../../misc/outcome/index.js'
 import { Types } from '../../../types/index.js'
 import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'

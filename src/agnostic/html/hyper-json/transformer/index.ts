@@ -1,4 +1,4 @@
-import { Outcome } from '../../../misc/outcome/index.js'
+import * as Outcome from '../../../misc/outcome/index.js'
 import { Method } from '../method/index.js'
 import { Tree as TreeNamespace } from '../tree/index.js'
 import { Types } from '../types/index.js'

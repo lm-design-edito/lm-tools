@@ -1,4 +1,4 @@
-import { Outcome } from '../../../misc/outcome/index.js'
+import * as Outcome from '../../../misc/outcome/index.js'
 import { Logger } from '../../../misc/logs/logger/index.js'
 import { Tree as TreeNamespace } from '../tree/index.js'
 import { Transformer } from '../transformer/index.js'

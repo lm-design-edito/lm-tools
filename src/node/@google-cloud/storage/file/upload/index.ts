@@ -1,7 +1,7 @@
 import { Readable } from 'node:stream'
 import { Bucket, FileOptions, SaveOptions } from '@google-cloud/storage'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
-import { Outcome } from '../../../../../agnostic/misc/outcome/index.js'
+import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 
 export type UploadOptions = {
   fileOptions?: FileOptions
