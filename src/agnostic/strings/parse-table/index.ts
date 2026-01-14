@@ -1,160 +1,252 @@
 import * as Outcome from '../../misc/outcome/index.js'
 
+/**
+ * Options for delimiter-based table parsing mode.
+ * 
+ * In this mode, the table is split into rows and cells using delimiter functions.
+ * The header row is parsed into column names, which are then mapped to each body row's cell values.
+ * 
+ * @template T - The type of objects in the resulting array, extending `Record<string, string>`.
+ * 
+ * @example
+ * ```typescript
+ * const options: ParseTableLineModeOptions<MyRow> = {
+ *   mode: 'line',
+ *   splitLines: input => input.split('\n'),
+ *   headerPos: 0,
+ *   splitHeaderCells: header => header.split('\t'),
+ *   bodyBounds: [1, Infinity],
+ *   splitBodyCells: row => row.split('\t'),
+ *   schema: obj => validateMyRow(obj)
+ * }
+ * ```
+ */
 export type ParseTableLineModeOptions<T extends Record<string, string>> = {
-  inputToLines: (input: string) => string[]
-  headLinePos: number
-  headLineToHeaders: (input: string) => string[]
-  bodyLinesBounds: [number, number] // [start, end]
-  bodyLineToCellValue: (input: string) => string[]
+  /** Parsing mode identifier. Must be 'line' for delimiter-based parsing. */
+  mode?: 'line'
+  /** Function to split the input string into lines. @default input => input.split('\n') */
+  splitLines: (input: string) => string[]
+  /** Zero-based index of the header line within the split lines array. @default 0 */
+  headerPos: number
+  /** Tuple `[start, end]` indicating the range of line indices to parse as body rows (inclusive start, exclusive end). Use `Infinity` as the end value to parse until the last line. @default [1, Infinity] */
+  bodyBounds: [number, number]
+  /** Function to split the header line into individual column names. @default header => header.split('\t') */
+  splitHeaderCells: (input: string) => string[]
+  /** Function to split each body line into individual cell values. @default input => input.split('\t') */
+  splitBodyCells: (input: string) => string[]
+  /** Function to validate and transform each parsed row object. Return `undefined` to skip invalid rows. Skipped rows will not appear in the result and will not produce error messages. */
   schema: (obj: unknown) => T | undefined
 }
 
+/**
+ * Options for fixed-width column parsing mode.
+ * 
+ * In this mode, the table is parsed using fixed character positions to define column boundaries.
+ * This is useful for parsing terminal output, formatted reports, or any text with consistent column alignment.
+ * 
+ * @template T - The type of objects in the resulting array, extending `Record<string, string>`.
+ * 
+ * @example
+ * ```typescript
+ * const options: ParseTableColumnModeOptions<MyRow> = {
+ *   mode: 'column',
+ *   splitLines: input => input.split('\n'),
+ *   headerPos: 0,
+ *   bodyBounds: [1, Infinity],
+ *   columns: [0, 10, 25],  // Columns start at positions 0, 10, and 25
+ *   headerCellRefine: header => header.trim().toLowerCase(),
+ *   bodyCellRefine: value => value.trim(),
+ *   schema: obj => validateMyRow(obj)
+ * }
+ * ```
+ */
 export type ParseTableColumnModeOptions<T extends Record<string, string>> = {
-  inputToLines: (input: string) => string[]
-  headLinePos: number
-  bodyLinesBounds: [number, number] // [start, end]
+  /** Parsing mode identifier. Must be 'column' for fixed-width column parsing. */
+  mode?: 'column'
+  /** Function to split the input string into lines. @default input => input.split('\n') */
+  splitLines: (input: string) => string[]
+  /** Zero-based index of the header line within the split lines array. @default 0 */
+  headerPos: number
+  /** Tuple `[start, end]` indicating the range of line indices to parse as body rows (inclusive start, exclusive end). Use `Infinity` as the end value to parse until the last line. @default [1, Infinity] */
+  bodyBounds: [number, number]
+  /** Array of starting character positions for each column. Each column extends from its start position to the start of the next column. The last column extends to the end of the line. @example [0, 10, 25] defines three columns: chars 0-9, 10-24, and 25-end */
   columns: number[]
-  headerRefine: (header: string) => string
-  valueRefine: (value: string) => string
+  /** Function to clean or normalize header names extracted from the header line. Applied to each column header after slicing. @default header => header */
+  headerCellRefine: (header: string) => string
+  /** Function to clean or normalize cell values extracted from body rows. Applied to each cell value after slicing. @default value => value */
+  bodyCellRefine: (value: string) => string
+  /** Function to validate and transform each parsed row object. Return `undefined` to skip invalid rows. Skipped rows will not appear in the result and will not produce error messages. */
   schema: (obj: unknown) => T | undefined
 }
 
-export type ParseTableOptions<T extends Record<string, string>> = ParseTableLineModeOptions<T> | ParseTableColumnModeOptions<T>
+/**
+ * Union type of all supported parsing mode options.
+ * 
+ * @template T - The type of objects in the resulting array, extending `Record<string, string>`.
+ */
+export type ParseTableOptions<T extends Record<string, string>> = 
+  | ParseTableLineModeOptions<T> 
+  | ParseTableColumnModeOptions<T>
 
 const defaultLineModeOptions: ParseTableLineModeOptions<any> = {
-  inputToLines: i => i.split('\n'),
-  headLinePos: 0,
-  headLineToHeaders: h => h.split('\t'),
-  bodyLinesBounds: [1, Infinity],
-  bodyLineToCellValue: i => i.split('\t'),
+  mode: 'line',
+  splitLines: i => i.split('\n'),
+  headerPos: 0,
+  splitHeaderCells: h => h.split('\t'),
+  bodyBounds: [1, Infinity],
+  splitBodyCells: i => i.split('\t'),
   schema: i => i
 }
 
 const defaultColumnModeOptions: ParseTableColumnModeOptions<any> = {
-  inputToLines: i => i.split('\n'),
-  headLinePos: 0,
-  bodyLinesBounds: [1, Infinity],
+  mode: 'column',
+  splitLines: i => i.split('\n'),
+  headerPos: 0,
+  bodyBounds: [1, Infinity],
   columns: [],
-  headerRefine: h => h,
-  valueRefine: v => v,
+  headerCellRefine: h => h,
+  bodyCellRefine: v => v,
   schema: i => i
 }
 
 /**
- * Parses a tabular string input into an array of objects, where each object represents a row in the table.
+ * Parses a tabular string input into an array of typed objects.
  *
- * There are two parsing modes:
+ * Supports two parsing modes:
+ * 1. **Delimiter-based** (`mode: 'line'` or when `columns` is not provided): Splits rows and cells using delimiter functions
+ * 2. **Fixed-width columns** (`mode: 'column'` or when `columns` is provided): Slices text at fixed character positions
  *
- * 1. **Delimiter-based parsing** (default)  
- *    - The table is split into rows and then into cells using functions such as splitting on `\n` and `\t`.  
- *    - The header row is parsed into an array of header names, which are mapped to each cell value.  
- *    - Defaults: `inputToLines = s => s.split('\n')`, `headLinePos = 0`, `headLineToHeaders = h => h.split('\t')`,
- *      `bodyLinesBounds = [0, Infinity]`, `bodyLineToCellValue = r => r.split('\t')`.
+ * @template T - The type of objects in the resulting array, extending `Record<string, string>`.
+ * @param {string} table - The string representation of the table to parse.
+ * @param {Partial<ParseTableOptions<T>> & { schema: (obj: unknown) => T | undefined }} options - Configuration options.
+ * @param {function(unknown): T | undefined} options.schema - **Required.** Validates and transforms each row. Return `undefined` to skip invalid rows.
+ * @param {'line' | 'column'} [options.mode] - Parsing mode. If omitted, inferred from presence of `columns` property.
+ * @param {function(string): string[]} [options.splitLines] - How to split input into lines.
+ * @param {number} [options.headerPos=0] - Index of the header line.
+ * @param {[number, number]} [options.bodyBounds=[1, Infinity]] - Range of lines to parse as body rows `[start, end)`.
+ * 
+ * **Delimiter-based mode options:**
+ * @param {function(string): string[]} [options.splitHeaderCells] - How to split header line into column names.
+ * @param {function(string): string[]} [options.splitBodyCells] - How to split body lines into cell values.
+ * 
+ * **Fixed-width column mode options:**
+ * @param {number[]} [options.columns] - Starting positions for each column.
+ * @param {function(string): string} [options.headerCellRefine] - Clean/normalize header names.
+ * @param {function(string): string} [options.bodyCellRefine] - Clean/normalize cell values.
  *
- * 2. **Column-slice parsing**  
- *    - The table is split into fixed-width columns based on start indices provided in `options.columns`.  
- *    - The header row and body rows are sliced using these column boundaries.  
- *    - Each header and cell value can be refined with user-provided functions.  
- *    - Defaults: `inputToLines = s => s.split('\n')`, `headLinePos = 0`, `bodyLinesBounds = [1, Infinity]`,
- *      `headerRefine = h => h`, `valueRefine = v => v`.
- *
- * @template T - The type of the objects in the resulting array, extending `Record<string, string>`.
- * @param {string} table - The string representation of the table to be parsed.
- * @param {Partial<ParseTableOptions<T>> & { schema: (obj: unknown) => T }} options - Configuration options for parsing the table.
- *
- * ### Required
- * @param {function(unknown): T} options.schema - Function to validate and transform each row object.
- *
- * ### Common (optional)
- * @param {function(string): string[]} [options.inputToLines] - Function to split the input string into lines. Default: `s => s.split('\n')`.
- * @param {number} [options.headLinePos] - Index of the header line. Default: `0`.
- * @param {[number, number]} [options.bodyLinesBounds] - Tuple `[start, end]` indicating the range of lines to parse as body rows.
- *
- * ### Delimiter-based (optional, used when `columns` is not provided)
- * @param {function(string): string[]} [options.headLineToHeaders] - Function to parse the header line into an array of header names. Default: `h => h.split('\t')`.
- * @param {function(string): string[]} [options.bodyLineToCellValue] - Function to parse each body line into an array of cell values. Default: `r => r.split('\t')`.
- *
- * ### Column-slice (optional, used when `columns` is provided)
- * @param {number[]} [options.columns] - Starting indices for each column. The last column extends to the end of the line.
- * @param {function(string): string} [options.headerRefine] - Function to clean or normalize header names. Default: `h => h`.
- * @param {function(string): string} [options.valueRefine] - Function to clean or normalize cell values. Default: `v => v`.
- *
- * @returns {Outcome.Either<T[], string>} An `Outcome` containing either:
- *   - `success = true` with an array of parsed row objects, or
- *   - `success = false` with an error message.
- *
- * @throws Will return a failure outcome if the header line cannot be found.
+ * @returns {Outcome.Either<T[], string>} 
+ * - On success: `{ success: true, payload: T[] }` containing parsed rows.
+ * - On failure: `{ success: false, payload: string }` containing error message.
  *
  * @example
- * // Delimiter-based parsing (default)
- * const table = 'name\tage\nAlice\t30\nBob\t25';
- * const result = parseTable(table, { schema: row => row });
- * if (result.success) {
- *   console.log(result.payload); // [{ name: 'Alice', age: '30' }, { name: 'Bob', age: '25' }]
- * }
+ * // Delimiter-based parsing (TSV)
+ * const tsvTable = 'name\tage\nAlice\t30\nBob\t25';
+ * const result = parseTable(tsvTable, { schema: row => row });
+ * // result.payload = [{ name: 'Alice', age: '30' }, { name: 'Bob', age: '25' }]
  *
  * @example
- * // Column-slice parsing
- * const table = 'Name      Age\nAlice     30 \nBob       25 ';
- * const result = parseTable(table, {
- *   schema: row => row,
- *   columns: [0, 10, 15],
- *   headerRefine: h => h.trim(),
- *   valueRefine: v => v.trim()
+ * // Fixed-width column parsing
+ * const fixedTable = 'Name      Age\nAlice     30 \nBob       25 ';
+ * const result = parseTable(fixedTable, {
+ *   mode: 'column',
+ *   columns: [0, 10],
+ *   headerCellRefine: h => h.trim().toLowerCase(),
+ *   bodyCellRefine: v => v.trim(),
+ *   schema: row => row
  * });
- * if (result.success) {
- *   console.log(result.payload); // [{ Name: 'Alice', Age: '30' }, { Name: 'Bob', Age: '25' }]
- * }
+ * // result.payload = [{ name: 'Alice', age: '30' }, { name: 'Bob', age: '25' }]
+ * 
+ * @example
+ * // With schema validation
+ * type Person = { name: string; age: string };
+ * const validatePerson = (obj: unknown): Person | undefined => {
+ *   if (typeof obj !== 'object' || obj === null) return undefined;
+ *   const { name, age } = obj as any;
+ *   if (typeof name !== 'string' || typeof age !== 'string') return undefined;
+ *   return { name, age };
+ * };
+ * const result = parseTable(tsvTable, { schema: validatePerson });
  */
 export function parseTable<T extends Record<string, string>> (
   table: string,
-  _options: Partial<ParseTableOptions<T>> & { schema: (obj: unknown) => T }
+  _options: Partial<ParseTableOptions<T>> & { schema: (obj: unknown) => T | undefined }
 ): Outcome.Either<T[], string> {
-  const options: ParseTableOptions<T> = 'columns' in _options
-    ? { ...defaultColumnModeOptions, ..._options }
-    : { ...defaultLineModeOptions, ..._options }
-  const lines = options.inputToLines(table)
-  const headLine = lines.at(options.headLinePos)
-  if (headLine === undefined) return Outcome.makeFailure('Head line not found')
-  if ('headLineToHeaders' in options) {
-    const headers = options.headLineToHeaders(headLine)
-    const bodyLines = lines.slice(options.bodyLinesBounds[0], options.bodyLinesBounds[1])
-    const bodyLinesSplit = bodyLines.map(options.bodyLineToCellValue)
+  // Determine mode: explicit mode, presence of 'columns', or presence of 'splitHeaderCells'
+  const inferredMode: 'line' | 'column' = 
+    'mode' in _options && _options.mode !== undefined
+      ? _options.mode
+      : 'columns' in _options
+        ? 'column'
+        : 'splitHeaderCells' in _options
+          ? 'line'
+          : 'line' // default to line mode
+  const options: ParseTableOptions<T> = inferredMode === 'column'
+    ? { ...defaultColumnModeOptions, ..._options, mode: 'column' }
+    : { ...defaultLineModeOptions, ..._options, mode: 'line' }
+  const lines = options.splitLines(table)
+  const headLine = lines.at(options.headerPos)
+  if (headLine === undefined) return Outcome.makeFailure(`Header line not found at position ${options.headerPos}`)
+  
+  // Delimiter-based mode (line mode)
+  if (options.mode === 'line' && 'splitHeaderCells' in options) {
+    const headers = options.splitHeaderCells(headLine)
+    const [bodyStart, bodyEnd] = options.bodyBounds
+    const bodyLines = lines.slice(bodyStart, bodyEnd)
+    const bodyLinesSplit = bodyLines.map(options.splitBodyCells)
     const rows: T[] = []
-    bodyLinesSplit.forEach(line => {
+    bodyLinesSplit.forEach(lineCells => {
       const row: Record<string, string> = {}
-      line.forEach((cell, cellPos) => {
-        const cellName = headers.at(cellPos)
-        if (cellName === undefined) return
-        const cellValue = cell
-        row[cellName] = cellValue as any
-      })
-      const checked = options.schema(row)
-      if (checked === undefined) return
-      rows.push(checked)
+      const cellCount = Math.min(lineCells.length, headers.length)
+      for (let cellPos = 0; cellPos < cellCount; cellPos++) {
+        const cellName = headers[cellPos]
+        const cellValue = lineCells[cellPos]
+        if (cellName !== undefined
+          && cellValue !== undefined) { row[cellName] = cellValue }
+      }
+      const validated = options.schema(row)
+      if (validated !== undefined) rows.push(validated)
     })
     return Outcome.makeSuccess(rows)
-  } else {
-    const colBounds: [number, number][] = options.columns.reduce((acc, colStartPos, colIndex) => {
-      const nextColStartPos = options.columns.at(colIndex + 1)
-      if (nextColStartPos === undefined) return [...acc, [colStartPos, Infinity]]
-      return [...acc, [colStartPos, nextColStartPos]]
-    }, [] as [number, number][])
-    const bodyLines = lines.slice(options.bodyLinesBounds[0], options.bodyLinesBounds[1])
-    const headers = colBounds.map(([start, end]) => options.headerRefine(headLine.slice(start, end)))
+  }
+  
+  // Fixed-width column mode
+  if (options.mode === 'column' && 'columns' in options) {
+    const { columns, headerCellRefine, bodyCellRefine } = options
+    if (columns.length === 0) return Outcome.makeFailure('Column mode requires at least one column position')
+    
+    // Build column boundaries: [start, end) for each column
+    const colBounds: Array<[number, number]> = columns.map((colStartPos, colIndex) => {
+      const nextColStartPos = columns[colIndex + 1]
+      return [colStartPos, nextColStartPos ?? Infinity]
+    })
+    
+    // Extract and refine headers
+    const headers = colBounds.map(([start, end]) => {
+      const rawHeader = headLine.slice(start, end)
+      return headerCellRefine(rawHeader)
+    })
+    
+    // Parse body rows
+    const [bodyStart, bodyEnd] = options.bodyBounds
+    const bodyLines = lines.slice(bodyStart, bodyEnd)
     const rows: T[] = []
     bodyLines.forEach(line => {
       const row: Record<string, string> = {}
       colBounds.forEach(([start, end], colIndex) => {
-        const header = headers.at(colIndex)
-        if (header === undefined) return
-        const cellValue = line.slice(start, end)
-        row[header] = cellValue as any
+        const header = headers[colIndex]
+        if (header !== undefined) {
+          const rawValue = line.slice(start, end)
+          const refinedValue = bodyCellRefine(rawValue)
+          row[header] = refinedValue
+        }
       })
-      const checked = options.schema(row)
-      if (checked === undefined) return
-      rows.push(checked)
+      const validated = options.schema(row)
+      if (validated !== undefined) rows.push(validated)
     })
+    
     return Outcome.makeSuccess(rows)
   }
+  
+  // This should never happen due to type constraints, but provides safety
+  return Outcome.makeFailure('Invalid parsing mode configuration')
 }

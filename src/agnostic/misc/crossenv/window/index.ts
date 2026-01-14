@@ -6,10 +6,13 @@ import { MinimalWindow } from '../types/index.js'
  * @returns {boolean} `true` if `window` is present, `false` otherwise.
  */
 export function exists (): boolean {
-  return typeof globalThis !== 'undefined' && 'window' in globalThis
+  return typeof globalThis !== 'undefined'
+    && 'window' in globalThis
 }
 
-let _window: MinimalWindow | null = exists() ? (globalThis['window'] ?? null) : null 
+let _window: MinimalWindow | null = exists()
+  ? (globalThis['window'] ?? null)
+  : null 
 
 /**
  * Sets a custom `window` object to be used internally.
@@ -18,7 +21,7 @@ let _window: MinimalWindow | null = exists() ? (globalThis['window'] ?? null) : 
  * @returns {MinimalWindow | null} The window object that was set.
  */
 export function set (customWindow: MinimalWindow | null): MinimalWindow | null {
-  _window = customWindow
+  _window = customWindow;
   return customWindow
 }
 

@@ -6,11 +6,11 @@ type WriteFileData = Parameters<typeof fs.writeFile>[1]
 
 export type Options = {
   /** Additional parameters forwarded to the underlying `fs.readFile`. */
-  readOptions?: Parameters<typeof fs.readFile>[1],
+  readOptions?: Parameters<typeof fs.readFile>[1]
   /** Additional parameters forwarded to the underlying `fs.writeFile`. */
-  writeOptions?: Parameters<typeof fs.writeFile>[2],
+  writeOptions?: Parameters<typeof fs.writeFile>[2]
   /** Output path for the edited file. If not provided, the file is written back to the original `path`. */
-  output?: Path,
+  output?: Path
   /** If `true`, the file is not written to disk, only the edited content is returned. @default false */
   dryRun?: boolean
 }
@@ -54,8 +54,16 @@ export async function readWrite(path: Path, editor: Replacements, opts?: Options
  * @param {boolean} [opts.dryRun=false]  - If `true`, skip writing to disk.
  * @returns {Promise<T>} The edited file content of type `T`.
  */
-export async function readWrite<T extends WriteFileData>(path: Path, editor: EditorFunc<T>, opts?: Options): Promise<T>
-export async function readWrite (path: Path, editor: EditorFunc | Replacements, opts: Options = {}): Promise<WriteFileData> {
+export async function readWrite<T extends WriteFileData>(
+  path: Path,
+  editor: EditorFunc<T>,
+  opts?: Options
+): Promise<T>
+export async function readWrite (
+  path: Path,
+  editor: EditorFunc | Replacements,
+  opts: Options = {}
+): Promise<WriteFileData> {
   const readData = await fs.readFile(path, opts.readOptions)
   const edited = typeof editor === 'function'
     ? editor(readData)

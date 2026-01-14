@@ -1,62 +1,44 @@
-// [WIP] this module should use crossenv
-
-/**
- * Represents an attribute filtering rule for sanitization.
- *
- * - `attributeName`: The attribute name to match, either as a string or a RegExp.
- * - `attributeValues` (optional): Array of allowed or forbidden values for the attribute,
- *   each being a string or a RegExp. If omitted, all values are affected.
- */
-export type AttributeNameValPair = {
-  attributeName: string | RegExp
-  attributeValues?: Array<string | RegExp>
-}
-
-/**
- * Configuration options for HTML sanitization.
- *
- * - `inputFreeTransform` (optional): Function applied to input HTML string before sanitization.
- * - `keepComments` (optional): Whether to preserve comment nodes. Default is `false`.
- * - `allowedTags` (optional): Array of allowed tag names. `'*'` allows all tags.
- * - `forbiddenTags` (optional): Array of forbidden tag names. `'*'` forbids all tags.
- * - `allowedAttributes` (optional): Object mapping tag names to allowed attributes (`AttributeNameValPair` arrays).
- * - `forbiddenAttributes` (optional): Object mapping tag names to forbidden attributes (`AttributeNameValPair` arrays).
- * - `depth` (optional): Maximum recursion depth for nested elements. Default is 20.
- * - `verbose` (optional): Enables console warnings for forbidden elements/attributes. Default is `false`.
- * - `documentObj` (optional): Document object used to create elements; defaults to `window.document`.
- */
-export type Options = {
-  inputFreeTransform?: (input: string) => string
-  keepComments?: boolean
-  allowedTags?: string[]
-  forbiddenTags?: string[]
-  allowedAttributes?: { [tagName: string]: AttributeNameValPair[] }
-  forbiddenAttributes?: { [tagName: string]: AttributeNameValPair[] }
-  depth?: number
-  verbose?: boolean
-  documentObj?: Document
-}
+import * as Window from '../../misc/crossenv/window/index.js'
+import type {
+  SanitizeHtmlOptions,
+  AttributeNameValPair
+} from '../types.js'
 
 /**
  * Default sanitization options.
  *
  * Only sets a default recursion depth of 20.
  */
-export const defaultOptions: Options = { depth: 20 }
+export const defaultOptions: SanitizeHtmlOptions = { depth: 20 }
 
 /**
  * Sanitizes an HTML string according to the provided options.
+ * 
+ * @deprecated
+ * @security
+ * ⚠️ SECURITY WARNING
+ * This function is **not a hardened or complete HTML sanitizer**.
+ * It does not guarantee protection against XSS or other injection attacks.
+ *
+ * Correctness and safety depend entirely on strict caller configuration.
+ * In particular, unsafe usage may occur if:
+ * - Wildcards (`'*'`) are used for allowed tags or attributes
+ * - URL-based attributes (`href`, `src`, `xlink:href`, etc.) are insufficiently constrained
+ * - Event handler attributes (`on*`) are not explicitly forbidden
+ * - SVG or MathML content is allowed
+ *
+ * This API must not be used as a security boundary for untrusted HTML.
+ * For security-critical sanitization, use a dedicated, security-audited library.
  *
  * @param {string} inputStr - The HTML string to sanitize.
- * @param {Sanitize.Options} [options=defaultOptions] - Sanitization configuration.
+ * @param {SanitizeHtmlOptions} [options=defaultOptions] - Sanitization configuration.
  * @returns {string} The sanitized HTML string.
  *
  * @throws Will throw an error if no document object is available for creating elements.
  */
-export function sanitize (inputStr: string, options: Options = defaultOptions): string {
-  const actualDocument = options.documentObj ?? window.document
-  if (actualDocument === null) throw new Error('window.document is not defined')
-  const wrapperDiv = actualDocument.createElement('div')
+export function sanitizeHtml (inputStr: string, options: SanitizeHtmlOptions = defaultOptions): string {
+  const { document } = Window.get()
+  const wrapperDiv = document.createElement('div')
   const { inputFreeTransform } = options
   wrapperDiv.innerHTML = inputFreeTransform !== undefined ? inputFreeTransform(inputStr) : inputStr
   const sanitizedWrapper = sanitizeElement(wrapperDiv, options)
@@ -66,21 +48,35 @@ export function sanitize (inputStr: string, options: Options = defaultOptions): 
 
 /**
  * Recursively sanitizes a DOM element and its descendants according to the provided options.
+ * 
+ * @deprecated
+ * @security
+ * ⚠️ SECURITY WARNING
+ * This function is **not a hardened or complete HTML sanitizer**.
+ * It does not guarantee protection against XSS or other injection attacks.
+ *
+ * Correctness and safety depend entirely on strict caller configuration.
+ * In particular, unsafe usage may occur if:
+ * - Wildcards (`'*'`) are used for allowed tags or attributes
+ * - URL-based attributes (`href`, `src`, `xlink:href`, etc.) are insufficiently constrained
+ * - Event handler attributes (`on*`) are not explicitly forbidden
+ * - SVG or MathML content is allowed
+ *
+ * This API must not be used as a security boundary for untrusted HTML.
+ * For security-critical sanitization, use a dedicated, security-audited library.
  *
  * @param {Element} element - The DOM element to sanitize.
- * @param {Sanitize.Options} [options=defaultOptions] - Sanitization configuration.
+ * @param {SanitizeHtmlOptions} [options=defaultOptions] - Sanitization configuration.
  * @returns {Element | null}
  * - A sanitized clone of the original element with allowed attributes and children.
  * - `null` if the element is forbidden or maximum recursion depth is reached.
  *
  * @throws Will throw an error if no document object is available for creating elements.
  */
-
 export function sanitizeElement (
   element: Element,
-  options: Options = defaultOptions): Element | null {
-  const actualDocument = options.documentObj ?? window.document
-  if (actualDocument === null) throw new Error('window.document is not defined')
+  options: SanitizeHtmlOptions = defaultOptions
+): Element | null {
   const { tagName, attributes, childNodes } = element
   const {
     allowedTags = [],
@@ -107,7 +103,7 @@ export function sanitizeElement (
     if (verbose === true) console.warn(tagName, 'tag is not allowed')
     return null
   }
-  const returnedElement = actualDocument.createElement(tagName)
+  const returnedElement = Window.get().document.createElement(tagName)
   
   // Element's attributes checkup
   const returnedAttributes = Array.from(attributes).filter(({ name: attributeName, value: attributeValue }) => {
