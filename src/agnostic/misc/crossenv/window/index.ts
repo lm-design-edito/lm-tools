@@ -1,4 +1,4 @@
-import { MinimalWindow } from '../types/index.js'
+import { MinimalWindow } from '../types.js'
 
 /**
  * Checks whether a `window` object exists in the current environment.
@@ -45,6 +45,6 @@ export function unset (): MinimalWindow | null {
  */
 export function get (): MinimalWindow {
   if (_window !== null) return _window
-  const message = 'Window is undefined. Please call Window.setWindow(windowObj) before using Window.get.'
+  const message = 'window is undefined. Please call Window.setWindow(windowObj) before using Window.get.'
   throw new Error(message)
 }

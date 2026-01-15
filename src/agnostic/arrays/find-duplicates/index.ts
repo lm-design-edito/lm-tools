@@ -1,3 +1,5 @@
+// [WIP] could provide an equality check optional function for checking mor complex objects
+
 /**
  * Finds duplicate elements in an array.
  *
@@ -16,4 +18,18 @@ export function findDuplicates<T> (arr: T[], stopAtFirst: boolean = false): T[] 
   return Array.from(duplicates)
 }
 
-// [WIP] dedupe ?
+/**
+ * Finds the positions of duplicate elements in an array.
+ *
+ * @param arr - The array to search for duplicates positions.
+ * @returns An array of the positions of duplicate elements found in the input array.
+ */
+export function findDuplicatesPositions (arr: any[]): number[] {
+  const seen = new Set()
+  const duplicatesPos: number[] = []
+  arr.forEach((item, pos) => {
+    if (seen.has(item)) return duplicatesPos.push(pos)
+    seen.add(item)
+  })
+  return duplicatesPos
+}

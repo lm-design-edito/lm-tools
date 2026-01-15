@@ -25,7 +25,7 @@ export function randomPick<T> (arr: T[], exclude: T[] = []): T {
  * @param arr - The array to pick from.
  * @param [exclude] - Array of elements to exclude from selection.
  * @returns An array of randomly selected elements.
- * @throws Throws an error if not enough elements are available after exclusions.
+ * @throws Propagates the error thrown by `randomPick` if not enough elements are available.
  */
 export function randomPickMany<T> (
   howMuch: number,

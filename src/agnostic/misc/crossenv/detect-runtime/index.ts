@@ -1,4 +1,4 @@
-import { RuntimeName } from '../types/index.js'
+import { RuntimeName } from '../types.js'
 
 declare var Deno: any
 declare var AWS: any
