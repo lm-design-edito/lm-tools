@@ -14,7 +14,9 @@ import * as Window from '../../misc/crossenv/window/index.js'
  * @returns {Node[]} An array of DOM nodes created from the string.
  */
 export function stringToNodes (inputStr: string): Node[] {
-  const wrapperDiv = Window.get().document.createElement('div')
+  const window = Window.get()
+  const { document, Node } = window
+  const wrapperDiv = document.createElement('div')
   wrapperDiv.innerHTML = inputStr
   const nodes = Array.from(wrapperDiv.childNodes).filter(node => {
     const allowedNodeTypes: number[] = [Node.ELEMENT_NODE, Node.TEXT_NODE]

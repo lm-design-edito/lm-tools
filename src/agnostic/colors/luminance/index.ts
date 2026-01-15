@@ -3,7 +3,7 @@ import { Color, Rgba, LuminanceMethod } from '../types.js'
 
 function luminanceRgb (rgb: Rgba): number {
   const { linearR, linearG, linearB } = linearizeToSRgb(rgb)
-  return (0.2126 * linearR + 0.7152 * linearG + 0.0722 * linearB) / 255
+  return (0.2126 * linearR + 0.7152 * linearG + 0.0722 * linearB)
 }
 
 /**
