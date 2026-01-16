@@ -21,8 +21,8 @@ export function selectorToElement (selector: string): Element {
   // The dot is apparently a valid character but is prevented here
   // in order to be able to match class elements
   const idRegexp = /#[A-Za-z]+[\w\-\:]*/
-  const classRegexp = /\.[A-Za-z]+[\w\-]*/
-  const attributeRegexp = /\[[A-Za-z]+[\w\-]*(="[\w\-]+")?\]/
+  const classRegexp = /\.[A-Za-z]+[\w\-]*/g
+  const attributeRegexp = /\[[A-Za-z]+[\w\-]*(="[\w\-]+")?\]/g
   // Matched
   const matchedTags = selector.match(tagRegexp) ?? []
   const matchedIds = selector.match(idRegexp) ?? []
@@ -30,7 +30,7 @@ export function selectorToElement (selector: string): Element {
   const matchedAttrs = selector.match(attributeRegexp) ?? []
   // Extracted
   const tag = matchedTags[matchedTags.length - 1] ?? 'div'
-  const id = matchedIds[matchedIds.length - 1] ?? null
+  const id = matchedIds.length > 0 ? matchedIds[matchedIds.length - 1]?.replace(/^#/, '')! : null
   const classes = matchedClasses.map(matchedClass => matchedClass.replace(/^\./, ''))
   const attributes = matchedAttrs.map(matchedAttr => matchedAttr
     .replace(/^\[/, '')
@@ -42,7 +42,8 @@ export function selectorToElement (selector: string): Element {
   element.classList.add(...classes)
   attributes.forEach(([name, value = '']) => {
     if (name === undefined) return;
-    element.setAttribute(name, value)
+    const cleanValue = value.replace(/^"(.*)"$/, '$1')
+    element.setAttribute(name, cleanValue)
   })
   return element
 }

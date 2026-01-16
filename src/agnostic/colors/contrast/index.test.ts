@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { contrast } from './index.js'
 
-describe('colors/contrast', () => {
+describe('contrast', () => {
   it('calculates contrast between white and black', () => {
     const result = contrast({ r: 255, g: 255, b: 255 }, { r: 0, g: 0, b: 0 })
     expect(result).toBeGreaterThan(20)

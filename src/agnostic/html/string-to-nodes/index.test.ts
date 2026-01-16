@@ -1,15 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { stringToNodes } from './index.js'
 
 import { JSDOM } from 'jsdom'
 import * as Window from '../../misc/crossenv/window/index.js'
 
 describe('stringToNodes', () => {
-  beforeEach(() => {
-    Window.set(
-      new JSDOM(`<!DOCTYPE html><html><body></body></html>`).window
-    )
-  })
+  beforeEach(() => Window.set(new JSDOM().window))
+  afterEach(() => Window.unset())
 
   it('converts simple HTML string to nodes', () => {
     const { Node } = Window.get()

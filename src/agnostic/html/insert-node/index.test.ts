@@ -1,13 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { insertNode } from './index.js'
 import { JSDOM } from 'jsdom'
 import * as Window from '../../misc/crossenv/window/index.js'
 
 describe('insertNode', () => {
-  beforeEach(() => {
-    const win = new JSDOM(`<!DOCTYPE html><html><body></body></html>`).window
-    Window.set(win)
-  })
+  beforeEach(() => Window.set(new JSDOM().window))
+  afterEach(() => Window.unset())
 
   it('inserts node before reference node', () => {
     const { document } = Window.get()

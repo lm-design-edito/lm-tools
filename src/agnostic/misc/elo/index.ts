@@ -1,3 +1,5 @@
+// [WIP] go further and then write tests
+
 // Constante K par défaut pour ajuster la vitesse de mise à jour du classement
 export const K_FACTOR = 32
 

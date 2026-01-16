@@ -1,6 +1,7 @@
 import { round } from '../../numbers/round/index.js'
 
 // [WIP] rename, responsive harmonics is not quite right
+// [WIP] write tests
 
 /**
  * Computes the harmonic value at a specific level between a minimum and maximum over a number of steps.

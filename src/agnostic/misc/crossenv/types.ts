@@ -36,5 +36,6 @@ export interface MinimalWindow {
   Text: typeof Text
   NodeList: typeof NodeList
   Attr: typeof Attr
+  ShadowRoot: typeof ShadowRoot
   document: Document
 }

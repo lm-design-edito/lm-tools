@@ -63,17 +63,15 @@ export function toNull (_value: unknown): null {
  * Converts a value to an array.
  *
  * - Arrays are returned as-is.
- * - Objects are converted to an array of `{ key, value }` pairs.
+ * - Objects are converted to an array of `[key, value]` pairs.
  * - Other values are wrapped in a single-element array.
  *
  * @param {unknown} value - The value to convert.
  * @returns {Array<unknown>} The array representation of the input.
  */
-export function toArray (value: unknown): Array<unknown> {
+export function toArray(value: unknown): Array<unknown> {
   if (Array.isArray(value)) return value
-  if (typeof value === 'object' && value !== null) return Object
-    .entries(value)
-    .map((key, value) => ({ key, value }))
+  if (typeof value === 'object' && value !== null) return Object.entries(value)
   return [value]
 }
 

@@ -1,13 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { JSDOM } from 'jsdom'
 import { getNodeAncestors } from './index.js'
 import * as Window from '../../misc/crossenv/window/index.js'
 
 describe('getNodeAncestors', () => {
-  beforeEach(() => {
-    const win = new JSDOM(`<!DOCTYPE html><html><body></body></html>`).window
-    Window.set(win)
-  })
+  beforeEach(() => Window.set(new JSDOM('', { url: 'http://localhost/' }).window))
+  afterEach(() => Window.unset())
 
   it('returns the node itself as first element', () => {
     const { document } = Window.get()
@@ -32,14 +30,14 @@ describe('getNodeAncestors', () => {
     expect(result[2]).toBe(grandparent)
   })
 
-  it('stops at document body', () => {
+  it('stops at document.documentElement', () => {
     const { document } = Window.get()
     const div = document.createElement('div')
     document.body.appendChild(div)
     
     const result = getNodeAncestors(div)
     expect(result.length).toBeGreaterThan(1)
-    expect(result[result.length - 1]).toBe(document.body)
+    expect(result.at(-1)).toBe(document.documentElement)
   })
 
   it('does not traverse shadow roots by default', () => {

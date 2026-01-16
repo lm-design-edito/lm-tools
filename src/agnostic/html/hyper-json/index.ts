@@ -9,6 +9,7 @@ import { Utils as UtilsNamespace } from './utils/index.js'
 
 // [WIP] missing jsdoc in all the hyper-json stuff
 // [WIP] get rid of namespaces
+// [WIP] write tests
 
 export namespace HyperJson {
   export import Cast = CastNamespace

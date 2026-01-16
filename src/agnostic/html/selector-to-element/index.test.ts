@@ -1,14 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { JSDOM } from 'jsdom'
 import { selectorToElement } from './index.js'
 import * as Window from '../../misc/crossenv/window/index.js'
 
 describe('selectorToElement', () => {
-  beforeEach(() => {
-    Window.set(
-      new JSDOM(`<!DOCTYPE html><html><body></body></html>`).window
-    )
-  })
+  beforeEach(() => Window.set(new JSDOM().window))
+  afterEach(() => Window.unset())
 
   it('creates element with tag name', () => {
     const element = selectorToElement('div')

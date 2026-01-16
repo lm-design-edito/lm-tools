@@ -1,8 +1,14 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { JSDOM } from 'jsdom'
 import { replaceInElement } from './index.js'
+import * as Window from '../../misc/crossenv/window/index.js'
 
 describe('replaceInElement', () => {
+  beforeEach(() => Window.set(new JSDOM().window))
+  afterEach(() => Window.unset())
+
   it('replaces a single node with another node', () => {
+    const { document } = Window.get()
     const parent = document.createElement('div')
     const toReplace = document.createElement('span')
     const replacement = document.createElement('p')
@@ -17,6 +23,7 @@ describe('replaceInElement', () => {
   })
 
   it('replaces multiple nodes', () => {
+    const { document } = Window.get()
     const parent = document.createElement('div')
     const node1 = document.createElement('span')
     const node2 = document.createElement('span')
@@ -37,6 +44,7 @@ describe('replaceInElement', () => {
   })
 
   it('replaces node with multiple nodes', () => {
+    const { document } = Window.get()
     const parent = document.createElement('div')
     const toReplace = document.createElement('span')
     const replacement1 = document.createElement('p')
@@ -57,6 +65,7 @@ describe('replaceInElement', () => {
   })
 
   it('only replaces nodes that are descendants', () => {
+    const { document } = Window.get()
     const parent = document.createElement('div')
     const child = document.createElement('span')
     const orphan = document.createElement('span')
@@ -74,6 +83,7 @@ describe('replaceInElement', () => {
   })
 
   it('returns the input element', () => {
+    const { document } = Window.get()
     const parent = document.createElement('div')
     const child = document.createElement('span')
     const replacement = document.createElement('p')
