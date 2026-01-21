@@ -16,6 +16,7 @@ type Output = {
   err: unknown
 }
 
+// [WIP] argsPrintFormat and throwOnError should go to options
 export async function spawner (
   label: string | null,
   command: string, args: string[],
@@ -51,6 +52,7 @@ export async function spawner (
   })
 }
 
+// [WIP] argsPrintFormat and throwOnError should go to options
 export function spawnerSync (
   label: string | null,
   command: string, args: string[],

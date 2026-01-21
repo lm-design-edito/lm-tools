@@ -6,3 +6,4 @@
 - [ ] JSDOC everywhere
 - [ ] Write tests for everything
 - [ ] Really not sure about the centralized error codes
+- [ ] create empty (export {}) index.js files in directories without index files so that import is easyer on the consumer side
