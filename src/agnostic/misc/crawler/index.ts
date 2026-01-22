@@ -67,18 +67,18 @@ export type Options<T extends any> = {
  * @param {Options<T>} options - Crawler configuration options.
  * @returns {{
  *   crawl: (startUrl: string) => Promise<void>,
- *   push: (url: string) => void,
+ *   push: (...urls: string[]) => void,
  *   flush: () => void
  * }} An object with methods to start crawling, enqueue URLs, and flush the waitlist.
  */
 export function create<T extends any> (options: Options<T>): {
   crawl: (startUrl: string) => Promise<void>
-  push: (url: string) => void
+  push: (...urls: string[]) => void
   flush: () => void
 } {
   let ops = 0
   const waitlist: string[] = []
-  const push = (url: string) => waitlist.push(url)
+  const push = (...urls: string[]) => waitlist.push(...urls)
   const flush = () => { waitlist.length = 0 }
   const processed = new Set<string>()
   const crawl = async (startUrl: string) => {
