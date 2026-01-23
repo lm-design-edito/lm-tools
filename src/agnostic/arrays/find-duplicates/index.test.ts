@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { findDuplicates, findDuplicatesPositions } from './index.js'
 
-describe('arrays/find-duplicates', () => {
+describe('find-duplicates', () => {
   it('finds no duplicates when there are none', () => {
     const result = findDuplicates([1, 2, 3])
     expect(result).toHaveLength(0)
@@ -19,7 +19,7 @@ describe('arrays/find-duplicates', () => {
   })
 })
 
-describe('arrays/find-duplicates-positions', () => {
+describe('find-duplicates-positions', () => {
   it('finds no duplicates positions when there are no duplicates', () => {
     const result = findDuplicatesPositions([1, 2, 3])
     expect(result).toHaveLength(0)

@@ -12,7 +12,9 @@ export type ConstructorFunction<T extends any = any> = new (...args: any[]) => T
  * @returns {input is ConstructorFunction} `true` if the input is a constructor function, otherwise `false`.
  */
 export function isConstructorFunction (input: unknown): input is ConstructorFunction {
-  if (typeof input !== 'function') return false
-  return 'prototype' in input
+  return typeof input === 'function'
+    && 'prototype' in input
+    && typeof input.prototype === 'object'
     && 'constructor' in input.prototype
+    && input.prototype.constructor === input
 }

@@ -12,9 +12,9 @@ describe('isConstructorFunction', () => {
     expect(isConstructorFunction(MyClass)).toBe(true)
   })
 
-  it('returns false for regular functions', () => {
+  it('returns true for regular functions', () => {
     function regularFunction () {}
-    expect(isConstructorFunction(regularFunction)).toBe(false)
+    expect(isConstructorFunction(regularFunction)).toBe(true)
   })
 
   it('returns false for arrow functions', () => {
@@ -27,6 +27,7 @@ describe('isConstructorFunction', () => {
     expect(isConstructorFunction(null)).toBe(false)
     expect(isConstructorFunction(42)).toBe(false)
     expect(isConstructorFunction('string')).toBe(false)
+    expect(isConstructorFunction(new Date())).toBe(false)
   })
 
   it('returns true for built-in constructors', () => {

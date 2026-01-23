@@ -4,7 +4,7 @@ import { JSDOM } from 'jsdom'
 
 const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`)
 
-describe('crossenv/window', () => {
+describe('window', () => {
   it('does not have a global window in nodejs', () => {
     expect(Window.exists()).toBe(false)
   })

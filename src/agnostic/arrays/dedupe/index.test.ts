@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { dedupe } from './index.js'
 
-
-describe('arrays/dedupe', () => {
+describe('dedupe', () => {
   it('preserves arrays without duplicates', () => {
     const result = dedupe([1, 2, 3])
     expect(result).toHaveLength(3)

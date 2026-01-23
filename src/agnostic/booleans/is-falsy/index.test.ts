@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { isFalsy, isNotFalsy } from './index.js'
 
-describe('booleans/is-falsy', () => {
+describe('is-falsy', () => {
   it('returns true on all falsy values', () => {
     expect(isFalsy(null)).toBe(true)
     expect(isFalsy(undefined)).toBe(true)
@@ -14,7 +14,7 @@ describe('booleans/is-falsy', () => {
   })
 })
 
-describe('booleans/is-not-falsy', () => {
+describe('is-not-falsy', () => {
   it('returns false on all falsy values', () => {
     expect(isNotFalsy(null)).toBe(false)
     expect(isNotFalsy(undefined)).toBe(false)

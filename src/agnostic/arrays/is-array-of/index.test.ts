@@ -5,7 +5,7 @@ import { isArrayOf } from './index.js'
 class MyClass { constructor (public value: number) {} }
 const isEvenNumber = (x: unknown): x is number => typeof x === 'number' && x % 2 === 0
 
-describe('arrays/is-array-of', () => {
+describe('is-array-of', () => {
   it('returns true for empty array without type checkers', () => {
     expect(isArrayOf([])).toBe(true)
   })

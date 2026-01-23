@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { shuffle } from './index.js'
 
-describe('arrays/shuffle', () => {
+describe('shuffle', () => {
   it('shuffles and keeps the same length', () => {
     const source = [0, 1, 2, 3, 4]
     const shuffled = shuffle(source)
