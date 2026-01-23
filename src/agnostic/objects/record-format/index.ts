@@ -1,49 +1,56 @@
+import type { UnwrapPromise } from '../../typescript/types.js'
+
 /**
- * A key of the input object or a string.
+ * A function that transforms a value of a specific type into another type, can return a Promise.
+ *
+ * @template InputType - The type of the input value the formatter receives.
+ * @template OutputType - The type of the value the formatter returns (or resolves to if Promise).
+ * @param {InputType} val - The input value to transform.
+ * @returns {OutputType | Promise<OutputType>} The transformed value or a Promise resolving to it.
  */
-export type FormatKey<Input extends {} = any> = keyof Input | string
+export type FormatterFunc<InputType, OutputType> = (val: InputType) => OutputType | Promise<OutputType>
+
 /**
- * The value type of a given key in the input object, or `undefined` if the key does not exist.
+ * An object mapping keys of an input object to formatter functions.
+ * Each formatter receives the value corresponding to its key from the input object.
+ *
+ * @template InputObject - The type of the input object being formatted.
  */
-export type InputValue<Input extends {}, Key extends FormatKey<Input>> = Input extends Record<Key, infer V> ? V : undefined
+export type Format<InputObject extends Record<PropertyKey, any>> = {
+  [Key in keyof InputObject]?: FormatterFunc<InputObject[Key], any>
+}
+
 /**
- * A function that transforms a value of type I into type O, can return a Promise.
+ * The resulting object after applying all formatters and unwrapping any returned Promises.
+ *
+ * @template FormatObject - The type of the format object mapping keys to formatter functions.
  */
-export type FormatterFunc<I, O> = (val: I) => O | Promise<O>
-/**
- * An object mapping keys to formatter functions.
- */
-export type Format<Input extends {} = any> = { [Key in FormatKey<Input>]: FormatterFunc<InputValue<Input, Key>, any> }
-/**
- * Utility type that extracts the resolved type of a Promise, or returns the type itself if not a Promise.
- */
-export type UnwrapPromise<PromiseOrNot> = PromiseOrNot extends Promise<infer Resolved> ? Resolved : PromiseOrNot
-/**
- * The object type resulting from applying all formatters and unwrapping any Promises.
- */
-export type Formatted<F extends Format<{}>> = { [Key in keyof F]: UnwrapPromise<ReturnType<F[Key]>> }
+export type Formatted<FormatObject> = {
+  [Key in keyof FormatObject]: FormatObject[Key] extends FormatterFunc<any, any>
+    ? UnwrapPromise<ReturnType<FormatObject[Key]>>
+    : never
+}
 
 /**
  * Applies a set of formatter functions to the corresponding properties of an input object.
  *
- * @template I - Input object type.
- * @template F - Format object type mapping keys to formatter functions.
- * @param {I} input - The object to format.
- * @param {F} format - An object of formatter functions for each key.
- * @returns {Promise<Formatted<F>>} A Promise resolving to the formatted object with all promises unwrapped.
+ * @template InputObject - The type of the input object.
+ * @template FormatObject - The type of the format object mapping keys to formatter functions.
+ * @param {InputObject} input - The object whose properties are to be formatted.
+ * @param {FormatObject} format - An object containing formatter functions for each key.
+ * @returns {Promise<Formatted<FormatObject>>} A Promise resolving to the formatted object with all promises unwrapped.
  */
 export async function recordFormat<
-  I extends {},
-  F extends Format<I>
-> (
-  input: I,
-  format: F
-): Promise<Formatted<F>> {
-  const result: Partial<Formatted<F>> = {}
+  InputObject extends Record<PropertyKey, any>,
+  FormatObject extends Format<InputObject>
+>(
+  input: InputObject,
+  format: FormatObject
+): Promise<Formatted<FormatObject>> {
+  const result = {} as Formatted<FormatObject>
   for (const key in format) {
-    const formatter = format[key]
-    if (typeof formatter === 'function') { result[key] = await formatter((input as any)[key as any]) }
-    else { result[key] = formatter }
+    const formatter = format[key]!
+    result[key] = await formatter(input[key])
   }
-  return result as Formatted<F>
+  return result
 }

@@ -36,3 +36,8 @@ export type NullIfUndefined<T> = T extends undefined ? null : T
  * ```
  */
 export type RequireKeys<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>
+
+/**
+ * Utility type that extracts the resolved type of a Promise, or returns the type itself if not a Promise.
+ */
+export type UnwrapPromise<PromiseOrNot> = PromiseOrNot extends Promise<infer Resolved> ? Resolved : PromiseOrNot
