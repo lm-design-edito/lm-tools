@@ -48,6 +48,7 @@ export type Logger = (
  * @template T - The type of content returned by the fetcher.
  * @property {number} limit - Maximum number of URLs to process.
  * @property {number | (() => number)} [delayMs] - Optional delay between processing URLs, in milliseconds, or a function returning the delay.
+ * @property {boolean} [allowDuplicates] - Optional, allows fetching and processing an URL that has already been seen
  * @property {Fetcher<T>} fetcher - Function that fetches content for each URL.
  * @property {Processor<T>} processor - Function that processes fetched content.
  * @property {Logger} [logger] - Optional function for logging crawl progress.
@@ -55,6 +56,7 @@ export type Logger = (
 export type Options<T extends any> = {
   limit: number
   delayMs?: number | (() => number)
+  allowDuplicates?: boolean
   fetcher: Fetcher<T>
   processor: Processor<T>
   logger?: Logger
@@ -87,7 +89,7 @@ export function create<T extends any> (options: Options<T>): {
       ops++
       const currentUrl = waitlist[0]!
       if (options.logger !== undefined) options.logger(ops, currentUrl, waitlist, processed)
-      if (!processed.has(currentUrl)) {
+      if (!processed.has(currentUrl) || options.allowDuplicates === true) {
         const content = await options.fetcher(currentUrl)
         await options.processor(currentUrl, content, { push, flush })
       }
