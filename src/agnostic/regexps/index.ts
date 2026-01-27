@@ -66,7 +66,7 @@ export function fromStartToEnd (regexp: RegExp, flags: string = 'g'): RegExp {
  *
  * @param string - The string to test.
  * @param regexp - The regular expression pattern.
- * @param [returnMatches=true] - If true, returns matches; otherwise, returns boolean.
+ * @param [returnMatches=false] - If true, returns matches; otherwise, returns boolean.
  * @param [flags='g'] - Optional flags.
  * @returns {boolean | RegExpMatchArray | null} Boolean or match array based on `returnMatches`.
  */
@@ -75,7 +75,7 @@ export function stringStartsWith (string: string, regexp: RegExp, returnMatches:
 export function stringStartsWith (string: string, regexp: RegExp, returnMatches: false): boolean
 export function stringStartsWith (string: string, regexp: RegExp, returnMatches: false, flags: string): boolean
 export function stringStartsWith (string: string, regexp: RegExp, returnMatches: true, flags: string): RegExpMatchArray | null
-export function stringStartsWith (string: string, regexp: RegExp, returnMatches = true, flags: string = 'g'): RegExpMatchArray | null | boolean {
+export function stringStartsWith (string: string, regexp: RegExp, returnMatches = false, flags: string = 'g'): RegExpMatchArray | null | boolean {
   const actualRegexp = fromStart(regexp, flags)
   return returnMatches ? string.match(actualRegexp) : actualRegexp.test(string)
 }
@@ -85,7 +85,7 @@ export function stringStartsWith (string: string, regexp: RegExp, returnMatches 
  *
  * @param string - The string to test.
  * @param regexp - The regular expression pattern.
- * @param [returnMatches=true] - If true, returns matches; otherwise, returns boolean.
+ * @param [returnMatches=false] - If true, returns matches; otherwise, returns boolean.
  * @param [flags='g'] - Optional flags.
  * @returns {boolean | RegExpMatchArray | null} Boolean or match array based on `returnMatches`.
  */
@@ -94,7 +94,7 @@ export function stringEndsWith (string: string, regexp: RegExp, returnMatches: t
 export function stringEndsWith (string: string, regexp: RegExp, returnMatches: false): boolean
 export function stringEndsWith (string: string, regexp: RegExp, returnMatches: false, flags: string): boolean
 export function stringEndsWith (string: string, regexp: RegExp, returnMatches: true, flags: string): RegExpMatchArray | null
-export function stringEndsWith (string: string, regexp: RegExp, returnMatches = true, flags: string = 'g'): RegExpMatchArray | null | boolean {
+export function stringEndsWith (string: string, regexp: RegExp, returnMatches = false, flags: string = 'g'): RegExpMatchArray | null | boolean {
   const actualRegexp = toEnd(regexp, flags)
   return returnMatches ? string.match(actualRegexp) : actualRegexp.test(string)
 }
@@ -133,15 +133,22 @@ export function fromStrings (strings: string[]): RegExp {
 
 /**
  * Escapes special RegExp characters in a string.
+ * - Newlines are turned into `\\n`
+ * - Other whitespace characters are normalized to `\\s`
+ * - RegExp special characters (including backslash) are escaped
  * 
  * @param {string} string - String to escape.
  * @returns {string} Escaped string.
  */
 export function escape (string: string): string {
-  return string
-    .replace(/\s/igm, '\\s')
-    .replace(/\n/igm, '\\n')
-    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  let result = ''
+  for (const ch of string) {
+    if (ch === '\n') { result += '\\n' }
+    else if (/\s/.test(ch)) { result += '\\s' } // any other whitespace (space, tab, etc.)
+    else if (/[.*+?^${}()|[\]\\]/.test(ch)) { result += '\\' + ch } // regex special chars (including backslash)
+    else { result += ch }
+  }
+  return result
 }
 
 /* * * * * * * * * UTILS * * * * * * * * */

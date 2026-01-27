@@ -76,7 +76,8 @@ export function throttle <T extends BasicFunction = BasicFunction>(
  */
 export function debounce <T extends BasicFunction = BasicFunction>(
   toDebounceFunc: T,
-  delayMs: number) {
+  delayMs: number
+) {
   let currentDelayMs = delayMs
   let lastArgs: any[] = []
   let lastCalledOn: number = 0
@@ -86,7 +87,7 @@ export function debounce <T extends BasicFunction = BasicFunction>(
 
   /** Schedules a next call according to the delay */
   function scheduleNextCall () {
-    if (typeof nextExecutionTimeout === 'number') {
+    if (nextExecutionTimeout !== null) {
       clearTimeout(nextExecutionTimeout)
       nextExecutionTimeout = null
     }
