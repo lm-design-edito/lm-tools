@@ -48,14 +48,14 @@ describe('flattenGetters', () => {
     expect(result).toEqual({ regular: 'value', computed: 'computed', number: 42 })
   })
 
-  it('throws on non-objects', () => {
-    expect(flattenGetters(null)).toThrow()
-    expect(flattenGetters(42)).toThrow()
-    expect(flattenGetters(undefined)).toThrow()
+  it('throws on null and undefined', () => {
+    expect(() => flattenGetters(null as any)).toThrow()
+    expect(() => flattenGetters(undefined as any)).toThrow()
   })
 
-  it('handles strings', () => {
-    expect(flattenGetters('abc')).toEqual({0:'a',1:'b',2:'c'})
+  it ('handles strings and numbers', () => {
+    expect(flattenGetters(42 as any)).toEqual({})
+    expect(flattenGetters('abc' as any)).toEqual({ '0': 'a', '1': 'b', '2': 'c' })
   })
 
   it('handles objects with no properties', () => {
@@ -83,11 +83,6 @@ describe('flattenGetters', () => {
       a: 1,
       get error () { throw new Error('test') }
     }
-
-    console.log('---------\n\n\n')
-    console.log(flattenGetters(obj))
-    console.log('\n\n\n---------')
-
     expect(() => flattenGetters(obj)).toThrow('test')
   })
 })

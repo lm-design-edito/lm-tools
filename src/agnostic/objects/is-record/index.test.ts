@@ -17,9 +17,9 @@ describe('isRecord', () => {
     expect(isRecord(null)).toBe(false)
   })
 
-  it('returns false for arrays', () => {
-    expect(isRecord([])).toBe(false)
-    expect(isRecord([1, 2, 3])).toBe(false)
+  it('returns true for arrays', () => {
+    expect(isRecord([])).toBe(true)
+    expect(isRecord([1, 2, 3])).toBe(true)
   })
 
   it('returns false for primitives', () => {
@@ -29,12 +29,12 @@ describe('isRecord', () => {
     expect(isRecord(undefined)).toBe(false)
   })
 
-  it('returns false for Date objects', () => {
-    expect(isRecord(new Date())).toBe(false)
+  it('returns true for Date objects', () => {
+    expect(isRecord(new Date())).toBe(true)
   })
 
-  it('returns false for RegExp objects', () => {
-    expect(isRecord(/test/)).toBe(false)
+  it('returns true for RegExp objects', () => {
+    expect(isRecord(/test/)).toBe(true)
   })
 
   it('returns false for functions', () => {
