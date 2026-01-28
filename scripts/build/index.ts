@@ -21,6 +21,10 @@ const entryPoints = (await Promise.all(rootDirs.map(async dirPath => {
     maxDepth: 100,
     returnRelative: false,
     filter: async (path: string) => {
+      if (path.endsWith('.test.ts')) return false
+      if (path.endsWith('.test.tsx')) return false
+      if (path.endsWith('.test.js')) return false
+      if (path.endsWith('.test.jsx')) return false
       return path.endsWith('index.ts')
         || path.endsWith('index.tsx')
         || path.endsWith('types.ts')
