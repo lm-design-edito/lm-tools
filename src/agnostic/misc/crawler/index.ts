@@ -15,69 +15,88 @@ export type Fetcher<T> = (url: string) => Promise<T>
  * @template T - The type of content provided by the fetcher.
  * @param {string} url - The URL of the content being processed.
  * @param {T} content - The content fetched from the URL.
- * @param {{ push: (...urls: string[]) => void, flush: () => void }} hooks - Hooks for dynamically enqueuing or clearing URLs.
+ * @param {object} hooks - Hooks for accessing crawler state and controlling the crawl.
+ * @param {(...urls: string[]) => void} hooks.push - Enqueue one or more URLs to be crawled.
+ * @param {() => void} hooks.flush - Clear the waitlist of pending URLs.
+ * @param {Set<string>} hooks.processed - Read-only snapshot of URLs already processed.
+ * @param {string[]} hooks.waitlist - Read-only snapshot of the current waitlist of URLs.
  * @returns {any} The result of processing (ignored by the crawler).
  */
 export type Processor<T> = (
   url: string,
   content: T,
   hooks: {
-    push: (...urls: string[]) => void,
+    push: (...urls: string[]) => void
     flush: () => void
+    processed: Set<string>
+    waitlist: string[]
   }
 ) => any
-
-/**
- * Optional logging function called during crawling.
- *
- * @param {number} ops - Number of processed URLs so far.
- * @param {string} url - The URL currently being processed.
- * @param {string[]} waitlist - The current waitlist of URLs.
- * @param {Set<string>} processed - Set of URLs already processed.
- */
-export type Logger = (
-  ops: number,
-  url: string,
-  waitlist: string[],
-  processed: Set<string>
-) => void
 
 /**
  * Configuration options for the crawler.
  *
  * @template T - The type of content returned by the fetcher.
- * @property {number} limit - Maximum number of URLs to process.
- * @property {number | (() => number)} [delayMs] - Optional delay between processing URLs, in milliseconds, or a function returning the delay.
- * @property {boolean} [allowDuplicates] - Optional, allows fetching and processing an URL that has already been seen
- * @property {Fetcher<T>} fetcher - Function that fetches content for each URL.
- * @property {Processor<T>} processor - Function that processes fetched content.
- * @property {Logger} [logger] - Optional function for logging crawl progress.
  */
 export type Options<T extends any> = {
+  /** Maximum number of URLs to process. */
   limit: number
+  /** Optional delay between processing URLs, in milliseconds, or a function returning the delay. */
   delayMs?: number | (() => number)
+  /** Optional, allows fetching and processing a URL that has already been seen. */
   allowDuplicates?: boolean
+  /** Function that fetches content for each URL. */
   fetcher: Fetcher<T>
+  /** Function that processes fetched content. */
   processor: Processor<T>
-  logger?: Logger
 }
 
 /**
- * Creates a sequential crawler with optional logging and delay.
+ * Crawler instance with methods to start crawling, enqueue URLs, and inspect crawler state.
+ */
+export type Crawler = {
+  /** Start crawling from the given URL. */
+  crawl: (startUrl: string) => Promise<void>
+  /** Enqueue one or more URLs to be crawled. */
+  push: (...urls: string[]) => void
+  /** Clear the waitlist of pending URLs. */
+  flush: () => void
+  /** Set of URLs that have been processed (mutable - use with caution). */
+  processed: Set<string>
+  /** Array of URLs waiting to be processed (mutable - use with caution). */
+  waitlist: string[]
+}
+
+/**
+ * Creates a sequential crawler with optional delay.
  *
  * @template T - The type of content returned by the fetcher.
  * @param {Options<T>} options - Crawler configuration options.
- * @returns {{
- *   crawl: (startUrl: string) => Promise<void>,
- *   push: (...urls: string[]) => void,
- *   flush: () => void
- * }} An object with methods to start crawling, enqueue URLs, and flush the waitlist.
+ * @param {number} options.limit - Maximum number of URLs to process.
+ * @param {number | (() => number)} [options.delayMs] - Optional delay between processing URLs, in milliseconds, or a function returning the delay.
+ * @param {boolean} [options.allowDuplicates] - Optional, allows fetching and processing a URL that has already been seen.
+ * @param {Fetcher<T>} options.fetcher - Function that fetches content for each URL.
+ * @param {Processor<T>} options.processor - Function that processes fetched content.
+ * @returns {Crawler} An object with methods to start crawling, enqueue URLs, flush the waitlist, and access crawler state.
+ * 
+ * @example
+ * ```typescript
+ * const crawler = create({
+ *   limit: 100,
+ *   delayMs: 1000,
+ *   fetcher: async (url) => fetch(url).then(r => r.text()),
+ *   processor: (url, content, { push, processed, waitlist }) => {
+ *     console.log(`Processed ${url}`);
+ *     console.log(`Remaining: ${waitlist.length}, Done: ${processed.size}`);
+ *     // Optionally push more URLs
+ *   }
+ * });
+ * 
+ * await crawler.crawl('https://example.com');
+ * console.log('Total processed:', crawler.processed.size);
+ * ```
  */
-export function create<T extends any> (options: Options<T>): {
-  crawl: (startUrl: string) => Promise<void>
-  push: (...urls: string[]) => void
-  flush: () => void
-} {
+export function create<T extends any> (options: Options<T>): Crawler {
   let ops = 0
   const waitlist: string[] = []
   const push = (...urls: string[]) => waitlist.push(...urls)
@@ -88,10 +107,14 @@ export function create<T extends any> (options: Options<T>): {
     while (waitlist.length > 0 && ops < options.limit) {
       ops++
       const currentUrl = waitlist[0]!
-      if (options.logger !== undefined) options.logger(ops, currentUrl, waitlist, processed)
       if (!processed.has(currentUrl) || options.allowDuplicates === true) {
         const content = await options.fetcher(currentUrl)
-        await options.processor(currentUrl, content, { push, flush })
+        await options.processor(currentUrl, content, {
+          push,
+          flush,
+          processed: new Set(processed),
+          waitlist: [...waitlist]
+        })
       }
       waitlist.shift()
       processed.add(currentUrl)
@@ -103,5 +126,11 @@ export function create<T extends any> (options: Options<T>): {
       if (delayMs !== 0) await wait(delayMs)
     }
   }
-  return { crawl, push, flush }
+  return {
+    crawl,
+    push,
+    flush,
+    processed,
+    waitlist
+  }
 }

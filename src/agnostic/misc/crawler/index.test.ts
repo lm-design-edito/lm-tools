@@ -51,20 +51,6 @@ describe('create', () => {
     expect(elapsed).toBeGreaterThanOrEqual(20)
   })
 
-  it('calls logger when provided', async () => {
-    const fetcher = vi.fn(async (url: string) => `content-${url}`)
-    const processor = vi.fn(async () => {})
-    const logger = vi.fn()
-    const crawler = create({
-      limit: 2,
-      fetcher,
-      processor,
-      logger
-    })
-    await crawler.crawl('url1')
-    expect(logger).toHaveBeenCalled()
-  })
-
   it('allows flushing the waitlist', async () => {
     const fetcher = vi.fn(async (url: string) => `content-${url}`)
     const processor = vi.fn(async (_u: string, _c: string, hooks: any) => {
