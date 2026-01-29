@@ -49,28 +49,7 @@ await new Promise((resolve, reject) => {
     sourcemap: false,
     format: 'esm',
     target: ['esnext'],
-    external: [
-      '*'
-      // [WIP] - just read package.json ?
-      // '@aws-sdk/client-s3',
-      // '@aws-sdk/lib-storage',
-      // '@google-cloud/storage',
-      // '@inquirer/prompts',
-      // 'ansi-regex',
-      // 'archiver',
-      // 'basic-ftp',
-      // 'chalk',
-      // 'express',
-      // 'multer',
-      // 'quantize',
-      // 'react',
-      // 'react-dom',
-      // 'sharp',
-      // 'ssh2',
-      // 'ssh2-sftp-client',
-      // 'xss',
-      // 'zod'
-    ],
+    external: ['*'],
     logLevel: 'info'
   }).then(() => {
     resolve(true)
