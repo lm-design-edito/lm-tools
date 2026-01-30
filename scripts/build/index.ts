@@ -70,7 +70,7 @@ await new Promise((resolve, reject) => {
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-const everyDirBuilt = await Subpaths.list(LIB, {
+const everyDirBuilt = [LIB, ...await Subpaths.list(LIB, {
   directories: true,
   files: false,
   symlinks: false,
@@ -79,7 +79,7 @@ const everyDirBuilt = await Subpaths.list(LIB, {
   dedupeSimlinksContents: true,
   maxDepth: 100,
   returnRelative: false
-})
+})]
 
 await Promise.all(everyDirBuilt.reverse().map(async dirpath => {
   const childrenFiles = await Subpaths.list(dirpath, {
