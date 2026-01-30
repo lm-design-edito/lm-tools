@@ -91,7 +91,7 @@ await new Promise(resolve => {
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-await Subpaths.list(LIB, {
+const everyDirBuilt = await Subpaths.list(LIB, {
   directories: true,
   files: false,
   symlinks: false,
@@ -99,45 +99,46 @@ await Subpaths.list(LIB, {
   hidden: false,
   dedupeSimlinksContents: true,
   maxDepth: 100,
-  returnRelative: false,
-  filter: async dirname => {
-    const childrenFiles = await Subpaths.list(dirname, {
-      directories: false,
-      files: true,
-      symlinks: false,
-      followSimlinks: false,
-      hidden: false,
-      dedupeSimlinksContents: true,
-      maxDepth: 0,
-      returnRelative: false
-    })
-    const childrenDirs = await Subpaths.list(dirname, {
-      directories: true,
-      files: false,
-      symlinks: false,
-      followSimlinks: false,
-      hidden: false,
-      dedupeSimlinksContents: true,
-      maxDepth: 0,
-      returnRelative: false
-    })
-    const hasIndexJs = childrenFiles.includes('index.js')
-    if (hasIndexJs) return true
-    let reExportFileContents = ''
-    await Promise.all(childrenDirs.map(async chiDir => {
-      const childName = path.basename(chiDir)
-      const childNameCamelCase = camelCase(childName)
-      reExportFileContents += `export * as ${childNameCamelCase} from './${childName}/index.js'\n`
-    }))
-    if (reExportFileContents === '') { reExportFileContents = 'export {}\n' }
+  returnRelative: false
+})
 
-    await fs.writeFile(
-      path.join(dirname, 'index.js'),
-      `${reExportFileContents}`,
-      { encoding: 'utf-8' }
-    )
-    return true
-  }
+everyDirBuilt.reverse().forEach(async dirpath => {
+  const childrenFiles = await Subpaths.list(dirpath, {
+    directories: false,
+    files: true,
+    symlinks: false,
+    followSimlinks: false,
+    hidden: false,
+    dedupeSimlinksContents: true,
+    maxDepth: 0,
+    returnRelative: false
+  })
+  const childrenDirs = await Subpaths.list(dirpath, {
+    directories: true,
+    files: false,
+    symlinks: false,
+    followSimlinks: false,
+    hidden: false,
+    dedupeSimlinksContents: true,
+    maxDepth: 0,
+    returnRelative: false
+  })
+  const hasIndexJs = childrenFiles.some(file => file.endsWith('/index.js'))
+  if (hasIndexJs) return true
+  let reExportFileContents = ''
+  await Promise.all(childrenDirs.map(async chiDir => {
+    const childName = path.basename(chiDir)
+    const childNameCamelCase = camelCase(childName)
+    reExportFileContents += `export * as ${childNameCamelCase} from './${childName}/index.js'\n`
+  }))
+  if (reExportFileContents === '') { reExportFileContents = 'export {}\n' }
+  await fs.writeFile(
+    path.join(dirpath, 'index.js'),
+    `${reExportFileContents}`,
+    { encoding: 'utf-8' }
+  )
+  console.log(`Created ${path.relative(LIB, dirpath)}/index.js`)
+  return true
 })
 
 console.log('')
