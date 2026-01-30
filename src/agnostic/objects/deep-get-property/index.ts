@@ -17,7 +17,7 @@ export function deepGetProperty (
   let returned: any = currentObject
   pathChunks.forEach((chunk, pos) => {
     const isLast = pos === pathChunks.length - 1
-    if (!isRecord(currentObject)) throw 'PROPERTY_UNREACHABLE' // [WIP] maybe use the lib's error register ?
+    if (!isRecord(currentObject)) throw 'PROPERTY_UNREACHABLE'
     if (isLast) {
       const val = currentObject[chunk]
       returned = val

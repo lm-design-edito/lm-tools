@@ -1,5 +1,8 @@
-import process from 'node:process'
 import { exec } from 'node:child_process'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import process from 'node:process'
+import { camelCase } from 'change-case'
 import esbuild from 'esbuild'
 import { COMPONENTS, AGNOSTIC, NODE, LIB } from '../_config/index.js'
 import * as Subpaths from '../../src/node/files/subpaths/index.js'
@@ -9,8 +12,9 @@ import * as Subpaths from '../../src/node/files/subpaths/index.js'
  * Build
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
-const rootDirs = [COMPONENTS, AGNOSTIC, NODE]
-const entryPoints = (await Promise.all(rootDirs.map(async dirPath => {
+
+const ROOT_DIRS = [COMPONENTS, AGNOSTIC, NODE]
+const entryPoints = (await Promise.all(ROOT_DIRS.map(async dirPath => {
   return await Subpaths.list(dirPath, {
     directories: false,
     files: true,
@@ -20,7 +24,7 @@ const entryPoints = (await Promise.all(rootDirs.map(async dirPath => {
     dedupeSimlinksContents: false,
     maxDepth: 100,
     returnRelative: false,
-    filter: async (path: string) => {
+    filter: async path => {
       if (path.endsWith('.test.ts')) return false
       if (path.endsWith('.test.tsx')) return false
       if (path.endsWith('.test.js')) return false
@@ -79,6 +83,61 @@ await new Promise(resolve => {
     resolve(true)
     console.log('Type declarations created')
   })
+})
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Generate re-export files
+ * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+await Subpaths.list(LIB, {
+  directories: true,
+  files: false,
+  symlinks: false,
+  followSimlinks: false,
+  hidden: false,
+  dedupeSimlinksContents: true,
+  maxDepth: 100,
+  returnRelative: false,
+  filter: async dirname => {
+    const childrenFiles = await Subpaths.list(dirname, {
+      directories: false,
+      files: true,
+      symlinks: false,
+      followSimlinks: false,
+      hidden: false,
+      dedupeSimlinksContents: true,
+      maxDepth: 0,
+      returnRelative: false
+    })
+    const childrenDirs = await Subpaths.list(dirname, {
+      directories: true,
+      files: false,
+      symlinks: false,
+      followSimlinks: false,
+      hidden: false,
+      dedupeSimlinksContents: true,
+      maxDepth: 0,
+      returnRelative: false
+    })
+    const hasIndexJs = childrenFiles.includes('index.js')
+    if (hasIndexJs) return true
+    let reExportFileContents = ''
+    await Promise.all(childrenDirs.map(async chiDir => {
+      const childName = path.basename(chiDir)
+      const childNameCamelCase = camelCase(childName)
+      reExportFileContents += `export * as ${childNameCamelCase} from './${childName}/index.js'\n`
+    }))
+    if (reExportFileContents === '') { reExportFileContents = 'export {}\n' }
+
+    await fs.writeFile(
+      path.join(dirname, 'index.js'),
+      `${reExportFileContents}`,
+      { encoding: 'utf-8' }
+    )
+    return true
+  }
 })
 
 console.log('')
