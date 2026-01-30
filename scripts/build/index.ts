@@ -1,5 +1,5 @@
 import { exec } from 'node:child_process'
-import fs from 'node:fs/promises'
+import fs, { glob } from 'node:fs/promises'
 import path from 'node:path'
 import process from 'node:process'
 import { camelCase } from 'change-case'
@@ -141,6 +141,21 @@ await new Promise(resolve => {
     console.log('Type declarations created')
   })
 })
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Copy styles.module.css files
+ * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+const cssModulesFilesIterable = glob(`**/styles.module.css`, { cwd: COMPONENTS })
+for await (const cssModuleRelPath of cssModulesFilesIterable) {
+  await fs.cp(
+    path.join(COMPONENTS, cssModuleRelPath),
+    path.join(LIB, 'components', cssModuleRelPath),
+    { recursive: true }
+  )
+}
 
 console.log('')
 console.log('Done.\n')

@@ -22,11 +22,14 @@
     "tests:preact": "vitest run --config vitest.preact.config.ts",
     "tests": "vitest run --reporter verbose",
     "tests:watch": "vitest --reporter verbose",
+    "demo": "cd demo && npm start",
+    "demo:preact": "cd demo && npm run start:preact",
     "bundle:scripts": "npx esbuild scripts/**/*.ts --outdir=.temp/scripts --bundle --platform=node --format=esm --packages=external",
     "bundle:src": "node .temp/scripts/build/index.js",
     "build:scripts": "rm -rf .temp/scripts && mkdir -p .temp/scripts && npm run bundle:scripts && npm run check:scripts",
     "build:src": "rm -rf lib && mkdir -p lib && npm run bundle:scripts && npm run bundle:src && npm run check:src",
     "build": "npm run check && npm run tests && npm run build:scripts && npm run build:src",
+    "buildquick": "npm run build:scripts && npm run build:src",
     "prepublishOnly": "npm run build && node .temp/scripts/pre-publish/index.js"
   },
   "devDependencies": {

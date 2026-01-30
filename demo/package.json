@@ -1,0 +1,42 @@
+{
+  "name": "lm-tools-demo",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build:scripts": "npx tsc -p scripts/tsconfig.json",
+    "build:public": "cp -r public/* dist",
+    "build:src": "npm run build:scripts && node .scripts/build/index.js",
+    "build:src:preact": "PREACT=true npm run build:src",
+    "check": "npx tsc -p src/tsconfig.json --noEmit",
+    "watch:public": "npm run build:public && npx chokidar-cli 'public/**/*' -c 'npm run build:public'",
+    "watch:src": "WATCH=true npm run build:src",
+    "watch:src:preact": "PREACT=true npm run watch:src",
+    "make:dist": "mkdir -p dist",
+    "serve:dist": "npm run make:dist && npx http-server dist --port ${PORT} --cors -c-1",
+    "start": "npx concurrently -n 'watch:src   ,watch:public,serve:dist  ' 'npm run watch:src' 'npm run watch:public' 'PORT=${PORT_DIST:-3000} npm run serve:dist'",
+    "start:preact": "PREACT=true npm start"
+  },
+  "author": "Service Design Éditorial – Le Monde, Maxime Fabas",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
+    "concurrently": "^9.2.1",
+    "esbuild": "^0.27.2",
+    "esbuild-plugin-inline-image": "^0.0.9",
+    "esbuild-sass-plugin": "^3.2.0",
+    "http-server": "^14.1.1",
+    "postcss": "^8.4.38",
+    "postcss-modules": "^6.0.0",
+    "sass": "^1.74.1",
+    "typescript": "^5.4.3"
+  },
+  "dependencies": {
+    "preact": "^10.20.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  }
+}
