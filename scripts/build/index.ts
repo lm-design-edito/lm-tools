@@ -66,27 +66,6 @@ await new Promise((resolve, reject) => {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * Create type declarations
- * 
- * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-await new Promise(resolve => {
-  const commands = [
-    'npx tsc --jsx react-jsx -p src/agnostic/tsconfig.json --emitDeclarationOnly',
-    'npx tsc --jsx react-jsx -p src/components/tsconfig.json --emitDeclarationOnly',
-    'npx tsc --jsx react-jsx -p src/node/tsconfig.json --emitDeclarationOnly'
-  ]
-  exec(commands.join(' && '), (err, stdout, stderr) => {
-    if (err !== null) console.error(err)
-    if (stdout !== '') console.log(stdout)
-    if (stderr !== '') console.log(stderr)
-    resolve(true)
-    console.log('Type declarations created')
-  })
-})
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * *
- *
  * Generate re-export files
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -102,7 +81,7 @@ const everyDirBuilt = await Subpaths.list(LIB, {
   returnRelative: false
 })
 
-everyDirBuilt.reverse().forEach(async dirpath => {
+await Promise.all(everyDirBuilt.reverse().map(async dirpath => {
   const childrenFiles = await Subpaths.list(dirpath, {
     directories: false,
     files: true,
@@ -125,20 +104,42 @@ everyDirBuilt.reverse().forEach(async dirpath => {
   })
   const hasIndexJs = childrenFiles.some(file => file.endsWith('/index.js'))
   if (hasIndexJs) return true
-  let reExportFileContents = ''
+  let reExportJsFileContents = ''
+  let reExportDTsFileContents = ''
   await Promise.all(childrenDirs.map(async chiDir => {
     const childName = path.basename(chiDir)
     const childNameCamelCase = camelCase(childName)
-    reExportFileContents += `export * as ${childNameCamelCase} from './${childName}/index.js'\n`
+    reExportJsFileContents += `export * as ${childNameCamelCase} from './${childName}/index.js'\n`
+    reExportDTsFileContents += `export * as ${childNameCamelCase} from './${childName}/index.js'\n`
   }))
-  if (reExportFileContents === '') { reExportFileContents = 'export {}\n' }
-  await fs.writeFile(
-    path.join(dirpath, 'index.js'),
-    `${reExportFileContents}`,
-    { encoding: 'utf-8' }
-  )
+  if (reExportJsFileContents === '') { reExportJsFileContents = 'export {}\n' }
+  if (reExportDTsFileContents === '') { reExportDTsFileContents = 'export {}\n' }
+  await fs.writeFile(path.join(dirpath, 'index.js'), `${reExportJsFileContents}`, { encoding: 'utf-8' })
+  await fs.writeFile(path.join(dirpath, 'index.d.ts'), `${reExportDTsFileContents}`, { encoding: 'utf-8' })
   console.log(`Created ${path.relative(LIB, dirpath)}/index.js`)
+  console.log(`Created ${path.relative(LIB, dirpath)}/index.d.ts`)
   return true
+}))
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Create type declarations
+ * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+await new Promise(resolve => {
+  const commands = [
+    'npx tsc --jsx react-jsx -p src/agnostic/tsconfig.json --emitDeclarationOnly',
+    'npx tsc --jsx react-jsx -p src/components/tsconfig.json --emitDeclarationOnly',
+    'npx tsc --jsx react-jsx -p src/node/tsconfig.json --emitDeclarationOnly'
+  ]
+  exec(commands.join(' && '), (err, stdout, stderr) => {
+    if (err !== null) console.error(err)
+    if (stdout !== '') console.log(stdout)
+    if (stderr !== '') console.log(stderr)
+    resolve(true)
+    console.log('Type declarations created')
+  })
 })
 
 console.log('')
