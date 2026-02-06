@@ -1,4 +1,4 @@
-import SftpClient from 'ssh2-sftp-client'
+import type SftpClient from 'ssh2-sftp-client'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 
@@ -27,7 +27,7 @@ export async function remove (
 ): Promise<Outcome.Either<true, string>> {
   const { ignoreMissing = true } = options ?? {}
   try {
-    const exists = await sftp.exists(targetPath)
+    const exists = await sftp.exists(targetPath) !== false
     if (!exists) {
       if (ignoreMissing) return Outcome.makeSuccess(true)
       return Outcome.makeFailure(`File not found at ${targetPath}.`)

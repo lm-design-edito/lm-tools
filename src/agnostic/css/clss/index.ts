@@ -7,7 +7,9 @@ export type Options = {
 }
 
 export function clss (blockNames: string | string[], options?: Options) {
-  blockNames = Array.isArray(blockNames) ? blockNames : [blockNames]
+  const blockNamesArr = Array.isArray(blockNames)
+    ? blockNames
+    : [blockNames]
   return (eltNames: EltNamesDescriptor, modNames: ModsDescriptor = []) => {
       
     // Refine input arguments
@@ -23,7 +25,7 @@ export function clss (blockNames: string | string[], options?: Options) {
     
     // Prepare returned value
     const outputClassesArr: string[] = []
-    blockNames.forEach(compName => {
+    blockNamesArr.forEach(compName => {
       eltNamesArr.forEach(eltName => {
         
         // Un-modified classes

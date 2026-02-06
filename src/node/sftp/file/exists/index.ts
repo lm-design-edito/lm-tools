@@ -1,4 +1,4 @@
-import Client from 'ssh2-sftp-client'
+import type Client from 'ssh2-sftp-client'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 
@@ -6,9 +6,9 @@ import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
  * Checks if a *file* (not a directory) exists on a specified SFTP server.
  *
  * `sftp.exists(path)` resolves to:
- *   • `'d'` – the path exists and is a **directory**  
- *   • `'-'` – the path exists and is a **regular file**  
- *   • `'l'` – the path exists and is a **symlink**  
+ *   • `'d'` – the path exists and is a **directory**
+ *   • `'-'` – the path exists and is a **regular file**
+ *   • `'l'` – the path exists and is a **symlink**
  *   • `false` – the path does **not** exist
  *
  * For the purpose of this util we treat a regular file (`'-'`) **or** a
@@ -25,7 +25,7 @@ export async function exists (
   sourcePath: string
 ): Promise<Outcome.Either<boolean, string>> {
   try {
-    const res = await sftp.exists(sourcePath)  // 'd' | '-' | 'l' | false
+    const res = await sftp.exists(sourcePath) // 'd' | '-' | 'l' | false
     const isFile = res === '-' || res === 'l'
     return Outcome.makeSuccess(isFile)
   } catch (err) {

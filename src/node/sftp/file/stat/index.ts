@@ -1,12 +1,12 @@
 // sftp/stat.ts
-import SftpClient from 'ssh2-sftp-client'
+import type SftpClient from 'ssh2-sftp-client'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 
 export interface Stat {
   size?: number
   modifiedAt?: Date
-  mode?: number          // POSIX mode bits
+  mode?: number // POSIX mode bits
   uid?: number
   gid?: number
   raw: SftpClient.FileStats
@@ -27,7 +27,7 @@ export async function stat (
     const info = await sftp.stat(path) // throws if not found
     return Outcome.makeSuccess({
       size: info.size,
-      modifiedAt: info.modifyTime ? new Date(info.modifyTime * 1000) : undefined,
+      modifiedAt: new Date(info.modifyTime * 1000),
       mode: info.mode,
       uid: info.uid,
       gid: info.gid,

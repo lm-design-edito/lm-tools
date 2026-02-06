@@ -297,7 +297,7 @@ export namespace Utils {
           : Types.Tree.Merge.Action.APPEND
         const children: typeof allChildren = Array
           .from(node.childNodes)
-          .filter(child => child instanceof Text || child instanceof Element)
+          .filter((child): child is Text | Element => child instanceof Text || child instanceof Element)
           .map(child => {
             if (child instanceof Text) return { node: child, key: undefined }
             const childKey = child.getAttribute(TreeNamespace.Tree.keyAttribute) ?? undefined

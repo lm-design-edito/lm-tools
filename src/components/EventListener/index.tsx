@@ -1,7 +1,8 @@
 import {
   type ReactNode,
   useRef,
-  useEffect
+  useEffect,
+  type JSX
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
@@ -24,7 +25,7 @@ export const EventListenerComponent = ({
   onEvent,
   content,
   children
-}: Props) => {
+}: Props): JSX.Element => {
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -40,19 +41,19 @@ export const EventListenerComponent = ({
       : root.querySelectorAll(targetSelector))
 
     // Add listeners
-    elements.forEach(elt =>
+    elements.forEach(elt => {
       typeArr.forEach(type => {
         elt.addEventListener(type, onEvent)
       })
-    )
+    })
 
     // Cleanup function to remove listeners
     return () => {
-      elements.forEach(elt =>
+      elements.forEach(elt => {
         typeArr.forEach(type => {
           elt.removeEventListener(type, onEvent)
         })
-      )
+      })
     }
   }, [targetSelector, type, onEvent])
 

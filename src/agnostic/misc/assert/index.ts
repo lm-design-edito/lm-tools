@@ -48,9 +48,9 @@ export async function assert (
       const asserted = assert(fullLabel, innerAssertion)
       return asserted
     }))
-    const allSuccess = allAsserted.every(asserted => asserted.success)
+    const allSuccess = allAsserted.every((asserted): asserted is Outcome.Success<string> => asserted.success)
     if (allSuccess) return Outcome.makeSuccess(allAsserted.map(e => e.payload).join('\n'))
-    const failures = allAsserted.filter(asserted => asserted.success === false)
+    const failures = allAsserted.filter((asserted): asserted is Outcome.Failure<string> => asserted.success === false)
     const failuresStr = failures.map(failure => failure.error).join('\n  ')
     return Outcome.makeFailure(failuresStr)
   }

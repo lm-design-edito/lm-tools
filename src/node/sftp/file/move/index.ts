@@ -1,4 +1,4 @@
-import Client from 'ssh2-sftp-client'
+import type Client from 'ssh2-sftp-client'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 
@@ -23,7 +23,7 @@ export type MoveOptions = {
  * The function uses `rename`, which atomically moves the file from
  * `sourcePath` to `targetPath`.  It supports two safety features:
  *
- * 1. **ensureDir** – If enabled, the parent directory of `targetPath`
+ * 1. **ensureDir** – If enabled, the parent directory of `targetPath`
  *    is created with `mkdir -p` semantics before the rename.
  * 2. **overwrite** – If disabled (default) the function first checks whether
  *    something already exists at `targetPath`; if so, it aborts.
@@ -52,14 +52,12 @@ export async function move (
   try {
     if (ensureDir) {
       const dirPath = targetPath.substring(0, targetPath.lastIndexOf('/'))
-      if (dirPath) await sftp.mkdir(dirPath, true)   // mkdir -p
+      await sftp.mkdir(dirPath, true) // mkdir -p
     }
 
     if (!overwrite) {
-      const exists = await sftp.exists(targetPath)   // 'd' | '-' | 'l' | false
-      if (exists) {
-        return Outcome.makeFailure(`File already exists at ${targetPath}.`)
-      }
+      const exists = await sftp.exists(targetPath) !== false
+      if (exists) return Outcome.makeFailure(`File already exists at ${targetPath}.`)
     }
 
     await sftp.rename(sourcePath, targetPath)

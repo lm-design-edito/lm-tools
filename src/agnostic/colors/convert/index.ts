@@ -1,6 +1,6 @@
 import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
 import { tidy } from '../tidy/index.js'
-import {
+import type {
   Color,
   Hex,
   Rgba,
@@ -11,10 +11,10 @@ import {
   Cmyka,
   Xyza,
   CssColor,
-  cssColors,
   TransformedColor,
   Srgba
 } from '../types.js'
+import { cssColors } from '../cssColorsMap.js'
 import {
   isHex,
   isRgb,
@@ -26,6 +26,7 @@ import {
   isLab,
   isLch
 } from '../typechecks/index.js'
+import { unknownToString } from '../../errors/unknown-to-string/index.js'
 
 /* * * * * * * * * * * * * * * * * *
  * Convertion building blocks
@@ -35,17 +36,20 @@ import {
 // [WIP] maybe use absoluteModulo where needed?
 // needs rewrite, hex char checks, etc
 function _hex2rgb (hex: Hex): Rgba {
-  if (!isHex(hex)) throw new Error(`invalid hex color ${hex}`)
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+  if (!isHex(hex)) throw new Error(`invalid hex color ${unknownToString(hex)}`)
   let hexString: string = hex
   const inputHex = hexString
   const startsWithHash = hexString.startsWith('#')
   if (!startsWithHash) throw new Error(`invalid hex color ${inputHex}`)
   hexString = hexString.slice(1)
-  if (hexString.length === 3) { hexString = hexString.split('').map(c => c + c).join('') + 'ff' }
-  else if (hexString.length === 4) { hexString = hexString.split('').map(c => c + c).join('') }
-  else if (hexString.length === 6) { hexString = hexString + 'ff' }
-  else if (hexString.length === 8) { hexString = hexString }
-  else throw new Error(`invalid hex color ${inputHex}`)
+  if (hexString.length === 3) {
+    hexString = hexString.split('').map(c => c + c).join('') + 'ff'
+  } else if (hexString.length === 4) {
+    hexString = hexString.split('').map(c => c + c).join('')
+  } else if (hexString.length === 6) {
+    hexString = hexString + 'ff'
+  } else if (hexString.length !== 8) throw new Error(`invalid hex color ${inputHex}`)
   const r = parseInt(hexString.slice(0, 2), 16)
   const g = parseInt(hexString.slice(2, 4), 16)
   const b = parseInt(hexString.slice(4, 6), 16)
@@ -64,7 +68,7 @@ function _rgb2hex (rgb: Rgba): Hex {
     // Here typescript says returned is 'never' but this is because
     // isHex function is more strict than Hex type, so technically
     // isHex(hex) can return false, for instance if hex === '#zzz'
-    throw new Error(`invalid hex color output ${returned}`)
+    throw new Error(`invalid hex color output ${unknownToString(returned)}`)
   }
   return returned
 }
@@ -136,9 +140,13 @@ function _rgb2hsl (rgb: Rgba): Hsla {
   const l = (max + min) / 2
   if (delta !== 0) {
     s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min)
-    if (max === R) { h = ((G - B) / delta + (G < B ? 6 : 0)) / 6 }
-    else if (max === G) { h = ((B - R) / delta + 2) / 6 }
-    else { h = ((R - G) / delta + 4) / 6 }
+    if (max === R) {
+      h = ((G - B) / delta + (G < B ? 6 : 0)) / 6
+    } else if (max === G) {
+      h = ((B - R) / delta + 2) / 6
+    } else {
+      h = ((R - G) / delta + 4) / 6
+    }
   }
   return {
     h: Math.round(h * 360),
@@ -193,9 +201,13 @@ function _rgb2hsb (rgb: Rgba): Hsba {
   const brightness = max
   if (max !== 0) { s = delta / max }
   if (delta !== 0) {
-    if (max === R) { h = ((G - B) / delta + (G < B ? 6 : 0)) / 6 }
-    else if (max === G) { h = ((B - R) / delta + 2) / 6 }
-    else { h = ((R - G) / delta + 4) / 6 }
+    if (max === R) {
+      h = ((G - B) / delta + (G < B ? 6 : 0)) / 6
+    } else if (max === G) {
+      h = ((B - R) / delta + 2) / 6
+    } else {
+      h = ((R - G) / delta + 4) / 6
+    }
   }
   return {
     h: Math.round(h * 360),
@@ -236,6 +248,7 @@ function _rgb2cmyk (rgb: Rgba): Cmyka {
   // Compute K (black)
   const K = 1 - Math.max(R, G, B)
   // Avoid division by zero
+  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
   const denom = 1 - K || 1
   // Compute C, M, Y
   const C = (1 - R - K) / denom
@@ -259,16 +272,16 @@ function _xyz2rgb (xyza: Xyza): Rgba {
   const Z = z / 100
   const A = Math.max(0, Math.min(1, a))
   // XYZ → linear RGB (D65)
-  let R =  X *  3.2404542 + Y * -1.5371385 + Z * -0.4985314
-  let G =  X * -0.9692660 + Y *  1.8760108 + Z *  0.0415560
-  let B =  X *  0.0556434 + Y * -0.2040259 + Z *  1.0572252
+  let R = X * 3.2404542 + Y * -1.5371385 + Z * -0.4985314
+  let G = X * -0.9692660 + Y * 1.8760108 + Z * 0.0415560
+  let B = X * 0.0556434 + Y * -0.2040259 + Z * 1.0572252
   // Apply gamma correction
   const GAMMA_THRESHOLD = 0.0031308
   const GAMMA_EXPONENT = 1 / 2.4
   const GAMMA_MULT = 1.055
   const GAMMA_OFFSET = 0.055
   const LINEAR_DIVISOR = 12.92
-  const gammaCorrect = (c: number) => c <= GAMMA_THRESHOLD
+  const gammaCorrect = (c: number): number => c <= GAMMA_THRESHOLD
     ? c * LINEAR_DIVISOR
     : GAMMA_MULT * Math.pow(c, GAMMA_EXPONENT) - GAMMA_OFFSET
   R = gammaCorrect(R)
@@ -295,7 +308,7 @@ function _rgb2xyz (rgb: Rgba): Xyza {
   const SRGB_DIVISOR = 1.055
   const SRGB_EXPONENT = 2.4
   const SRGB_LINEAR_DIVISOR = 12.92
-  const linearize = (c: number) => c > SRGB_THRESHOLD
+  const linearize = (c: number): number => c > SRGB_THRESHOLD
     ? Math.pow((c + SRGB_OFFSET) / SRGB_DIVISOR, SRGB_EXPONENT)
     : c / SRGB_LINEAR_DIVISOR
   R = linearize(R)
@@ -327,7 +340,7 @@ function _lab2xyz (lab: Laba): Xyza {
   const fz3 = Math.pow(fz, 3)
   const fy3 = Math.pow(fy, 3)
   const epsilon = 0.008856 // CIE standard
-  const kappa = 903.3      // CIE standard
+  const kappa = 903.3 // CIE standard
   const X = fx3 > epsilon ? fx3 : (116 * fx - 16) / kappa
   const Y = l > (kappa * epsilon) ? fy3 : l / kappa
   const Z = fz3 > epsilon ? fz3 : (116 * fz - 16) / kappa
@@ -349,7 +362,7 @@ function _xyz2lab (xyza: Xyza): Laba {
   const Y = y / REF_Y
   const Z = z / REF_Z
   const epsilon = 0.008856 // CIE standard
-  const kappa = 903.3      // CIE standard
+  const kappa = 903.3 // CIE standard
   const fx = X > epsilon ? Math.cbrt(X) : (kappa * X + 16) / 116
   const fy = Y > epsilon ? Math.cbrt(Y) : (kappa * Y + 16) / 116
   const fz = Z > epsilon ? Math.cbrt(Z) : (kappa * Z + 16) / 116
@@ -401,8 +414,8 @@ export function toRgb (color: Color): Rgba {
   if (isHex(color)) return _hex2rgb(color)
   if (isXyz(color)) return _xyz2rgb(color)
   if (isLab(color)) return _xyz2rgb(_lab2xyz(color))
-  if (isLch(color)) return _xyz2rgb(_lab2xyz(_lch2lab(color))) 
-  throw new Error(`Invalid color input: ${color}`)
+  if (isLch(color)) return _xyz2rgb(_lab2xyz(_lch2lab(color)))
+  throw new Error(`Invalid color input: ${unknownToString(color)}`)
 }
 
 /**
@@ -422,7 +435,7 @@ export function toXyz (color: Color): Xyza {
   if (isCmyk(color)) return _rgb2xyz(_cmyk2rgb(color))
   if (isCssColor(color)) return _rgb2xyz(_css2rgb(color))
   if (isHex(color)) return _rgb2xyz(_hex2rgb(color))
-  throw new Error(`Invalid color input: ${color}`)
+  throw new Error(`Invalid color input: ${unknownToString(color)}`)
 }
 
 /**
@@ -531,7 +544,7 @@ export function toHex (color: Color): Hex {
  * @returns {TransformedColor<C>} The transformed color in the original format.
  * @throws {Error} If the color format is invalid or unsupported.
  */
-export function viaRgb <C extends Color>(color: C, transformer: (rgb: Rgba) => Rgba): TransformedColor<C> {
+export function viaRgb <C extends Color> (color: C, transformer: (rgb: Rgba) => Rgba): TransformedColor<C> {
   const _color: Color = color
   const rgb = toRgb(_color)
   const transformedRgb = transformer(rgb)
@@ -544,8 +557,9 @@ export function viaRgb <C extends Color>(color: C, transformer: (rgb: Rgba) => R
   if (isLch(_color)) return toLch(transformedRgb) as TransformedColor<C>
   if (isHex(_color)) return toRgb(transformedRgb) as TransformedColor<C>
   if (isCssColor(_color)) return transformedRgb as TransformedColor<C>
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _typecheck: typeof _color extends never ? true : false = true
-  throw new Error(`Invalid color input: ${_color}`)
+  throw new Error(`Invalid color input: ${unknownToString(_color)}`)
 }
 
 /**
@@ -558,7 +572,7 @@ export function viaRgb <C extends Color>(color: C, transformer: (rgb: Rgba) => R
  * @returns {TransformedColor<C>} The transformed color in the original format.
  * @throws {Error} If the color format is invalid or unsupported.
  */
-export function viaHsl <C extends Color>(color: C, transformer: (hsl: Hsla) => Hsla): TransformedColor<C> {
+export function viaHsl <C extends Color> (color: C, transformer: (hsl: Hsla) => Hsla): TransformedColor<C> {
   const _color: Color = color
   const hsl = toHsl(_color)
   const transformedHsl = transformer(hsl)
@@ -571,8 +585,9 @@ export function viaHsl <C extends Color>(color: C, transformer: (hsl: Hsla) => H
   if (isLch(_color)) return toLch(transformedHsl) as TransformedColor<C>
   if (isHex(_color)) return toHex(transformedHsl) as TransformedColor<C>
   if (isCssColor(_color)) return transformedHsl as TransformedColor<C>
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _typecheck: typeof _color extends never ? true : false = true
-  throw new Error(`Invalid color input: ${_color}`)
+  throw new Error(`Invalid color input: ${unknownToString(_color)}`)
 }
 
 /**
@@ -585,7 +600,7 @@ export function viaHsl <C extends Color>(color: C, transformer: (hsl: Hsla) => H
  * @returns {TransformedColor<C>} The transformed color in the original format.
  * @throws {Error} If the color format is invalid or unsupported.
  */
-export function viaHsb <C extends Color>(color: C, transformer: (hsb: Hsba) => Hsba): TransformedColor<C> {
+export function viaHsb <C extends Color> (color: C, transformer: (hsb: Hsba) => Hsba): TransformedColor<C> {
   const _color: Color = color
   const hsb = toHsb(_color)
   const transformedHsb = transformer(hsb)
@@ -598,8 +613,9 @@ export function viaHsb <C extends Color>(color: C, transformer: (hsb: Hsba) => H
   if (isLch(_color)) return toLch(transformedHsb) as TransformedColor<C>
   if (isHex(_color)) return toHex(transformedHsb) as TransformedColor<C>
   if (isCssColor(_color)) return transformedHsb as TransformedColor<C>
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _typecheck: typeof _color extends never ? true : false = true
-  throw new Error(`Invalid color input: ${_color}`)
+  throw new Error(`Invalid color input: ${unknownToString(_color)}`)
 }
 
 /**
@@ -612,7 +628,7 @@ export function viaHsb <C extends Color>(color: C, transformer: (hsb: Hsba) => H
  * @returns {TransformedColor<C>} The transformed color in the original format.
  * @throws {Error} If the color format is invalid or unsupported.
  */
-export function viaCmyk <C extends Color>(color: C, transformer: (cmyk: Cmyka) => Cmyka): TransformedColor<C> {
+export function viaCmyk <C extends Color> (color: C, transformer: (cmyk: Cmyka) => Cmyka): TransformedColor<C> {
   const _color: Color = color
   const cmyk = toCmyk(_color)
   const transformedCmyk = transformer(cmyk)
@@ -625,8 +641,9 @@ export function viaCmyk <C extends Color>(color: C, transformer: (cmyk: Cmyka) =
   if (isLch(_color)) return toLch(transformedCmyk) as TransformedColor<C>
   if (isHex(_color)) return toHex(transformedCmyk) as TransformedColor<C>
   if (isCssColor(_color)) return transformedCmyk as TransformedColor<C>
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _typecheck: typeof _color extends never ? true : false = true
-  throw new Error(`Invalid color input: ${_color}`)
+  throw new Error(`Invalid color input: ${unknownToString(_color)}`)
 }
 
 /**
@@ -639,7 +656,7 @@ export function viaCmyk <C extends Color>(color: C, transformer: (cmyk: Cmyka) =
  * @returns {TransformedColor<C>} The transformed color in the original format.
  * @throws {Error} If the color format is invalid or unsupported.
  */
-export function viaXyz <C extends Color>(color: C, transformer: (xyz: Xyza) => Xyza): TransformedColor<C> {
+export function viaXyz <C extends Color> (color: C, transformer: (xyz: Xyza) => Xyza): TransformedColor<C> {
   const _color: Color = color
   const xyz = toXyz(_color)
   const transformedXyz = transformer(xyz)
@@ -652,8 +669,9 @@ export function viaXyz <C extends Color>(color: C, transformer: (xyz: Xyza) => X
   if (isLch(_color)) return toLch(transformedXyz) as TransformedColor<C>
   if (isHex(_color)) return toHex(transformedXyz) as TransformedColor<C>
   if (isCssColor(_color)) return transformedXyz as TransformedColor<C>
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _typecheck: typeof _color extends never ? true : false = true
-  throw new Error(`Invalid color input: ${_color}`)
+  throw new Error(`Invalid color input: ${unknownToString(_color)}`)
 }
 
 /**
@@ -666,7 +684,7 @@ export function viaXyz <C extends Color>(color: C, transformer: (xyz: Xyza) => X
  * @returns {TransformedColor<C>} The transformed color in the original format.
  * @throws {Error} If the color format is invalid or unsupported.
  */
-export function viaLab <C extends Color>(color: C, transformer: (lab: Laba) => Laba): TransformedColor<C> {
+export function viaLab <C extends Color> (color: C, transformer: (lab: Laba) => Laba): TransformedColor<C> {
   const _color: Color = color
   const lab = toLab(_color)
   const transformedLab = transformer(lab)
@@ -679,8 +697,9 @@ export function viaLab <C extends Color>(color: C, transformer: (lab: Laba) => L
   if (isLch(_color)) return toLch(transformedLab) as TransformedColor<C>
   if (isHex(_color)) return toHex(transformedLab) as TransformedColor<C>
   if (isCssColor(_color)) return transformedLab as TransformedColor<C>
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _typecheck: typeof _color extends never ? true : false = true
-  throw new Error(`Invalid color input: ${_color}`)
+  throw new Error(`Invalid color input: ${unknownToString(_color)}`)
 }
 
 /**
@@ -693,7 +712,7 @@ export function viaLab <C extends Color>(color: C, transformer: (lab: Laba) => L
  * @returns {TransformedColor<C>} The transformed color in the original format.
  * @throws {Error} If the color format is invalid or unsupported.
  */
-export function viaLch <C extends Color>(color: C, transformer: (lch: Lcha) => Lcha): TransformedColor<C> {
+export function viaLch <C extends Color> (color: C, transformer: (lch: Lcha) => Lcha): TransformedColor<C> {
   const _color: Color = color
   const lch = toLch(_color)
   const transformedLch = transformer(lch)
@@ -706,8 +725,9 @@ export function viaLch <C extends Color>(color: C, transformer: (lch: Lcha) => L
   if (isLch(_color)) return toLch(transformedLch) as TransformedColor<C>
   if (isHex(_color)) return toHex(transformedLch) as TransformedColor<C>
   if (isCssColor(_color)) return transformedLch as TransformedColor<C>
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _typecheck: typeof _color extends never ? true : false = true
-  throw new Error(`Invalid color input: ${_color}`)
+  throw new Error(`Invalid color input: ${unknownToString(_color)}`)
 }
 
 /* * * * * * * * * * * * * * * * * *
@@ -722,7 +742,7 @@ export function viaLch <C extends Color>(color: C, transformer: (lch: Lcha) => L
  */
 export function linearizeToSRgb (rgb: Rgba): Srgba {
   const cleanRgb = tidy(rgb)
-  const linearChannel = (v: number) => {
+  const linearChannel = (v: number): number => {
     const n = v / 255
     if (n <= 0.04045) return n / 12.92
     else return Math.pow((n + 0.055) / 1.055, 2.4)
@@ -742,7 +762,7 @@ export function linearizeToSRgb (rgb: Rgba): Srgba {
  * @returns {Rgba} The delinearized color in RGBA format.
  */
 export function delinearizeToRgb (srgb: Srgba): Rgba {
-  const gammaChannel = (v: number) => {
+  const gammaChannel = (v: number): number => {
     if (v <= 0.0031308) return v * 12.92
     else return 1.055 * Math.pow(v, 1 / 2.4) - 0.055
   }

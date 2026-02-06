@@ -1,9 +1,9 @@
 import { clamp } from '../../numbers/clamp/index.js'
 import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
 import {
-  Color,
-  TransformedColor,
-  Channel
+  type Color,
+  type TransformedColor,
+  type Channel
 } from '../types.js'
 import {
   toRgb,
@@ -35,7 +35,7 @@ import {
  * @param {number} value - The new value for the channel.
  * @returns {TransformedColor<C>} The color with the updated channel, in the original format.
  */
-export function setChannel <C extends Color>(color: C, channel: Channel, value: number): TransformedColor<C> {
+export function setChannel <C extends Color> (color: C, channel: Channel, value: number): TransformedColor<C> {
   switch (channel) {
     case 'red': return viaRgb(color, rgb => ({ ...rgb, r: clamp(value, 0, 255) }))
     case 'green': return viaRgb(color, rgb => ({ ...rgb, g: clamp(value, 0, 255) }))
@@ -56,7 +56,7 @@ export function setChannel <C extends Color>(color: C, channel: Channel, value: 
     case 'aLab': return viaLab(color, lab => ({ ...lab, a: value }))
     case 'bLab': return viaLab(color, lab => ({ ...lab, b: value }))
     case 'chroma': return viaLch(color, lch => ({ ...lch, c: Math.max(0, value) }))
-    case 'hueLch': return viaLch(color, lch => ({ ...lch, h: clamp(value, 0, 360) }))  
+    case 'hueLch': return viaLch(color, lch => ({ ...lch, h: clamp(value, 0, 360) }))
   }
 }
 
@@ -92,7 +92,7 @@ export function getChannel (color: Color, channel: Channel): number {
     case 'aLab': return toLab(color).a
     case 'bLab': return toLab(color).b
     case 'chroma': return toLch(color).c
-    case 'hueLch': return toLch(color).h 
+    case 'hueLch': return toLch(color).h
   }
 }
 
@@ -108,7 +108,7 @@ export function getChannel (color: Color, channel: Channel): number {
  * @param {number} amount - The amount to add to the channel.
  * @returns {TransformedColor<C>} The color with the updated channel, in the original format.
  */
-export function addChannel <C extends Color>(color: C, channel: Channel, amount: number): TransformedColor<C> {
+export function addChannel <C extends Color> (color: C, channel: Channel, amount: number): TransformedColor<C> {
   switch (channel) {
     case 'red': return viaRgb(color, rgb => ({ ...rgb, r: clamp(rgb.r + amount, 0, 255) }))
     case 'green': return viaRgb(color, rgb => ({ ...rgb, g: clamp(rgb.g + amount, 0, 255) }))
@@ -145,7 +145,7 @@ export function addChannel <C extends Color>(color: C, channel: Channel, amount:
  * @param {number} factor - The multiplication factor.
  * @returns {TransformedColor<C>} The color with the updated channel, in the original format.
  */
-export function multChannel <C extends Color>(color: C, channel: Channel, factor: number): TransformedColor<C> {
+export function multChannel <C extends Color> (color: C, channel: Channel, factor: number): TransformedColor<C> {
   switch (channel) {
     case 'red': return viaRgb(color, rgb => ({ ...rgb, r: clamp(rgb.r * factor, 0, 255) }))
     case 'green': return viaRgb(color, rgb => ({ ...rgb, g: clamp(rgb.g * factor, 0, 255) }))
@@ -166,6 +166,6 @@ export function multChannel <C extends Color>(color: C, channel: Channel, factor
     case 'aLab': return viaLab(color, lab => ({ ...lab, a: lab.a * factor }))
     case 'bLab': return viaLab(color, lab => ({ ...lab, b: lab.b * factor }))
     case 'chroma': return viaLch(color, lch => ({ ...lch, c: Math.max(0, lch.c * factor) }))
-    case 'hueLch': return viaLch(color, lch => ({ ...lch, h: clamp(lch.h * factor, 0, 360) })) 
+    case 'hueLch': return viaLch(color, lch => ({ ...lch, h: clamp(lch.h * factor, 0, 360) }))
   }
 }

@@ -3,7 +3,8 @@ import {
   useState,
   useRef,
   useEffect,
-  useCallback
+  useCallback,
+  type JSX
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
@@ -22,7 +23,10 @@ type ObserverOptions = {
 export type Props = {
   className?: string
   render?: ReactNode
-  onIntersection?: (details: { ioEntry?: IOE | undefined, observer: IO }) => void
+  onIntersection?: (details: {
+    ioEntry?: IOE | undefined
+    observer: IO
+  }) => void
   content?: ReactNode
   children?: ReactNode
 } & ObserverOptions
@@ -36,7 +40,7 @@ export const IntersectionObserverComponent = ({
   rootMargin,
   threshold,
   children
-}: Props) => {
+}: Props): JSX.Element => {
   const [ioEntry, setIoEntry] = useState<IOE | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IO | null>(null)

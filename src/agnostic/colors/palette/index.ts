@@ -120,5 +120,6 @@ export function palette<
     case 'tetradic': return tetradicHsl(color)as Palette<C, T>
     case 'tetradic-lab': return tetradicLab(color)as Palette<C, T>
     case 'tetradic-lch': return tetradicLch(color)as Palette<C, T>
+    default: throw new Error(`Invalid palette type: ${type}`)
   }
 }

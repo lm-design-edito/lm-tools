@@ -6,6 +6,11 @@ import styles from './styles.module.css'
 
 const App = () => <div className={styles['app']}>
   <h3>EventListener</h3>
+  <p>Click on the button to see the console log.</p>
+  <p>Hover on the button to see the console log.</p>
+  <code>
+    console.log('clicked')
+  </code>
   <EventListenerComponent
     type='click'
     onEvent={() => console.log('clicked')}>

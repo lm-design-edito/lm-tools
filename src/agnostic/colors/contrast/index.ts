@@ -1,4 +1,4 @@
-import { Color, Rgba, ContrastMethod } from '../types.js'
+import type { Color, Rgba, ContrastMethod } from '../types.js'
 import { luminance } from '../luminance/index.js'
 import { toRgb } from '../convert/index.js'
 

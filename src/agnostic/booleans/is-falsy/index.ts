@@ -1,4 +1,4 @@
-import { nullishValues, Nullish } from '../../misc/is-nullish/index.js'
+import { nullishValues, type Nullish } from '../../misc/is-nullish/index.js'
 
 /** Union type representing all falsy values in JavaScript. */
 export type Falsy = Nullish | false | '' | 0 | -0 | typeof NaN | 0n
@@ -19,8 +19,8 @@ export { falsyValues }
  * @returns `true` if the value is falsy, `false` otherwise.
  */
 export function isFalsy<T> (val: T | Falsy): val is Falsy {
-  return falsyValues.includes(val as any)
-} 
+  return falsyValues.includes(val as Falsy)
+}
 
 /**
  * Type guard to check if a value is not falsy.

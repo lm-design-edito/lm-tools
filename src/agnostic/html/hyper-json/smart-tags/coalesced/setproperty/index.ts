@@ -105,10 +105,11 @@ export function deepSetProperty (
       }
       // Set on Text
       else if (currentItem instanceof Text) {
-        const currContent = currentItem.textContent
+        const currContent = currentItem.textContent ?? ''
         if (Number.isNaN(numChunk)
           || numChunk < 0
-          || numChunk > currContent.length) throw `INVALID_PROP: Could not access item's child at ${numChunk} found at pos ${pos} in path ${pathChunks.join('.')}`  
+          || numChunk > currContent.length
+        ) throw `INVALID_PROP: Could not access item's child at ${numChunk} found at pos ${pos} in path ${pathChunks.join('.')}`
         const newContent = [
           ...currContent.slice(0, numChunk),
           ...Cast.toString(value),
@@ -182,7 +183,7 @@ export function deepSetProperty (
       if (currentItem instanceof Element) {
         const children = Array
           .from(currentItem.childNodes)
-          .filter(e => e instanceof Text || e instanceof Element)
+          .filter((e): e is Text | Element => e instanceof Text || e instanceof Element)
         const found = children[numChunk]
         if (found === undefined) throw `INVALID_PROP: Could not access item's child at ${numChunk} found at pos ${pos} in path ${pathChunks.join('.')}`
         currentItemParent = currentItem

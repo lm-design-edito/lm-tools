@@ -9,10 +9,10 @@ type TypeCheckerFunction<T> = (input: unknown) => input is T
 type TypeChecker<T> = ConstructorFunction<T> | TypeCheckerFunction<T>
 
 /** Infer the type from a TypeChecker */
-type TypeOfChecker<C> =
-  C extends ConstructorFunction<infer U> ? U :
-  C extends TypeCheckerFunction<infer U> ? U :
-  never
+type TypeOfChecker<C> = C extends ConstructorFunction<infer U>
+  ? U
+  : C extends TypeCheckerFunction<infer U>
+    ? U : never
 
 /**
  * Type guard to check if an input is an array and optionally if all elements match a type.
@@ -22,17 +22,17 @@ type TypeOfChecker<C> =
  * and custom type guard functions.
  */
 export function isArrayOf<
-  C extends TypeChecker<any> | TypeChecker<any>[]
->(
+  C extends TypeChecker<any> | Array<TypeChecker<any>>
+> (
   input: unknown,
   _types?: C
 ): input is Array<TypeOfChecker<C extends any[] ? C[number] : C>> {
   if (!Array.isArray(input)) return false
-  if (!_types) return true
+  if (_types === undefined) return true
 
   const types = Array.isArray(_types) ? _types : [_types]
 
-  const primitiveTypeMap = new Map<Function, string>([
+  const primitiveTypeMap = new Map<ConstructorFunction<any>, string>([
     [Number, 'number'],
     [String, 'string'],
     [Boolean, 'boolean']
@@ -42,7 +42,8 @@ export function isArrayOf<
     types.some(typeChecker => {
       if (!isConstructorFunction(typeChecker)) return typeChecker(entry)
       const primitiveType = primitiveTypeMap.get(typeChecker)
-      if (primitiveType) return typeof entry === primitiveType
+      // eslint-disable-next-line valid-typeof
+      if (primitiveType !== undefined) return typeof entry === primitiveType
       return entry instanceof typeChecker
     })
   )
