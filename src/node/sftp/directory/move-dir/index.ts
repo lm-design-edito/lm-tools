@@ -1,4 +1,4 @@
-import Client from 'ssh2-sftp-client'
+import type Client from 'ssh2-sftp-client'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 
@@ -37,14 +37,12 @@ export async function moveDir (
   try {
     if (ensureDir) {
       const parentDir = targetDir.substring(0, targetDir.lastIndexOf('/'))
-      if (parentDir) {
-        await sftp.mkdir(parentDir, true)
-      }
+      await sftp.mkdir(parentDir, true)
     }
 
     if (!overwrite) {
       const exists = await sftp.exists(targetDir)
-      if (exists) return Outcome.makeFailure(`Target ${targetDir} already exists.`)
+      if (exists !== false) return Outcome.makeFailure(`Target ${targetDir} already exists.`)
     }
 
     await sftp.rename(sourceDir, targetDir)

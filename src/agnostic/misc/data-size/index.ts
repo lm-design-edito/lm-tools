@@ -3,24 +3,10 @@ import type { Unit, UnitShort } from './types.js'
 export class DataSize {
   value: number
   unit: Unit
-  
+
   constructor (value: number, unit: Unit | UnitShort) {
     this.value = value
-    if (unit === 'b' || unit === 'bit') { this.unit = 'bit' }
-    else if (unit === 'B' || unit === 'byte') { this.unit = 'byte' }
-    else if (unit === 'KB' || unit === 'kilobyte') { this.unit = 'kilobyte' }
-    else if (unit === 'MB' || unit === 'megabyte') { this.unit = 'megabyte' }
-    else if (unit === 'GB' || unit === 'gigabyte') { this.unit = 'gigabyte' }
-    else if (unit === 'TB' || unit === 'terabyte') { this.unit = 'terabyte' }
-    else if (unit === 'PB' || unit === 'petabyte') { this.unit = 'petabyte' }
-    else if (unit === 'EB' || unit === 'exabyte') { this.unit = 'exabyte' }
-    else if (unit === 'KiB' || unit === 'kibibyte') { this.unit = 'kibibyte' }
-    else if (unit === 'MiB' || unit === 'mebibyte') { this.unit = 'mebibyte' }
-    else if (unit === 'GiB' || unit === 'gibibyte') { this.unit = 'gibibyte' }
-    else if (unit === 'TiB' || unit === 'tebibyte') { this.unit = 'tebibyte' }
-    else if (unit === 'PiB' || unit === 'pebibyte') { this.unit = 'pebibyte' }
-    else if (unit === 'EiB' || unit === 'exbibyte') { this.unit = 'exbibyte' }
-    else { this.unit = 'byte' } // defaults to byte
+    if (unit === 'b' || unit === 'bit') { this.unit = 'bit' } else if (unit === 'B' || unit === 'byte') { this.unit = 'byte' } else if (unit === 'KB' || unit === 'kilobyte') { this.unit = 'kilobyte' } else if (unit === 'MB' || unit === 'megabyte') { this.unit = 'megabyte' } else if (unit === 'GB' || unit === 'gigabyte') { this.unit = 'gigabyte' } else if (unit === 'TB' || unit === 'terabyte') { this.unit = 'terabyte' } else if (unit === 'PB' || unit === 'petabyte') { this.unit = 'petabyte' } else if (unit === 'EB' || unit === 'exabyte') { this.unit = 'exabyte' } else if (unit === 'KiB' || unit === 'kibibyte') { this.unit = 'kibibyte' } else if (unit === 'MiB' || unit === 'mebibyte') { this.unit = 'mebibyte' } else if (unit === 'GiB' || unit === 'gibibyte') { this.unit = 'gibibyte' } else if (unit === 'TiB' || unit === 'tebibyte') { this.unit = 'tebibyte' } else if (unit === 'PiB' || unit === 'pebibyte') { this.unit = 'pebibyte' } else if (unit === 'EiB' || unit === 'exbibyte') { this.unit = 'exbibyte' } else { this.unit = 'byte' } // defaults to byte
 
     this.toBits = this.toBits.bind(this)
     this.toBytes = this.toBytes.bind(this)
@@ -35,7 +21,7 @@ export class DataSize {
     this.toGibibytes = this.toGibibytes.bind(this)
     this.toTebibytes = this.toTebibytes.bind(this)
     this.toPebibytes = this.toPebibytes.bind(this)
-    this.toExbibytes = this.toExbibytes.bind(this)      
+    this.toExbibytes = this.toExbibytes.bind(this)
   }
 
   toBits (): number {
@@ -56,7 +42,7 @@ export class DataSize {
     return this.value // defaults to bits
   }
 
-  /* * * * * * * * * * * * * * * * * * 
+  /* * * * * * * * * * * * * * * * * *
    * Decimal unit converters
    * * * * * * * * * * * * * * * * * */
   toBytes (): number { return this.toBits() / 8 }
@@ -80,7 +66,7 @@ export class DataSize {
   toExabytes (): number { return this.toBytes() / 1e18 }
   toEB = this.toExabytes.bind(this)
 
-  /* * * * * * * * * * * * * * * * * * 
+  /* * * * * * * * * * * * * * * * * *
    * Binary unit converters
    * * * * * * * * * * * * * * * * * */
   toKibibytes (): number { return this.toBytes() / 1024 }

@@ -1,7 +1,7 @@
 import {
-  Bucket,
-  BucketMetadata,
-  GetBucketMetadataOptions as GCSGetBucketMetadataOptions
+  type Bucket,
+  type BucketMetadata,
+  type GetBucketMetadataOptions as GCSGetBucketMetadataOptions
 } from '@google-cloud/storage'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
@@ -16,7 +16,7 @@ export type GetBucketMetadataOptions = GCSGetBucketMetadataOptions
  *
  * @param {Bucket} bucket - The Google Cloud Storage bucket object.
  * @param {GetBucketMetadataOptions} [options] - Optional configuration options to pass to the `getMetadata` method.
- * @returns {Promise<Outcome.Either<BucketMetadata, string>>} A promise that resolves to an `Outcome.Either`. 
+ * @returns {Promise<Outcome.Either<BucketMetadata, string>>} A promise that resolves to an `Outcome.Either`.
  * - On success: `Outcome.makeSuccess(metadata)` with the bucket metadata.
  * - On failure: `Outcome.makeFailure(errStr)` with an error message.
  *

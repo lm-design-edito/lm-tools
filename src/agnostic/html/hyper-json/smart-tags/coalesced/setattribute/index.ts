@@ -4,9 +4,9 @@ import { Cast } from '../../../cast/index.js'
 import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
 
-type Main = Element | Array<Element> | NodeListOf<Element | Text>
+type Main = Element | Element[] | NodeListOf<Element | Text>
 type Args = [string | Text] | [string | Text, string | Text]
-type Output = Element | Array<Element> | NodeListOf<Element | Text>
+type Output = Element | Element[] | NodeListOf<Element | Text>
 
 export const setattribute = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'setattribute',
@@ -46,7 +46,10 @@ export const setattribute = SmartTags.makeSmartTag<Main, Args, Output>({
       const mainArrCloned = mainArr.map(e => Utils.clone(e))
       mainArrCloned.forEach(e => e.setAttribute(name, value))
       if (Array.isArray(main)) return Outcome.makeSuccess(mainArrCloned)
-      return Outcome.makeSuccess(mainArrCloned[0] as Element)
+      const { makeMainValueError } = Utils.SmartTags
+      const returned = mainArrCloned[0]
+      if (returned === undefined) return Outcome.makeFailure(makeMainValueError('element', 'undefined'))
+      return Outcome.makeSuccess(returned)
     }
   }
 })

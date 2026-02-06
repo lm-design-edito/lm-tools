@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { getConnection, getCurrentDownlink } from './index.js'
 import * as Window from '../crossenv/window/index.js'
@@ -54,7 +56,7 @@ describe('getConnection', () => {
       configurable: true
     })
     Window.set(window)
-    
+
     const result = getConnection()
     expect(result).toEqual({
       downlink: 10,
@@ -83,7 +85,7 @@ describe('getConnection', () => {
       configurable: true
     })
     Window.set(window)
-    
+
     const result = getConnection()
     expect(result?.type).toBe('cellular')
   })
@@ -108,7 +110,7 @@ describe('getConnection', () => {
       configurable: true
     })
     Window.set(window)
-    
+
     const result = getConnection()
     expect(result?.type).toBe('ethernet')
   })
@@ -138,7 +140,7 @@ describe('getCurrentDownlink', () => {
       configurable: true
     })
     Window.set(window)
-    
+
     expect(getCurrentDownlink()).toBe(10)
   })
 
@@ -152,7 +154,7 @@ describe('getCurrentDownlink', () => {
       configurable: true
     })
     Window.set(window)
-    
+
     expect(getCurrentDownlink()).toBeUndefined()
   })
 })

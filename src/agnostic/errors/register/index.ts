@@ -5,7 +5,7 @@ export type RegisterEntry = {
 
 export type Source<C extends string> = { [K in C]: RegisterEntry }
 
-export function makeSource<S extends Source<string>>(s: S): S { return s }
+export function makeSource<S extends Source<string>> (s: S): S { return s }
 
 export type RegisterKeys<S extends Source<string>> = keyof S
 
@@ -34,19 +34,22 @@ export type ErrorData<
   Code extends RegisterKeys<S>
 > = {
   code: Code
-  message: Message<S, Code>,
+  message: Message<S, Code>
   details: Details<S, Code>
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function from<S extends Source<string>> (source: S) {
   function getMessage<Code extends RegisterKeys<S>> (code: Code): Message<S, Code> {
-    const message = source[code]!.message
+    const message = source[code]?.message
+    if (message === undefined) throw new Error('Unknown code')
     return message
   }
 
   function getDetailsMaker<Code extends RegisterKeys<S>> (code: Code): DetailsMaker<S, Code> {
-    const maker = source[code]!.detailsMaker as DetailsMaker<S, Code>
-    return maker
+    const maker = source[code]?.detailsMaker
+    if (maker === undefined) throw new Error('Unknown code')
+    return maker as DetailsMaker<S, Code>
   }
 
   function getDetails<Code extends RegisterKeys<S>> (

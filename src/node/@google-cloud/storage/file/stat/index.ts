@@ -1,8 +1,8 @@
 import {
-  Bucket,
-  FileOptions,
-  GetFileMetadataOptions,
-  FileMetadata
+  type Bucket,
+  type FileOptions,
+  type GetFileMetadataOptions,
+  type FileMetadata
 } from '@google-cloud/storage'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
@@ -11,7 +11,7 @@ import { unknownToString } from '../../../../../agnostic/errors/unknown-to-strin
 export interface Stat {
   size?: number
   modifiedAt?: Date
-  checksum?: string            // md5Hash (base64) or crc32c(hex)
+  checksum?: string // md5Hash (base64) or crc32c(hex)
   contentType?: string
   metadata?: Record<string, string | number | boolean | null>
   storageClass?: string
@@ -44,8 +44,12 @@ export async function stat (
       .getMetadata(getMetadataOptions)
 
     const res: Stat = {
-      size: meta.size ? Number(meta.size) : undefined,
-      modifiedAt: meta.updated ? new Date(meta.updated) : undefined,
+      size: meta.size !== undefined
+        ? Number(meta.size)
+        : undefined,
+      modifiedAt: meta.updated !== undefined
+        ? new Date(meta.updated)
+        : undefined,
       checksum: meta.md5Hash ?? meta.crc32c,
       contentType: meta.contentType,
       metadata: meta.metadata,

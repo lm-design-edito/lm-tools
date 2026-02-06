@@ -1,7 +1,7 @@
 import {
-  Bucket,
-  FileOptions,
-  SetFileMetadataOptions
+  type Bucket,
+  type FileOptions,
+  type SetFileMetadataOptions
 } from '@google-cloud/storage'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
@@ -14,7 +14,7 @@ export type UpdateFileMetadataOptions = {
 /**
  * Updates the metadata of a file in a Google Cloud Storage bucket.
  *
- * This function allows updating the metadata of a file located at `targetPath` in the given bucket. 
+ * This function allows updating the metadata of a file located at `targetPath` in the given bucket.
  * The metadata is updated according to the provided `metadata` object, which contains the new metadata key-value pairs.
  * It can be customized using optional `fileOptions` and `metadataOptions` to control the update behavior.
  *

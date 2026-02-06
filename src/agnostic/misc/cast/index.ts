@@ -69,7 +69,7 @@ export function toNull (_value: unknown): null {
  * @param {unknown} value - The value to convert.
  * @returns {Array<unknown>} The array representation of the input.
  */
-export function toArray(value: unknown): Array<unknown> {
+export function toArray (value: unknown): unknown[] {
   if (Array.isArray(value)) return value
   if (typeof value === 'object' && value !== null) return Object.entries(value)
   return [value]
@@ -103,7 +103,9 @@ export function toRecord (value: unknown): Record<string, unknown> {
   const record: Record<string, unknown> = {}
   try {
     Object
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       .keys(value as any)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       .forEach(key => { record[key] = (value as any)[key] })
   } catch (err) {
     return record

@@ -1,9 +1,10 @@
 import { isRecord } from '../../../objects/is-record/index.js'
 import * as Window from '../../../misc/crossenv/window/index.js'
-import { Types } from '../types/index.js'
+import { type Types } from '../types/index.js'
 import { Utils } from '../utils/index.js'
 import { Method } from '../method/index.js'
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Cast {
   export const toNull = (): null => null
 
@@ -46,13 +47,13 @@ export namespace Cast {
     if (input instanceof Method) return `[Method:${input.transformer.name}]`
     return `{${Object.entries(input).map(([key, val]) => `${key}:"${toString(val)}"`).join(',')}}`
   }
-  
+
   export const toText = (input: Types.Tree.RestingValue): Text => {
     const { Text, document } = Window.get()
     if (input instanceof Text) return input.cloneNode(true) as Text
     return document.createTextNode(toString(input))
   }
-  
+
   export const toElement = (input: Types.Tree.RestingValue, tagName?: string): Element => {
     const { Element, Text, NodeList, document } = Window.get()
     if (input instanceof Element) return input.cloneNode(true) as Element

@@ -1,10 +1,10 @@
 import * as Outcome from '../../../../../misc/outcome/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
 
 type Main = Types.Tree.RestingArrayValue
-type Args = Array<Types.Tree.RestingArrayValue>
+type Args = Types.Tree.RestingArrayValue[]
 type Output = Types.Tree.RestingArrayValue
 
 export const pusheach = SmartTags.makeSmartTag<Main, Args, Output>({

@@ -2,7 +2,7 @@
  * Supported duration types (long form).
  */
 export type DurationType = 'milliseconds' | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months' | 'years'
-  
+
 /**
  * Supported duration types (short form aliases).
  */
@@ -14,7 +14,7 @@ export type DurationTypeShort = 'ms' | 's' | 'sec' | 'min' | 'm' | 'h' | 'd' | '
 export class Duration {
   value: number
   type: DurationType
-  
+
   /**
    * Creates a new Duration instance.
    *
@@ -23,7 +23,6 @@ export class Duration {
    */
   constructor (value: number, type: DurationType | DurationTypeShort) {
     this.toMilliseconds = this.toMilliseconds.bind(this)
-    this.toMs = this.toMs.bind(this)
     this.toSeconds = this.toSeconds.bind(this)
     this.toMinutes = this.toMinutes.bind(this)
     this.toHours = this.toHours.bind(this)
@@ -32,19 +31,11 @@ export class Duration {
     this.toMonths = this.toMonths.bind(this)
     this.toYear = this.toYear.bind(this)
     this.value = value
-    if (type === 'ms' || type === 'milliseconds') { this.type = 'milliseconds' }
-    else if (type === 's' || type === 'sec' || type === 'seconds') { this.type = 'seconds' }
-    else if (type === 'm' || type === 'min' || type === 'minutes') { this.type = 'minutes' }
-    else if (type === 'h' || type === 'hours') { this.type = 'hours' }
-    else if (type === 'd' || type === 'days') { this.type = 'days' }
-    else if (type === 'w' || type === 'weeks') { this.type = 'weeks' }
-    else if (type === 'mo' || type === 'mth' || type === 'months') { this.type = 'months' }
-    else if (type === 'y' || type === 'years') { this.type = 'years' }
-    else { this.type = 'milliseconds' } // defaults to milliseconds
+    if (type === 'ms' || type === 'milliseconds') { this.type = 'milliseconds' } else if (type === 's' || type === 'sec' || type === 'seconds') { this.type = 'seconds' } else if (type === 'm' || type === 'min' || type === 'minutes') { this.type = 'minutes' } else if (type === 'h' || type === 'hours') { this.type = 'hours' } else if (type === 'd' || type === 'days') { this.type = 'days' } else if (type === 'w' || type === 'weeks') { this.type = 'weeks' } else if (type === 'mo' || type === 'mth' || type === 'months') { this.type = 'months' } else if (type === 'y' || type === 'years') { this.type = 'years' } else { this.type = 'milliseconds' } // defaults to milliseconds
   }
 
-  toMilliseconds = this.toMs
-  toMs (): number {
+  // [WIP] why only toMs and no other shorthands ?
+  toMilliseconds (): number {
     if (this.type === 'milliseconds') return this.value
     if (this.type === 'seconds') return this.value * 1000
     if (this.type === 'minutes') return this.value * 1000 * 60
@@ -56,20 +47,66 @@ export class Duration {
     return this.value // defaults to milliseconds
   }
 
+  toMs = this.toMilliseconds.bind(this)
+
   toSeconds (): number { return this.toMs() / 1000 }
+
+  toS = this.toSeconds.bind(this)
+
+  toSec = this.toSeconds.bind(this)
+
   toMinutes (): number { return this.toMs() / (1000 * 60) }
+
+  toM = this.toMinutes.bind(this)
+
+  toMin = this.toMinutes.bind(this)
+
   toHours (): number { return this.toMs() / (1000 * 60 * 60) }
+
+  toH = this.toHours.bind(this)
+
   toDays (): number { return this.toMs() / (1000 * 60 * 60 * 24) }
+
+  toD = this.toDays.bind(this)
+
   toWeeks (): number { return this.toMs() / (1000 * 60 * 60 * 24 * 7) }
+
+  toW = this.toWeeks.bind(this)
+
   toMonths (): number { return this.toMs() / (1000 * 60 * 60 * 24 * 30) }
+
+  toMth = this.toMonths.bind(this)
+
   toYear (): number { return this.toMs() / (1000 * 60 * 60 * 24 * 365) }
+
+  toY = this.toYear.bind(this)
+
+  toYr = this.toYear.bind(this)
 }
 
 export function milliseconds (value: number): Duration { return new Duration(value, 'milliseconds') }
+export const ms = milliseconds
+
 export function seconds (value: number): Duration { return new Duration(value, 'seconds') }
+export const s = seconds
+export const sec = seconds
+
 export function minutes (value: number): Duration { return new Duration(value, 'minutes') }
+export const m = minutes
+export const min = minutes
+
 export function hours (value: number): Duration { return new Duration(value, 'hours') }
+export const h = hours
+
 export function days (value: number): Duration { return new Duration(value, 'days') }
+export const d = days
+
 export function weeks (value: number): Duration { return new Duration(value, 'weeks') }
+export const w = weeks
+
 export function months (value: number): Duration { return new Duration(value, 'months') }
+export const mth = months
+
 export function years (value: number): Duration { return new Duration(value, 'years') }
+export const y = years
+export const yr = years

@@ -20,7 +20,10 @@
  * //    console.log('hi')
  * //  }"
  */
-export function normalizeIndent (input: string, indentLevel: number = 0) {
+export function normalizeIndent (
+  input: string,
+  indentLevel: number = 0
+): string {
   const indent = (' ').repeat(indentLevel)
   const lines = input.split('\n')
   const noIndentLines = lines.map(line => line.replace(/^\s*/igm, ''))

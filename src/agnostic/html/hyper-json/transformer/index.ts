@@ -1,7 +1,7 @@
 import * as Outcome from '../../../misc/outcome/index.js'
 import { Method } from '../method/index.js'
-import { Tree as TreeNamespace } from '../tree/index.js'
-import { Types } from '../types/index.js'
+import { type Tree as TreeNamespace } from '../tree/index.js'
+import { type Types } from '../types/index.js'
 
 export class Transformer<
   Main extends Types.Tree.RestingValue = Types.Tree.RestingValue,
@@ -13,15 +13,16 @@ export class Transformer<
   innerValue: Types.Tree.RestingValue
   typeChecks: {
     mainValue: (mainValue: Types.Tree.RestingValue) => Outcome.Either<Main, {
-      expected: string,
+      expected: string
       found: string
     }>
     argsValue: (argsValue: Types.Tree.RestingArrayValue, mainValue: Main) => Outcome.Either<Args, {
-      expected: string,
-      found: string,
+      expected: string
+      found: string
       position?: number
     }>
   }
+
   func: Types.Transformations.Function<Main, Args, Output>
   sourceTree: TreeNamespace.Tree
 
@@ -65,7 +66,6 @@ export class Transformer<
     let argsValue: Types.Tree.RestingArrayValue
     if (mode === 'isolation') {
       if (Array.isArray(innerValue)) {
-        innerValue
         mainValue = innerValue.at(0) ?? []
         argsValue = innerValue.slice(1)
       } else {
@@ -95,7 +95,7 @@ export class Transformer<
       transformerName: name,
       path: sourceTree.pathString,
       mainValue,
-      argsValue,
+      argsValue
     }
   }
 
@@ -117,7 +117,7 @@ export class Transformer<
       transformerName: name,
       path: sourceTree.pathString,
       mainValue,
-      argsValue,
+      argsValue
     }
   }
 
@@ -133,19 +133,17 @@ export class Transformer<
       transformerName: name,
       path: sourceTree.pathString,
       mainValue,
-      argsValue,
+      argsValue
     }
   }
-  
+
   apply (outerValue: Types.Tree.RestingValue): Types.Transformations.Output {
-    const {
-      getMainAndArgsValue,
-      typeChecks,
-      makeMainValueError,
-      makeArgsValueError,
-      makeTransformationError,
-      func
-    } = this
+    const getMainAndArgsValue = this.getMainAndArgsValue.bind(this)
+    const makeMainValueError = this.makeMainValueError.bind(this)
+    const makeArgsValueError = this.makeArgsValueError.bind(this)
+    const makeTransformationError = this.makeTransformationError.bind(this)
+    const func = this.func.bind(this)
+    const { typeChecks } = this
     const { mainValue, argsValue } = getMainAndArgsValue(outerValue)
     const mainChecked = typeChecks.mainValue(mainValue)
     if (!mainChecked.success) return Outcome.makeFailure(makeMainValueError(

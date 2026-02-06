@@ -7,7 +7,7 @@
  * @example
  * trimStart("   hello") // => "hello"
  */
-export function trimStart (string: string) {
+export function trimStart (string: string): string {
   return string.replace(/^\s*/, '')
 }
 
@@ -20,6 +20,6 @@ export function trimStart (string: string) {
  * @example
  * trimEnd("hello   ") // => "hello"
  */
-export function trimEnd (string: string) {
+export function trimEnd (string: string): string {
   return string.replace(/\s*$/, '')
 }

@@ -13,7 +13,7 @@ export const defaultOptions: SanitizeHtmlOptions = { depth: 20 }
 
 /**
  * Sanitizes an HTML string according to the provided options.
- * 
+ *
  * @deprecated
  * @security
  * ⚠️ SECURITY WARNING
@@ -48,7 +48,7 @@ export function sanitizeHtml (inputStr: string, options: SanitizeHtmlOptions = d
 
 /**
  * Recursively sanitizes a DOM element and its descendants according to the provided options.
- * 
+ *
  * @deprecated
  * @security
  * ⚠️ SECURITY WARNING
@@ -90,21 +90,21 @@ export function sanitizeElement (
     console.warn('Max depth reached')
     return null
   }
-  
+
   // Element's tag name checkup
   const normalizedTagName = tagName.toLowerCase().trim()
   const tagIsInForbidden = forbiddenTags.includes('*') || forbiddenTags.includes(normalizedTagName)
   if (tagIsInForbidden) {
-    if (verbose === true) console.warn(tagName, 'tag is forbidden')
+    if (verbose) console.warn(tagName, 'tag is forbidden')
     return null
   }
-  const tagIsInAllowed = allowedTags.includes('*') || allowedTags.includes(normalizedTagName)  
+  const tagIsInAllowed = allowedTags.includes('*') || allowedTags.includes(normalizedTagName)
   if (!tagIsInAllowed) {
-    if (verbose === true) console.warn(tagName, 'tag is not allowed')
+    if (verbose) console.warn(tagName, 'tag is not allowed')
     return null
   }
   const returnedElement = Window.get().document.createElement(tagName)
-  
+
   // Element's attributes checkup
   const returnedAttributes = Array.from(attributes).filter(({ name: attributeName, value: attributeValue }) => {
     const allTagsForbiddenAttributes = forbiddenAttributes['*'] ?? [] as AttributeNameValPair[]
@@ -112,24 +112,25 @@ export function sanitizeElement (
     const mergedForbiddenAttributes: AttributeNameValPair[] = [...allTagsForbiddenAttributes, ...thisTagForbiddenAttributes]
     const isInForbidden = mergedForbiddenAttributes.some(({
       attributeName: nameTester,
-      attributeValues: valTesters }) => {
+      attributeValues: valTesters
+    }) => {
       if (typeof nameTester === 'string' && nameTester !== '*' && attributeName !== nameTester) return false // attribute name doesnt match
       if (typeof nameTester !== 'string' && !nameTester.test(attributeName)) return false // attribute name doesnt match
       if (valTesters === undefined) {
-        if (verbose === true) console.warn(attributeName, 'attribute on', tagName, 'tag is forbidden')
+        if (verbose) console.warn(attributeName, 'attribute on', tagName, 'tag is forbidden')
         return true // attribute name matches, and all values are forbidden
       }
       if (valTesters.includes('*')) {
-        if (verbose === true) console.warn(attributeName, 'attribute on', tagName, 'tag is forbidden')
+        if (verbose) console.warn(attributeName, 'attribute on', tagName, 'tag is forbidden')
         return true // attribute name matches, and all values are EXPLICITLY forbidden
       }
       return valTesters.some(valTester => {
         if (typeof valTester === 'string' && attributeValue === valTester) {
-          if (verbose === true) console.warn(attributeValue, 'value for', attributeName, 'attribute on', tagName, 'tag is forbidden. Rule:', valTester)
+          if (verbose) console.warn(attributeValue, 'value for', attributeName, 'attribute on', tagName, 'tag is forbidden. Rule:', valTester)
           return true // attribute value strictly matches
         }
         if (typeof valTester !== 'string' && valTester.test(attributeValue)) {
-          if (verbose === true) console.warn(attributeValue, 'value for', attributeName, 'attribute on', tagName, 'tag is forbidden. Rule:', valTester)
+          if (verbose) console.warn(attributeValue, 'value for', attributeName, 'attribute on', tagName, 'tag is forbidden. Rule:', valTester)
           return true // attribute value partially matches
         }
         return false
@@ -142,7 +143,8 @@ export function sanitizeElement (
     let latestNotAllowedReason: string[] = [tagName, 'has no allowed attributes']
     const isInAllowed = mergedAllowedAttributes.some(({
       attributeName: nameTester,
-      attributeValues: valTesters }) => {
+      attributeValues: valTesters
+    }) => {
       if (typeof nameTester === 'string' && nameTester !== '*' && attributeName !== nameTester) {
         latestNotAllowedReason = [attributeName, 'attribute on', tagName, 'tag is not allowed']
         return false // attribute name doesnt match
@@ -161,12 +163,12 @@ export function sanitizeElement (
       })
     })
     if (!isInAllowed) {
-      if (verbose === true) console.warn(...latestNotAllowedReason)
+      if (verbose) console.warn(...latestNotAllowedReason)
       return false
     }
     return true
   })
-  
+
   returnedAttributes.forEach(({ name, value }) => {
     returnedElement.setAttribute(name, value)
   })

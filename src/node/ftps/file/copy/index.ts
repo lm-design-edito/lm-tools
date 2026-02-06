@@ -1,4 +1,4 @@
-import { Client } from 'basic-ftp'
+import { type Client } from 'basic-ftp'
 import { PassThrough } from 'node:stream'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
@@ -36,8 +36,8 @@ export async function copy (
   options?: CopyOptions
 ): Promise<Outcome.Either<true, string>> {
   const {
-    overwrite  = false,
-    ensureDir  = true
+    overwrite = false,
+    ensureDir = true
   } = options ?? {}
 
   try {
@@ -52,7 +52,7 @@ export async function copy (
     // Create missing target directories if requested
     if (ensureDir) {
       const dirPath = targetPath.substring(0, targetPath.lastIndexOf('/'))
-      if (dirPath) await ftpClient.ensureDir(dirPath)
+      await ftpClient.ensureDir(dirPath)
     }
 
     // Stream copy: download → PassThrough → upload

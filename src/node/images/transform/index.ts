@@ -1,14 +1,14 @@
-import sharp from 'sharp'
+import type sharp from 'sharp'
 import * as Outcome from '../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../agnostic/errors/unknown-to-string/index.js'
 import { isNonNullObject } from '../../../agnostic/objects/is-object/index.js'
 import {
   OpName,
-  OperationDescriptor,
-  TransformLimits,
-  TransformErr,
+  type OperationDescriptor,
+  type TransformLimits,
+  type TransformErr,
   TransformErrCodes,
-  ImageLike
+  type ImageLike
 } from '../types.js'
 import { toSharpInstance } from '../utils/index.js'
 
@@ -56,15 +56,20 @@ export function isOperationDescriptor (obj: unknown): Outcome.Either<OperationDe
   if (!isNonNullObject(obj)) return Outcome.makeFailure('Invalid operation descriptor')
   if (!('name' in obj) || typeof obj.name !== 'string') return Outcome.makeFailure('Field named \'name\' in operation descriptor is required and must be a string')
   const name = obj.name as OpName
-  const validateOperation = (validatorFn: (obj: unknown) => any) => {
+  const validateOperation = (validatorFn: typeof validators[keyof typeof validators]): Outcome.Either<any, any> => {
     const result = validatorFn(obj)
-    if (result.success) return Outcome.makeSuccess({ name: obj.name, ...result.payload })
+    if (result.success) return Outcome.makeSuccess({
+      name: obj.name,
+      ...result.payload
+    })
     return Outcome.makeFailure(result.error)
   }
   const simpleOperations = new Set([OpName.FLIP, OpName.FLOP] as const)
-  if (simpleOperations.has(name as any)) return Outcome.makeSuccess({ name: name as OpName.FLIP | OpName.FLOP })
+  if (simpleOperations.has(name as OpName.FLIP | OpName.FLOP)) return Outcome.makeSuccess({
+    name: name as OpName.FLIP | OpName.FLOP
+  })
   const validator = validators[name as keyof typeof validators]
-  if (validator) return validateOperation(validator)
+  if (validator !== undefined) return validateOperation(validator)
   return Outcome.makeFailure('Invalid operation descriptor')
 }
 
@@ -96,8 +101,8 @@ export async function transform (
   // Wrap op with per-operation timeout
   const runWithOpTimeout = async <T>(op: () => Promise<T>): Promise<T | TransformErrCodes.OP_TIMEOUT> => {
     return limits?.opTimeoutMs === undefined
-      ? op()
-      : Promise.race([op(), new Promise<TransformErrCodes.OP_TIMEOUT>(
+      ? await op()
+      : await Promise.race([op(), new Promise<TransformErrCodes.OP_TIMEOUT>(
         resolve => setTimeout(
           () => resolve(TransformErrCodes.OP_TIMEOUT),
           limits.opTimeoutMs
@@ -118,21 +123,21 @@ export async function transform (
     try {
       result = await runWithOpTimeout(async () => {
         switch (operation.name) {
-          case OpName.BLUR: return blur(sharpInstance, operation)
-          case OpName.BRIGHTEN: return brighten(sharpInstance, operation)
-          case OpName.EXTEND: return extend(sharpInstance, operation)
-          case OpName.EXTRACT: return extract(sharpInstance, operation)
-          case OpName.FLATTEN: return flatten(sharpInstance, operation)
-          case OpName.FLIP: return flip(sharpInstance)
-          case OpName.FLOP: return flop(sharpInstance)
-          case OpName.HUE: return hue(sharpInstance, operation)
-          case OpName.LEVEL: return level(sharpInstance, operation)
-          case OpName.LIGHTEN: return lighten(sharpInstance, operation)
-          case OpName.NORMALIZE: return normalize(sharpInstance, operation)
-          case OpName.OVERLAY: return overlay(sharpInstance, operation)
-          case OpName.RESIZE: return resize(sharpInstance, operation)
-          case OpName.ROTATE: return rotate(sharpInstance, operation)
-          case OpName.SATURATE: return saturate(sharpInstance, operation)
+          case OpName.BLUR: return await blur(sharpInstance, operation)
+          case OpName.BRIGHTEN: return await brighten(sharpInstance, operation)
+          case OpName.EXTEND: return await extend(sharpInstance, operation)
+          case OpName.EXTRACT: return await extract(sharpInstance, operation)
+          case OpName.FLATTEN: return await flatten(sharpInstance, operation)
+          case OpName.FLIP: return await flip(sharpInstance)
+          case OpName.FLOP: return await flop(sharpInstance)
+          case OpName.HUE: return await hue(sharpInstance, operation)
+          case OpName.LEVEL: return await level(sharpInstance, operation)
+          case OpName.LIGHTEN: return await lighten(sharpInstance, operation)
+          case OpName.NORMALIZE: return await normalize(sharpInstance, operation)
+          case OpName.OVERLAY: return await overlay(sharpInstance, operation)
+          case OpName.RESIZE: return await resize(sharpInstance, operation)
+          case OpName.ROTATE: return await rotate(sharpInstance, operation)
+          case OpName.SATURATE: return await saturate(sharpInstance, operation)
           default: return sharpInstance
         }
       })
@@ -159,13 +164,11 @@ export async function transform (
       try {
         const meta = await sharpInstance.metadata() // can throw
         if (limits.width !== undefined
-          && meta.width
           && meta.width > limits.width) return Outcome.makeFailure({
           code: TransformErrCodes.WIDTH_LIMIT_EXCEEDED,
           details: `Image width exceeded the limit (${meta.width}px)`
         })
         if (limits.height !== undefined
-          && meta.height
           && meta.height > limits.height) return Outcome.makeFailure({
           code: TransformErrCodes.HEIGHT_LIMIT_EXCEEDED,
           details: `Image height exceeded the limit (${meta.height}px)`

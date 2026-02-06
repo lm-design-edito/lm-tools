@@ -3,7 +3,7 @@ import { insertNode } from '../../../../../html/insert-node/index.js'
 import * as Outcome from '../../../../../misc/outcome/index.js'
 import { Cast } from '../../../cast/index.js'
 import { Utils } from '../../../utils/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { SmartTags } from '../../index.js'
 
 type Main = Element | NodeListOf<Element | Text>
@@ -77,7 +77,6 @@ export const transformselected = SmartTags.makeSmartTag<Main, Args, Output>({
         insertNode(Cast.toText(replacer), 'after', selected)
         selected.remove()
       }
-      transformedChecked.payload
     }
     if (main instanceof Element) return makeSuccess(mainClone)
     const safeChildren = Array.from(mainClone.childNodes)

@@ -1,8 +1,8 @@
 import {
-  Bucket,
-  FileOptions,
-  CopyOptions as GCSCopyOptions,
-  DeleteFileOptions as GCSDeleteOptions
+  type Bucket,
+  type FileOptions,
+  type CopyOptions as GCSCopyOptions,
+  type DeleteFileOptions as GCSDeleteOptions
 } from '@google-cloud/storage'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
@@ -44,12 +44,12 @@ export async function moveDir (
 ): Promise<Outcome.Either<true, string>> {
   const { fileOptions, copyOptions, deleteOptions, overwrite = false } = options ?? {}
   const from = sourceDir.endsWith('/') ? sourceDir : `${sourceDir}/`
-  const to   = targetDir.endsWith('/')   ? targetDir   : `${targetDir}/`
+  const to = targetDir.endsWith('/') ? targetDir : `${targetDir}/`
 
   try {
     const [files] = await bucket.getFiles({ prefix: from })
     for (const f of files) {
-      const rel  = f.name.substring(from.length)
+      const rel = f.name.substring(from.length)
       const dest = `${to}${rel}`
       const srcFile = bucket.file(f.name, fileOptions)
       const destFile = bucket.file(dest, fileOptions)

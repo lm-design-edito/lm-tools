@@ -17,7 +17,6 @@ describe('stringToNodes', () => {
   })
 
   it('converts multiple elements', () => {
-    const { Node } = Window.get()
     const result = stringToNodes('<div>1</div><span>2</span>')
     expect(result).toHaveLength(2)
     expect((result[0] as Element).tagName).toBe('DIV')

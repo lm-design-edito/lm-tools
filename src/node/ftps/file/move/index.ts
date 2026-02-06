@@ -1,4 +1,4 @@
-import { Client } from 'basic-ftp'
+import { type Client } from 'basic-ftp'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 
@@ -23,9 +23,9 @@ export type MoveOptions = {
  * The function performs a simple `rename` operation, which moves the file from
  * `sourcePath` to `targetPath`.  It supports two safety features:
  *
- * 1. **ensureDir** – If enabled, the parent directory of `targetPath`
+ * 1. **ensureDir** – If enabled, the parent directory of `targetPath`
  *    is created with `ftpClient.ensureDir` before the rename.
- * 2. **overwrite** – If disabled (default) the function first checks whether
+ * 2. **overwrite** – If disabled (default) the function first checks whether
  *    an object already exists at `targetPath`; if so, it aborts.
  *
  * @param {Client} ftpClient  - The basic‑ftp client instance.
@@ -52,18 +52,18 @@ export async function move (
   try {
     if (ensureDir) {
       const dirPath = targetPath.substring(0, targetPath.lastIndexOf('/'))
-      if (dirPath) await ftpClient.ensureDir(dirPath)
+      await ftpClient.ensureDir(dirPath)
     }
 
     if (!overwrite) {
       try {
-        await ftpClient.size(targetPath)          // will succeed if file exists
+        await ftpClient.size(targetPath) // will succeed if file exists
         return Outcome.makeFailure(`File already exists at ${targetPath}.`)
       } catch (err: any) {
-        if (err.code !== 550) {                   // 550 = "not found"; any other error -> propagate
+        if (err.code !== 550) { // 550 = "not found"; any other error -> propagate
           return Outcome.makeFailure(unknownToString(err))
         }
-        // 550 means destination does not exist – proceed
+        // 550 means destination does not exist – proceed
       }
     }
 

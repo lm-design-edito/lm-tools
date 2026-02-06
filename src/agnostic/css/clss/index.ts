@@ -5,13 +5,16 @@ export type Options = {
   cssModule: CssModuleObj
   cssModuleRoot?: string
 }
+export type ClssMaker = (eltNames: EltNamesDescriptor, modNames?: ModsDescriptor) => string
 
-export function clss (blockNames: string | string[], options?: Options) {
+export function clss (
+  blockNames: string | string[],
+  options?: Options
+): ClssMaker {
   const blockNamesArr = Array.isArray(blockNames)
     ? blockNames
     : [blockNames]
-  return (eltNames: EltNamesDescriptor, modNames: ModsDescriptor = []) => {
-      
+  return (eltNames, modNames = []) => {
     // Refine input arguments
     const eltNamesArr = Array.isArray(eltNames) ? eltNames : [eltNames]
     const modNamesArr = (Array.isArray(modNames) ? modNames : [modNames]).map(modName => {
@@ -22,12 +25,11 @@ export function clss (blockNames: string | string[], options?: Options) {
         .map(([key]) => key)
       return trueModNames
     }).flat()
-    
+
     // Prepare returned value
     const outputClassesArr: string[] = []
     blockNamesArr.forEach(compName => {
       eltNamesArr.forEach(eltName => {
-        
         // Un-modified classes
         const targetPublicClss = eltName === null ? compName : `${compName}__${eltName}`
         const targetPrivateClss = eltName === null
@@ -35,7 +37,7 @@ export function clss (blockNames: string | string[], options?: Options) {
           : options?.cssModule[eltName]
         outputClassesArr.push(targetPublicClss)
         if (targetPrivateClss !== undefined) outputClassesArr.push(targetPrivateClss)
-        
+
         // Modified classes
         modNamesArr.forEach(modName => {
           const targetModifiedPublicClss = `${targetPublicClss}--${modName}`
@@ -47,7 +49,7 @@ export function clss (blockNames: string | string[], options?: Options) {
         })
       })
     })
-    
+
     // Return
     return outputClassesArr.join(' ')
   }

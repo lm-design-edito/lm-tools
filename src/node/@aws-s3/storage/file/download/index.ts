@@ -1,8 +1,8 @@
-import { Readable } from 'node:stream'
+import { type Readable } from 'node:stream'
 import {
-  S3Client,
+  type S3Client,
   GetObjectCommand,
-  GetObjectCommandInput
+  type GetObjectCommandInput
 } from '@aws-sdk/client-s3'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
@@ -16,7 +16,7 @@ export type DownloadOptions = Omit<GetObjectCommandInput, 'Bucket' | 'Key'>
 /**
  * Downloads a file from a specified Amazon S3 bucket.
  *
- * The function streams the object’s content back as a Node `Readable`.
+ * The function streams the object’s content back as a Node `Readable`.
  *
  * @param {S3Client} client       - The v3 S3 client instance.
  * @param {string}   bucketName   - The name of the S3 bucket.

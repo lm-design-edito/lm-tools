@@ -4,7 +4,7 @@ import { memoize } from './index.js'
 describe('memoize', () => {
   it('returns the same result for identical arguments without re-calling the wrapped function', () => {
     let callCount = 0
-    const fn = (...args: number[]) => {
+    const fn = (...args: number[]): number => {
       callCount += 1
       return args.reduce((sum, n) => sum + n, 0)
     }
@@ -18,7 +18,7 @@ describe('memoize', () => {
 
   it('recomputes when arguments change (shallow equality)', () => {
     let callCount = 0
-    const fn = (obj: { v: number }) => {
+    const fn = (obj: { v: number }): number => {
       callCount += 1
       return obj.v * 2
     }

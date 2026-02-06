@@ -12,7 +12,7 @@ import * as Window from '../../misc/crossenv/window/index.js'
  * @param {boolean} [traverseShadowRoots] - Whether to traverse through shadow roots via their host elements.
  * @returns {Node[]} An array of ancestor nodes, starting with the provided node.
  */
-export function getNodeAncestors(
+export function getNodeAncestors (
   node: Node,
   traverseShadowRoots?: boolean
 ): Node[] {
@@ -21,10 +21,12 @@ export function getNodeAncestors(
   const { ShadowRoot } = Window.get()
   while (currentNode !== null) {
     returned.push(currentNode)
-    const parentNode = currentNode.parentNode as ParentNode | null
+    const parentNode: ParentNode | null = currentNode.parentNode
     if (parentNode instanceof ShadowRoot) {
       returned.push(parentNode)
-      currentNode = traverseShadowRoots ? parentNode.host : null
+      currentNode = traverseShadowRoots === true
+        ? parentNode.host
+        : null
       continue
     }
     currentNode = currentNode.parentElement

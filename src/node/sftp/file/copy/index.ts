@@ -1,4 +1,5 @@
-import Client, { TransferOptions } from 'ssh2-sftp-client'
+import { type TransferOptions } from 'ssh2-sftp-client'
+import type Client from 'ssh2-sftp-client'
 import { PassThrough } from 'node:stream'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
@@ -36,8 +37,8 @@ export async function copy (
   options?: CopyOptions
 ): Promise<Outcome.Either<true, string>> {
   const {
-    overwrite  = false,
-    ensureDir  = true,
+    overwrite = false,
+    ensureDir = true,
     ...transferOptions
   } = options ?? {}
 
@@ -45,13 +46,13 @@ export async function copy (
     // Abort if destination exists and overwrite is disabled
     if (!overwrite) {
       const exists = await sftp.exists(targetPath)
-      if (exists) return Outcome.makeFailure(`File already exists at ${targetPath}.`)
+      if (exists !== false) return Outcome.makeFailure(`File already exists at ${targetPath}.`)
     }
 
     // Create missing target directories if requested
     if (ensureDir) {
       const dirPath = targetPath.substring(0, targetPath.lastIndexOf('/'))
-      if (dirPath) await sftp.mkdir(dirPath, true)
+      await sftp.mkdir(dirPath, true)
     }
 
     // Stream copy: download → PassThrough → upload

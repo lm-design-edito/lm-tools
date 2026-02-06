@@ -1,6 +1,6 @@
 import * as Outcome from '../../../../../misc/outcome/index.js'
 import { Utils } from '../../../utils/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { SmartTags } from '../../index.js'
 
 type Main = Types.Tree.RestingArrayValue // [WIP] string, text, array, element, nodelist ?
@@ -19,6 +19,6 @@ export const pickrandom = SmartTags.makeSmartTag<Main, Args, Output>({
     const pos = Math.floor(Math.random() * main.length)
     const found = main[pos]
     if (found === undefined) return makeFailure(makeTransformationError('Cannot pick inside empty array'))
-    return makeSuccess(found!)
+    return makeSuccess(found)
   }
 })

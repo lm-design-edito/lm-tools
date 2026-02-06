@@ -131,4 +131,3 @@ describe('escape', () => {
     expect(escaped.includes('\\n')).toBe(true)
   })
 })
-

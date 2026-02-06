@@ -1,5 +1,5 @@
-import { Transformer } from '../transformer/index.js'
-import { Types } from '../types/index.js'
+import { type Transformer } from '../transformer/index.js'
+import { type Types } from '../types/index.js'
 
 export class Method<
   Main extends Types.Tree.RestingValue = Types.Tree.RestingValue,

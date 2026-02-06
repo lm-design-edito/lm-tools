@@ -23,8 +23,8 @@ export async function spawner (
   argsPrintFormat?: (args: string[]) => string[],
   throwOnError?: boolean,
   options?: SpawnOptions
-) {
-  return new Promise<Outcome.Either<Output, Output>>((resolve, reject) => {
+): Promise<Outcome.Either<Output, Output>> {
+  return await new Promise<Outcome.Either<Output, Output>>((resolve, reject) => {
     if (label !== null) console.log('\n' + styles.info(label) + '\n')
     const printableArgs = argsPrintFormat !== undefined ? argsPrintFormat(args) : args
     console.log(styles.light(`> ${command} ${printableArgs.join(' ')}\n`))
@@ -33,19 +33,21 @@ export async function spawner (
     let stderr = ''
     let err: unknown = null
     prcss.stdout?.on('data', data => {
-      stdout += data.toString()
-      console.log(styles.light(data.toString().replace(ansiRegex(), '').trim()))
+      const strData = unknownToString(data)
+      stdout += strData
+      console.log(styles.light(strData.replace(ansiRegex(), '').trim()))
     })
     prcss.stderr?.on('data', data => {
-      stderr += data.toString()
-      console.log(styles.warning(data.toString().replace(ansiRegex(), '').trim()))
+      const strData = unknownToString(data)
+      stderr += strData
+      console.log(styles.warning(strData.replace(ansiRegex(), '').trim()))
     })
     prcss.on('error', e => {
       err = e
       console.log(styles.error(unknownToString(err).replace(ansiRegex(), '').trim()))
     })
     prcss.on('close', code => {
-      if (code !== 0 && throwOnError === true) reject(stderr + '\n' + stdout)
+      if (code !== 0 && throwOnError === true) reject(new Error(stderr + '\n' + stdout))
       else if (code !== 0) return resolve(Outcome.makeFailure({ stdout, stderr, err }))
       else return resolve(Outcome.makeSuccess({ stdout, stderr, err }))
     })
@@ -59,7 +61,7 @@ export function spawnerSync (
   argsPrintFormat?: (args: string[]) => string[],
   throwOnError?: boolean,
   options?: SpawnSyncOptions
-) {
+): Outcome.Either<Output, Output> {
   if (label !== null) console.log('\n' + styles.info(label) + '\n')
   const printableArgs = argsPrintFormat !== undefined ? argsPrintFormat(args) : args
   console.log(styles.light(`> ${command} ${printableArgs.join(' ')}\n`))
@@ -72,12 +74,12 @@ export function spawnerSync (
     console.log(styles.error(unknownToString(err).replace(ansiRegex(), '')))
     console.log('')
   }
-  if (stderr) {
+  if (stderr !== '') {
     console.log(styles.light(chalk.italic('stderr:\n')))
     console.log(styles.warning(stderr.replace(ansiRegex(), '')))
     console.log('')
   }
-  if (stdout) {
+  if (stdout !== '') {
     console.log(styles.light(chalk.italic('stdout:\n')))
     console.log(styles.light(stdout.replace(ansiRegex(), '')))
     console.log('')

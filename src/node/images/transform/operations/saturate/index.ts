@@ -1,4 +1,4 @@
-import sharp from 'sharp'
+import type sharp from 'sharp'
 import z from 'zod'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import type { SaturateOperationParams } from '../../../types.js'

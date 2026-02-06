@@ -43,14 +43,15 @@ export type Formatted<FormatObject> = {
 export async function recordFormat<
   InputObject extends Record<PropertyKey, any>,
   FormatObject extends Format<InputObject>
->(
+> (
   input: InputObject,
   format: FormatObject
 ): Promise<Formatted<FormatObject>> {
-  const result = {} as Formatted<FormatObject>
+  const result: Partial<Formatted<FormatObject>> = {}
   for (const key in format) {
-    const formatter = format[key]!
+    const formatter = format[key]
+    if (formatter === undefined) continue
     result[key] = await formatter(input[key])
   }
-  return result
+  return result as Formatted<FormatObject>
 }

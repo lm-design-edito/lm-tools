@@ -1,19 +1,19 @@
 import {
-  S3Client,
+  type S3Client,
   HeadObjectCommand,
   CopyObjectCommand,
   DeleteObjectCommand,
-  CopyObjectCommandInput,
-  DeleteObjectCommandInput
+  type CopyObjectCommandInput,
+  type DeleteObjectCommandInput
 } from '@aws-sdk/client-s3'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 
 export type MoveOptions = {
   /** Extra parameters forwarded to `CopyObjectCommand` (`Bucket`, `Key`, `CopySource` are filled internally). */
-  copyOptions?:   Omit<CopyObjectCommandInput,  'Bucket' | 'Key' | 'CopySource'>
+  copyOptions?: Omit<CopyObjectCommandInput, 'Bucket' | 'Key' | 'CopySource'>
   /** Extra parameters forwarded to `DeleteObjectCommand` (`Bucket`, `Key` are filled internally). */
-  deleteOptions?: Omit<DeleteObjectCommandInput,'Bucket' | 'Key'>
+  deleteOptions?: Omit<DeleteObjectCommandInput, 'Bucket' | 'Key'>
   /**
    * If **false** (default) and `targetPath` already exists, the move aborts
    * with an error.
@@ -23,7 +23,7 @@ export type MoveOptions = {
 }
 
 /**
- * Moves an object from one key to another within the same S3 bucket (AWS SDK v3).
+ * Moves an object from one key to another within the same S3 bucket (AWS SDK v3).
  *
  * The function copies the object from `sourcePath` to `targetPath` and, upon
  * successful copy, deletes the original object.
@@ -60,11 +60,10 @@ export async function move (
         await client.send(new HeadObjectCommand({ Bucket: bucketName, Key: targetPath }))
         return Outcome.makeFailure(`Object already exists at ${targetPath}.`)
       } catch (err: any) {
-        const notFound =
-          err.$metadata?.httpStatusCode === 404 ||
-          err.name === 'NotFound' ||
-          err.Code === 'NotFound' ||
-          err.Code === 'NoSuchKey'
+        const notFound = err.$metadata?.httpStatusCode === 404
+          || err.name === 'NotFound'
+          || err.Code === 'NotFound'
+          || err.Code === 'NoSuchKey'
         if (!notFound) {
           return Outcome.makeFailure(unknownToString(err))
         }

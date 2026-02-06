@@ -1,8 +1,8 @@
 import {
-  S3Client,
+  type S3Client,
   HeadObjectCommand,
-  HeadObjectCommandInput,
-  HeadObjectCommandOutput
+  type HeadObjectCommandInput,
+  type HeadObjectCommandOutput
 } from '@aws-sdk/client-s3'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
@@ -10,7 +10,7 @@ import { unknownToString } from '../../../../../agnostic/errors/unknown-to-strin
 export interface Stat {
   size?: number
   modifiedAt?: Date
-  checksum?: string          // ETag without quotes
+  checksum?: string // ETag without quotes
   contentType?: string
   metadata?: Record<string, string>
   storageClass?: string
@@ -54,8 +54,7 @@ export async function stat (
     }
     return Outcome.makeSuccess(stat)
   } catch (err: any) {
-    const notFound =
-      err.$metadata?.httpStatusCode === 404 || err.name === 'NotFound'
+    const notFound = err.$metadata?.httpStatusCode === 404 || err.name === 'NotFound'
     if (notFound) return Outcome.makeFailure(`Object not found: ${key}`)
     return Outcome.makeFailure(unknownToString(err))
   }

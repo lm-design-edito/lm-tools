@@ -38,7 +38,7 @@ export type Processor<T> = (
  *
  * @template T - The type of content returned by the fetcher.
  */
-export type Options<T extends any> = {
+export type Options<T> = {
   /** Maximum number of URLs to process. */
   limit: number
   /** Optional delay between processing URLs, in milliseconds, or a function returning the delay. */
@@ -78,7 +78,7 @@ export type Crawler = {
  * @param {Fetcher<T>} options.fetcher - Function that fetches content for each URL.
  * @param {Processor<T>} options.processor - Function that processes fetched content.
  * @returns {Crawler} An object with methods to start crawling, enqueue URLs, flush the waitlist, and access crawler state.
- * 
+ *
  * @example
  * ```typescript
  * const crawler = create({
@@ -91,22 +91,22 @@ export type Crawler = {
  *     // Optionally push more URLs
  *   }
  * });
- * 
+ *
  * await crawler.crawl('https://example.com');
  * console.log('Total processed:', crawler.processed.size);
  * ```
  */
-export function create<T extends any> (options: Options<T>): Crawler {
+export function create<T> (options: Options<T>): Crawler {
   let ops = 0
   const waitlist: string[] = []
-  const push = (...urls: string[]) => waitlist.push(...urls)
-  const flush = () => { waitlist.length = 0 }
+  const push = (...urls: string[]): number => waitlist.push(...urls)
+  const flush = (): void => { waitlist.length = 0 }
   const processed = new Set<string>()
-  const crawl = async (startUrl: string) => {
+  const crawl = async (startUrl: string): Promise<void> => {
     push(startUrl)
     while (waitlist.length > 0 && ops < options.limit) {
       ops++
-      const currentUrl = waitlist[0]!
+      const currentUrl = (waitlist as [string, ...string[]])[0]
       if (!processed.has(currentUrl) || options.allowDuplicates === true) {
         const content = await options.fetcher(currentUrl)
         await options.processor(currentUrl, content, {

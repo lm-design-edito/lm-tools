@@ -18,7 +18,7 @@ export type Nullish = null | undefined
  * @returns {val is Nullish} `true` if the value is nullish, otherwise `false`.
  */
 export function isNullish<T> (val: T | Nullish): val is Nullish {
-  return nullishValues.includes(val as any)
+  return nullishValues.includes(val as Nullish)
 }
 
 /**

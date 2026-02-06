@@ -1,4 +1,8 @@
-export function makeTextBlock (text: string, vPadding: number = 1, hPadding: number = vPadding) {
+export function makeTextBlock (
+  text: string,
+  vPadding: number = 1,
+  hPadding: number = vPadding
+): string {
   const lines = text.split('\n')
   const longestLine = Math.max(...lines.map(line => line.length))
   const textBlockArr = new Array(lines.length + 2 * vPadding)
@@ -9,6 +13,6 @@ export function makeTextBlock (text: string, vPadding: number = 1, hPadding: num
     textBlockArr[linePos + vPadding]?.splice(hPadding, chars.length, ...chars)
   })
   return textBlockArr
-  .map(lineArr => lineArr.join(''))
-  .join('\n')
+    .map(lineArr => lineArr.join(''))
+    .join('\n')
 }

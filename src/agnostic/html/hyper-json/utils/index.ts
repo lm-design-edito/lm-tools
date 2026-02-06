@@ -8,6 +8,7 @@ import { Transformer } from '../transformer/index.js'
 import { Tree as TreeNamespace } from '../tree/index.js'
 import { Types } from '../types/index.js'
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Utils {
   export function clone<T extends Types.Tree.Value = Types.Tree.Value> (value: T): T {
     const { Element, Text, NodeList, document } = Window.get()
@@ -18,7 +19,7 @@ export namespace Utils {
     if (value instanceof Text) return value.cloneNode(true) as T
     if (value instanceof NodeList) {
       const frag = document.createDocumentFragment()
-      const nodes = Array.from(value).map(e => (e as Node).cloneNode(true) as Element | Text)
+      const nodes = Array.from(value).map(e => (e).cloneNode(true) as Element | Text)
       frag.append(...nodes)
       return frag.childNodes as T
     }
@@ -79,7 +80,7 @@ export namespace Utils {
       }
       return actualSubvalue
     }
-  
+
     if (currentValue instanceof Text) {
       if (actualSubvalue === null
         || typeof actualSubvalue === 'boolean'
@@ -99,7 +100,7 @@ export namespace Utils {
       }
       return actualSubvalue
     }
-  
+
     if (currentValue instanceof Element) {
       if (actualSubvalue === null
         || typeof actualSubvalue === 'boolean'
@@ -122,7 +123,7 @@ export namespace Utils {
       }
       return actualSubvalue
     }
-  
+
     if (currentValue instanceof NodeList) {
       if (actualSubvalue === null
         || typeof actualSubvalue === 'boolean'
@@ -145,7 +146,7 @@ export namespace Utils {
       }
       return actualSubvalue
     }
-    
+
     // current value is a record here
     if (typeof subpath === 'number') return { ...currentValue }
     return {
@@ -187,16 +188,19 @@ export namespace Utils {
     const elt = document.createElement('record')
     Object.entries(value).forEach(([key, val]) => {
       const hjVal = toHyperJson(val)
-      if (hjVal instanceof Text) return;
+      if (hjVal instanceof Text) return
       hjVal.setAttribute(TreeNamespace.Tree.keyAttribute, key)
       elt.append(hjVal)
     })
     return elt
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace Transformations {
+
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     export namespace TypeChecks {
-      export function getType<T extends unknown> (value: T): T extends Types.Tree.Value
+      export function getType<T> (value: T): T extends Types.Tree.Value
         ? Types.Tree.ValueTypeName
         : Types.Tree.ValueTypeName | undefined {
         if (singleTypeCheck(value, 'null')) return 'null'
@@ -246,8 +250,8 @@ export namespace Utils {
         }
         return false
       }
-  
-      export function typeCheck<K extends Array<Types.Tree.ValueTypeName>> (
+
+      export function typeCheck<K extends Types.Tree.ValueTypeName[]> (
         value: unknown,
         ...types: K
       ): Outcome.Either<Types.Tree.ValueTypeFromNames<K>, { expected: string, found: string }> {
@@ -258,37 +262,38 @@ export namespace Utils {
           found: getType(value) ?? 'undefined'
         })
       }
-    
-      export function typeCheckMany<K extends Array<Types.Tree.ValueTypeName>> (
+
+      export function typeCheckMany<K extends Types.Tree.ValueTypeName[]> (
         values: unknown[],
         ...types: K
-      ): Outcome.Either<Types.Tree.ValueTypeFromNames<K>[], {
-        position: number
-        expected: string
-        found: string
-      }> {
+      ): Outcome.Either<Array<Types.Tree.ValueTypeFromNames<K>>, {
+          position: number
+          expected: string
+          found: string
+        }> {
         for (const [pos, val] of Object.entries(values)) {
           const checked = typeCheck(val, ...types)
           if (checked.success) continue
           return Outcome.makeFailure({ position: parseInt(pos), ...checked.error })
         }
-        return Outcome.makeSuccess(values as Types.Tree.ValueTypeFromNames<K>[])
+        return Outcome.makeSuccess(values as Array<Types.Tree.ValueTypeFromNames<K>>)
       }
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace Tree {
-    export function mergeNodes (nodes: Element[]) {
+    export function mergeNodes (nodes: Element[]): Element {
       const { document, Text, Element } = Window.get()
       const clones = nodes.map(node => node.cloneNode(true)) as Element[]
       type ChildData = {
-        node: Element,
+        node: Element
         key: string | undefined
       } | {
-        node: Text,
+        node: Text
         key: undefined
       }
-      const allChildren: Array<ChildData> = []
+      const allChildren: ChildData[] = []
       clones.forEach(node => {
         const actionAttribute = node.getAttribute(TreeNamespace.Tree.actionAttribute)?.trim().toLowerCase()
         const actionAttrIsValid = isInEnum(Types.Tree.Merge.Action, actionAttribute ?? '')
@@ -303,27 +308,25 @@ export namespace Utils {
             const childKey = child.getAttribute(TreeNamespace.Tree.keyAttribute) ?? undefined
             return { node: child, key: childKey }
           })
-        if (nodeAction === Types.Tree.Merge.Action.REPLACE) { allChildren.splice(0, allChildren.length) }
-        else if (nodeAction === Types.Tree.Merge.Action.PREPEND) { allChildren.unshift(...children) }
-        else { allChildren.push(...children) }
+        if (nodeAction === Types.Tree.Merge.Action.REPLACE) { allChildren.splice(0, allChildren.length) } else if (nodeAction === Types.Tree.Merge.Action.PREPEND) { allChildren.unshift(...children) } else { allChildren.push(...children) }
       })
       const mergedChildren: typeof allChildren = []
       allChildren.forEach(childData => {
         if (childData.key === undefined) mergedChildren.push(childData)
         else {
-          const childKey = childData.key!
+          const childKey = childData.key
           const alreadyMerged = mergedChildren.find(dat => dat.key === childKey)
-          if (alreadyMerged) return;
+          if (alreadyMerged !== undefined) return
           const toMerge = allChildren.filter(dat => dat.key === childKey)
-          if (toMerge.length === 0) return;
+          if (toMerge.length === 0) return
           const merged = mergeNodes(toMerge.map(dat => dat.node) as [Element])
           mergedChildren.push({ node: merged, key: childKey })
         }
       })
-      const allAttributes = clones.reduce((attributes, node) => ([
+      const allAttributes = clones.reduce<Attr[]>((attributes, node) => ([
         ...Array.from(attributes),
         ...Array.from(node.attributes)
-      ]), [] as Attr[])
+      ]), [])
       const outWrapper = (clones[0]?.cloneNode() ?? document.createElement('div')) as Element
       allAttributes.forEach(attr => outWrapper.setAttribute(attr.name, attr.value))
       outWrapper.append(...mergedChildren.map(e => e.node))
@@ -344,8 +347,9 @@ export namespace Utils {
       throw new Error(`Unknown value type name: ${name}`)
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     export namespace TypeChecks {
-      export function getType<T extends unknown> (value: T): T extends Types.Tree.Value
+      export function getType<T> (value: T): T extends Types.Tree.Value
         ? Types.Tree.ValueTypeName
         : Types.Tree.ValueTypeName | undefined {
         if (singleTypeCheck(value, 'null')) return 'null'
@@ -397,14 +401,14 @@ export namespace Utils {
         }
         return false
       }
-  
-      export function typeCheck<K extends Array<Types.Tree.ValueTypeName>> (
+
+      export function typeCheck<K extends Types.Tree.ValueTypeName[]> (
         value: unknown,
         ...types: K
       ): Outcome.Either<Types.Tree.ValueTypeFromNames<K>, {
-        expected: string
-        found: string
-      }> {
+          expected: string
+          found: string
+        }> {
         const matchesOneType = types.some(type => singleTypeCheck(value, type))
         if (matchesOneType) return Outcome.makeSuccess(value as Types.Tree.ValueTypeFromNames<K>)
         return Outcome.makeFailure({
@@ -412,33 +416,33 @@ export namespace Utils {
           found: getType(value) ?? 'undefined'
         })
       }
-    
-      export function typeCheckMany<K extends Array<Types.Tree.ValueTypeName>> (
+
+      export function typeCheckMany<K extends Types.Tree.ValueTypeName[]> (
         values: unknown[],
         ...types: K
-      ): Outcome.Either<Types.Tree.ValueTypeFromNames<K>[], {
-        position: number
-        expected: string
-        found: string
-      }> {
+      ): Outcome.Either<Array<Types.Tree.ValueTypeFromNames<K>>, {
+          position: number
+          expected: string
+          found: string
+        }> {
         for (const [pos, val] of Object.entries(values)) {
           const checked = typeCheck(val, ...types)
           if (checked.success) continue
           return Outcome.makeFailure({ position: parseInt(pos), ...checked.error })
         }
-        return Outcome.makeSuccess(values as Types.Tree.ValueTypeFromNames<K>[])
+        return Outcome.makeSuccess(values as Array<Types.Tree.ValueTypeFromNames<K>>)
       }
 
-      export function typeCheckManyWithLength<K extends Array<Types.Tree.ValueTypeName>> (
+      export function typeCheckManyWithLength<K extends Types.Tree.ValueTypeName[]> (
         values: unknown[],
         minLength?: number,
         maxLength?: number,
         ...types: K
-      ): Outcome.Either<Types.Tree.ValueTypeFromNames<K>[], {
-        position: number
-        expected: string
-        found: string
-      }> {
+      ): Outcome.Either<Array<Types.Tree.ValueTypeFromNames<K>>, {
+          position: number
+          expected: string
+          found: string
+        }> {
         if (minLength !== undefined && values.length < minLength) return Outcome.makeFailure({
           position: values.length + 1,
           expected: `min length: ${minLength}`,
@@ -451,9 +455,9 @@ export namespace Utils {
         })
         return typeCheckMany(values, ...types)
       }
-  
-      export const isTreeMode = (name: string): name is Types.Tree.Mode => name === 'isolation' || name === 'coalescion' 
-  
+
+      export const isTreeMode = (name: string): name is Types.Tree.Mode => name === 'isolation' || name === 'coalescion'
+
       export const isValueTypeName = (name: string): name is Types.Tree.ValueTypeName => {
         const list: Types.Tree.ValueTypeName[] = [
           'null', 'boolean', 'number', 'string',
@@ -461,14 +465,15 @@ export namespace Utils {
           'transformer', 'method',
           'array', 'record'
         ]
-        return list.includes(name as any)
+        return list.includes(name as Types.Tree.ValueTypeName)
       }
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace SmartTags {
     export const expectEmptyArgs = (args: unknown[]): Outcome.Either<[], {
-      expected: string,
+      expected: string
       found: string
     }> => {
       if (args.length === 0) return Outcome.makeSuccess([])
@@ -482,26 +487,28 @@ export namespace Utils {
       expected: string,
       found: string,
       details?: any
-    ) => ({
+    ): Types.Transformations.FunctionMainValueFailure => ({
       expected,
       found,
       details
-    }) as Types.Transformations.FunctionMainValueFailure
-    
+    })
+
     export const makeArgsValueError = (
       expected: string,
       found: string,
       position?: number,
       details?: any
-    ) => ({
+    ): Types.Transformations.FunctionArgsValueFailure => ({
       expected,
       found,
       position,
       details
-    }) as Types.Transformations.FunctionArgsValueFailure
-    
-    export const makeTransformationError = (details?: any) => ({
+    })
+
+    export const makeTransformationError = (
+      details?: any
+    ): Types.Transformations.FunctionTransformationFailure => ({
       details
-    }) as Types.Transformations.FunctionTransformationFailure
+    })
   }
 }

@@ -7,10 +7,10 @@ import { isDuckTypedSharpInstance, toSharpInstance } from '../../../utils/index.
 import type { OverlayOperationParams } from '../../../types.js'
 
 export function isOverlayOperationParams (obj: unknown): Outcome.Either<OverlayOperationParams, string> {
-  const schema = z.object({ 
+  const schema = z.object({
     input: z.union([
       z.custom<sharp.Sharp>(isDuckTypedSharpInstance),
-      z.custom<Buffer>(Buffer.isBuffer),
+      z.custom<Buffer>(data => Buffer.isBuffer(data)),
       z.string(),
       z.object({
         width: z.number().optional(),

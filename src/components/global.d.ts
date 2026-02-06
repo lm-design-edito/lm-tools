@@ -9,6 +9,6 @@
 
 /* Load scss modules */
 declare module '*.module.css' {
-  const data: { [key: string]: string }
+  const data: Record<string, string>
   export default data
 }

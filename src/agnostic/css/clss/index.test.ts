@@ -20,7 +20,7 @@ describe('clss', () => {
     expect(clss('block')(['elt-1', 'elt-2'])).toEqual('block__elt-1 block__elt-2')
     expect(clss('block')([null, 'elt-1', 'elt-2'])).toEqual('block block__elt-1 block__elt-2')
   })
-  
+
   it('handles modifiers on block correctly', () => {
     expect(clss('block')(null, 'mod')).toEqual('block block--mod')
     expect(clss('block')(null, ['mod-1', 'mod-2'])).toEqual('block block--mod-1 block--mod-2')

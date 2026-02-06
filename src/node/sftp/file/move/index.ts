@@ -25,7 +25,7 @@ export type MoveOptions = {
  *
  * 1. **ensureDir** – If enabled, the parent directory of `targetPath`
  *    is created with `mkdir -p` semantics before the rename.
- * 2. **overwrite** – If disabled (default) the function first checks whether
+ * 2. **overwrite** – If disabled (default) the function first checks whether
  *    something already exists at `targetPath`; if so, it aborts.
  *
  * @param {Client} sftp          - The ssh2‑sftp‑client instance.

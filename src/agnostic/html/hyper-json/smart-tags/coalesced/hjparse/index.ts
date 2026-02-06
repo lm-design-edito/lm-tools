@@ -1,6 +1,6 @@
 import { unknownToString } from '../../../../../errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../../misc/outcome/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
 import { parse } from '../hjstringify/index.js'
@@ -17,6 +17,7 @@ export const hjparse = SmartTags.makeSmartTag<Main, Args, Output>({
   argsValueCheck: a => Utils.SmartTags.expectEmptyArgs(a),
   func: main => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       const parsed = parse(`${main}`)
       return Outcome.makeSuccess(parsed)
     } catch (err) {

@@ -1,3 +1,5 @@
+/* eslint-disable no-useless-escape */
+
 import * as Window from '../../misc/crossenv/window/index.js'
 
 /**
@@ -30,7 +32,9 @@ export function selectorToElement (selector: string): Element {
   const matchedAttrs = selector.match(attributeRegexp) ?? []
   // Extracted
   const tag = matchedTags[matchedTags.length - 1] ?? 'div'
-  const id = matchedIds.length > 0 ? matchedIds[matchedIds.length - 1]?.replace(/^#/, '')! : null
+  const id = matchedIds.length > 0
+    ? matchedIds[matchedIds.length - 1]?.replace(/^#/, '') ?? null
+    : null
   const classes = matchedClasses.map(matchedClass => matchedClass.replace(/^\./, ''))
   const attributes = matchedAttrs.map(matchedAttr => matchedAttr
     .replace(/^\[/, '')
@@ -41,7 +45,7 @@ export function selectorToElement (selector: string): Element {
   if (id !== null) { element.id = id }
   element.classList.add(...classes)
   attributes.forEach(([name, value = '']) => {
-    if (name === undefined) return;
+    if (name === undefined) return
     const cleanValue = value.replace(/^"(.*)"$/, '$1')
     element.setAttribute(name, cleanValue)
   })

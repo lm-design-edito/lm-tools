@@ -1,7 +1,7 @@
 import * as Outcome from '../../../../../misc/outcome/index.js'
 import * as Window from '../../../../../misc/crossenv/window/index.js'
 import { Cast } from '../../../cast/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
 
@@ -33,8 +33,9 @@ export const at = SmartTags.makeSmartTag<Main, Args, Output>({
     const { NodeList } = Window.get()
     if (typeof main === 'string'
       || Array.isArray(main)
-      || main instanceof NodeList) { found = main[numPos] }
-    else {
+      || main instanceof NodeList) {
+      found = main[numPos]
+    } else {
       const strMain = Cast.toString(main)
       found = strMain[numPos]
     }

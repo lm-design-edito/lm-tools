@@ -74,8 +74,8 @@ function lerpHsb (hsb1: Hsba, hsb2: Hsba, amount: number): Hsba {
 }
 
 function lerpLinearRgb (rgb1: Rgba, rgb2: Rgba, amount: number): Rgba {
-  const linearChannel = (v: number) => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
-  const delinearize = (v: number) => v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1/2.4) - 0.055
+  const linearChannel = (v: number): number => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+  const delinearize = (v: number): number => v <= 0.0031308 ? v * 12.92 : 1.055 * Math.pow(v, 1 / 2.4) - 0.055
   const r = delinearize(linearChannel(rgb1.r) + (linearChannel(rgb2.r) - linearChannel(rgb1.r)) * amount)
   const g = delinearize(linearChannel(rgb1.g) + (linearChannel(rgb2.g) - linearChannel(rgb1.g)) * amount)
   const b = delinearize(linearChannel(rgb1.b) + (linearChannel(rgb2.b) - linearChannel(rgb1.b)) * amount)
@@ -102,7 +102,7 @@ function lerpXyz (xyz1: Xyza, xyz2: Xyza, amount: number): Xyza {
  * @param {LerpMethod} [method='rgb'] - The interpolation method to use.
  * @returns {TransformedColor<C1>} The interpolated color in the format of c1.
  */
-export function lerp <C1 extends Color, C2 extends Color>(
+export function lerp <C1 extends Color, C2 extends Color> (
   c1: C1,
   c2: C2,
   amount: number,

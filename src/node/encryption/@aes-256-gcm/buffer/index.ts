@@ -10,7 +10,7 @@ import {
  *
  * @param {Buffer} inputBuffer - The input data to encrypt.
  * @param {string} encryptionKey - The encryption key to use.
- * 
+ *
  * @returns {Outcome.Either<Buffer, string>} The result of the encryption. Success returns the encrypted data as a `Buffer` (with IV prepended), or failure returns an error message.
  */
 export function encrypt (
@@ -28,7 +28,7 @@ export function encrypt (
  *
  * @param {Buffer} encryptedBuffer - The encrypted data to decrypt.
  * @param {string} encryptionKey - The encryption key to use.
- * 
+ *
  * @returns {Outcome.Either<Buffer, string>} The result of the decryption. Success returns the decrypted data as a `Buffer`, or failure returns an error message.
  */
 export function decrypt (

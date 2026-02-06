@@ -1,19 +1,19 @@
-import { Bucket as GCSBucket } from '@google-cloud/storage'
-import { Client as FtpClient } from 'basic-ftp'
-import SftpClient from 'ssh2-sftp-client'
+import { type Bucket as GCSBucket } from '@google-cloud/storage'
+import { type Client as FtpClient } from 'basic-ftp'
+import type SftpClient from 'ssh2-sftp-client'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import {
-  AnyClient,
+  type AnyClient,
   isFtpClient,
   isGcsBucket,
   isS3ClientWithBucket,
   isSftpClient,
-  S3ClientWithBucket
+  type S3ClientWithBucket
 } from '../../clients/index.js'
-import { RemoveOptions as FtpRemoveOptions, remove as ftpRemove } from '../../../ftps/file/remove/index.js'
-import { RemoveOptions as SftpRemoveOptions, remove as sftpRemove } from '../../../sftp/file/remove/index.js'
-import { RemoveOptions as S3RemoveOptions, remove as s3Remove } from '../../../@aws-s3/storage/file/remove/index.js'
-import { RemoveOptions as GcsRemoveOptions, remove as gcsRemove } from '../../../@google-cloud/storage/file/remove/index.js'
+import { type RemoveOptions as FtpRemoveOptions, remove as ftpRemove } from '../../../ftps/file/remove/index.js'
+import { type RemoveOptions as SftpRemoveOptions, remove as sftpRemove } from '../../../sftp/file/remove/index.js'
+import { type RemoveOptions as S3RemoveOptions, remove as s3Remove } from '../../../@aws-s3/storage/file/remove/index.js'
+import { type RemoveOptions as GcsRemoveOptions, remove as gcsRemove } from '../../../@google-cloud/storage/file/remove/index.js'
 
 /** Return type for remove file operations. */
 type Returned = Outcome.Either<true, string>
@@ -76,9 +76,9 @@ export async function removeFile (client: SftpClient, path: string, options?: Sf
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
 export async function removeFile (client: AnyClient, path: string, options?: GcsRemoveOptions | S3RemoveOptions | FtpRemoveOptions | SftpRemoveOptions): Promise<Returned> {
-  if (isGcsBucket(client)) return gcsRemove(client, path, options as GcsRemoveOptions)
-  if (isS3ClientWithBucket(client)) return s3Remove(client.client, path, client.bucketName, options as S3RemoveOptions)
-  if (isFtpClient(client)) return ftpRemove(client, path, options as FtpRemoveOptions)
-  if (isSftpClient(client)) return sftpRemove(client, path, options as SftpRemoveOptions)
+  if (isGcsBucket(client)) return await gcsRemove(client, path, options as GcsRemoveOptions)
+  if (isS3ClientWithBucket(client)) return await s3Remove(client.client, path, client.bucketName, options as S3RemoveOptions)
+  if (isFtpClient(client)) return await ftpRemove(client, path, options as FtpRemoveOptions)
+  if (isSftpClient(client)) return await sftpRemove(client, path, options as SftpRemoveOptions)
   return Outcome.makeFailure('Invalid client type')
 }

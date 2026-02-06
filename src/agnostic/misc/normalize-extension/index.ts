@@ -93,7 +93,7 @@ const defaultAliases: Record<string, string> = {
   plist: 'xml',
   xsl: 'xml',
   xslt: 'xml',
-  svgx: 'svg',
+  svgx: 'svg'
 }
 
 /**

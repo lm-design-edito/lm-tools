@@ -40,7 +40,6 @@ function isConnection (unk: unknown): unk is MinimalConnection {
   if (!isType(unk.type)) return false
   if (!('effectiveType' in unk)) return false
   if (!isEffectiveType(unk.effectiveType)) return false
-  unk
   return true
 }
 
@@ -51,7 +50,7 @@ function isConnection (unk: unknown): unk is MinimalConnection {
  *
  * @returns {MinimalConnection | undefined} A minimal connection object if available, otherwise `undefined`.
  */
-export function getConnection (): MinimalConnection | undefined  {
+export function getConnection (): MinimalConnection | undefined {
   const window = Window.get()
   const navigator = (window as any).navigator
   if (typeof navigator !== 'object' || navigator === null) return undefined

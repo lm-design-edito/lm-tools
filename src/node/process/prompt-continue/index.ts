@@ -26,7 +26,7 @@ export async function promptContinue (
     message: message ?? 'Continue?',
     default: false
   })
-  if (answer === true) return true
+  if (answer) return true
   if (throws) throw new Error('Aborted')
   return false
 }

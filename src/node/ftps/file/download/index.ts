@@ -1,5 +1,5 @@
-import { Readable, PassThrough } from 'node:stream'
-import { Client } from 'basic-ftp'
+import { type Readable, PassThrough } from 'node:stream'
+import { type Client } from 'basic-ftp'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 
@@ -25,7 +25,7 @@ export type DownloadOptions = {
 export async function download (
   ftpClient: Client,
   sourcePath: string,
-  options?: DownloadOptions 
+  options?: DownloadOptions
 ): Promise<Outcome.Either<Readable, string>> {
   const { startAt } = options ?? {}
   const stream = new PassThrough()

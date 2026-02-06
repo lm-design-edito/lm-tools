@@ -1,5 +1,5 @@
 import { linearizeToSRgb, toLab, toRgb, toXyz } from '../convert/index.js'
-import { Color, Rgba, LuminanceMethod } from '../types.js'
+import { type Color, type Rgba, type LuminanceMethod } from '../types.js'
 
 function luminanceRgb (rgb: Rgba): number {
   const { linearR, linearG, linearB } = linearizeToSRgb(rgb)

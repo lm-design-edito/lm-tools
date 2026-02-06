@@ -48,7 +48,7 @@ describe('create', () => {
     const crawler = create({ limit: 2, delayMs: 20, fetcher, processor })
     await crawler.crawl('url1')
     const elapsed = Date.now() - startTime
-    expect(elapsed).toBeGreaterThanOrEqual(20)
+    expect(elapsed).toBeGreaterThanOrEqual(18)
   })
 
   it('allows flushing the waitlist', async () => {

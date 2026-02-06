@@ -2,7 +2,7 @@ import { isRecord } from '../../../../../objects/is-record/index.js'
 import * as Outcome from '../../../../../misc/outcome/index.js'
 import { Cast } from '../../../cast/index.js'
 import { Utils } from '../../../utils/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { SmartTags } from '../../index.js'
 
 type Main = Types.Tree.RestingRecordValue
@@ -58,13 +58,17 @@ export function deepGetProperty (
     const isLast = pos === pathChunks.length - 1
     if (isLast) {
       const val = currentRecord[chunk]
+      // eslint-disable-next-line @typescript-eslint/no-throw-literal
       if (val === undefined) throw 'PROP_UNDEFINED'
       returned = val
-    }
-    else {
+    } else {
       const found = currentRecord[chunk]
-      if (isRecord(found)) currentRecord = found
-      else throw 'NOT_A_RECORD'
+      if (isRecord(found)) {
+        currentRecord = found
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-throw-literal
+        throw 'NOT_A_RECORD'
+      }
     }
   })
   return returned

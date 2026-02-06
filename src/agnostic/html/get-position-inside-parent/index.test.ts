@@ -12,7 +12,7 @@ describe('getPositionInsideParent', () => {
     const parent = document.createElement('div')
     const firstChild = document.createElement('span')
     parent.appendChild(firstChild)
-    
+
     expect(getPositionInsideParent(firstChild)).toBe(0)
   })
 
@@ -25,7 +25,7 @@ describe('getPositionInsideParent', () => {
     parent.appendChild(child1)
     parent.appendChild(child2)
     parent.appendChild(child3)
-    
+
     expect(getPositionInsideParent(child2)).toBe(1)
     expect(getPositionInsideParent(child3)).toBe(2)
   })
@@ -45,7 +45,7 @@ describe('getPositionInsideParent', () => {
     parent.appendChild(text1)
     parent.appendChild(element)
     parent.appendChild(text2)
-    
+
     expect(getPositionInsideParent(element)).toBe(1)
   })
 
@@ -58,7 +58,7 @@ describe('getPositionInsideParent', () => {
     parent.appendChild(child1)
     parent.appendChild(child2)
     parent.appendChild(child3)
-    
+
     parent.removeChild(child1)
     expect(getPositionInsideParent(child2)).toBe(0)
     expect(getPositionInsideParent(child3)).toBe(1)

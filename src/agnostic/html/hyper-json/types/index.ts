@@ -1,16 +1,18 @@
-import * as Outcome from '../../../misc/outcome/index.js'
-import { Logger } from '../../../misc/logs/logger/index.js'
-import { Tree as TreeNamespace } from '../tree/index.js'
-import { Transformer } from '../transformer/index.js'
-import { Method } from '../method/index.js'
+import type * as Outcome from '../../../misc/outcome/index.js'
+import { type Logger } from '../../../misc/logs/logger/index.js'
+import { type Tree as TreeNamespace } from '../tree/index.js'
+import { type Transformer } from '../transformer/index.js'
+import { type Method } from '../method/index.js'
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Types {
-  /* * * * * * * * * * * * * * * * * * * * * * 
+  /* * * * * * * * * * * * * * * * * * * * * *
    *
    * TRANSFORMATIONS
-   * 
+   *
    * * * * * * * * * * * * * * * * * * * * * */
-  
+
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace Transformations {
     export type FunctionMainValueFailure = {
       expected: string
@@ -30,8 +32,8 @@ export namespace Types {
     }
 
     export type FunctionFailurePayload = FunctionMainValueFailure
-      | FunctionArgsValueFailure
-      | FunctionTransformationFailure
+    | FunctionArgsValueFailure
+    | FunctionTransformationFailure
 
     export type FunctionDetailsArg = {
       name: string
@@ -63,14 +65,16 @@ export namespace Types {
     > = Outcome.Either<S, F>
   }
 
-  /* * * * * * * * * * * * * * * * * * * * * * 
+  /* * * * * * * * * * * * * * * * * * * * * *
    *
    * TREE
-   * 
+   *
    * * * * * * * * * * * * * * * * * * * * * */
 
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace Tree {
 
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     export namespace Merge {
       export enum Action {
         APPEND = 'append',
@@ -86,7 +90,7 @@ export namespace Types {
     export type RestingValue = PrimitiveValue | RestingValue[] | { [k: string]: RestingValue }
     export type Value = RestingValue | TransformerValue
     export type RestingArrayValue = RestingValue[]
-    export type RestingRecordValue = { [k: string]: RestingValue }
+    export type RestingRecordValue = Record<string, RestingValue>
 
     export type ValuesTypesNamesIndex = {
       null: null
@@ -114,24 +118,25 @@ export namespace Types {
     }
 
     export type Serialized = { type: 'null', value: null }
-      | { type: 'boolean', value: boolean }
-      | { type: 'number', value: number }
-      | { type: 'string', value: string }
-      | { type: 'text', value: string }
-      | { type: 'element', value: string }
-      | { type: 'nodelist', value: Array<Serialized> }
-      | { type: 'array', value: Array<Serialized> }
-      | { type: 'record', value: { [k: string]: Serialized } }
-      | { type: 'transformer', value: Transformer }
-      | { type: 'method', value: Method }
+    | { type: 'boolean', value: boolean }
+    | { type: 'number', value: number }
+    | { type: 'string', value: string }
+    | { type: 'text', value: string }
+    | { type: 'element', value: string }
+    | { type: 'nodelist', value: Serialized[] }
+    | { type: 'array', value: Serialized[] }
+    | { type: 'record', value: Record<string, Serialized> }
+    | { type: 'transformer', value: Transformer }
+    | { type: 'method', value: Method }
   }
 
-  /* * * * * * * * * * * * * * * * * * * * * * 
+  /* * * * * * * * * * * * * * * * * * * * * *
    *
    * SMART TAGS
-   * 
+   *
    * * * * * * * * * * * * * * * * * * * * * */
 
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace SmartTags {
     export type SmartTag<
       Main extends Types.Tree.RestingValue = Types.Tree.RestingValue,
@@ -141,7 +146,7 @@ export namespace Types {
       defaultMode: Types.Tree.Mode
       isolationInitType: Exclude<Types.Tree.ValueTypeName, 'transformer' | 'method'>
       generator: (innerValue: Types.Tree.RestingValue, mode: Types.Tree.Mode, sourceTree: TreeNamespace.Tree) => {
-        transformer: Transformer<Main, Args, Output>,
+        transformer: Transformer<Main, Args, Output>
         method: Method<Main, Args, Output>
       }
     }
@@ -151,11 +156,11 @@ export namespace Types {
       Args extends Types.Tree.RestingArrayValue = Types.Tree.RestingArrayValue,
       Output extends Types.Tree.RestingValue = Types.Tree.RestingValue
     > = {
-      name: string,
-      defaultMode: Types.Tree.Mode,
-      isolationInitType: Exclude<Types.Tree.ValueTypeName, 'transformer' | 'method'>,
-      mainValueCheck: Transformer<Main, Args, Output>['typeChecks']['mainValue'],
-      argsValueCheck: Transformer<Main, Args, Output>['typeChecks']['argsValue'],
+      name: string
+      defaultMode: Types.Tree.Mode
+      isolationInitType: Exclude<Types.Tree.ValueTypeName, 'transformer' | 'method'>
+      mainValueCheck: Transformer<Main, Args, Output>['typeChecks']['mainValue']
+      argsValueCheck: Transformer<Main, Args, Output>['typeChecks']['argsValue']
       func: Transformer<Main, Args, Output>['func']
     }
 

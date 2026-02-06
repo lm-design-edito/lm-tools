@@ -1,6 +1,6 @@
 import * as Outcome from '../../../../../misc/outcome/index.js'
 import * as Window from '../../../../../misc/crossenv/window/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { Utils } from '../../../utils/index.js'
 import { Cast } from '../../../cast/index.js'
 import { SmartTags } from '../../index.js'
@@ -20,12 +20,12 @@ export const guess = SmartTags.makeSmartTag<Main, Args, Output>({
     const { makeSuccess } = Outcome
     let coalesced = main
     for (const arg of args) coalesced = Utils.coalesceValues(coalesced, 0, arg)
-    const { Text, Element, document } =  Window.get()
+    const { Text, Element, document } = Window.get()
     if (typeof coalesced !== 'string' && !(coalesced instanceof Text)) return makeSuccess(coalesced)
     const strCoalesced = Cast.toString(coalesced)
     if (strCoalesced.trim().toLowerCase() === 'true') return makeSuccess(true)
     if (strCoalesced.trim().toLowerCase() === 'false') return makeSuccess(false)
-    if (strCoalesced.trim().toLowerCase().match(/^\s*-?\s*(\d+(\.\d*)?|\.\d+)\s*$/)) return makeSuccess(parseFloat(strCoalesced))
+    if (strCoalesced.trim().toLowerCase().match(/^\s*-?\s*(\d+(\.\d*)?|\.\d+)\s*$/) !== null) return makeSuccess(parseFloat(strCoalesced))
     if (strCoalesced.trim().toLowerCase() === 'null') return makeSuccess(null)
     try {
       const parsed = JSON.parse(strCoalesced)

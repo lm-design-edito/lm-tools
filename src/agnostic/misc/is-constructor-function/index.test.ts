@@ -3,22 +3,24 @@ import { isConstructorFunction } from './index.js'
 
 describe('isConstructorFunction', () => {
   it('returns true for class declarations', () => {
+    // eslint-disable-next-line @typescript-eslint/no-extraneous-class
     class MyClass {}
     expect(isConstructorFunction(MyClass)).toBe(true)
   })
 
   it('returns true for class expressions', () => {
+    // eslint-disable-next-line @typescript-eslint/no-extraneous-class
     const MyClass = class {}
     expect(isConstructorFunction(MyClass)).toBe(true)
   })
 
   it('returns true for regular functions', () => {
-    function regularFunction () {}
+    function regularFunction (): void {}
     expect(isConstructorFunction(regularFunction)).toBe(true)
   })
 
   it('returns false for arrow functions', () => {
-    const arrowFunction = () => {}
+    const arrowFunction = (): void => {}
     expect(isConstructorFunction(arrowFunction)).toBe(false)
   })
 

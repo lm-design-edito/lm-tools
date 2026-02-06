@@ -1,4 +1,4 @@
-import Client from 'ssh2-sftp-client'
+import type Client from 'ssh2-sftp-client'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 

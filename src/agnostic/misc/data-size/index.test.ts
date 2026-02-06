@@ -15,6 +15,7 @@ describe('DataSize', () => {
   })
 
   it('defaults to byte for unknown units', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     const size = new DataSize(100, 'unknown' as any)
     expect(size.unit).toBe('byte')
   })

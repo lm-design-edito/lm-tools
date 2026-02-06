@@ -1,8 +1,9 @@
 import * as Window from '../../../misc/crossenv/window/index.js'
-import { Types } from '../types/index.js'
+import { type Types } from '../types/index.js'
 import { Transformer } from '../transformer/index.js'
 import { Method } from '../method/index.js'
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Serialize {
   export function serialize (value: Types.Tree.Value): Types.Tree.Serialized {
     const { Text, Element, NodeList } = Window.get()
@@ -49,10 +50,10 @@ export namespace Serialize {
         .filter(e => e.type === 'text' || e.type === 'element')
         .map(deserialize) as Array<Element | Text>
       deserialized.forEach(elt => frag.append(elt.cloneNode(true)))
-      return frag.childNodes as NodeListOf<Element | Text> 
+      return frag.childNodes as NodeListOf<Element | Text>
     }
     if (serialized.type === 'array') {
-      let toRet: Types.Tree.RestingArrayValue = []
+      const toRet: Types.Tree.RestingArrayValue = []
       for (const val of serialized.value) {
         const deserialized = deserialize(val)
         if (deserialized instanceof Transformer) continue
@@ -65,10 +66,10 @@ export namespace Serialize {
     return Object
       .entries(serialized.value)
       .reduce((reduced, [key, serialized]) => {
-      return {
-        ...reduced,
-        [key]: deserialize(serialized)
-      }
-    }, {})
+        return {
+          ...reduced,
+          [key]: deserialize(serialized)
+        }
+      }, {})
   }
 }

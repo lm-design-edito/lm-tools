@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, JSX } from 'react'
+import type { InputHTMLAttributes, JSX } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import * as classes from '../public-classnames.js'
@@ -12,7 +12,7 @@ export type Props = InputHTMLAttributes<HTMLInputElement> & {
   labelAfter?: boolean
 }
 
-export const Input = (props: Props) => {
+export const Input = (props: Props): JSX.Element => {
   const { label, labelAfter } = props
   delete props.label
   delete props.labelAfter

@@ -3,10 +3,10 @@ import { isRecord } from '../../../../../objects/is-record/index.js'
 import * as Window from '../../../../../misc/crossenv/window/index.js'
 import { Cast } from '../../../cast/index.js'
 import { Utils } from '../../../utils/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { SmartTags } from '../../index.js'
 
-type Main = Array<Types.Tree.RestingRecordValue>
+type Main = Types.Tree.RestingRecordValue[]
 type Args = [string | Text]
 type Output = Main
 

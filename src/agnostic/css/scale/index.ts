@@ -43,10 +43,10 @@ export function createScale (descriptor: ScaleDescriptor): (level: number) => st
   }
 }
 
-/* * * * * * * * * * * * * * * * * * 
+/* * * * * * * * * * * * * * * * * *
  *
  * Utils
- * 
+ *
  * * * * * * * * * * * * * * * * * */
 
 type AffineFunction = {
@@ -55,16 +55,16 @@ type AffineFunction = {
 }
 
 function getAffineFunction (
-  x1: number, 
-  y1: number, 
-  x2: number, 
+  x1: number,
+  y1: number,
+  x2: number,
   y2: number): AffineFunction {
   const slope = (y2 - y1) / (x2 - x1)
   const yIntercept = y1 - (x1 * slope)
   return { slope, yIntercept }
 }
 
-function getCssValueFromAffine (affine: AffineFunction) {
+function getCssValueFromAffine (affine: AffineFunction): string {
   const { slope, yIntercept } = affine
   const roundedSlope = round(100 * slope, 3)
   const roundedIntercept = round(yIntercept, 2)

@@ -2,7 +2,7 @@ import * as Window from '../../../../../misc/crossenv/window/index.js'
 import { isNonNullObject } from '../../../../../objects/is-object/index.js'
 import * as Outcome from '../../../../../misc/outcome/index.js'
 import { Method } from '../../../method/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
 
@@ -39,7 +39,7 @@ export function stringify (val: Types.Tree.RestingValue): string {
 }
 
 type JsonPrimitive = string | number | boolean | null
-type JsonValue = JsonPrimitive | Array<JsonValue> | { [k: string]: JsonValue }
+type JsonValue = JsonPrimitive | JsonValue[] | { [k: string]: JsonValue }
 
 export function parse (val: string): Types.Tree.RestingValue {
   const { document } = Window.get()

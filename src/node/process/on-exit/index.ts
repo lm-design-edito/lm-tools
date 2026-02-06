@@ -6,7 +6,8 @@ export const forceExitEvents = ['SIGINT', 'SIGTERM', 'uncaughtException']
  *
  * @param callback - Function to execute before forced exit. Can be async.
  */
-export function beforeForcedExit (callback: () => void | Promise<void>) {
+export function beforeForcedExit (callback: () => void | Promise<void>): void {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   forceExitEvents.forEach(ev => process.on(ev, callback))
 }
 
@@ -15,7 +16,8 @@ export function beforeForcedExit (callback: () => void | Promise<void>) {
  *
  * @param callback - Function to execute before exit. Can be async.
  */
-export function beforeExit (callback: () => void | Promise<void>) {
+export function beforeExit (callback: () => void | Promise<void>): void {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   process.on('beforeExit', callback)
 }
 
@@ -24,7 +26,8 @@ export function beforeExit (callback: () => void | Promise<void>) {
  *
  * @param callback - Function to execute on exit. Can be async.
  */
-export function onExit (callback: () => void | Promise<void>) {
+export function onExit (callback: () => void | Promise<void>): void {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   process.on('exit', callback)
 }
 
@@ -35,11 +38,12 @@ export function onExit (callback: () => void | Promise<void>) {
  *
  * @param callback - Function to execute on any exit. Can be async.
  */
-export function onAllExits (callback: () => void | Promise<void>) {
+export function onAllExits (callback: () => void | Promise<void>): void {
   let alreadyCalled = false
-  const actualCallback = () => {
+  const actualCallback = (): void => {
     if (!alreadyCalled) {
       alreadyCalled = true
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises, @typescript-eslint/no-floating-promises
       callback()
     }
   }

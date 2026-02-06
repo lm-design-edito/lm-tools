@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
 import { describe, it, expect } from 'vitest'
 import { flattenGetters } from './index.js'
 
@@ -53,7 +55,7 @@ describe('flattenGetters', () => {
     expect(() => flattenGetters(undefined as any)).toThrow()
   })
 
-  it ('handles strings and numbers', () => {
+  it('handles strings and numbers', () => {
     expect(flattenGetters(42 as any)).toEqual({})
     expect(flattenGetters('abc' as any)).toEqual({ '0': 'a', '1': 'b', '2': 'c' })
   })

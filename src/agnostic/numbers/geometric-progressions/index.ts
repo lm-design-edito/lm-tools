@@ -1,5 +1,5 @@
 /**
- * Computes the value at a specific level in a geometric progression 
+ * Computes the value at a specific level in a geometric progression
  * between a minimum and maximum over a given number of steps.
  *
  * This function divides the range [min, max] multiplicatively (logarithmically)

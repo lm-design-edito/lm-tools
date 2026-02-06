@@ -37,7 +37,7 @@ export type Replacements = Record<string, string>
  * @param {boolean} [opts.dryRun=false]  - If `true`, skip writing to disk.
  * @returns {Promise<string>} The edited file content as a string.
  */
-export async function readWrite(path: Path, editor: Replacements, opts?: Options): Promise<string>
+export async function readWrite (path: Path, editor: Replacements, opts?: Options): Promise<string>
 /**
  * Reads a file, applies edits, and optionally writes it back.
  *
@@ -54,7 +54,7 @@ export async function readWrite(path: Path, editor: Replacements, opts?: Options
  * @param {boolean} [opts.dryRun=false]  - If `true`, skip writing to disk.
  * @returns {Promise<T>} The edited file content of type `T`.
  */
-export async function readWrite<T extends WriteFileData>(
+export async function readWrite<T extends WriteFileData> (
   path: Path,
   editor: EditorFunc<T>,
   opts?: Options
@@ -72,7 +72,7 @@ export async function readWrite (
       readData.toString()
     )
   const actualWriteOptions = opts.writeOptions ?? opts.readOptions
-  const targetOutput = opts.output === undefined ? path : opts.output
+  const targetOutput = opts.output ?? path
   if (opts.dryRun !== true) await fs.writeFile(targetOutput, edited, actualWriteOptions)
   return edited
 }

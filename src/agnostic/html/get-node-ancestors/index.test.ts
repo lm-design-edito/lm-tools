@@ -22,7 +22,7 @@ describe('getNodeAncestors', () => {
     const child = document.createElement('div')
     grandparent.appendChild(parent)
     parent.appendChild(child)
-    
+
     const result = getNodeAncestors(child)
     expect(result).toHaveLength(3)
     expect(result[0]).toBe(child)
@@ -34,7 +34,7 @@ describe('getNodeAncestors', () => {
     const { document } = Window.get()
     const div = document.createElement('div')
     document.body.appendChild(div)
-    
+
     const result = getNodeAncestors(div)
     expect(result.length).toBeGreaterThan(1)
     expect(result.at(-1)).toBe(document.documentElement)
@@ -46,7 +46,7 @@ describe('getNodeAncestors', () => {
     const shadowRoot = host.attachShadow({ mode: 'open' })
     const shadowChild = document.createElement('span')
     shadowRoot.appendChild(shadowChild)
-    
+
     const result = getNodeAncestors(shadowChild)
     expect(result).toContain(shadowChild)
     expect(result).toContain(shadowRoot)
@@ -59,7 +59,7 @@ describe('getNodeAncestors', () => {
     const shadowRoot = host.attachShadow({ mode: 'open' })
     const shadowChild = document.createElement('span')
     shadowRoot.appendChild(shadowChild)
-    
+
     const result = getNodeAncestors(shadowChild, true)
     expect(result).toContain(shadowChild)
     expect(result).toContain(shadowRoot)

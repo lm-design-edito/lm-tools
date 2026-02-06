@@ -1,13 +1,14 @@
 import { Method } from '../method/index.js'
 import { Transformer } from '../transformer/index.js'
-import { Types } from '../types/index.js'
+import { type Types } from '../types/index.js'
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace SmartTags {
   export function makeSmartTag <
     Main extends Types.Tree.RestingValue = Types.Tree.RestingValue,
     Args extends Types.Tree.RestingArrayValue = Types.Tree.RestingArrayValue,
     Output extends Types.Tree.RestingValue = Types.Tree.RestingValue
-  >(descriptor: Types.SmartTags.Descriptor<Main, Args, Output>): [string, Types.SmartTags.SmartTag<Main, Args, Output>] {
+  > (descriptor: Types.SmartTags.Descriptor<Main, Args, Output>): [string, Types.SmartTags.SmartTag<Main, Args, Output>] {
     return [descriptor.name, {
       defaultMode: descriptor.defaultMode,
       isolationInitType: descriptor.isolationInitType,

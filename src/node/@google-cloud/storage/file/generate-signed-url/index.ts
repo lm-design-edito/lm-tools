@@ -1,4 +1,4 @@
-import { Bucket, FileOptions, GetSignedUrlConfig } from '@google-cloud/storage'
+import { type Bucket, type FileOptions, type GetSignedUrlConfig } from '@google-cloud/storage'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 
@@ -10,7 +10,7 @@ export type GenerateSignedUrlOptions = {
 /**
  * Generates a signed URL that provides temporary access to a file in Google Cloud Storage.
  *
- * This function generates a signed URL for the file located at `sourcePath` in the given bucket. The signed URL 
+ * This function generates a signed URL for the file located at `sourcePath` in the given bucket. The signed URL
  * allows users to perform an action on the file (e.g., `read`, `write`) for a limited time as defined by the `expiresOn` parameter.
  * The behavior can be customized using optional `fileOptions` and `getSignedUrlOptions`.
  *
@@ -38,7 +38,7 @@ export async function generateSignedUrl (
       expires: expiresOn,
       ...getSignedUrlOptions
     })
-    return Outcome.makeSuccess(url);
+    return Outcome.makeSuccess(url)
   } catch (err) {
     const errStr = unknownToString(err)
     return Outcome.makeFailure(errStr)

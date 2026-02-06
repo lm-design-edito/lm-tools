@@ -7,7 +7,10 @@ import path from 'node:path'
  * @param parentPath - The parent directory path.
  * @returns `true` if `childPath` is within `parentPath`, `false` otherwise.
  */
-export function isInDirectory (childPath: string, parentPath: string) {
+export function isInDirectory (
+  childPath: string,
+  parentPath: string
+): boolean {
   const rel = path.relative(parentPath, childPath)
   return rel !== '' && !rel.startsWith('..')
 }

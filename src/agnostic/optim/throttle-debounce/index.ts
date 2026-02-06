@@ -2,22 +2,33 @@ import type { NodeTimeout } from './types.js'
 
 type BasicFunction = (...args: any[]) => any
 
+type ThrottledResult<T extends BasicFunction> = {
+  throttled: (...args: any[]) => {
+    returnValue: ReturnType<T> | undefined
+    lastExecutedOn: number
+    delayMs: number
+    isCached: boolean
+  }
+  setDelay: (delayMs: number) => void
+}
+
 /**
  * Returns a throttled version of the function passed as an argument
  * @param toThrottleFunc - The function that has to be throttled
  * @param delayMs - The throttle delay in ms
  */
-export function throttle <T extends BasicFunction = BasicFunction>(
+export function throttle <T extends BasicFunction = BasicFunction> (
   toThrottleFunc: T,
-  delayMs: number) {
+  delayMs: number
+): ThrottledResult<T> {
   let currentDelayMs = delayMs
   let lastArgs: any[] = []
   let lastExecutedOn: number = 0
-  let lastReturnValue: ReturnType<T> | undefined = undefined
+  let lastReturnValue: ReturnType<T> | undefined
   let nextExecutionTimeout: NodeTimeout | number | null = null
-  
+
   /** Schedules a next call according to the delay */
-  function scheduleNextCall () {
+  function scheduleNextCall (): void {
     if (nextExecutionTimeout !== null) {
       clearTimeout(nextExecutionTimeout)
       nextExecutionTimeout = null
@@ -27,17 +38,19 @@ export function throttle <T extends BasicFunction = BasicFunction>(
     const msTillNextExecution = nextExecutionTimestamp - now
     nextExecutionTimeout = setTimeout(() => {
       nextExecutionTimeout = null
-      const returnValue = toThrottleFunc(...lastArgs)      
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      const returnValue = toThrottleFunc(...lastArgs)
       lastReturnValue = returnValue
       lastExecutedOn = now
     }, msTillNextExecution) ?? null
   }
 
   /** The throttled function */
-  function throttled (...args: any[]) {
+  function throttled (...args: any[]): ReturnType<ThrottledResult<T>['throttled']> {
     const now = Date.now()
     lastArgs = args
     if (now - lastExecutedOn >= delayMs) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const returnValue = toThrottleFunc(...lastArgs)
       lastReturnValue = returnValue
       lastExecutedOn = now
@@ -58,7 +71,7 @@ export function throttle <T extends BasicFunction = BasicFunction>(
   }
 
   /** Changes the throttle delay */
-  function setDelay (delayMs: number) {
+  function setDelay (delayMs: number): void {
     currentDelayMs = delayMs
     if (nextExecutionTimeout !== null) scheduleNextCall()
   }
@@ -69,24 +82,34 @@ export function throttle <T extends BasicFunction = BasicFunction>(
   }
 }
 
+type DebounceResult<T extends BasicFunction> = {
+  debounced: (...args: any[]) => {
+    returnValue: ReturnType<T> | undefined
+    lastExecutedOn: number
+    delayMs: number
+    isCached: boolean
+  }
+  setDelay: (delayMs: number) => void
+}
+
 /**
  * Returns a debounced version of the function passed as an argument
  * @param toDebounceFunc - The function that has to be debounced
  * @param delayMs - The debounce delay in ms
  */
-export function debounce <T extends BasicFunction = BasicFunction>(
+export function debounce <T extends BasicFunction = BasicFunction> (
   toDebounceFunc: T,
   delayMs: number
-) {
+): DebounceResult<T> {
   let currentDelayMs = delayMs
   let lastArgs: any[] = []
   let lastCalledOn: number = 0
   let lastExecutedOn: number = 0
-  let lastReturnValue: ReturnType<T> | undefined = undefined
+  let lastReturnValue: ReturnType<T> | undefined
   let nextExecutionTimeout: NodeTimeout | number | null = null
 
   /** Schedules a next call according to the delay */
-  function scheduleNextCall () {
+  function scheduleNextCall (): void {
     if (nextExecutionTimeout !== null) {
       clearTimeout(nextExecutionTimeout)
       nextExecutionTimeout = null
@@ -96,18 +119,20 @@ export function debounce <T extends BasicFunction = BasicFunction>(
     const msTillNextExecution = nextExecutionTimestamp - now
     nextExecutionTimeout = setTimeout(() => {
       nextExecutionTimeout = null
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const returnValue = toDebounceFunc(...lastArgs)
       lastReturnValue = returnValue
       lastExecutedOn = now
     }, msTillNextExecution) ?? null
   }
-  
+
   /** The debounced function */
-  function debounced (...args: any[]) {
+  function debounced (...args: any[]): ReturnType<DebounceResult<T>['debounced']> {
     const now = Date.now()
     lastArgs = args
     if (now - lastCalledOn >= currentDelayMs) {
       lastCalledOn = now
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const returnValue = toDebounceFunc(...lastArgs)
       lastReturnValue = returnValue
       lastExecutedOn = now
@@ -129,7 +154,7 @@ export function debounce <T extends BasicFunction = BasicFunction>(
   }
 
   /** Changes the debounce delay */
-  function setDelay (delayMs: number) {
+  function setDelay (delayMs: number): void {
     currentDelayMs = delayMs
     if (nextExecutionTimeout !== null) scheduleNextCall()
   }

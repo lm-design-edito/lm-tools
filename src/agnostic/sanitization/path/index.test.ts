@@ -19,4 +19,3 @@ describe('sanitizePath', () => {
     expect(result?.startsWith('/')).toBe(true)
   })
 })
-

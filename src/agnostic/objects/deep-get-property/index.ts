@@ -17,14 +17,14 @@ export function deepGetProperty (
   let returned: any = currentObject
   pathChunks.forEach((chunk, pos) => {
     const isLast = pos === pathChunks.length - 1
-    if (!isRecord(currentObject)) throw 'PROPERTY_UNREACHABLE'
+    if (!isRecord(currentObject)) throw new Error('PROPERTY_UNREACHABLE')
     if (isLast) {
       const val = currentObject[chunk]
       returned = val
     } else {
       const found = currentObject[chunk]
       if (isRecord(found)) currentObject = found
-      else throw 'PROPERTY_UNREACHABLE'
+      else throw new Error('PROPERTY_UNREACHABLE')
     }
   })
   return returned

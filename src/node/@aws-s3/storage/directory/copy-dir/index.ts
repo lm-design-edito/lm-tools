@@ -1,9 +1,9 @@
 import {
-  S3Client,
+  type S3Client,
   ListObjectsV2Command,
-  ListObjectsV2CommandInput,
+  type ListObjectsV2CommandInput,
   CopyObjectCommand,
-  CopyObjectCommandInput,
+  type CopyObjectCommandInput,
   HeadObjectCommand
 } from '@aws-sdk/client-s3'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
@@ -22,7 +22,7 @@ export type CopyDirOptions = {
 
 /**
  * Recursively copies every object under `sourceDir` to the same relative path
- * beneath `targetDir` in a single S3 bucket (AWS SDK v3).
+ * beneath `targetDir` in a single S3 bucket (AWS SDK v3).
  *
  * @param {S3Client} client - The v3 S3 client instance.
  * @param {string} bucketName - The name of the S3 bucket.
@@ -60,7 +60,7 @@ export async function copyDir (
       )
 
       for (const obj of listResp.Contents ?? []) {
-        if (!obj.Key) continue
+        if (obj.Key === undefined) continue
         const rel = obj.Key.substring(from.length)
         const dest = `${to}${rel}`
 
@@ -88,8 +88,10 @@ export async function copyDir (
         )
       }
 
-      token = listResp.IsTruncated ? listResp.NextContinuationToken : undefined
-    } while (token)
+      token = listResp.IsTruncated === true
+        ? listResp.NextContinuationToken
+        : undefined
+    } while (token !== undefined)
 
     return Outcome.makeSuccess(true)
   } catch (err) {

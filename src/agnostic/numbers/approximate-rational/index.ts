@@ -36,10 +36,9 @@ export function approximateRationalDumb (
       if (roundAbsDiff < closestAbsDiff) {
         closestFound.numerator = numerator
         closestFound.denominator = denominator
-        closestFound.found = roundResult 
+        closestFound.found = roundResult
       }
-      if (roundResult < positiveTarget) { numerator++ }
-      else { denominator++ }
+      if (roundResult < positiveTarget) { numerator++ } else { denominator++ }
     }
   }
   if (target < 0) {
@@ -67,25 +66,25 @@ export function approximateRational (
 ): [number, number] {
   const sign = target < 0 ? -1 : 1
   const absTarget = Math.abs(target)
-  let h1 = 1, h2 = 0  // numerator convergents
-  let k1 = 0, k2 = 1  // denominator convergents
+  let h1 = 1; let h2 = 0 // numerator convergents
+  let k1 = 0; let k2 = 1 // denominator convergents
   let b = absTarget
   do {
     const a = Math.floor(b)
     let temp = h1
     h1 = a * h1 + h2
     h2 = temp
-    
+
     temp = k1
     k1 = a * k1 + k2
     k2 = temp
-    
+
     if (k1 > maxDenominator) {
       k1 = k2
       h1 = h2
       break
     }
-    
+
     b = 1 / (b - a)
   } while (Math.abs(absTarget - h1 / k1) > 1e-10 && Number.isFinite(b))
   return [sign * h1, k1]

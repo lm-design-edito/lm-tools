@@ -102,7 +102,7 @@ function grayscaleCmykVia (cmyk: Cmyka, channel: 'cyan' | 'magenta' | 'yellow' |
     case 'cyan': return { ...cmyk, c, m: c, y: c, k: c }
     case 'magenta': return { ...cmyk, c: m, m, y: m, k: m }
     case 'yellow': return { ...cmyk, c: y, m: y, y, k: y }
-    case 'black': return { ...cmyk, c: k, m: k, y: k, k: k }
+    case 'black': return { ...cmyk, c: k, m: k, y: k, k }
   }
 }
 
@@ -131,7 +131,7 @@ function grayscaleLch (lch: Lcha): Lcha { return { ...lch, c: 0 } }
  * @param {GrayscaleMethod} [method='lab'] - The grayscale conversion method to use.
  * @returns {TransformedColor<C>} The grayscale color in the original format.
  */
-export function grayscale <C extends Color>(
+export function grayscale <C extends Color> (
   color: C,
   method: GrayscaleMethod = 'lab'
 ): TransformedColor<C> {
@@ -143,7 +143,7 @@ export function grayscale <C extends Color>(
     case 'rgb-via-red': return viaRgb(color, rgb => grayscaleRgbVia(rgb, 'red'))
     case 'rgb-via-green': return viaRgb(color, rgb => grayscaleRgbVia(rgb, 'green'))
     case 'rgb-via-blue': return viaRgb(color, rgb => grayscaleRgbVia(rgb, 'blue'))
-    
+
     case 'cmyk-avg': return viaCmyk(color, avgGrayscaleCmyk)
     case 'cmyk-no-black-avg': return viaCmyk(color, avgNoBlackGrayscaleCmyk)
     case 'cmyk-min-channel': return viaCmyk(color, minChannelGrayscaleCmyk)

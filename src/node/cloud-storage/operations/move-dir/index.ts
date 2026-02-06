@@ -1,19 +1,19 @@
-import { Bucket as GCSBucket } from '@google-cloud/storage'
-import { Client as FtpClient } from 'basic-ftp'
-import SftpClient from 'ssh2-sftp-client'
+import { type Bucket as GCSBucket } from '@google-cloud/storage'
+import { type Client as FtpClient } from 'basic-ftp'
+import type SftpClient from 'ssh2-sftp-client'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import {
-  AnyClient,
+  type AnyClient,
   isFtpClient,
   isGcsBucket,
   isS3ClientWithBucket,
   isSftpClient,
-  S3ClientWithBucket
+  type S3ClientWithBucket
 } from '../../clients/index.js'
-import { moveDir as ftpMoveDir, MoveDirOptions as FtpsMoveDirOptions } from '../../../ftps/directory/move-dir/index.js'
-import { moveDir as sftpMoveDir, MoveDirOptions as SftpMoveDirOptions } from '../../../sftp/directory/move-dir/index.js'
-import { MoveDirOptions as S3MoveDirOptions, moveDir as s3MoveDir } from '../../../@aws-s3/storage/directory/move-dir/index.js'
-import { MoveDirOptions as GcsMoveDirOptions, moveDir as gcsMoveDir } from '../../../@google-cloud/storage/directory/move-dir/index.js'
+import { moveDir as ftpMoveDir, type MoveDirOptions as FtpsMoveDirOptions } from '../../../ftps/directory/move-dir/index.js'
+import { moveDir as sftpMoveDir, type MoveDirOptions as SftpMoveDirOptions } from '../../../sftp/directory/move-dir/index.js'
+import { type MoveDirOptions as S3MoveDirOptions, moveDir as s3MoveDir } from '../../../@aws-s3/storage/directory/move-dir/index.js'
+import { type MoveDirOptions as GcsMoveDirOptions, moveDir as gcsMoveDir } from '../../../@google-cloud/storage/directory/move-dir/index.js'
 
 /** Return type for move directory operations. */
 type Returned = Outcome.Either<true, string>
@@ -81,9 +81,9 @@ export async function moveDir (client: SftpClient, sourcePath: string, targetPat
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
 export async function moveDir (client: AnyClient, sourcePath: string, targetPath: string, options?: GcsMoveDirOptions | S3MoveDirOptions | FtpsMoveDirOptions | SftpMoveDirOptions): Promise<Returned> {
-  if (isGcsBucket(client)) return gcsMoveDir(client, sourcePath, targetPath, options as GcsMoveDirOptions)
-  if (isS3ClientWithBucket(client)) return s3MoveDir(client.client, client.bucketName, sourcePath, targetPath, options as S3MoveDirOptions)
-  if (isFtpClient(client)) return ftpMoveDir(client, sourcePath, targetPath, options as FtpsMoveDirOptions)
-  if (isSftpClient(client)) return sftpMoveDir(client, sourcePath, targetPath, options as SftpMoveDirOptions)
+  if (isGcsBucket(client)) return await gcsMoveDir(client, sourcePath, targetPath, options as GcsMoveDirOptions)
+  if (isS3ClientWithBucket(client)) return await s3MoveDir(client.client, client.bucketName, sourcePath, targetPath, options as S3MoveDirOptions)
+  if (isFtpClient(client)) return await ftpMoveDir(client, sourcePath, targetPath, options as FtpsMoveDirOptions)
+  if (isSftpClient(client)) return await sftpMoveDir(client, sourcePath, targetPath, options as SftpMoveDirOptions)
   return Outcome.makeFailure('Invalid client type')
 }

@@ -3,7 +3,7 @@ import { replaceAll } from '../../../../../strings/replace-all/index.js'
 import * as Window from '../../../../../misc/crossenv/window/index.js'
 import { Cast } from '../../../cast/index.js'
 import { Utils } from '../../../utils/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { SmartTags } from '../../index.js'
 import { deepGetProperty } from '../getproperty/index.js'
 

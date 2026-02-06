@@ -1,3 +1,4 @@
+import { isNonNullObject } from 'agnostic/objects/is-object/index.js'
 import { isFalsy } from '../../booleans/is-falsy/index.js'
 import { isValidClassName } from '../is-valid-css-class-name/index.js'
 
@@ -7,7 +8,7 @@ export function getNamesArr (arg: any): string[] {
     arg.trim().split(/\s+/gm).forEach(name => { if (isValidClassName(name)) returned.push(name) })
   } else if (Array.isArray(arg)) {
     arg.forEach(elt => returned.push(...getNamesArr(elt)))
-  } else if (typeof arg === 'object' && arg !== null) {
+  } else if (isNonNullObject(arg)) {
     Object.entries(arg).forEach(([key, val]) => {
       if (!isFalsy(val)) returned.push(...getNamesArr(key))
     })
@@ -42,23 +43,23 @@ export class BEM {
     this.getCurrentBlock = this.getCurrentBlock.bind(this)
   }
 
-  addBlock (blockNameArg: any): BEM {
+  addBlock (blockNameArg: any): this {
     const blocksNames = getNamesArr(blockNameArg)
-    blocksNames.forEach(this.addSingleBlock)
+    blocksNames.forEach(this.addSingleBlock.bind(this))
     return this
   }
 
-  addElement (elementNameArg: any): BEM {
+  addElement (elementNameArg: any): this {
     const elementsNames = getNamesArr(elementNameArg)
-    elementsNames.forEach(this.addSingleElement)
+    elementsNames.forEach(this.addSingleElement.bind(this))
     return this
   }
 
-  addModifier (modifierNameArg: any): BEM {
+  addModifier (modifierNameArg: any): this {
     const currentBlock = this.getCurrentBlock()
     if (currentBlock === undefined) return this
     const modifiersNames = getNamesArr(modifierNameArg)
-    modifiersNames.forEach(this.addSingleModifier)
+    modifiersNames.forEach(this.addSingleModifier.bind(this))
     return this
   }
 
@@ -66,7 +67,7 @@ export class BEM {
     const copy = new BEM()
     this.blocks.forEach(block => {
       copy.addBlock(block.name)
-      block.modifiers.forEach(copy.addModifier)
+      block.modifiers.forEach(copy.addModifier.bind(copy))
     })
     return copy
   }
@@ -91,11 +92,11 @@ export class BEM {
 
   private blocks: Block[] = []
 
-  private findBlockByName (name: string): Block|undefined {
+  private findBlockByName (name: string): Block | undefined {
     return this.blocks.find(block => block.name === name)
   }
 
-  private addSingleBlock (blockName: string): BEM {
+  private addSingleBlock (blockName: string): this {
     if (this.findBlockByName(blockName) !== undefined) {
       this.setCurrentBlockByName(blockName)
     } else {
@@ -105,14 +106,14 @@ export class BEM {
     return this
   }
 
-  private addSingleElement (elementName: string): BEM {
+  private addSingleElement (elementName: string): this {
     const currentBlock = this.getCurrentBlock()
     if (currentBlock === undefined) this.addBlock(elementName)
     else { currentBlock.name = currentBlock.name + '__' + elementName }
     return this
   }
 
-  private addSingleModifier (modifierName: string): BEM {
+  private addSingleModifier (modifierName: string): this {
     const currentBlock = this.getCurrentBlock()
     if (currentBlock !== undefined) {
       currentBlock.modifiers.push(modifierName)
@@ -120,7 +121,7 @@ export class BEM {
     return this
   }
 
-  private setCurrentBlockByName (blockName: string): BEM {
+  private setCurrentBlockByName (blockName: string): this {
     const block = this.findBlockByName(blockName)
     if (block !== undefined) {
       const blockPos = this.blocks.indexOf(block)
@@ -137,7 +138,7 @@ export class BEM {
     return { name: blockName, modifiers: [] }
   }
 
-  private getCurrentBlock (): Block|undefined {
+  private getCurrentBlock (): Block | undefined {
     return this.blocks.slice(-1)[0]
   }
 }

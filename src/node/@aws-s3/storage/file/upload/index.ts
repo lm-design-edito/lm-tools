@@ -1,8 +1,8 @@
-import { Readable } from 'node:stream'
+import { type Readable } from 'node:stream'
 import {
-  S3Client,
+  type S3Client,
   HeadObjectCommand,
-  PutObjectCommandInput
+  type PutObjectCommandInput
 } from '@aws-sdk/client-s3'
 import { Upload } from '@aws-sdk/lib-storage'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
@@ -26,7 +26,7 @@ export type UploadOptions = {
  * @param {UploadOptions} [options] - Optional configuration.
  * @returns {Promise<Outcome.Either<true, string>>}
  */
-export async function upload(
+export async function upload (
   s3: S3Client,
   bucketName: string,
   targetPath: string,

@@ -1,5 +1,5 @@
-import { Readable } from 'node:stream'
-import { Bucket, FileOptions, DownloadOptions as GCSFileDownloadOptions } from '@google-cloud/storage'
+import { type Readable } from 'node:stream'
+import { type Bucket, type FileOptions, type DownloadOptions as GCSFileDownloadOptions } from '@google-cloud/storage'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 
@@ -24,7 +24,7 @@ export type DownloadOptions = {
 export async function download (
   bucket: Bucket,
   sourcePath: string,
-  options?: DownloadOptions 
+  options?: DownloadOptions
 ): Promise<Outcome.Either<Readable, string>> {
   const { fileOptions, downloadOptions } = options ?? {}
   try {

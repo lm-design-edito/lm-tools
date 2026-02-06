@@ -1,4 +1,4 @@
-import { Bucket, FileOptions, FileExistsOptions as GCSFileExistsOptions } from '@google-cloud/storage'
+import { type Bucket, type FileOptions, type FileExistsOptions as GCSFileExistsOptions } from '@google-cloud/storage'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 
@@ -9,9 +9,9 @@ export type ExistsOptions = {
 
 /**
  * Checks if a file exists in the specified bucket.
- * 
+ *
  * This function verifies whether a file at the given `sourcePath` exists in the bucket. It can be configured with options to customize the behavior of the check.
- * 
+ *
  * @param {Bucket} bucket - The GCS bucket to check for the file existence.
  * @param {string} sourcePath - The path of the file to check within the bucket.
  * @param {ExistsOptions} [options] - Optional configuration for the file existence check.
@@ -22,7 +22,7 @@ export type ExistsOptions = {
 export async function exists (
   bucket: Bucket,
   sourcePath: string,
-  options?: ExistsOptions 
+  options?: ExistsOptions
 ): Promise<Outcome.Either<boolean, string>> {
   const { fileOptions, existsOptions } = options ?? {}
   try {

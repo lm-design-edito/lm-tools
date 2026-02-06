@@ -1,4 +1,4 @@
-import { Bucket, FileOptions, CopyOptions as GCSFileCopyOptions } from '@google-cloud/storage'
+import { type Bucket, type FileOptions, type CopyOptions as GCSFileCopyOptions } from '@google-cloud/storage'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 
@@ -21,7 +21,7 @@ export type CopyOptions = {
  * If `overwrite` is **false** (default) and the destination object already
  * exists, the operation aborts.
  *
- * @param {Bucket} bucket - The Google Cloud Storage bucket containing the file.
+ * @param {Bucket} bucket - The Google Cloud Storage bucket containing the file.
  * @param {string} sourcePath - The path of the source object to copy.
  * @param {string} targetPath - The destination path for the copied object.
  * @param {CopyOptions} [options] - Optional copy configuration.
@@ -45,7 +45,7 @@ export async function copy (
   } = options ?? {}
 
   try {
-    const srcFile  = bucket.file(sourcePath, fileOptions)
+    const srcFile = bucket.file(sourcePath, fileOptions)
     const destFile = bucket.file(targetPath, fileOptions)
 
     if (!overwrite) {

@@ -23,7 +23,7 @@ export function matches (input: string, matcher: Matcher): boolean {
  * @param matchers - A matcher or array of matchers.
  * @returns `true` if the input matches at least one matcher, otherwise `false`.
  */
-export function matchesSome (input: string, matchers: Matcher | Array<Matcher>): boolean {
+export function matchesSome (input: string, matchers: Matcher | Matcher[]): boolean {
   if (!Array.isArray(matchers)) return matches(input, matchers)
   return matchers.some(matcher => matches(input, matcher))
 }
@@ -35,7 +35,7 @@ export function matchesSome (input: string, matchers: Matcher | Array<Matcher>):
  * @param matchers - A matcher or array of matchers.
  * @returns `true` if the input matches all matchers, otherwise `false`.
  */
-export function matchesEvery (input: string, matchers: Matcher | Array<Matcher>): boolean {
+export function matchesEvery (input: string, matchers: Matcher | Matcher[]): boolean {
   if (!Array.isArray(matchers)) return matches(input, matchers)
   return matchers.every(matcher => matches(input, matcher))
 }

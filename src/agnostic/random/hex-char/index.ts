@@ -5,5 +5,6 @@ export const hexChars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 
 export function randomHexChar (): string {
   const nbr = Math.floor(Math.random() * 16)
   const char = hexChars[nbr]
-  return char as string
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return char!
 }

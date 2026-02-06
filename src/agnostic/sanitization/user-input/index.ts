@@ -18,6 +18,7 @@ export const sanitizeUserInput = <T>(input: T, seen = new WeakMap()): T => {
     if (seen.has(input)) return seen.get(input)
     const sanitized: unknown[] = []
     seen.set(input, sanitized)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     sanitized.push(...input.map(item => sanitizeUserInput(item, seen)))
     return sanitized as T
   }

@@ -1,5 +1,5 @@
 import {
-  S3Client,
+  type S3Client,
   HeadObjectCommand,
   DeleteObjectCommand
 } from '@aws-sdk/client-s3'

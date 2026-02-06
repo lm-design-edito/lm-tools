@@ -20,7 +20,9 @@ module.exports = {
   rules: {
     '@typescript-eslint/consistent-type-definitions': 'off',
     '@typescript-eslint/no-confusing-void-expression': 'off',
+    '@typescript-eslint/restrict-template-expressions': 'off',
     'curly': 'off',
-    'operator-linebreak': ['error', 'before', { 'overrides': { '=': 'none' } }]
+    'operator-linebreak': ['error', 'before', { 'overrides': { '=': 'none' } }],
+    'quote-props': 'off'
   }
 }

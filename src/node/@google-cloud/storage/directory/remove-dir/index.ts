@@ -1,4 +1,4 @@
-import { Bucket, DeleteFileOptions as GCSDeleteFileOptions } from '@google-cloud/storage'
+import { type Bucket, type DeleteFileOptions as GCSDeleteFileOptions } from '@google-cloud/storage'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 
@@ -7,7 +7,7 @@ export type RemoveDirOptions = {
   deleteOptions?: GCSDeleteFileOptions & { force?: boolean }
   /**
    * If **true** (default) the function ignores the case where the prefix is
-   * already empty / does not exist and simply returns success.  
+   * already empty / does not exist and simply returns success.
    * If **false** and no objects are found, the function returns a failure.
    * @default true
    */

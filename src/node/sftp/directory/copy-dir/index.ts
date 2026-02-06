@@ -1,4 +1,5 @@
-import Client, { TransferOptions } from 'ssh2-sftp-client'
+import { type TransferOptions } from 'ssh2-sftp-client'
+import type Client from 'ssh2-sftp-client'
 import { PassThrough } from 'node:stream'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
@@ -54,12 +55,12 @@ export async function copyDir (
       } else if (entry.type === '-') {
         if (!overwrite) {
           const exists = await sftp.exists(dst)
-          if (exists) throw new Error(`File already exists at ${dst}.`)
+          if (exists !== false) throw new Error(`File already exists at ${dst}.`)
         }
 
         if (ensureDir) {
           const dirPath = dst.substring(0, dst.lastIndexOf('/'))
-          if (dirPath) await sftp.mkdir(dirPath, true)
+          await sftp.mkdir(dirPath, true)
         }
 
         const pass = new PassThrough()

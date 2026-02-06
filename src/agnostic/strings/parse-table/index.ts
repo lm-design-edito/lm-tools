@@ -2,12 +2,12 @@ import * as Outcome from '../../misc/outcome/index.js'
 
 /**
  * Options for delimiter-based table parsing mode.
- * 
+ *
  * In this mode, the table is split into rows and cells using delimiter functions.
  * The header row is parsed into column names, which are then mapped to each body row's cell values.
- * 
+ *
  * @template T - The type of objects in the resulting array, extending `Record<string, string>`.
- * 
+ *
  * @example
  * ```typescript
  * const options: ParseTableLineModeOptions<MyRow> = {
@@ -40,12 +40,12 @@ export type ParseTableLineModeOptions<T extends Record<string, string>> = {
 
 /**
  * Options for fixed-width column parsing mode.
- * 
+ *
  * In this mode, the table is parsed using fixed character positions to define column boundaries.
  * This is useful for parsing terminal output, formatted reports, or any text with consistent column alignment.
- * 
+ *
  * @template T - The type of objects in the resulting array, extending `Record<string, string>`.
- * 
+ *
  * @example
  * ```typescript
  * const options: ParseTableColumnModeOptions<MyRow> = {
@@ -81,11 +81,11 @@ export type ParseTableColumnModeOptions<T extends Record<string, string>> = {
 
 /**
  * Union type of all supported parsing mode options.
- * 
+ *
  * @template T - The type of objects in the resulting array, extending `Record<string, string>`.
  */
-export type ParseTableOptions<T extends Record<string, string>> = 
-  | ParseTableLineModeOptions<T> 
+export type ParseTableOptions<T extends Record<string, string>> =
+  | ParseTableLineModeOptions<T>
   | ParseTableColumnModeOptions<T>
 
 const defaultLineModeOptions: ParseTableLineModeOptions<any> = {
@@ -124,17 +124,17 @@ const defaultColumnModeOptions: ParseTableColumnModeOptions<any> = {
  * @param {function(string): string[]} [options.splitLines] - How to split input into lines.
  * @param {number} [options.headerPos=0] - Index of the header line.
  * @param {[number, number]} [options.bodyBounds=[1, Infinity]] - Range of lines to parse as body rows `[start, end)`.
- * 
+ *
  * **Delimiter-based mode options:**
  * @param {function(string): string[]} [options.splitHeaderCells] - How to split header line into column names.
  * @param {function(string): string[]} [options.splitBodyCells] - How to split body lines into cell values.
- * 
+ *
  * **Fixed-width column mode options:**
  * @param {number[]} [options.columns] - Starting positions for each column.
  * @param {function(string): string} [options.headerCellRefine] - Clean/normalize header names.
  * @param {function(string): string} [options.bodyCellRefine] - Clean/normalize cell values.
  *
- * @returns {Outcome.Either<T[], string>} 
+ * @returns {Outcome.Either<T[], string>}
  * - On success: `{ success: true, payload: T[] }` containing parsed rows.
  * - On failure: `{ success: false, payload: string }` containing error message.
  *
@@ -155,7 +155,7 @@ const defaultColumnModeOptions: ParseTableColumnModeOptions<any> = {
  *   schema: row => row
  * });
  * // result.payload = [{ name: 'Alice', age: '30' }, { name: 'Bob', age: '25' }]
- * 
+ *
  * @example
  * // With schema validation
  * type Person = { name: string; age: string };
@@ -172,21 +172,20 @@ export function parseTable<T extends Record<string, string>> (
   _options: Partial<ParseTableOptions<T>> & { schema: (obj: unknown) => T | undefined }
 ): Outcome.Either<T[], string> {
   // Determine mode: explicit mode, presence of 'columns', or presence of 'splitHeaderCells'
-  const inferredMode: 'line' | 'column' = 
-    'mode' in _options && _options.mode !== undefined
-      ? _options.mode
-      : 'columns' in _options
-        ? 'column'
-        : 'splitHeaderCells' in _options
-          ? 'line'
-          : 'line' // default to line mode
+  const inferredMode: 'line' | 'column' = 'mode' in _options && _options.mode !== undefined
+    ? _options.mode
+    : 'columns' in _options
+      ? 'column'
+      : 'splitHeaderCells' in _options
+        ? 'line'
+        : 'line' // default to line mode
   const options: ParseTableOptions<T> = inferredMode === 'column'
     ? { ...defaultColumnModeOptions, ..._options, mode: 'column' }
     : { ...defaultLineModeOptions, ..._options, mode: 'line' }
   const lines = options.splitLines(table)
   const headLine = lines.at(options.headerPos)
   if (headLine === undefined) return Outcome.makeFailure(`Header line not found at position ${options.headerPos}`)
-  
+
   // Delimiter-based mode (line mode)
   if (options.mode === 'line' && 'splitHeaderCells' in options) {
     const headers = options.splitHeaderCells(headLine)
@@ -208,24 +207,24 @@ export function parseTable<T extends Record<string, string>> (
     })
     return Outcome.makeSuccess(rows)
   }
-  
+
   // Fixed-width column mode
   if (options.mode === 'column' && 'columns' in options) {
     const { columns, headerCellRefine, bodyCellRefine } = options
     if (columns.length === 0) return Outcome.makeFailure('Column mode requires at least one column position')
-    
+
     // Build column boundaries: [start, end) for each column
     const colBounds: Array<[number, number]> = columns.map((colStartPos, colIndex) => {
       const nextColStartPos = columns[colIndex + 1]
       return [colStartPos, nextColStartPos ?? Infinity]
     })
-    
+
     // Extract and refine headers
     const headers = colBounds.map(([start, end]) => {
       const rawHeader = headLine.slice(start, end)
       return headerCellRefine(rawHeader)
     })
-    
+
     // Parse body rows
     const [bodyStart, bodyEnd] = options.bodyBounds
     const bodyLines = lines.slice(bodyStart, bodyEnd)
@@ -243,10 +242,10 @@ export function parseTable<T extends Record<string, string>> (
       const validated = options.schema(row)
       if (validated !== undefined) rows.push(validated)
     })
-    
+
     return Outcome.makeSuccess(rows)
   }
-  
+
   // This should never happen due to type constraints, but provides safety
   return Outcome.makeFailure('Invalid parsing mode configuration')
 }

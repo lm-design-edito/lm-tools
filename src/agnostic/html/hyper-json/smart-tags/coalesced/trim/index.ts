@@ -16,6 +16,6 @@ export const trim = SmartTags.makeSmartTag<Main, Args, Output>({
   func: main => {
     return typeof main === 'string'
       ? Outcome.makeSuccess(main.trim())
-      : Outcome.makeSuccess(Cast.toText(`${main}`.trim()))
+      : Outcome.makeSuccess(Cast.toText((main.textContent ?? '').trim()))
   }
 })

@@ -27,8 +27,8 @@ export type SanitizeHtmlOptions = {
   keepComments?: boolean
   allowedTags?: string[]
   forbiddenTags?: string[]
-  allowedAttributes?: { [tagName: string]: AttributeNameValPair[] }
-  forbiddenAttributes?: { [tagName: string]: AttributeNameValPair[] }
+  allowedAttributes?: Record<string, AttributeNameValPair[]>
+  forbiddenAttributes?: Record<string, AttributeNameValPair[]>
   depth?: number
   verbose?: boolean
 }

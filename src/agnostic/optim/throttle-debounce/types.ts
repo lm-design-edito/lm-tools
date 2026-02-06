@@ -1,3 +1,3 @@
-import { setTimeout } from 'node:timers'
+import { type setTimeout } from 'node:timers'
 
 export type NodeTimeout = ReturnType<typeof setTimeout>

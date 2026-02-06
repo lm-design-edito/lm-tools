@@ -1,7 +1,7 @@
 import {
-  S3Client,
+  type S3Client,
   ListObjectsV2Command,
-  ListObjectsV2CommandInput
+  type ListObjectsV2CommandInput
 } from '@aws-sdk/client-s3'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
@@ -11,7 +11,7 @@ export type ListOptions = Omit<ListObjectsV2CommandInput, 'Bucket' | 'Prefix' | 
 
 /**
  * Lists all direct‑child object keys under a given directory prefix in an S3
- * bucket (AWS SDK v3). The listing is **non‑recursive**.
+ * bucket (AWS SDK v3). The listing is **non‑recursive**.
  *
  * @param {S3Client} client         - The v3 S3 client used to list objects.
  * @param {string}   bucketName     - The name of the S3 bucket.
@@ -40,8 +40,8 @@ export async function list (
     )
 
     const keys = (response.Contents ?? [])
-      .map(obj => obj.Key!)
-      .filter(Boolean)
+      .map(obj => obj.Key)
+      .filter((e): e is string => e !== undefined)
 
     return Outcome.makeSuccess(keys)
   } catch (err) {

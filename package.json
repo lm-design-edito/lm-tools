@@ -17,7 +17,7 @@
     "check:src:components": "npx tsc --project src/components/tsconfig.json --noEmit",
     "check:src:node": "npx tsc --project src/node/tsconfig.json --noEmit",
     "check:src": "npm run check:src:agnostic && npm run check:src:components && npm run check:src:node",
-    "check": "npm run check:scripts && npm run check:src",
+    "check": "npm run check:scripts && npm run lint:src && npm run check:src",
     "tests:node": "vitest run src/node/**/*.tests.ts",
     "tests:agnostic": "vitest run src/agnostic/**/*.tests.ts",
     "tests:react": "vitest run --config vitest.react.config.ts",

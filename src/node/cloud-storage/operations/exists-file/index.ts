@@ -1,19 +1,19 @@
-import { Bucket as GCSBucket } from '@google-cloud/storage'
-import { Client as FtpClient } from 'basic-ftp'
-import SftpClient from 'ssh2-sftp-client'
+import { type Bucket as GCSBucket } from '@google-cloud/storage'
+import { type Client as FtpClient } from 'basic-ftp'
+import type SftpClient from 'ssh2-sftp-client'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import {
-  AnyClient,
+  type AnyClient,
   isFtpClient,
   isGcsBucket,
   isS3ClientWithBucket,
   isSftpClient,
-  S3ClientWithBucket
+  type S3ClientWithBucket
 } from '../../clients/index.js'
 import { exists as ftpExists } from '../../../ftps/file/exists/index.js'
 import { exists as sftpExists } from '../../../sftp/file/exists/index.js'
-import { ExistsOptions as S3ExistsOptions, exists as s3Exists } from '../../../@aws-s3/storage/file/exists/index.js'
-import { ExistsOptions as GcsExistsOptions, exists as gcsExists } from '../../../@google-cloud/storage/file/exists/index.js'
+import { type ExistsOptions as S3ExistsOptions, exists as s3Exists } from '../../../@aws-s3/storage/file/exists/index.js'
+import { type ExistsOptions as GcsExistsOptions, exists as gcsExists } from '../../../@google-cloud/storage/file/exists/index.js'
 
 /** Return type for file existence checks. */
 type Returned = Outcome.Either<boolean, string>
@@ -79,9 +79,9 @@ export async function existsFile (client: SftpClient, path: string): Promise<Ret
  * - On failure:  `Outcome.makeFailure(errStr)` for unexpected errors.
  */
 export async function existsFile (client: AnyClient, path: string, options?: GcsExistsOptions | S3ExistsOptions): Promise<Returned> {
-  if (isGcsBucket(client)) return gcsExists(client, path, options as GcsExistsOptions)
-  if (isS3ClientWithBucket(client)) return s3Exists(client.client, client.bucketName, path, options as S3ExistsOptions)
-  if (isFtpClient(client)) return ftpExists(client, path)
-  if (isSftpClient(client)) return sftpExists(client, path)
+  if (isGcsBucket(client)) return await gcsExists(client, path, options as GcsExistsOptions)
+  if (isS3ClientWithBucket(client)) return await s3Exists(client.client, client.bucketName, path, options as S3ExistsOptions)
+  if (isFtpClient(client)) return await ftpExists(client, path)
+  if (isSftpClient(client)) return await sftpExists(client, path)
   return Outcome.makeFailure('Invalid client type')
 }

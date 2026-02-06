@@ -25,4 +25,3 @@ describe('sanitizeFileName', () => {
     expect(result).toBeNull()
   })
 })
-

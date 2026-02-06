@@ -7,7 +7,7 @@
  * - `null` if the node has no parent.
  */
 export function getPositionInsideParent (node: Node): number | null {
-  if (!node.parentNode) return null
-  const childNodes = Array.from(node.parentNode.childNodes) as Array<Node>
+  if (node.parentNode === null) return null
+  const childNodes = Array.from(node.parentNode.childNodes) as Node[]
   return childNodes.indexOf(node)
 }

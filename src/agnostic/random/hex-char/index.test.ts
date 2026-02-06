@@ -21,4 +21,3 @@ describe('randomHexChar', () => {
     expect(results.every(c => hexChars.includes(c))).toBe(true)
   })
 })
-

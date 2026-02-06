@@ -1,6 +1,6 @@
 /** A standard Unicode character code (number). */
 export type CharCode = number
-  
+
 /** A base-36 encoded character code (string). */
 export type B36CharCode = string
 
@@ -80,7 +80,7 @@ export function charFromB36CharCode (b36CharCode: B36CharCode): string {
  * @param string - Input string.
  * @returns Array of character codes.
  */
-export function toCharCodes (string: string): Array<CharCode> {
+export function toCharCodes (string: string): CharCode[] {
   const chars = string.split('')
   return chars.map(charToCharCode)
 }
@@ -90,7 +90,7 @@ export function toCharCodes (string: string): Array<CharCode> {
  * @param string - Input string.
  * @returns Array of base-36 character codes.
  */
-export function toB36CharCodes (string: string): Array<B36CharCode> {
+export function toB36CharCodes (string: string): B36CharCode[] {
   const chars = string.split('')
   return chars.map(charToB36CharCode)
 }
@@ -102,10 +102,10 @@ export function toB36CharCodes (string: string): Array<B36CharCode> {
  * @param charCodes - Array of character codes.
  * @returns Reconstructed string.
  */
-export function fromCharCodes (charCodes: Array<CharCode>): string {
+export function fromCharCodes (charCodes: CharCode[]): string {
   return charCodes
     .map(charFromCharCode)
-    .map(char => char === null ? '\x00' : char)
+    .map(char => char ?? '\x00')
     .join('')
 }
 
@@ -114,10 +114,10 @@ export function fromCharCodes (charCodes: Array<CharCode>): string {
  * @param b36CharCodes - Array of base-36 character codes.
  * @returns Reconstructed string.
  */
-export function fromB36CharCodes (b36CharCodes: Array<B36CharCode>): string {
+export function fromB36CharCodes (b36CharCodes: B36CharCode[]): string {
   return b36CharCodes
     .map(charFromB36CharCode)
-    .map(char => char === null ? '\x00' : char)
+    .map(char => char ?? '\x00')
     .join('')
 }
 
@@ -139,7 +139,7 @@ export function serialize (charCodes: Array<CharCode | B36CharCode>): string {
  * @param serializedCharCodes - Serialized string.
  * @returns Array of Unicode character codes.
  */
-export function deserialize (serializedCharCodes: string): Array<CharCode> {
+export function deserialize (serializedCharCodes: string): CharCode[] {
   const b36CharCodes = serializedCharCodes.split('')
   return b36CharCodes.map(b36CharCodeToCharCode)
 }

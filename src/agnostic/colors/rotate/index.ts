@@ -3,11 +3,11 @@ import type { Color, TransformedColor, RotateMethod } from '../types.js'
 import { addChannel } from '../channels/index.js'
 import { viaLab, viaLch } from '../convert/index.js'
 
-function rotateHsl <C extends Color>(color: C, degrees: number): TransformedColor<C> {
+function rotateHsl <C extends Color> (color: C, degrees: number): TransformedColor<C> {
   return addChannel(color, 'hue', degrees)
 }
 
-function rotateLab <C extends Color>(color: C, degrees: number): TransformedColor<C> {
+function rotateLab <C extends Color> (color: C, degrees: number): TransformedColor<C> {
   return viaLab(color, lab => {
     const hue = Math.atan2(lab.b, lab.a) * (180 / Math.PI)
     const chroma = Math.sqrt(lab.a ** 2 + lab.b ** 2)
@@ -21,7 +21,7 @@ function rotateLab <C extends Color>(color: C, degrees: number): TransformedColo
   })
 }
 
-function rotateLch <C extends Color>(color: C, degrees: number): TransformedColor<C> {
+function rotateLch <C extends Color> (color: C, degrees: number): TransformedColor<C> {
   return viaLch(color, lch => ({
     ...lch,
     h: absoluteModulo(lch.h + degrees, 360)
@@ -37,7 +37,7 @@ function rotateLch <C extends Color>(color: C, degrees: number): TransformedColo
  * @param {RotateMethod} [method='hsl'] - The color space to use for rotation.
  * @returns {TransformedColor<C>} The rotated color in the original format.
  */
-export function rotate <C extends Color>(
+export function rotate <C extends Color> (
   color: C,
   degrees: number,
   method: RotateMethod = 'hsl'

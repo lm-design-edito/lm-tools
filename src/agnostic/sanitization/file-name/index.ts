@@ -10,9 +10,13 @@
  * @param {number} [maxLength=255] - Maximum allowed length of the sanitized file name.
  * @returns {string | null} Sanitized file name, or null if empty or exceeds maxLength.
  */
-export function sanitizeFileName (input: string, maxLength: number = 255): string | null {
+export function sanitizeFileName (
+  input: string,
+  maxLength: number = 255
+): string | null {
   input = input
     .normalize('NFKC') // Normalize Unicode to avoid homoglyph attacks
+    // eslint-disable-next-line no-control-regex
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '') // Remove invalid characters (e.g., Windows and Unix forbidden characters)
     .trim() // Trim whitespace
     .replace(/\s+/g, ' ') // Replace multiple spaces with a single space

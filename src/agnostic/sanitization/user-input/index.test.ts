@@ -33,4 +33,3 @@ describe('sanitizeUserInput', () => {
     expect(result['sanitized(self)']).toBe(result)
   })
 })
-

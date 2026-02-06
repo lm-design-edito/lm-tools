@@ -11,11 +11,15 @@ export function recordMap<Input extends Record<string, any>, MappedValue> (
   record: Input,
   mapper: (value: Input[keyof Input], key: keyof Input) => MappedValue
 ): { [K in keyof Input]: MappedValue } {
-  const result = {} as { [K in keyof Input]: MappedValue }
+  const result: Partial<{
+    [K in keyof Input]: MappedValue
+  }> = {}
   for (const key in record) {
     if (Object.prototype.hasOwnProperty.call(record, key)) {
       result[key] = mapper(record[key], key)
     }
   }
-  return result
+  return result as {
+    [K in keyof Input]: MappedValue
+  }
 }

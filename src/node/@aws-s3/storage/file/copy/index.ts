@@ -1,7 +1,7 @@
 import {
-  S3Client,
+  type S3Client,
   CopyObjectCommand,
-  CopyObjectCommandInput,
+  type CopyObjectCommandInput,
   HeadObjectCommand
 } from '@aws-sdk/client-s3'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
@@ -54,7 +54,7 @@ export async function copy (
         return Outcome.makeFailure(`Object already exists at ${targetPath}.`)
       } catch (err: any) {
         const notFound = err.$metadata?.httpStatusCode === 404 || err.name === 'NotFound'
-        if (!notFound) throw err          // propagate unexpected errors
+        if (!notFound) throw err // propagate unexpected errors
       }
     }
 

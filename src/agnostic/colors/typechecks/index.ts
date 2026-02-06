@@ -1,15 +1,15 @@
 import { isNonNullObject } from '../../objects/is-object/index.js'
 import {
-  Hex,
-  Rgba,
-  Hsla,
-  Hsba,
-  Laba,
-  Lcha,
-  Cmyka,
-  Xyza,
-  CssColor,
-  Color
+  type Hex,
+  type Rgba,
+  type Hsla,
+  type Hsba,
+  type Laba,
+  type Lcha,
+  type Cmyka,
+  type Xyza,
+  type CssColor,
+  type Color
 } from '../types.js'
 import { cssColors } from '../cssColorsMap.js'
 

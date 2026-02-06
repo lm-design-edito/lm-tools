@@ -1,4 +1,4 @@
-import { Request, Response, RequestHandler } from 'express'
+import { type Request, type Response, type RequestHandler } from 'express'
 import multer from 'multer'
 import * as Outcome from '../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../agnostic/errors/unknown-to-string/index.js'
@@ -8,19 +8,19 @@ export type WithMulterModeOptions = {
   mode: 'none' | 'any'
 } | {
   /** Upload a single file. */
-  mode: 'single',
+  mode: 'single'
   /** The name of the form field containing the file. */
   fieldName: string
 } | {
   /** Upload multiple files from the same field. */
-  mode: 'array',
+  mode: 'array'
   /** The name of the form field containing the files. */
-  fieldName: string,
+  fieldName: string
   /** Maximum number of files allowed. */
   maxCount?: number
 } | {
   /** Upload files from multiple fields. */
-  mode: 'fields',
+  mode: 'fields'
   /** Array of field configurations. */
   fields: multer.Field[]
 }
@@ -30,9 +30,9 @@ export type WithMulterOptions = multer.Options & WithMulterModeOptions
 
 export type WithMulterError = {
   /** Error code from multer or 'UNKNOWN' for non-multer errors. */
-  code: multer.MulterError['code'] | 'UNKNOWN',
+  code: multer.MulterError['code'] | 'UNKNOWN'
   /** Human-readable error message. */
-  message: string,
+  message: string
   /** The form field name that caused the error, if applicable. */
   field?: string
 }
@@ -63,6 +63,7 @@ export async function useMulterMiddleware (
   res: Response,
   options: WithMulterOptions
 ): Promise<Outcome.Either<true, WithMulterError>> {
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   const { storage, limits, fileFilter } = options
   const uploader = multer({
     storage: storage ?? multer.memoryStorage(),
@@ -70,11 +71,7 @@ export async function useMulterMiddleware (
     fileFilter
   })
   let middleware: RequestHandler
-  if (options.mode === 'none') { middleware = uploader.none() }
-  else if (options.mode === 'single') { middleware = uploader.single(options.fieldName) }
-  else if (options.mode === 'array') { middleware = uploader.array(options.fieldName, options.maxCount) }
-  else if (options.mode === 'fields') { middleware = uploader.fields(options.fields) }
-  else { middleware = uploader.any() }
+  if (options.mode === 'none') { middleware = uploader.none() } else if (options.mode === 'single') { middleware = uploader.single(options.fieldName) } else if (options.mode === 'array') { middleware = uploader.array(options.fieldName, options.maxCount) } else if (options.mode === 'fields') { middleware = uploader.fields(options.fields) } else { middleware = uploader.any() }
   return await new Promise<Outcome.Either<true, WithMulterError>>(resolve => middleware(req, res, (err: unknown) => {
     if (err instanceof multer.MulterError) return resolve(Outcome.makeFailure({
       code: err.code,

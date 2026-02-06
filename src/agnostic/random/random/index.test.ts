@@ -80,5 +80,3 @@ describe('randomInt', () => {
     expect(randomInt(10, 5)).toBeUndefined()
   })
 })
-
-

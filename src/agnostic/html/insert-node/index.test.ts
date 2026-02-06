@@ -13,9 +13,9 @@ describe('insertNode', () => {
     const reference = document.createElement('span')
     const node = document.createElement('p')
     parent.appendChild(reference)
-    
+
     insertNode(node, 'before', reference)
-    
+
     expect(parent.childNodes[0]).toBe(node)
     expect(parent.childNodes[1]).toBe(reference)
   })
@@ -26,9 +26,9 @@ describe('insertNode', () => {
     const reference = document.createElement('span')
     const node = document.createElement('p')
     parent.appendChild(reference)
-    
+
     insertNode(node, 'after', reference)
-    
+
     expect(parent.childNodes[0]).toBe(reference)
     expect(parent.childNodes[1]).toBe(node)
   })
@@ -39,9 +39,9 @@ describe('insertNode', () => {
     const reference = document.createElement('span')
     const node = document.createElement('p')
     parent.appendChild(reference)
-    
+
     insertNode(node, 'after', reference)
-    
+
     expect(parent.lastChild).toBe(node)
   })
 
@@ -51,9 +51,9 @@ describe('insertNode', () => {
     const existing = document.createElement('span')
     const node = document.createElement('p')
     parent.appendChild(existing)
-    
+
     insertNode(node, 'startof', parent)
-    
+
     expect(parent.firstChild).toBe(node)
     expect(parent.childNodes[1]).toBe(existing)
   })
@@ -64,9 +64,9 @@ describe('insertNode', () => {
     const existing = document.createElement('span')
     const node = document.createElement('p')
     parent.appendChild(existing)
-    
+
     insertNode(node, 'endof', parent)
-    
+
     expect(parent.lastChild).toBe(node)
     expect(parent.firstChild).toBe(existing)
   })
@@ -75,9 +75,9 @@ describe('insertNode', () => {
     const { document } = Window.get()
     const parent = document.createElement('div')
     const node = document.createElement('p')
-    
+
     insertNode(node, 'startof', parent)
-    
+
     expect(parent.firstChild).toBe(node)
     expect(parent.lastChild).toBe(node)
   })
@@ -86,9 +86,9 @@ describe('insertNode', () => {
     const { document } = Window.get()
     const parent = document.createElement('div')
     const node = document.createElement('p')
-    
+
     insertNode(node, 'endof', parent)
-    
+
     expect(parent.firstChild).toBe(node)
     expect(parent.lastChild).toBe(node)
   })

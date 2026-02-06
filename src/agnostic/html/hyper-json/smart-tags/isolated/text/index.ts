@@ -16,7 +16,9 @@ export const text = SmartTags.makeSmartTag<Main, Args, Output>({
   func: (main, args) => {
     const all = [main, ...args]
     const reduced = all.reduce<Text>((reduced, curr) => {
-      return Cast.toText(`${reduced}${Cast.toText(curr)}`)
+      const red = reduced.textContent ?? ''
+      const cur = Cast.toText(curr).textContent ?? ''
+      return Cast.toText(`${red}${cur}`)
     }, Cast.toText(''))
     return Outcome.makeSuccess(reduced)
   }

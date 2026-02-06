@@ -1,8 +1,8 @@
 import {
-  Bucket,
-  FileOptions,
-  GetFileMetadataOptions as GCSGetFileMetadataOptions,
-  FileMetadata
+  type Bucket,
+  type FileOptions,
+  type GetFileMetadataOptions as GCSGetFileMetadataOptions,
+  type FileMetadata
 } from '@google-cloud/storage'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
@@ -15,7 +15,7 @@ export type GetMetadataOptions = {
 /**
  * Retrieves the metadata of a file from a specified Google Cloud Storage bucket.
  *
- * This function fetches the metadata for a file located at `sourcePath` in the given bucket. 
+ * This function fetches the metadata for a file located at `sourcePath` in the given bucket.
  * It can be customized using optional `fileOptions` and `getFileMetadataOptions` to control the retrieval behavior.
  *
  * @param {Bucket} bucket - The Google Cloud Storage bucket object containing the file whose metadata is being retrieved.

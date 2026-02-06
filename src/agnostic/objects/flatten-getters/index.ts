@@ -10,6 +10,9 @@ export function flattenGetters (obj: object): Record<string, unknown> {
   ).filter(([_, desc]) => (typeof desc.get === 'function'))
     .map(([key]) => key)
   const returned: Record<string, unknown> = { ...obj }
-  getters.forEach(getter => { returned[getter] = (obj as any)[getter] })
+  getters.forEach(getter => {
+    const key = getter as keyof typeof obj
+    returned[getter] = obj[key]
+  })
   return returned
 }

@@ -1,4 +1,4 @@
-import sharp from 'sharp'
+import type sharp from 'sharp'
 import zod from 'zod'
 import { clamp } from '../../../agnostic/numbers/clamp/index.js'
 import * as Outcome from '../../../agnostic/misc/outcome/index.js'
@@ -17,7 +17,7 @@ import type {
   ImageLike
 } from '../types.js'
 
-/* * * * * * * * * * * * * * * 
+/* * * * * * * * * * * * * * *
  * SCHEMAS
  * * * * * * * * * * * * * * */
 
@@ -127,7 +127,7 @@ const formatOptionsSchema = zod.union([
   formatKeepOptionsSchema
 ])
 
-/* * * * * * * * * * * * * * * 
+/* * * * * * * * * * * * * * *
  * TYPECHECKS
  * * * * * * * * * * * * * * */
 
@@ -148,7 +148,7 @@ export const isFormatHeifOptions = (options: unknown): options is FormatHeifOpti
 /** Type guard to check if options match FormatOptions. */
 export const isFormatOptions = (options: unknown): options is FormatOptions => formatOptionsSchema.safeParse(options).success
 
-/* * * * * * * * * * * * * * * 
+/* * * * * * * * * * * * * * *
  * CONVERTERS
  * * * * * * * * * * * * * * */
 /** Converts FormatCommonOptions to Sharp resize options. */
@@ -158,7 +158,7 @@ export const toSharpResizeOptions = (options: FormatCommonOptions): sharp.Resize
     height: options.height,
     fit: options.fit,
     position: options.position,
-    background: options.background
+    background: options.background !== undefined
       ? toSharpColor(options.background)
       : undefined,
     kernel: options.kernel,
@@ -262,7 +262,7 @@ export const toSharpHeifOptions = (options: FormatHeifOptions): sharp.HeifOption
   }
 }
 
-/* * * * * * * * * * * * * * * 
+/* * * * * * * * * * * * * * *
  * FUNCTIONS
  * * * * * * * * * * * * * * */
 
@@ -292,19 +292,19 @@ export async function format (input: ImageLike, options: FormatOptions): Promise
 }
 
 /** Resizes an image to a specific width while maintaining aspect ratio. */
-export const toWidth = async (input: ImageLike, width: number): Promise<Buffer> => (await toSharpInstance(input)).resize({ width }).toBuffer()
+export const toWidth = async (input: ImageLike, width: number): Promise<Buffer> => await (await toSharpInstance(input)).resize({ width }).toBuffer()
 /** Resizes an image to a specific height while maintaining aspect ratio. */
-export const toHeight = async (input: ImageLike, height: number): Promise<Buffer> => (await toSharpInstance(input)).resize({ height }).toBuffer()
+export const toHeight = async (input: ImageLike, height: number): Promise<Buffer> => await (await toSharpInstance(input)).resize({ height }).toBuffer()
 
 /** Converts an image to JPEG format. */
-export const toJpg = async (input: ImageLike, quality?: number): Promise<Buffer> => (await toSharpInstance(input)).jpeg({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+export const toJpg = async (input: ImageLike, quality?: number): Promise<Buffer> => await (await toSharpInstance(input)).jpeg({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
 /** Converts an image to PNG format. */
-export const toPng = async (input: ImageLike, quality?: number, compressionLevel?: FormatPngOptions['compressionLevel']): Promise<Buffer> => (await toSharpInstance(input)).png({ quality: clamp(quality ?? 100, 1, 100), compressionLevel }).toBuffer()
+export const toPng = async (input: ImageLike, quality?: number, compressionLevel?: FormatPngOptions['compressionLevel']): Promise<Buffer> => await (await toSharpInstance(input)).png({ quality: clamp(quality ?? 100, 1, 100), compressionLevel }).toBuffer()
 /** Converts an image to WebP format. */
-export const toWebp = async (input: ImageLike, quality?: number): Promise<Buffer> => (await toSharpInstance(input)).webp({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+export const toWebp = async (input: ImageLike, quality?: number): Promise<Buffer> => await (await toSharpInstance(input)).webp({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
 /** Converts an image to AVIF format. */
-export const toAvif = async (input: ImageLike, quality?: number): Promise<Buffer> => (await toSharpInstance(input)).avif({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+export const toAvif = async (input: ImageLike, quality?: number): Promise<Buffer> => await (await toSharpInstance(input)).avif({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
 /** Converts an image to TIFF format. */
-export const toTiff = async (input: ImageLike, quality?: number, compression?: FormatTiffOptions['compression']): Promise<Buffer> => (await toSharpInstance(input)).tiff({ quality: clamp(quality ?? 100, 1, 100), compression }).toBuffer()
+export const toTiff = async (input: ImageLike, quality?: number, compression?: FormatTiffOptions['compression']): Promise<Buffer> => await (await toSharpInstance(input)).tiff({ quality: clamp(quality ?? 100, 1, 100), compression }).toBuffer()
 /** Converts an image to HEIF format. */
-export const toHeif = async (input: ImageLike, quality?: number): Promise<Buffer> => (await toSharpInstance(input)).heif({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()
+export const toHeif = async (input: ImageLike, quality?: number): Promise<Buffer> => await (await toSharpInstance(input)).heif({ quality: clamp(quality ?? 100, 1, 100) }).toBuffer()

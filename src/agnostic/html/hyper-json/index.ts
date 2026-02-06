@@ -11,6 +11,7 @@ import { Utils as UtilsNamespace } from './utils/index.js'
 // [WIP] get rid of namespaces
 // [WIP] write tests
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace HyperJson {
   export import Cast = CastNamespace
   export const Method = MethodClass

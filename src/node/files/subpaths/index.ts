@@ -1,4 +1,6 @@
-import { Stats, promises as fs } from 'node:fs'
+/* eslint-disable @typescript-eslint/no-throw-literal */
+
+import { type Stats, promises as fs } from 'node:fs'
 import path from 'node:path'
 import { matchesSome as stringMatchesSome } from '../../../agnostic/strings/matches/index.js'
 
@@ -49,8 +51,8 @@ export type ListOptions = {
   /** Whether to deduplicate paths when following symlinks. @default false */ dedupeSimlinksContents?: boolean
   /** Maximum recursion depth. @default Infinity */ maxDepth?: number
   /** Whether to return relative paths instead of absolute paths. @default false */ returnRelative?: boolean
-  /** Patterns to exclude from the results. */ exclude?: RegExp | string | (RegExp | string)[] | null
-  /** Patterns to include in the results (takes precedence over exclude). */ include?: RegExp | string | (RegExp | string)[] | null
+  /** Patterns to exclude from the results. */ exclude?: RegExp | string | Array<RegExp | string> | null
+  /** Patterns to include in the results (takes precedence over exclude). */ include?: RegExp | string | Array<RegExp | string> | null
   /** Custom filter function to further refine results. */ filter?: ((path: string, details: ChildDetails) => boolean | Promise<boolean>)
 }
 
@@ -111,9 +113,11 @@ export async function list (...args: Parameters<typeof listAbsoluteSubpaths>): P
 async function listAbsoluteSubpaths (
   inputPath: string,
   _options: ListOptions = {},
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   __private_context: ListContext = {}
 ): Promise<string[]> {
   const options = fillOptions(_options)
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   const _private_context = fillListContext(__private_context)
   if (_private_context.rootPath === null) { _private_context.rootPath = inputPath }
   const subpaths: string[] = []
@@ -135,10 +139,10 @@ async function listAbsoluteSubpaths (
       const isFile = !isDirectory && !isSymlink
       const isHidden = path.basename(childAbsPath).startsWith('.')
       const type = isDirectory ? 'directory' : (isSymlink ? 'symlink' : 'file')
-      if (isDirectory && options.directories === false) throw true
-      if (isSymlink && options.symlinks === false) throw false
-      if (isFile && options.files === false) throw false
-      if (isHidden && options.hidden === false) throw false
+      if (isDirectory && !options.directories) throw true
+      if (isSymlink && !options.symlinks) throw false
+      if (isFile && !options.files) throw false
+      if (isHidden && !options.hidden) throw false
       const realPath = isSymlink
         ? await fs.realpath(childAbsPath)
         : childAbsPath
@@ -149,7 +153,7 @@ async function listAbsoluteSubpaths (
       const isInFilter = await options.filter(childPathForFilters, { type, hidden: isHidden, realPath })
       if (!isInFilter) throw true
       if (isSymlink) {
-        if (options.followSimlinks === false) subpaths.push(childAbsPath)
+        if (!options.followSimlinks) subpaths.push(childAbsPath)
         else {
           const childSubpaths = await listAbsoluteSubpaths(realPath, options, {
             ..._private_context,
@@ -170,7 +174,7 @@ async function listAbsoluteSubpaths (
         }
       }
     } catch (err: unknown) {
-      if (typeof err !== 'boolean') throw new Error(`This try/catch block should only throw booleans`)
+      if (typeof err !== 'boolean') throw new Error('This try/catch block should only throw booleans')
       const shouldDiveDeeper = err
       if (!shouldDiveDeeper) return []
       const childSubpaths = await listAbsoluteSubpaths(childAbsPath, options, {
@@ -181,7 +185,7 @@ async function listAbsoluteSubpaths (
       subpaths.push(...childSubpaths)
     }
   }))
-  
+
   return options.dedupeSimlinksContents
     ? Array.from(new Set(subpaths))
     : subpaths

@@ -34,6 +34,6 @@ export const notrailing = SmartTags.makeSmartTag<Main, Args, Output>({
     let strOutput = strMain
     while (strOutput.endsWith(strFirstArg)) strOutput = strOutput.slice(0, -1)
     if (typeof main === 'string') return Outcome.makeSuccess(strOutput)
-    return Outcome.makeSuccess(Cast.toText(strOutput))    
+    return Outcome.makeSuccess(Cast.toText(strOutput))
   }
 })

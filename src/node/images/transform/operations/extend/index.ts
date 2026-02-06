@@ -1,8 +1,8 @@
-import sharp from 'sharp'
+import type sharp from 'sharp'
 import z from 'zod'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { isColor } from '../../../../../agnostic/colors/typechecks/index.js'
-import { Color } from '../../../../../agnostic/colors/types.js'
+import { type Color } from '../../../../../agnostic/colors/types.js'
 import { toSharpColor } from '../../../utils/index.js'
 import type { ExtendOperationParams } from '../../../types.js'
 

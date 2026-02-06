@@ -13,10 +13,10 @@ describe('replaceInElement', () => {
     const toReplace = document.createElement('span')
     const replacement = document.createElement('p')
     parent.appendChild(toReplace)
-    
+
     const replaceMap = new Map([[toReplace, replacement]])
     replaceInElement(parent, replaceMap)
-    
+
     expect(parent.childNodes.length).toBe(1)
     expect(parent.firstChild).toBe(replacement)
     expect(parent.contains(toReplace)).toBe(false)
@@ -31,13 +31,13 @@ describe('replaceInElement', () => {
     const replacement2 = document.createElement('div')
     parent.appendChild(node1)
     parent.appendChild(node2)
-    
+
     const replaceMap = new Map([
       [node1, replacement1],
       [node2, replacement2]
     ])
     replaceInElement(parent, replaceMap)
-    
+
     expect(parent.childNodes.length).toBe(2)
     expect(parent.childNodes[0]).toBe(replacement1)
     expect(parent.childNodes[1]).toBe(replacement2)
@@ -50,15 +50,15 @@ describe('replaceInElement', () => {
     const replacement1 = document.createElement('p')
     const replacement2 = document.createElement('div')
     parent.appendChild(toReplace)
-    
+
     const fragment = document.createDocumentFragment()
     fragment.appendChild(replacement1)
     fragment.appendChild(replacement2)
     const nodeList = fragment.childNodes
-    
+
     const replaceMap = new Map([[toReplace, nodeList]])
     replaceInElement(parent, replaceMap)
-    
+
     expect(parent.childNodes.length).toBe(2)
     expect(parent.childNodes[0]).toBe(replacement1)
     expect(parent.childNodes[1]).toBe(replacement2)
@@ -71,13 +71,13 @@ describe('replaceInElement', () => {
     const orphan = document.createElement('span')
     const replacement = document.createElement('p')
     parent.appendChild(child)
-    
+
     const replaceMap = new Map([
       [child, replacement],
       [orphan, document.createElement('div')]
     ])
     replaceInElement(parent, replaceMap)
-    
+
     expect(parent.contains(replacement)).toBe(true)
     expect(parent.contains(orphan)).toBe(false)
   })
@@ -88,10 +88,10 @@ describe('replaceInElement', () => {
     const child = document.createElement('span')
     const replacement = document.createElement('p')
     parent.appendChild(child)
-    
+
     const replaceMap = new Map([[child, replacement]])
     const result = replaceInElement(parent, replaceMap)
-    
+
     expect(result).toBe(parent)
   })
 })

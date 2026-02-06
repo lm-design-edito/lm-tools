@@ -1,10 +1,10 @@
 import * as Outcome from '../../../../../misc/outcome/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
 
 type Main = Types.Tree.RestingArrayValue
-type Args = Array<Types.Tree.MethodValue>
+type Args = Types.Tree.MethodValue[]
 type Output = Types.Tree.RestingArrayValue
 
 export const map = SmartTags.makeSmartTag<Main, Args, Output>({
@@ -15,7 +15,7 @@ export const map = SmartTags.makeSmartTag<Main, Args, Output>({
   argsValueCheck: a => Utils.Tree.TypeChecks.typeCheckMany(a, 'method'),
   func: (main, args) => {
     const { makeTransformationError } = Utils.SmartTags
-    let mapped: Types.Tree.RestingArrayValue = []
+    const mapped: Types.Tree.RestingArrayValue = []
     for (const val of main) {
       let reduced: Types.Tree.RestingValue = val
       for (const arg of args) {

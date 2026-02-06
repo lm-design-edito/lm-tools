@@ -1,14 +1,14 @@
-import type { Sharp, SharpOptions } from 'sharp'
+import type { Sharp } from 'sharp'
 import type { Color } from '../../agnostic/colors/types.js'
 
-/* * * * * * * * * * * * * * * 
+/* * * * * * * * * * * * * * *
  * GENERIC
  * * * * * * * * * * * * * * */
 
 /** Union type representing any valid image input. */
 export type ImageLike = Sharp | Buffer | CreateOptions | string
 
-/* * * * * * * * * * * * * * * 
+/* * * * * * * * * * * * * * *
  * CREATE
  * * * * * * * * * * * * * * */
 
@@ -33,7 +33,7 @@ export type CreateOptions = {
   pageHeight?: number
 }
 
-/* * * * * * * * * * * * * * * 
+/* * * * * * * * * * * * * * *
  * FORMAT
  * * * * * * * * * * * * * * */
 
@@ -207,7 +207,7 @@ export type FormatHeifOptions = FormatCommonOptions & {
 /** Union type representing all supported format options. */
 export type FormatOptions = FormatJpgOptions | FormatPngOptions | FormatWebpOptions | FormatAvifOptions | FormatTiffOptions | FormatHeifOptions | FormatCommonOptions
 
-/* * * * * * * * * * * * * * * 
+/* * * * * * * * * * * * * * *
  * TRANSFORM
  * * * * * * * * * * * * * * */
 
@@ -377,20 +377,20 @@ export type RotateOperationDescriptor = { name: OpName.ROTATE } & RotateOperatio
 export type SaturateOperationDescriptor = { name: OpName.SATURATE } & SaturateOperationParams
 
 export type OperationDescriptor = BlurOperationDescriptor
-  | BrightenOperationDescriptor
-  | ExtendOperationDescriptor
-  | ExtractOperationDescriptor
-  | FlattenOperationDescriptor
-  | FlipOperationDescriptor
-  | FlopOperationDescriptor
-  | HueOperationDescriptor
-  | LevelOperationDescriptor
-  | LightenOperationDescriptor
-  | NormalizeOperationDescriptor
-  | OverlayOperationDescriptor
-  | ResizeOperationDescriptor
-  | RotateOperationDescriptor
-  | SaturateOperationDescriptor
+| BrightenOperationDescriptor
+| ExtendOperationDescriptor
+| ExtractOperationDescriptor
+| FlattenOperationDescriptor
+| FlipOperationDescriptor
+| FlopOperationDescriptor
+| HueOperationDescriptor
+| LevelOperationDescriptor
+| LightenOperationDescriptor
+| NormalizeOperationDescriptor
+| OverlayOperationDescriptor
+| ResizeOperationDescriptor
+| RotateOperationDescriptor
+| SaturateOperationDescriptor
 
 export type TransformLimits = {
   /** Maximum time allowed for the entire transformation process in milliseconds. */
@@ -414,7 +414,7 @@ export enum TransformErrCodes {
 
 export type TransformErr = {
   /** Error code indicating the type of error. */
-  code: TransformErrCodes,
+  code: TransformErrCodes
   /** Human-readable error details. */
   details: string
 }

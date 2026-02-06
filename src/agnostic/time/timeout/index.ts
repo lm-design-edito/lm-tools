@@ -6,13 +6,16 @@
  * @param callback - The function to execute. Can be synchronous or return a promise.
  * @returns A promise that resolves with the callback result if completed in time, or rejects with `false` if timed out.
  */
-export function timeout<T> (timeoutMs: number, callback: () => T): Promise<T> {
+export async function timeout<T> (timeoutMs: number, callback: () => T): Promise<T> {
   let hasRejected = false
-  return new Promise(async (resolve, reject) => {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises, no-async-promise-executor
+  return await new Promise(async (resolve, reject) => {
     const rejectTimeout = setTimeout(() => {
+      // eslint-disable-next-line prefer-promise-reject-errors
       reject(false)
       hasRejected = true
     }, timeoutMs)
+    // eslint-disable-next-line @typescript-eslint/await-thenable
     const callbackResult = await callback()
     if (hasRejected) return
     clearTimeout(rejectTimeout)

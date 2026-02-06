@@ -1,7 +1,7 @@
-import { Component } from 'react'
+import { Component, type JSX } from 'react'
 import {
   createRoot as reactCreateRoot,
-  Root as ReactRoot
+  type Root as ReactRoot
 } from 'react-dom/client'
 import { randomHash } from '../../random/uuid/index.js'
 
@@ -17,25 +17,24 @@ export type StylesSetItem = {
 }
 
 export class StylesSet {
-
   static defaultPrivateIDAttribute = 'data-styleset-private-id'
   static defaultPublicIDAttribute = 'data-styleset-public-id'
   tagsPrivateIDAttribute = StylesSet.defaultPrivateIDAttribute
   tagsPublicIDAttribute = StylesSet.defaultPublicIDAttribute
 
-  private _items = new Map<string, StylesSetItem>()
+  private readonly _items = new Map<string, StylesSetItem>()
 
-  get items () {
+  get items (): Map<string, StylesSetItem> {
     const sortedItemsArray = Array.from(this._items).map(([privateId, item]) => {
       const targetPosition = this.getTargetPosition(privateId) ?? 0
       return { targetPosition, privateId, item }
     }).sort((a, b) => a.targetPosition - b.targetPosition)
-     .map(({ item, privateId }) => ([privateId, item] as [string, StylesSetItem]))
+      .map(({ item, privateId }) => ([privateId, item] as [string, StylesSetItem]))
     const sortedItemsMap = new Map(sortedItemsArray)
     return sortedItemsMap
   }
 
-  private getTargetPosition (privateId: string) {
+  private getTargetPosition (privateId: string): number | null {
     const orderedStyles = Array.from(this._items)
       .map(([privateId, data]) => ({ privateId, data }))
       .sort((a, b) => {
@@ -71,7 +70,7 @@ export class StylesSet {
     return generated
   }
 
-  private _rendered = new Map<Element, ReactRoot>()
+  private readonly _rendered = new Map<Element, ReactRoot>()
 
   render (element: Element): this {
     const root = reactCreateRoot(element)
@@ -141,11 +140,11 @@ export class StylesSet {
   async getDomString (documentObj?: Document): Promise<string> {
     const actualDocumentObj = documentObj ?? window.document
     if (actualDocumentObj === null) throw new Error('Window.document is not available')
-    return new Promise(resolve => {
+    return await new Promise(resolve => {
       const tempElt = actualDocumentObj.createElement('div')
       const tempRoot = reactCreateRoot(tempElt)
       const { items } = this
-      const onRendered = () => {
+      const onRendered = (): void => {
         resolve(tempElt.innerHTML)
         tempRoot.unmount()
         tempElt.remove()
@@ -179,7 +178,7 @@ export class StylesSetComp extends Component<StylesSetCompProps> {
     if (onRendered !== undefined) onRendered()
   }
 
-  render () {
+  render (): JSX.Element {
     const { props } = this
     const items: StylesSet['items'] = props.items ?? new Map()
     const pidAttr = props.privateIDAttribute ?? StylesSet.defaultPrivateIDAttribute

@@ -1,8 +1,8 @@
 import {
-  Bucket,
-  FileOptions,
-  CopyOptions,
-  DeleteFileOptions as GCSDeleteFileOptions
+  type Bucket,
+  type FileOptions,
+  type CopyOptions,
+  type DeleteFileOptions as GCSDeleteFileOptions
 } from '@google-cloud/storage'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
@@ -55,7 +55,7 @@ export async function move (
   } = options ?? {}
 
   try {
-    const srcFile  = bucket.file(sourcePath, fileOptions)
+    const srcFile = bucket.file(sourcePath, fileOptions)
     const destFile = bucket.file(targetPath, fileOptions)
 
     if (!overwrite) {

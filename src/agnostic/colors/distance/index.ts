@@ -1,9 +1,9 @@
-import { Color, Laba, DistanceMethod } from '../types.js'
+import { type Color, type Laba, type DistanceMethod } from '../types.js'
 import { toLab } from '../convert/index.js'
 
 function distanceCiede2000 (c1: Laba, c2: Laba): number {
-  const deg2rad = (deg: number) => (Math.PI / 180) * deg
-  const rad2deg = (rad: number) => (180 / Math.PI) * rad
+  const deg2rad = (deg: number): number => (Math.PI / 180) * deg
+  const rad2deg = (rad: number): number => (180 / Math.PI) * rad
 
   // Step 1: Compute C* and mean C*
   const C1 = Math.sqrt(c1.a * c1.a + c1.b * c1.b)
@@ -56,10 +56,10 @@ function distanceCiede2000 (c1: Laba, c2: Laba): number {
 
   // Step 10: return ΔE00
   return Math.sqrt(
-    (dLp / SL) * (dLp / SL) +
-      (dCp / SC) * (dCp / SC) +
-      (dHp / SH) * (dHp / SH) +
-      RT * (dCp / SC) * (dHp / SH)
+    (dLp / SL) * (dLp / SL)
+      + (dCp / SC) * (dCp / SC)
+      + (dHp / SH) * (dHp / SH)
+      + RT * (dCp / SC) * (dHp / SH)
   )
 }
 

@@ -1,4 +1,4 @@
-import { Client } from 'basic-ftp'
+import { type Client } from 'basic-ftp'
 import { PassThrough } from 'node:stream'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
@@ -56,13 +56,13 @@ export async function copyDir (
           try {
             await ftpClient.size(dst)
             throw new Error(`File already exists at ${dst}.`)
-          } catch { /* 550 “not found” – safe to proceed */ }
+          } catch { /* 550 “not found” – safe to proceed */ }
         }
 
         // Make sure parent directory exists if ensureDir is enabled
         if (ensureDir) {
           const dirPath = dst.substring(0, dst.lastIndexOf('/'))
-          if (dirPath) await ftpClient.ensureDir(dirPath)
+          await ftpClient.ensureDir(dirPath)
         }
 
         const pass = new PassThrough()

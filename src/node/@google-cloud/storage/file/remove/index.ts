@@ -1,4 +1,4 @@
-import { Bucket, FileOptions, DeleteFileOptions as GCSDeleteFileOptions } from '@google-cloud/storage'
+import { type Bucket, type FileOptions, type DeleteFileOptions as GCSDeleteFileOptions } from '@google-cloud/storage'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 

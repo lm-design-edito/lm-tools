@@ -1,11 +1,11 @@
-import Client from 'ssh2-sftp-client'
+import type Client from 'ssh2-sftp-client'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 
 export type RemoveDirOptions = {
   /**
    * If **true** (default) the function ignores the case where `directoryPath`
-   * does not exist and simply returns success.  
+   * does not exist and simply returns success.
    * If **false** and the path is missing, the function returns a failure.
    * @default true
    */
@@ -20,8 +20,8 @@ export type RemoveDirOptions = {
  * @param {RemoveDirOptions} [options] - Optional configuration.
  * @param {boolean} [options.ignoreMissing=true] - Whether to ignore a missing directory.
  * @returns {Promise<Outcome.Either<true, string>>}
- * - On success: `Outcome.makeSuccess(true)` – deletion succeeded, or the
- *   directory was absent and `ignoreMissing` is true.  
+ * - On success: `Outcome.makeSuccess(true)` – deletion succeeded, or the
+ *   directory was absent and `ignoreMissing` is true.
  * - On failure: `Outcome.makeFailure(errStr)` if deletion fails, or directory
  *   absent and `ignoreMissing` is false.
  */

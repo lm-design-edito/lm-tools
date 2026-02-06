@@ -1,20 +1,20 @@
 type ConsoleMethod = 'assert'
-  |'count'
-  |'countReset'
-  |'debug'
-  |'dir'
-  |'dirxml'
-  |'error'
-  |'group'
-  |'groupCollapsed'
-  |'groupEnd'
-  |'info'
-  |'log'
-  |'table'
-  |'time'
-  |'timeEnd'
-  |'trace'
-  |'warn'
+| 'count'
+| 'countReset'
+| 'debug'
+| 'dir'
+| 'dirxml'
+| 'error'
+| 'group'
+| 'groupCollapsed'
+| 'groupEnd'
+| 'info'
+| 'log'
+| 'table'
+| 'time'
+| 'timeEnd'
+| 'trace'
+| 'warn'
 
 type ConsoleMethodsParams = {
   assert: Parameters<typeof console.assert>
@@ -51,7 +51,7 @@ class Log<T extends ConsoleMethod = ConsoleMethod> {
     this.stack = (new Error().stack ?? '')
   }
 
-  get displayTime () {
+  get displayTime (): string {
     return this.time.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -63,11 +63,11 @@ class Log<T extends ConsoleMethod = ConsoleMethod> {
     }) + `:${this.time.getMilliseconds()}`
   }
 
-  get elapsedTimeMs () {
+  get elapsedTimeMs (): number {
     return (this.time.getTime() - logsTimeOrigin.getTime()) / 1000
   }
 
-  get displayStack () {
+  get displayStack (): string {
     return this.stack
       .split('\n')
       .map(line => line.trim())
@@ -77,7 +77,7 @@ class Log<T extends ConsoleMethod = ConsoleMethod> {
 }
 
 export class Logger {
-  _private_threads: Map<string, Log[]> = new Map()
+  _private_threads = new Map<string, Log[]>()
   constructor () {
     // this.assert = this.assert.bind(this)
     // this.count = this.count.bind(this)
@@ -105,20 +105,20 @@ export class Logger {
   // count          (thread: string = '', ...args: ConsoleMethodsParams['count'])          { this.setLog(thread, 'count', args) }
   // countReset     (thread: string = '', ...args: ConsoleMethodsParams['countReset'])     { this.setLog(thread, 'countReset', args) }
   // debug          (thread: string = '', ...args: ConsoleMethodsParams['debug'])          { this.setLog(thread, 'debug', args) }
-  dir            (thread: string = '', ...args: ConsoleMethodsParams['dir'])            { this.setLog(thread, 'dir', args) }
+  dir (thread: string = '', ...args: ConsoleMethodsParams['dir']): void { this.setLog(thread, 'dir', args) }
   // dirxml         (thread: string = '', ...args: ConsoleMethodsParams['dirxml'])         { this.setLog(thread, 'dirxml', args) }
-  error          (thread: string = '', ...args: ConsoleMethodsParams['error'])          { this.setLog(thread, 'error', args) }
-  group          (thread: string = '', ...args: ConsoleMethodsParams['group'])          { this.setLog(thread, 'group', args) }
+  error (thread: string = '', ...args: ConsoleMethodsParams['error']): void { this.setLog(thread, 'error', args) }
+  group (thread: string = '', ...args: ConsoleMethodsParams['group']): void { this.setLog(thread, 'group', args) }
   // groupCollapsed (thread: string = '', ...args: ConsoleMethodsParams['groupCollapsed']) { this.setLog(thread, 'groupCollapsed', args) }
-  groupEnd       (thread: string = '', ...args: ConsoleMethodsParams['groupEnd'])       { this.setLog(thread, 'groupEnd', args) }
+  groupEnd (thread: string = '', ...args: ConsoleMethodsParams['groupEnd']): void { this.setLog(thread, 'groupEnd', args) }
   // info           (thread: string = '', ...args: ConsoleMethodsParams['info'])           { this.setLog(thread, 'info', args) }
-  log            (thread: string = '', ...args: ConsoleMethodsParams['log'])            { this.setLog(thread, 'log', args) }
-  table          (thread: string = '', ...args: ConsoleMethodsParams['table'])          { this.setLog(thread, 'table', args) }
+  log (thread: string = '', ...args: ConsoleMethodsParams['log']): void { this.setLog(thread, 'log', args) }
+  table (thread: string = '', ...args: ConsoleMethodsParams['table']): void { this.setLog(thread, 'table', args) }
   // time           (thread: string = '', ...args: ConsoleMethodsParams['time'])           { this.setLog(thread, 'time', args) }
   // timeEnd        (thread: string = '', ...args: ConsoleMethodsParams['timeEnd'])        { this.setLog(thread, 'timeEnd', args) }
   // trace          (thread: string = '', ...args: ConsoleMethodsParams['trace'])          { this.setLog(thread, 'trace', args) }
-  warn           (thread: string = '', ...args: ConsoleMethodsParams['warn'])           { this.setLog(thread, 'warn', args) }
-  
+  warn (thread: string = '', ...args: ConsoleMethodsParams['warn']): void { this.setLog(thread, 'warn', args) }
+
   setLog<T extends ConsoleMethod> (
     threadName: string,
     type: T,
@@ -130,7 +130,7 @@ export class Logger {
     return this
   }
 
-  print (this: Logger, threadFilter?: string, withStack?: boolean) {
+  print (this: Logger, threadFilter?: string, withStack?: boolean): void {
     const allLogs = Array.from(this._private_threads.entries())
       .map(([threadName, logs]) => logs.map(log => ({ threadName, log })))
       .flat()
@@ -140,14 +140,14 @@ export class Logger {
         return threadName === threadFilter
       })
     allLogs.forEach(({ threadName, log }) => {
-      console.log(`%c${threadName}`, 'font-weight: 800; color: white; background: black; padding: 4px;', `+${log.elapsedTimeMs}s –`, log.displayTime);
+      console.log(`%c${threadName}`, 'font-weight: 800; color: white; background: black; padding: 4px;', `+${log.elapsedTimeMs}s –`, log.displayTime)
       if (withStack === true) console.log(`%c${log.displayStack}`, 'color: grey; font-size: inherit;')
       ;(console[log.type] as any)(...log.data)
       console.log('')
     })
   }
 
-  printThreads (this:Logger, withStack?: boolean) {
+  printThreads (this: Logger, withStack?: boolean): void {
     Array.from(this._private_threads.entries())
       .forEach(([threadName, logs]) => {
         console.group(`%c${threadName}`, 'font-weight: 800; color: white; background: black; padding: 4px;')

@@ -33,7 +33,7 @@ describe('approximateRational', () => {
   })
 
   it('uses default maxDenominator of 1000', () => {
-    const [num, den] = approximateRational(Math.PI)
+    const [, den] = approximateRational(Math.PI)
     expect(den).toBeLessThanOrEqual(1000)
   })
 

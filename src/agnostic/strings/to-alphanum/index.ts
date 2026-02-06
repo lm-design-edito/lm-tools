@@ -1,6 +1,6 @@
 /**
  * Converts a string to an alphanumeric-only string.
- * 
+ *
  * Non-alphanumeric characters are replaced with the provided `replacer`.
  * Consecutive occurrences of the `replacer` are collapsed into a single instance.
  *
@@ -9,11 +9,11 @@
  * @returns The sanitized alphanumeric string.
  *
  * @example
- * toAlphanum("Hello, World!") 
+ * toAlphanum("Hello, World!")
  * // => "HelloWorld"
  *
  * @example
- * toAlphanum("Hello, World!", "-") 
+ * toAlphanum("Hello, World!", "-")
  * // => "Hello-World"
  */
 export function toAlphanum (string: string, replacer: string = ''): string {

@@ -1,8 +1,7 @@
 import * as Outcome from '../../../../../misc/outcome/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
-
 
 type Main = Types.Tree.RestingValue // [WIP] Main is ignored in all cases, should typecheck that?
 type Args = Types.Tree.RestingArrayValue

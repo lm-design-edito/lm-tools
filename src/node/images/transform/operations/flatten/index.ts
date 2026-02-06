@@ -1,7 +1,7 @@
-import sharp from 'sharp'
+import type sharp from 'sharp'
 import z from 'zod'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
-import { Color } from '../../../../../agnostic/colors/types.js'
+import { type Color } from '../../../../../agnostic/colors/types.js'
 import { isColor } from '../../../../../agnostic/colors/typechecks/index.js'
 import { toSharpColor } from '../../../utils/index.js'
 import type { FlattenOperationParams } from '../../../types.js'
@@ -20,7 +20,9 @@ export async function flatten (
   params: FlattenOperationParams
 ): Promise<sharp.Sharp> {
   const inputBg = params.background
-  const rgbBackground = inputBg !== undefined ? toSharpColor(inputBg) : undefined
-  const background = rgbBackground !== undefined ? rgbBackground : undefined
+  const rgbBackground = inputBg !== undefined
+    ? toSharpColor(inputBg)
+    : undefined
+  const background = rgbBackground ?? rgbBackground
   return sharpInstance.flatten({ background })
 }

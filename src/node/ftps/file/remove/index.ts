@@ -1,4 +1,4 @@
-import { Client } from 'basic-ftp'
+import { type Client } from 'basic-ftp'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 
@@ -28,8 +28,7 @@ export async function remove (
   const { ignoreMissing = true } = options ?? {}
   try {
     let fileExists = true
-    try { await ftpClient.size(targetPath) }
-    catch { fileExists = false }
+    try { await ftpClient.size(targetPath) } catch { fileExists = false }
     if (!fileExists) {
       if (ignoreMissing) { return Outcome.makeSuccess(true) }
       return Outcome.makeFailure(`File not found at ${targetPath}.`)

@@ -1,19 +1,19 @@
-import { Bucket as GCSBucket } from '@google-cloud/storage'
-import { Client as FtpClient } from 'basic-ftp'
-import SftpClient from 'ssh2-sftp-client'
+import { type Bucket as GCSBucket } from '@google-cloud/storage'
+import { type Client as FtpClient } from 'basic-ftp'
+import type SftpClient from 'ssh2-sftp-client'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import {
-  AnyClient,
+  type AnyClient,
   isFtpClient,
   isGcsBucket,
   isS3ClientWithBucket,
   isSftpClient,
-  S3ClientWithBucket
+  type S3ClientWithBucket
 } from '../../clients/index.js'
-import { copy as ftpCopy, CopyOptions as FtpsCopyOptions } from '../../../ftps/file/copy/index.js'
-import { copy as sftpCopy, CopyOptions as SftpCopyOptions } from '../../../sftp/file/copy/index.js'
-import { CopyOptions as S3CopyOptions, copy as s3Copy } from '../../../@aws-s3/storage/file/copy/index.js'
-import { CopyOptions as GcsCopyOptions, copy as gcsCopy } from '../../../@google-cloud/storage/file/copy/index.js'
+import { copy as ftpCopy, type CopyOptions as FtpsCopyOptions } from '../../../ftps/file/copy/index.js'
+import { copy as sftpCopy, type CopyOptions as SftpCopyOptions } from '../../../sftp/file/copy/index.js'
+import { type CopyOptions as S3CopyOptions, copy as s3Copy } from '../../../@aws-s3/storage/file/copy/index.js'
+import { type CopyOptions as GcsCopyOptions, copy as gcsCopy } from '../../../@google-cloud/storage/file/copy/index.js'
 
 /** Return type for copy file operations. */
 type Returned = Outcome.Either<true, string>
@@ -81,9 +81,9 @@ export async function copyFile (client: SftpClient, sourcePath: string, targetPa
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
 export async function copyFile (client: AnyClient, sourcePath: string, targetPath: string, options?: GcsCopyOptions | S3CopyOptions | FtpsCopyOptions | SftpCopyOptions): Promise<Returned> {
-  if (isGcsBucket(client)) return gcsCopy(client, sourcePath, targetPath, options as GcsCopyOptions)
-  if (isS3ClientWithBucket(client)) return s3Copy(client.client, client.bucketName, sourcePath, targetPath, options as S3CopyOptions)
-  if (isFtpClient(client)) return ftpCopy(client, sourcePath, targetPath, options as FtpsCopyOptions)
-  if (isSftpClient(client)) return sftpCopy(client, sourcePath, targetPath, options as SftpCopyOptions)
+  if (isGcsBucket(client)) return await gcsCopy(client, sourcePath, targetPath, options as GcsCopyOptions)
+  if (isS3ClientWithBucket(client)) return await s3Copy(client.client, client.bucketName, sourcePath, targetPath, options as S3CopyOptions)
+  if (isFtpClient(client)) return await ftpCopy(client, sourcePath, targetPath, options as FtpsCopyOptions)
+  if (isSftpClient(client)) return await sftpCopy(client, sourcePath, targetPath, options as SftpCopyOptions)
   return Outcome.makeFailure('Invalid client type')
 }

@@ -3,7 +3,7 @@
  *
  * @template T - The type of object constructed by the function.
  */
-export type ConstructorFunction<T extends any = any> = new (...args: any[]) => T
+export type ConstructorFunction<T = any> = new (...args: any[]) => T
 
 /**
  * Checks whether a given value is a constructor function (i.e., a class or function with a prototype).

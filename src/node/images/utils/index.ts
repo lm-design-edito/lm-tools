@@ -61,8 +61,8 @@ export function toCreateOptions (options: CreateOptions): sharp.SharpOptions['cr
       ? toSharpColor(options.background)
       : toSharpColor('white'),
     noise: options.noise !== undefined
-     ? { ...options.noise, type: 'gaussian' }
-     : undefined,
+      ? { ...options.noise, type: 'gaussian' }
+      : undefined,
     pageHeight: options.pageHeight
   }
 }

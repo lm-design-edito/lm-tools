@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-throw-literal */
+
 import * as Outcome from '../../../../../misc/outcome/index.js'
 import { isRecord } from '../../../../../objects/is-record/index.js'
 import { Cast } from '../../../cast/index.js'
 import { Utils } from '../../../utils/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { SmartTags } from '../../index.js'
 import * as Window from '../../../../../misc/crossenv/window/index.js'
 import { Method } from '../../../method/index.js'
@@ -50,6 +52,7 @@ export const setproperty = SmartTags.makeSmartTag<Main, Args, Output>({
         val)
       return makeSuccess(withPropertySet)
     } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       return makeFailure(makeTransformationError(`Impossible to access property :${key}`))
     }
   }
@@ -62,8 +65,8 @@ export function deepSetProperty (
 ): Exclude<Types.Tree.RestingValue, Types.Tree.MethodValue> {
   const pathChunks = pathString.split('.')
   let clone = Utils.clone(input)
-  let currentItemParent: Types.Tree.RestingValue | undefined = undefined
-  let currentItemPathFromParent: string | number | undefined = undefined
+  let currentItemParent: Types.Tree.RestingValue | undefined
+  let currentItemPathFromParent: string | number | undefined
   let currentItem: Types.Tree.RestingValue = clone
   const { Text, Element, NodeList, document } = Window.get()
   pathChunks.forEach((chunk, pos) => {
@@ -76,7 +79,7 @@ export function deepSetProperty (
       if (typeof currentItem === 'number'
         || typeof currentItem === 'boolean'
         || currentItem === null
-        || currentItem instanceof Method) throw `DEAD_END: Cannot set properties on a string, number, boolean, null or Method item`
+        || currentItem instanceof Method) throw 'DEAD_END: Cannot set properties on a string, number, boolean, null or Method item'
       // Set on string
       else if (typeof currentItem === 'string') {
         if (currentItemParent !== undefined && currentItemPathFromParent === undefined) throw `INVALID_PROP: Could not access item's child at ${currentItemPathFromParent} found at pos ${pos - 1} in path ${pathChunks.join('.')}`
@@ -88,23 +91,21 @@ export function deepSetProperty (
           + currentItem.slice(numChunk + 1)
         if (currentItemParent === undefined) { clone = newString }
         if (Array.isArray(currentItemParent)) {
-          if (typeof currentItemPathFromParent !== 'number') throw `IMPOSSIBLE_OPERATION: non-number path from an Array parent, this is a bug`
+          if (typeof currentItemPathFromParent !== 'number') throw 'IMPOSSIBLE_OPERATION: non-number path from an Array parent, this is a bug'
           currentItemParent[currentItemPathFromParent] = newString
         } else if (isRecord(currentItemParent)) {
-          if (typeof currentItemPathFromParent !== 'string') throw `IMPOSSIBLE_OPERATION: non-string path from an Record parent, this is a bug`
+          if (typeof currentItemPathFromParent !== 'string') throw 'IMPOSSIBLE_OPERATION: non-string path from an Record parent, this is a bug'
           currentItemParent[currentItemPathFromParent] = newString
         } else throw `IMPOSSIBLE_OPERATION: a string item should not be a child of anything else than Array or Record, cannot mutate. At ${currentItemPathFromParent} found at pos ${pos - 1} in path ${pathChunks.join('.')}`
-      }
       // Set on Array
-      else if (Array.isArray(currentItem)) {
+      } else if (Array.isArray(currentItem)) {
         if (Number.isNaN(numChunk)
           || numChunk < 0
           || numChunk > currentItem.length) throw `INVALID_PROP: Could not access item's child at ${numChunk} found at pos ${pos} in path ${pathChunks.join('.')}`
         if (numChunk === currentItem.length) currentItem.push(Utils.clone(value))
         else { currentItem[numChunk] = Utils.clone(value) }
-      }
       // Set on Text
-      else if (currentItem instanceof Text) {
+      } else if (currentItem instanceof Text) {
         const currContent = currentItem.textContent ?? ''
         if (Number.isNaN(numChunk)
           || numChunk < 0
@@ -116,9 +117,8 @@ export function deepSetProperty (
           ...currContent.slice(numChunk)
         ].join('')
         currentItem.textContent = newContent
-      }
       // Set on Element
-      else if (currentItem instanceof Element) {
+      } else if (currentItem instanceof Element) {
         const currChildren = Array
           .from(currentItem.childNodes)
           .filter(e => e instanceof Text || e instanceof Element)
@@ -129,17 +129,16 @@ export function deepSetProperty (
         if (value instanceof NodeList
           || value instanceof Element
           || value instanceof Text
-        ) { newValue = Utils.clone(value) }
-        else { newValue = Cast.toText(value) }
+        ) { newValue = Utils.clone(value) } else { newValue = Cast.toText(value) }
         const newChildren = [...currChildren.slice(0, numChunk)]
         if (newValue instanceof NodeList) newChildren.push(...Array.from(newValue))
         else newChildren.push(newValue)
         newChildren.push(...currChildren.slice(numChunk + 1))
         currentItem.textContent = ''
         currentItem.append(...newChildren)
-      }
+
       // Set on NodeList
-      else if (currentItem instanceof NodeList) {
+      } else if (currentItem instanceof NodeList) {
         const currChildren = Array.from(currentItem)
         if (Number.isNaN(numChunk)
           || numChunk < 0
@@ -148,8 +147,7 @@ export function deepSetProperty (
         if (value instanceof NodeList
           || value instanceof Element
           || value instanceof Text
-        ) { newValue = Utils.clone(value) }
-        else { newValue = Cast.toText(value) }
+        ) { newValue = Utils.clone(value) } else { newValue = Cast.toText(value) }
         const newChildren = [...currChildren.slice(0, numChunk)]
         if (newValue instanceof NodeList) newChildren.push(...Array.from(newValue))
         else newChildren.push(newValue)
@@ -159,19 +157,20 @@ export function deepSetProperty (
         const newNodelist = newNodelistFragment.childNodes as NodeListOf<Text | Element>
         if (currentItemParent === undefined) { clone = newNodelist }
         if (Array.isArray(currentItemParent)) {
-          if (typeof currentItemPathFromParent !== 'number') throw `IMPOSSIBLE_OPERATION: non-number path from an Array parent, this is a bug`
+          if (typeof currentItemPathFromParent !== 'number') throw 'IMPOSSIBLE_OPERATION: non-number path from an Array parent, this is a bug'
           currentItemParent[currentItemPathFromParent] = newNodelist
         } else if (isRecord(currentItemParent)) {
-          if (typeof currentItemPathFromParent !== 'string') throw `IMPOSSIBLE_OPERATION: non-string path from an Record parent, this is a bug`
+          if (typeof currentItemPathFromParent !== 'string') throw 'IMPOSSIBLE_OPERATION: non-string path from an Record parent, this is a bug'
           currentItemParent[currentItemPathFromParent] = newNodelist
         } else throw `IMPOSSIBLE_OPERATION: a Nodelist item should not be a child of anything else than Array or Record, cannot mutate. At ${currentItemPathFromParent} found at pos ${pos - 1} in path ${pathChunks.join('.')}`
-      }
+
       // Set on Record
-      else { currentItem[chunk] = Utils.clone(value) }
-    }
+      } else {
+        currentItem[chunk] = Utils.clone(value)
+      }
 
     // NOT LAST PATH CHUNK, select child and go deeper
-    else {
+    } else {
       // [WIP] this logic could probably be shared with getProperty smart-tag logic
       if (typeof currentItem === 'string'
         || typeof currentItem === 'number'
@@ -179,7 +178,7 @@ export function deepSetProperty (
         || currentItem === null
         || currentItem instanceof Text
         || currentItem instanceof Method
-      ) throw `DEAD_END: Cannot go deeper when a string, number, boolean, null, Text or Method item is reached`
+      ) throw 'DEAD_END: Cannot go deeper when a string, number, boolean, null, Text or Method item is reached'
       if (currentItem instanceof Element) {
         const children = Array
           .from(currentItem.childNodes)

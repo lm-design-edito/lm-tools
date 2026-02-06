@@ -1,11 +1,11 @@
 import {
-  S3Client,
+  type S3Client,
   ListObjectsV2Command,
-  ListObjectsV2CommandInput,
+  type ListObjectsV2CommandInput,
   CopyObjectCommand,
-  CopyObjectCommandInput,
+  type CopyObjectCommandInput,
   DeleteObjectCommand,
-  DeleteObjectCommandInput,
+  type DeleteObjectCommandInput,
   HeadObjectCommand
 } from '@aws-sdk/client-s3'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
@@ -15,9 +15,9 @@ export type MoveDirOptions = {
   /** Extra parameters forwarded to every `ListObjectsV2Command` call. */
   listObjectsOptions?: Omit<ListObjectsV2CommandInput, 'Bucket' | 'Prefix'>
   /** Extra parameters forwarded to every `CopyObjectCommand` (`Bucket`, `Key`, `CopySource` are supplied internally). */
-  copyOptions?:        Omit<CopyObjectCommandInput,  'Bucket' | 'Key' | 'CopySource'>
+  copyOptions?: Omit<CopyObjectCommandInput, 'Bucket' | 'Key' | 'CopySource'>
   /** Extra parameters forwarded to every `DeleteObjectCommand` (`Bucket`, `Key` are supplied internally). */
-  deleteOptions?:      Omit<DeleteObjectCommandInput,'Bucket' | 'Key'>
+  deleteOptions?: Omit<DeleteObjectCommandInput, 'Bucket' | 'Key'>
   /**
    * If **false** (default) and *any* destination key already exists, the move
    * operation aborts with an error.
@@ -28,9 +28,9 @@ export type MoveDirOptions = {
 
 /**
  * Recursively moves every object under `sourceDir` to the corresponding path
- * under `targetDir` within the same S3 bucket (AWS SDK v3).
+ * under `targetDir` within the same S3 bucket (AWS SDK v3).
  *
- * Behaviour when `overwrite` is **false** (default): abort if *any* destination
+ * Behaviour when `overwrite` is **false** (default): abort if *any* destination
  * key already exists.
  *
  * @param {S3Client} client      - The v3 S3 client instance.
@@ -57,7 +57,7 @@ export async function moveDir (
   } = options ?? {}
 
   const from = sourceDir.endsWith('/') ? sourceDir : `${sourceDir}/`
-  const to   = targetDir.endsWith('/') ? targetDir   : `${targetDir}/`
+  const to = targetDir.endsWith('/') ? targetDir : `${targetDir}/`
 
   try {
     let token: string | undefined
@@ -72,8 +72,8 @@ export async function moveDir (
       )
 
       for (const obj of listResp.Contents ?? []) {
-        if (!obj.Key) continue
-        const rel  = obj.Key.substring(from.length)
+        if (obj.Key === undefined) continue
+        const rel = obj.Key.substring(from.length)
         const dest = `${to}${rel}`
 
         if (!overwrite) {
@@ -106,8 +106,10 @@ export async function moveDir (
         )
       }
 
-      token = listResp.IsTruncated ? listResp.NextContinuationToken : undefined
-    } while (token)
+      token = listResp.IsTruncated === true
+        ? listResp.NextContinuationToken
+        : undefined
+    } while (token !== undefined)
 
     return Outcome.makeSuccess(true)
   } catch (err) {

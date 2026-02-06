@@ -1,5 +1,5 @@
 import * as Outcome from '../../../../../misc/outcome/index.js'
-import { Types } from '../../../types/index.js'
+import { type Types } from '../../../types/index.js'
 import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
 
@@ -29,7 +29,7 @@ export const call = SmartTags.makeSmartTag<Main, Args, Output>({
   },
   argsValueCheck: a => Utils.Tree.TypeChecks.typeCheckMany(a, 'array'),
   func: (main, args) => {
-    const { makeFailure, makeSuccess } = Outcome
+    const { makeFailure } = Outcome
     const { makeTransformationError } = Utils.SmartTags
     return makeFailure(makeTransformationError({
       message: 'This smart tag should not be used.'

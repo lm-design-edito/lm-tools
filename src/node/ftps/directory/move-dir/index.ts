@@ -1,4 +1,4 @@
-import { Client } from 'basic-ftp'
+import { type Client } from 'basic-ftp'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 
@@ -10,7 +10,7 @@ export type MoveDirOptions = {
 }
 
 /**
- * Renames (moves) a directory on an FTP server.  
+ * Renames (moves) a directory on an FTP server.
  * Most FTP servers allow `RNFR /path/old` + `RNTO /path/new` to move a tree
  * atomically. Falling back to manual copy/delete would be expensive, so this
  * util simply performs `rename`.
@@ -38,9 +38,7 @@ export async function moveDir (
     if (ensureDir) {
       // ensure parent directory of targetDir exists
       const parentDir = targetDir.substring(0, targetDir.lastIndexOf('/'))
-      if (parentDir) {
-        await ftpClient.ensureDir(parentDir)
-      }
+      await ftpClient.ensureDir(parentDir)
     }
 
     if (!overwrite) {

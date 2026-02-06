@@ -1,6 +1,6 @@
 /**
  * Merges multiple flag strings into a single string containing each flag only once.
- * 
+ *
  * @param {...string[]} flagStrs - Flag strings to merge.
  * @returns {string} Merged flags string.
  */
@@ -15,7 +15,7 @@ export function mergeFlags (...flagStrs: string[]): string {
 
 /**
  * Returns a new RegExp with combined flags.
- * 
+ *
  * @param {RegExp} regexp - The original regular expression.
  * @param {string} flags - Flags to add.
  * @returns {RegExp} New regular expression with combined flags.
@@ -27,7 +27,7 @@ export function setFlags (regexp: RegExp, flags: string): RegExp {
 
 /**
  * Anchors a RegExp to the start of a string.
- * 
+ *
  * @param {RegExp} regexp - The original regular expression.
  * @param {string} [flags='g'] - Optional flags to apply.
  * @returns {RegExp} Anchored RegExp.
@@ -39,7 +39,7 @@ export function fromStart (regexp: RegExp, flags: string = 'g'): RegExp {
 
 /**
  * Anchors a RegExp to the end of a string.
- * 
+ *
  * @param {RegExp} regexp - The original regular expression.
  * @param {string} [flags='g'] - Optional flags to apply.
  * @returns {RegExp} Anchored RegExp.
@@ -51,7 +51,7 @@ export function toEnd (regexp: RegExp, flags: string = 'g'): RegExp {
 
 /**
  * Anchors a RegExp to match the entire string.
- * 
+ *
  * @param {RegExp} regexp - The original regular expression.
  * @param {string} [flags='g'] - Optional flags to apply.
  * @returns {RegExp} Anchored RegExp.
@@ -120,7 +120,7 @@ export function stringIs (string: string, regexp: RegExp, returnMatches = false,
 
 /**
  * Creates a RegExp that matches any of the provided strings.
- * 
+ *
  * @param {string[]} strings - Strings to match.
  * @returns {RegExp} Regular expression matching all strings.
  */
@@ -136,17 +136,22 @@ export function fromStrings (strings: string[]): RegExp {
  * - Newlines are turned into `\\n`
  * - Other whitespace characters are normalized to `\\s`
  * - RegExp special characters (including backslash) are escaped
- * 
+ *
  * @param {string} string - String to escape.
  * @returns {string} Escaped string.
  */
 export function escape (string: string): string {
   let result = ''
   for (const ch of string) {
-    if (ch === '\n') { result += '\\n' }
-    else if (/\s/.test(ch)) { result += '\\s' } // any other whitespace (space, tab, etc.)
-    else if (/[.*+?^${}()|[\]\\]/.test(ch)) { result += '\\' + ch } // regex special chars (including backslash)
-    else { result += ch }
+    if (ch === '\n') {
+      result += '\\n'
+    } else if (/\s/.test(ch)) {
+      result += '\\s' // any other whitespace (space, tab, etc.)
+    } else if (/[.*+?^${}()|[\]\\]/.test(ch)) {
+      result += '\\' + ch // regex special chars (including backslash)
+    } else {
+      result += ch
+    }
   }
   return result
 }

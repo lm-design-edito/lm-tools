@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-throw-literal */
+
 import * as Window from '../../../misc/crossenv/window/index.js'
 import { trimStart, trimEnd } from '../../../strings/trim/index.js'
 
 import { Serialize } from '../serialize/index.js'
 import { Transformer } from '../transformer/index.js'
-import { Types } from '../types/index.js'
+import { type Types } from '../types/index.js'
 import { Utils } from '../utils/index.js'
 import { Cast } from '../cast/index.js'
 
@@ -78,6 +80,7 @@ import { transformselected } from '../smart-tags/coalesced/transformselected/ind
 import { trim } from '../smart-tags/coalesced/trim/index.js'
 
 // [WIP] eventually just export the Tree class here
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Tree {
   export class Tree {
     readonly node: Element | Text
@@ -149,7 +152,7 @@ export namespace Tree {
       this.getCachedValue = this.getCachedValue.bind(this)
       this.setCachedValue = this.setCachedValue.bind(this)
       this.evaluate = this.evaluate.bind(this)
-      
+
       // node
       this.node = node
 
@@ -172,7 +175,12 @@ export namespace Tree {
       }
 
       // path, pathString
-      this.path = this.isRoot ? [] : [...this.parent!.path, this.pathFromParent!]
+      const thisPath: Array<string | number> = []
+      if (!this.isRoot) {
+        thisPath.push(...(this.parent?.path ?? []))
+        if (this.pathFromParent !== null) thisPath.push(this.pathFromParent)
+      }
+      this.path = thisPath
       this.pathString = `/${this.path.join('/')}`
 
       // attributes
@@ -188,7 +196,7 @@ export namespace Tree {
         const isMethod = hasTrailingUnderscore || hasMethodAttribute
         this.isMethod = isMethod
         this.tagName = rawTagName
-        this.smartTagName = hasTrailingUnderscore 
+        this.smartTagName = hasTrailingUnderscore
           ? rawTagName.replace(/_+$/g, '')
           : rawTagName
       } else {
@@ -208,8 +216,7 @@ export namespace Tree {
       ])
 
       // smartTagData
-      if (this.smartTagName === null) { this.smartTagData = null }
-      else { this.smartTagData = this.smartTagsRegister.get(this.smartTagName) ?? null }
+      if (this.smartTagName === null) { this.smartTagData = null } else { this.smartTagData = this.smartTagsRegister.get(this.smartTagName) ?? null }
 
       // mode
       const hasModeAttribute = this.attributes?.find(attr => {
@@ -235,12 +242,9 @@ export namespace Tree {
         if (val === 'method') return false
         return true
       })
-      if (this.mode === 'coalescion') { this.isolationInitType = 'array' }
-      else {
+      if (this.mode === 'coalescion') { this.isolationInitType = 'array' } else {
         const initAttributeValue = hasInitAttribute?.value as Exclude<Types.Tree.ValueTypeName, 'transformer' | 'method'> | undefined
-        if (initAttributeValue !== undefined) { this.isolationInitType = initAttributeValue }
-        else if (this.smartTagData !== null) { this.isolationInitType = this.smartTagData?.isolationInitType ?? 'array' }
-        else { this.isolationInitType = 'nodelist' }
+        if (initAttributeValue !== undefined) { this.isolationInitType = initAttributeValue } else if (this.smartTagData !== null) { this.isolationInitType = this.smartTagData?.isolationInitType ?? 'array' } else { this.isolationInitType = 'nodelist' }
       }
 
       // subtrees
@@ -249,28 +253,28 @@ export namespace Tree {
       const mutableSubtrees = new Map<string | number, Tree>()
       Array
         .from(childNodes)
-        // Filter out non Text or Element children
         .filter((child, _, childNodes): child is Element | Text => {
+          // Filter out non Text or Element children
           if (child instanceof Element) return true
           if (child instanceof Text) return true
           return false
         })
+        .reduce<Array<Element | Text>>((reduced, child) => {
         // Merge neighboring Text nodes
-        .reduce((reduced, child) => {
-          if (reduced.length === 0) return [child]
-          if (child instanceof Element) return [...reduced, child]
-          const lastReducedItem = reduced[reduced.length - 1]!
-          if (lastReducedItem instanceof Element) return [...reduced, child]
-          const lastReducedTrimmed = trimEnd(lastReducedItem.textContent ?? '')
-          const childTrimmed = trimStart(child.textContent ?? '')
-          const merged = document.createTextNode(`${lastReducedTrimmed}${childTrimmed}`)
-          const returned = [...reduced]
-          returned.pop()
-          returned.push(merged)
-          return returned
-        }, [] as Array<Element | Text>)
-        // Filter out empty Text nodes after merging neighbours
+        if (reduced.length === 0) return [child]
+        if (child instanceof Element) return [...reduced, child]
+        const lastReducedItem = reduced[reduced.length - 1]
+        if (lastReducedItem instanceof Element) return [...reduced, child]
+        const lastReducedTrimmed = trimEnd(lastReducedItem?.textContent ?? '')
+        const childTrimmed = trimStart(child.textContent ?? '')
+        const merged = document.createTextNode(`${lastReducedTrimmed}${childTrimmed}`)
+        const returned = [...reduced]
+        returned.pop()
+        returned.push(merged)
+        return returned
+      }, [])
         .filter(child => {
+          // Filter out empty Text nodes after merging neighbours
           if (child instanceof Element) return true
           const textContent = child.textContent ?? ''
           return textContent.trim() !== ''
@@ -309,6 +313,7 @@ export namespace Tree {
     }
 
     resolve: Types.Tree.Resolver = function (this: Tree, path): Tree | undefined {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       let currentTree: Tree = this
       for (const chunk of path) {
         if (chunk === '.') continue
@@ -342,7 +347,7 @@ export namespace Tree {
       return deserialized
     }
 
-    private performSafetyChecks () {
+    private performSafetyChecks (): void {
       const { node, smartTagData, isMethod, mode, isRoot } = this
       const { Text } = Window.get()
 
@@ -356,16 +361,16 @@ export namespace Tree {
     }
 
     private computeValue (): Types.Tree.Value {
+      const performSafetyChecks = this.performSafetyChecks.bind(this)
       const {
         isolationInitType,
         subtrees,
         node,
         smartTagData,
         isMethod,
-        mode,
-        performSafetyChecks,
+        mode
       } = this
-      
+
       // Looks for impossible attributes configurations
       performSafetyChecks()
 
@@ -401,14 +406,15 @@ export namespace Tree {
           error: 'Transformation error',
           details: applied.error,
           transformer: transformer.name,
-          path: this.pathString,
+          path: this.pathString
         }
       }
       return transformer
     }
 
     private enforceEvaluation (): Types.Tree.Value {
-      const { isPreserved, node, computeValue, isLiteral, attributes } = this
+      const { isPreserved, node, isLiteral, attributes } = this
+      const computeValue = this.computeValue.bind(this)
       const { Element } = Window.get()
       if (isPreserved) return Utils.clone(node)
       const evaluated = computeValue()
@@ -427,17 +433,15 @@ export namespace Tree {
       return deserialized
     }
 
-    private setCachedValue (evaluated: Types.Tree.Value) {
+    private setCachedValue (evaluated: Types.Tree.Value): void {
       this.cachedValue = Serialize.serialize(evaluated)
     }
 
-    evaluate () {
+    evaluate (): Types.Tree.Value {
       const start = Date.now()
-      const {
-        getCachedValue,
-        setCachedValue,
-        enforceEvaluation
-      } = this
+      const getCachedValue = this.getCachedValue.bind(this)
+      const setCachedValue = this.setCachedValue.bind(this)
+      const enforceEvaluation = this.enforceEvaluation.bind(this)
       const cached = getCachedValue()
       if (cached !== undefined) return cached
       const evaluated = enforceEvaluation()
