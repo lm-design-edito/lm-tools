@@ -3,7 +3,7 @@ import { detectRuntime } from './index.js'
 import { RuntimeName } from '../types.js'
 
 describe('detectRuntime', () => {
-  // Cannot simulate browser in nodejs for now
+  // [WIP] Cannot simulate browser in nodejs for now
   // it('returns RuntimeName.BROWSER in browser environment', () => {
   //   const result = detectRuntime()
   //   // In test environment, this should detect browser if window is available
