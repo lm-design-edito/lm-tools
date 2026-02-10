@@ -11,7 +11,7 @@ export function sortKeys<T extends Record<string, unknown>> (
   sorter: (a: keyof T, b: keyof T) => number = (a, b) => String(a).localeCompare(String(b))
 ): { [K in keyof T]: T[K] } {
   const out: Partial<{ [K in keyof T]: T[K] }> = {}
-  const keys = Object.keys(obj) as (keyof T)[]
+  const keys = Object.keys(obj) as Array<keyof T>
   for (const key of keys.sort(sorter)) { out[key] = obj[key] }
   return out as { [K in keyof T]: T[K] }
 }
