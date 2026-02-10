@@ -1,9 +1,46 @@
 # To do
 
-- [ ] Migrate to v3 of aws-sdk (then remove workaround plugin in lm-publisher)
-- [ ] Get rid of namespaces (import * as Thing from './thing/index.js' instead, dont worry about types not being imported that way)
-  - Or maybe... get rid of reexports?
-- [ ] JSDOC everywhere
-- [ ] Write tests for everything
-- [ ] Really not sure about the centralized error codes
-- [ ] create empty (export {}) index.js files in directories without index files so that import is easyer on the consumer side
+- [ ] Tests manquants (garder la forme describe('funcName') { it('does something') {} })
+  - [ ] agnostic/html/hyper-json -> nécessaire mais trop compliqué/long
+  - [ ] agnostic/html/placeholders -> pas nécessaire
+  - [ ] agnostic/misc/logs/make-text-block -> Manque JSDOC aussi
+  - [ ] agnostic/strings/char-codes
+  - [ ] agnostic/strings/matches
+  - [ ] agnostic/strings/parse-table
+  - [ ] agnostic/strings/to-alphanum
+  - [ ] agnostic/strings/trim
+  - [ ] agnostic/time/dates/format-date
+  - [ ] agnostic/time/duration
+  - [ ] agnostic/time/timeout
+  - [ ] agnostic/time/transitions
+  - [ ] agnostic/time/wait
+  - [ ] node/@aws-s3 - oui mais comment (valable aussi pour gcs, ftps & sftp) ?
+  - [ ] node/@design-edito - vide
+  - [ ] node/@express/@multer
+  - [ ] node/@google-cloud
+  - [ ] node/cloud-storage
+  - [ ] node/encryption
+  - [ ] node/files
+  - [ ] node/ftps
+  - [ ] node/images
+  - [ ] node/process
+  - [ ] node/sftp
+  - [x] agnostic/css/bem -> DEPRECATED
+  - [x] agnostic/css/styles-set -> DEPRECATED
+  - [x] agnostic/errors/register -> pas nécessaire
+  - [x] agnostic/html/sanitization/html -> DEPRECATED
+  - [x] agnostic/misc/assert -> DEPRECATED
+  - [x] agnostic/misc/logs/logger -> presque DEPRECATED
+  - [x] agnostic/misc/logs/styles -> pas nécessaire tout de suite
+  - [x] agnostic/strings/normalize-indent -> pas nécessaire tout de suite, fonction à repenser
+  - [x] agnostic/strings/replace-all -> DEPRECATED
+
+- [ ] Repenser agnostic/optim/throttle-debounce ?
+- [ ] Repenser agnostic/strings/normalize-indent ?
+- [ ] Get rid of namespaces in hyper-json ?
+- [ ] agnostic/misc/logs/styles, se repencher dessus, viser à substituer totalement chalk (styles génériques, bold, red, bgBlue, etc...) + continuer à exporter des "styles nommés" comme actuellement
+- [x] agnostic/misc/logs/styles, écrire à la main les ansi machins et se passer de chalk ?
+- [x] Migrate to v3 of aws-sdk (then remove workaround plugin in lm-publisher)
+- [x] JSDOC everywhere
+- [x] Really not sure about the centralized error codes
+- [x] create empty (export {}) index.js files in directories without index files so that import is easyer on the consumer side

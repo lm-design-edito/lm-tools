@@ -15,6 +15,9 @@ function makeFailure (label: string): undefined {
   throw new Error(`🚫 FAILURE:\n  ${formattedLabel}`)
 }
 
+/**
+ * @deprecated
+ */
 export async function assert (
   label: string,
   assertion: Assertion | Assertion[] | Map<string, Assertion> | Record<string, Assertion>

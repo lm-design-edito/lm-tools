@@ -6,7 +6,7 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
-import { eventListener } from '../public-classnames.js'
+import { eventListener as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
 export type Props = {
@@ -58,8 +58,8 @@ export const EventListenerComponent = ({
   }, [targetSelector, type, onEvent])
 
   // Class names & rendering
-  const c = clss(eventListener, { cssModule })
-  const wrapperClassName = [c(null), className].filter(isNotFalsy).join(' ')
+  const c = clss(publicClassName, { cssModule })
+  const wrapperClassName = [c(), className].filter(isNotFalsy).join(' ')
   return <span className={wrapperClassName} ref={rootRef}>
     {children}
     {content}

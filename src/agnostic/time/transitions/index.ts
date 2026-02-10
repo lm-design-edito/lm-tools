@@ -60,31 +60,35 @@ export type EasingFunction = (progress: number) => number
 export type EasingDictionary = Record<string, EasingFunction>
 
 /**
- * Performs a numeric transition from 0 to `to` over `durationMs` milliseconds.
+ * Performs a numeric transition from 0 to `steps` over `durationMs` milliseconds.
  * Invokes a callback at each step with the eased value and timestamp.
  *
- * @param to - The number of steps or increments for the transition.
+ * @param steps - The number of steps or increments for the transition.
  * @param durationMs - Total duration of the transition in milliseconds.
  * @param callbackOrEase - Either a callback function for each step or a predefined easing name.
  * @param callback - Optional callback if `callbackOrEase` is an easing name.
  * @returns A promise that resolves when the transition is complete.
  */
 export async function transition (
-  to: number,
+  steps: number,
   durationMs: number,
   callbackOrEase: Ease | Callback,
-  callback?: Callback): Promise<void> {
+  callback?: Callback
+): Promise<void> {
   const ease = typeof callbackOrEase === 'string' ? callbackOrEase : Ease.LINEAR
   const easing = easings[ease]
   if (easing === undefined) return
-  const actualCallback = callback ?? (typeof callbackOrEase === 'function' ? callbackOrEase : undefined)
+  const actualCallback = callback ?? (typeof callbackOrEase === 'function'
+    ? callbackOrEase
+    : undefined
+  )
   if (actualCallback === undefined) return
   const start = Date.now()
-  const timeTable = new Array(to).fill(null).map((_, step) => {
-    const progression = (step + 1) / to
+  const timeTable = new Array(steps).fill(null).map((_, step) => {
+    const progression = (step + 1) / steps
     const eased = easing(progression)
     const time = start + eased * durationMs
-    return { time, step: eased * to }
+    return { time, step: eased * steps }
   })
   for (const { time, step } of timeTable) {
     const now = Date.now()
