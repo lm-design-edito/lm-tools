@@ -1,5 +1,6 @@
 import process from 'node:process'
 import { promises as fs } from 'node:fs'
+import path from 'node:path'
 import { exec, execSync } from 'node:child_process'
 import prompts from 'prompts'
 import semver from 'semver'
@@ -11,6 +12,7 @@ import { PKG_JSON, LIB_PKG_JSON, LIB } from '../_config/index.js'
  * NPM login
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 const { npmLoggedIn } = await prompts({
   name: 'npmLoggedIn',
   type: 'confirm',
@@ -98,6 +100,36 @@ else {
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+const indexJsFiles = fs.glob('**/index.js', { cwd: LIB })
+const exports: Record<string, {
+  import: string
+  types?: string
+}> = {}
+for await (const file of indexJsFiles) {
+  const importPath = file.replace(/\/?index.js$/, '')
+  const fileAbsPath = path.join(LIB, file)
+  const dTsAbsPath = path.join(LIB, file).replace(/index.js$/, 'index.d.ts')
+  try {
+    await fs.access(dTsAbsPath)
+    exports[importPath === '' ? '.' : `./${importPath}`] = {
+      import: `./${path.relative(LIB, fileAbsPath)}`,
+      types: `./${path.relative(LIB, dTsAbsPath)}`
+    }
+  } catch (err) {
+    exports[importPath === '' ? '.' : `./${importPath}`] = {
+      import: `./${path.relative(LIB, fileAbsPath)}`
+    }
+  }
+}
+const exportsSorted = Object.entries(exports).sort((a, b) => {
+  const aKey = a[0]
+  const bKey = b[0]
+  return aKey.localeCompare(bKey)
+}).reduce<typeof exports>((acc, [key, data]) => {
+  acc[key] = data
+  return acc
+}, {})
+
 await fs.cp(PKG_JSON, LIB_PKG_JSON)
 const libPkgJsonData = await fs.readFile(LIB_PKG_JSON, { encoding: 'utf-8' })
 type PkgJson = {
@@ -113,6 +145,7 @@ type PkgJson = {
   type?: string | undefined
   main?: string | undefined
   module?: string | undefined
+  exports?: typeof exports
   scripts?: Record<string, string> | undefined
   dependencies?: Record<string, string> | undefined
   devDependencies?: Record<string, string> | undefined
@@ -131,6 +164,7 @@ try {
     type: parsed.type,
     main: 'index.js',
     module: 'index.js',
+    exports: exportsSorted,
     dependencies: parsed.dependencies,
     peerDependencies: parsed.peerDependencies,
     devDependencies: parsed.devDependencies
