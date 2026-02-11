@@ -1,16 +1,39 @@
 import { createRoot } from 'react-dom/client'
+import { Disclaimer } from '~/components/Disclaimer/index.js'
 import { EventListenerComponent } from '~/components/EventListener/index.js'
 import { Input } from '~/components/Input/index.js'
 import { IntersectionObserverComponent } from '~/components/IntersectionObserver/index.js'
+import { ResizeObserverComponent } from '~/components/ResizeObserver/index.js'
 import styles from './styles.module.css'
 
 const App = () => <div className={styles['app']}>
+  <h3>ResizeObserver</h3>
+  <p>This is a resize observer</p>
+  <ResizeObserverComponent>
+    <div style={{
+      width: '100%',
+      height: '600px',
+      backgroundColor: 'coral'
+    }}>resize me!!</div>
+  </ResizeObserverComponent>
+
+
+  <h3>Disclaimer</h3>
+  <p>This is a disclaimer</p>
+  <Disclaimer
+    content='U sure bro?'
+    buttonContent='Lets go'>
+    <div>Disclosed content</div>
+  </Disclaimer>
+  <br />
+  <br />
+
   <h3>EventListener</h3>
   <p>Click on the button to see the console log.</p>
   <p>Hover on the button to see the console log.</p>
-  <code>
+  <pre>
     console.log('clicked')
-  </code>
+  </pre>
   <EventListenerComponent
     type='click'
     onEvent={() => console.log('clicked')}>

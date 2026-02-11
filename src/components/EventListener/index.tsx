@@ -5,63 +5,60 @@ import {
   type JSX
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
-import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
+import { mergeClassNames } from '../utils/index.js'
 import { eventListener as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
+/**
+ * Props for the EventListenerComponent.
+ *
+ * @property className - Optional additional class name(s) applied to the root element.
+ * @property type - Event type or list of event types to listen to (e.g. "click", ["mouseenter", "focus"]).
+ * @property targetSelector - Optional CSS selector used to match descendant elements
+ * within the root element. If omitted, the listener is attached to the root element itself.
+ * @property onEvent - Callback invoked when one of the specified events is triggered.
+ * Receives the native DOM Event object.
+ * @property children - React children rendered inside the root element.
+ */
 export type Props = {
   className?: string
   type?: string | string[]
   targetSelector?: string
   onEvent?: (e: Event) => void
-  content?: ReactNode
   children?: ReactNode
 }
 
+/**
+ * Component that attaches one or multiple DOM event listeners to its root element
+ * or to matching descendants.
+ * @param props - Component properties
+ * @see {@link Props}
+ * @returns A span element wrapping `children`, with configured event listeners.
+ */
 export const EventListenerComponent = ({
   className,
   type,
   targetSelector,
   onEvent,
-  content,
   children
 }: Props): JSX.Element => {
+  // Effects & refs
   const rootRef = useRef<HTMLDivElement>(null)
-
   useEffect(() => {
     const root = rootRef.current
-    if (onEvent === undefined
-      || type === undefined
-      || root === null) return
-    const typeArr = Array.isArray(type)
-      ? type
-      : [type]
-    const elements = Array.from(targetSelector === undefined
-      ? [root]
-      : root.querySelectorAll(targetSelector))
-
-    // Add listeners
-    elements.forEach(elt => {
-      typeArr.forEach(type => {
-        elt.addEventListener(type, onEvent)
-      })
-    })
-
-    // Cleanup function to remove listeners
-    return () => {
-      elements.forEach(elt => {
-        typeArr.forEach(type => {
-          elt.removeEventListener(type, onEvent)
-        })
-      })
-    }
+    if (onEvent === undefined || type === undefined || root === null) return
+    const typeArr = Array.isArray(type) ? type : [type]
+    const elements = Array.from(targetSelector === undefined ? [root] : root.querySelectorAll(targetSelector))
+    elements.forEach(e => typeArr.forEach(t => e.addEventListener(t, onEvent)))
+    return () => elements.forEach(e => typeArr.forEach(t => e.removeEventListener(t, onEvent)))
   }, [targetSelector, type, onEvent])
 
-  // Class names & rendering
+  // Rendering
   const c = clss(publicClassName, { cssModule })
-  const wrapperClassName = [c(), className].filter(isNotFalsy).join(' ')
-  return <span className={wrapperClassName} ref={rootRef}>
+  const rootClss = mergeClassNames(c(), className)
+  return <span
+    className={rootClss}
+    ref={rootRef}>
     {children}
-    {content}
   </span>
 }

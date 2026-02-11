@@ -13,20 +13,20 @@ export type Props = InputHTMLAttributes<HTMLInputElement> & {
 }
 
 export const Input = (props: Props): JSX.Element => {
-  const { label, labelAfter } = props
-  delete props.label
-  delete props.labelAfter
-
+  const {
+    label,
+    labelAfter,
+    ...intrinsicInputProps
+  } = props
   const c = clss([classes.input], { cssModule: styles })
   const inputClassName = c(null, { alt: true })
   const inputId = props.id ?? randomHash(8)
-
   return <>
     {label !== undefined
       && labelAfter !== true
       && <label>{label}</label>}
     <input
-      {...props}
+      {...intrinsicInputProps}
       className={inputClassName}
       id={inputId} />
     {label !== undefined

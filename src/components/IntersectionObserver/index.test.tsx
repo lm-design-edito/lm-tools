@@ -91,19 +91,13 @@ describe('IntersectionObserverComponent', () => {
     vi.useRealTimers()
   })
 
-  it('renders children and content', () => {
+  it('renders children', () => {
     render(
-      <IntersectionObserverComponent content="content">
+      <IntersectionObserverComponent>
         <span>child</span>
       </IntersectionObserverComponent>
     )
     expect(screen.getByText('child')).toBeDefined()
-    expect(screen.getByText('content')).toBeDefined()
-  })
-
-  it('renders the render prop', () => {
-    render(<IntersectionObserverComponent render={<span>rendered</span>} />)
-    expect(screen.getByText('rendered')).toBeDefined()
   })
 
   it('applies className', () => {

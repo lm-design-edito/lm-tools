@@ -24,12 +24,16 @@
     "tests:preact": "RENDERER=preact vitest run --config vitest.components.config.ts --reporter verbose",
     "tests:components": "npm run tests:react && npm run tests:preact",
     "tests": "npm run tests:node && npm run tests:agnostic && npm run tests:components",
-    "demo": "cd demo && npm start",
     "demo:preact": "cd demo && npm run start:preact",
+    "demo:react": "cd demo && npm run start:react",
+    "demo": "cd demo && npm start",
     "build:scripts": "rm -rf .temp/scripts && mkdir -p .temp/scripts && npx esbuild scripts/**/*.ts --outdir=.temp/scripts --bundle --platform=node --format=esm --packages=external",
     "build:src": "rm -rf lib && mkdir -p lib && node .temp/scripts/build/index.js",
     "build": "npm run check && npm run tests && npm run lint:src && npm run build:scripts && npm run build:src",
-    "prepublishOnly": "npm run build && node .temp/scripts/pre-publish/index.js"
+    "prepublishOnly": "npm run build && node .temp/scripts/pre-publish/index.js",
+    "start:preact": "npm run demo:preact",
+    "start:react": "npm run demo:react",
+    "start": "npm run start:preact"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.3",

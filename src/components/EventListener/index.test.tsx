@@ -12,15 +12,13 @@ const { render, fireEvent, screen, cleanup } = await (async () => {
 describe('EventListenerComponent', () => {
   afterEach(() => cleanup())
 
-  it('renders children and content', () => {
+  it('renders children', () => {
     render(
-      <EventListenerComponent
-        content="content">
+      <EventListenerComponent>
         <span>child</span>
       </EventListenerComponent>
     )
     expect(screen.getByText('child')).toBeDefined()
-    expect(screen.getByText('content')).toBeDefined()
   })
 
   it('applies className and cssModule classes', () => {

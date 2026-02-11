@@ -1,46 +1,81 @@
 import {
-  type ReactNode,
   useState,
   useRef,
   useEffect,
   useCallback,
-  type JSX
+  type JSX,
+  type PropsWithChildren
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
-import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
-import { intersectionObserver } from '../public-classnames.js'
+import { mergeClassNames } from '../utils/index.js'
+import type { WithClassName } from '../utils/types.js'
+import { intersectionObserver as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
+/** Alias for the native IntersectionObserver interface. */
 export type IO = IntersectionObserver
+/** Alias for the native IntersectionObserverEntry interface. */
 export type IOE = IntersectionObserverEntry
 
-type ObserverOptions = {
+/**
+ * Configuration options for the underlying IntersectionObserver instance.
+ *
+ * @property root - The element used as the viewport for checking visibility.
+ * If not provided, the browser viewport is used.
+ * @property rootMargin - Margin around the root, in CSS margin format
+ * (e.g. "10px 20px"). Expands or shrinks the effective root bounds.
+ * @property threshold - A single number or an array of numbers indicating
+ * at what percentage(s) of the target's visibility the observer callback
+ * should be executed.
+ */
+export type ObserverOptions = {
   root?: HTMLElement
   rootMargin?: string
   threshold?: number[] | number
 }
 
-export type Props = {
-  className?: string
-  render?: ReactNode
+/**
+ * Props for the IntersectionObserverComponent.
+ *
+ * @property onIntersection - Callback invoked whenever an intersection change
+ * is reported. Receives an object containing the current IntersectionObserverEntry
+ * (if available) and the active IntersectionObserver instance.
+ * @property root - See {@link ObserverOptions.root}.
+ * @property rootMargin - See {@link ObserverOptions.rootMargin}.
+ * @property threshold - See {@link ObserverOptions.threshold}.
+ * @property className - Optional additional class name(s) applied to the root element.
+ * @property children - React children rendered inside the observed element.
+ */
+export type Props = PropsWithChildren<WithClassName<{
   onIntersection?: (details: {
     ioEntry?: IOE | undefined
     observer: IO
   }) => void
-  content?: ReactNode
-  children?: ReactNode
-} & ObserverOptions
+} & ObserverOptions>>
 
+/**
+ * Component that observes its root element using the IntersectionObserver API
+ * and notifies consumers about visibility changes.
+ *
+ * @param props - Component properties.
+ * @see {@link Props}
+ *
+ * @returns A div element wrapping `children`, observed for intersection changes.
+ *
+ * @remarks
+ * - Automatically creates and disconnects the IntersectionObserver instance.
+ * - Re-observes the element shortly after mount to handle late layout changes.
+ * - Adds an `is-intersecting` modifier class when the element is intersecting.
+ */
 export const IntersectionObserverComponent = ({
-  className,
-  render,
-  content,
   onIntersection,
   root,
   rootMargin,
   threshold,
+  className,
   children
 }: Props): JSX.Element => {
+  // Refs, handlers and effects
   const [ioEntry, setIoEntry] = useState<IOE | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IO | null>(null)
@@ -63,7 +98,6 @@ export const IntersectionObserverComponent = ({
     observer.observe(rootEl)
   }, [])
 
-  // Main observer effect
   useEffect(() => {
     const rootEl = rootRef.current
     if (rootEl === null) return console.warn('rootRef.current should not be null')
@@ -73,7 +107,6 @@ export const IntersectionObserverComponent = ({
     return () => observer.disconnect()
   }, [root, rootMargin, threshold, observation])
 
-  // Force observation timeouts
   useEffect(() => {
     const timeout1 = window.setTimeout(forceObservation, 100)
     const timeout2 = window.setTimeout(forceObservation, 500)
@@ -83,19 +116,16 @@ export const IntersectionObserverComponent = ({
     }
   }, [forceObservation])
 
-  // Class names & rendering
-  const c = clss(intersectionObserver, { cssModule })
+  // Rendering
+  const c = clss(publicClassName, { cssModule })
   const isIntersecting = ioEntry?.isIntersecting ?? false
-  const wrapperClassName = [
+  const rootClss = mergeClassNames(
     c(null, { 'is-intersecting': isIntersecting }),
     className
-  ].filter(isNotFalsy).join(' ')
-
+  )
   return <div
-    ref={rootRef}
-    className={wrapperClassName}>
-    {render ?? null}
+    className={rootClss}
+    ref={rootRef}>
     {children}
-    {content}
   </div>
 }
