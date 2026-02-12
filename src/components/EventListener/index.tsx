@@ -2,7 +2,8 @@ import {
   type ReactNode,
   useRef,
   useEffect,
-  type JSX
+  type JSX,
+  type FunctionComponent
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../utils/index.js'
@@ -35,13 +36,13 @@ export type Props = {
  * @see {@link Props}
  * @returns A span element wrapping `children`, with configured event listeners.
  */
-export const EventListenerComponent = ({
+export const EventListenerComponent: FunctionComponent<Props> = ({
   className,
   type,
   targetSelector,
   onEvent,
   children
-}: Props): JSX.Element => {
+}): JSX.Element => {
   // Effects & refs
   const rootRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -56,9 +57,9 @@ export const EventListenerComponent = ({
   // Rendering
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(), className)
-  return <span
+  return <div
     className={rootClss}
     ref={rootRef}>
     {children}
-  </span>
+  </div>
 }

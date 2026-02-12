@@ -3,7 +3,8 @@ import {
   useEffect,
   type ReactNode,
   type PropsWithChildren,
-  type JSX
+  type JSX,
+  type FunctionComponent
 } from 'react'
 import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
@@ -16,11 +17,10 @@ import cssModule from './styles.module.css'
  * Props for the Disclaimer component.
  *
  * @property content - Content displayed inside the disclaimer panel.
- * @property buttonContent - Content rendered inside the dismiss button.
- * If not provided, the button is not rendered.
+ * @property togglerContent - Content rendered inside the dismiss toggler.
+ * If not provided, the toggler is not rendered.
  * @property isOn - Controls the visibility state. When defined, the component
  * behaves as a controlled component.
- * @property onDismissClick - Callback invoked when the dismiss button is clicked.
  * @property onDismissed - Callback invoked after the disclaimer is dismissed
  * in uncontrolled mode.
  * @property className - Optional additional class name(s) applied to the root element.
@@ -28,9 +28,8 @@ import cssModule from './styles.module.css'
  */
 export type Props = PropsWithChildren<WithClassName<{
   content?: ReactNode
-  buttonContent?: ReactNode
+  togglerContent?: ReactNode
   isOn?: boolean
-  onDismissClick?: () => void
   onDismissed?: () => void
 }>>
 
@@ -48,49 +47,40 @@ export type Props = PropsWithChildren<WithClassName<{
  * - In uncontrolled mode, the component manages its own visibility state.
  * - Applies `on` and `off` modifier classes depending on visibility state.
  */
-export const Disclaimer = ({
+export const Disclaimer: FunctionComponent<Props> = ({
   content,
-  buttonContent,
+  togglerContent,
   isOn: isOnProp,
-  onDismissClick,
   onDismissed,
   children,
   className
-}: Props): JSX.Element => {
-  // State, effects & handlers
-  const [isOn, setIsOn] = useState(true)
-  useEffect(() => {
-    if (isOnProp === undefined) return
-    if (isOnProp === isOn) return
-    setIsOn(isOnProp)
-  }, [isOnProp])
+}): JSX.Element => {
+  // State & handlers
+  const [internalIsOn, setInternalIsOn] = useState(isOnProp ?? true)
+  const isOn = isOnProp ?? internalIsOn
   const handleDismissClick = (): void => {
-    if (onDismissClick !== undefined) onDismissClick()
     if (isOnProp !== undefined) return
-    setIsOn(!isOn)
-    if (onDismissed !== undefined) onDismissed()
+    setInternalIsOn(false)
+    onDismissed?.()
   }
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(
-    c(null, { on: isOn, off: !isOn }),
-    className
-  )
+  const rootClss = mergeClassNames(c(null, { on: isOn, off: !isOn }), className)
   const panelClss = c('panel')
   const contentClss = c('content')
-  const btnClss = c('button')
+  const btnClss = c('toggler')
   return <div className={rootClss}>
     <div className={panelClss}>
-      {isNotFalsy(content) && <span
+      {isNotFalsy(content) && <div
         className={contentClss}>
         {content}
-      </span>}
-      {isNotFalsy(buttonContent) && <button
+      </div>}
+      {isNotFalsy(togglerContent) && <div
         className={btnClss}
         onClick={handleDismissClick}>
-        {buttonContent}
-      </button>}
+        {togglerContent}
+      </div>}
     </div>
     {children}
   </div>

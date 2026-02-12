@@ -4,7 +4,8 @@ import {
   useEffect,
   useCallback,
   type JSX,
-  type PropsWithChildren
+  type PropsWithChildren,
+  type FunctionComponent
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../utils/index.js'
@@ -67,14 +68,14 @@ export type Props = PropsWithChildren<WithClassName<{
  * - Re-observes the element shortly after mount to handle late layout changes.
  * - Adds an `is-intersecting` modifier class when the element is intersecting.
  */
-export const IntersectionObserverComponent = ({
+export const IntersectionObserverComponent: FunctionComponent<Props> = ({
   onIntersection,
   root,
   rootMargin,
   threshold,
   className,
   children
-}: Props): JSX.Element => {
+}): JSX.Element => {
   // Refs, handlers and effects
   const [ioEntry, setIoEntry] = useState<IOE | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
