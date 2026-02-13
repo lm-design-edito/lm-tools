@@ -1,6 +1,5 @@
 import {
   useState,
-  useEffect,
   type ReactNode,
   type PropsWithChildren,
   type JSX,

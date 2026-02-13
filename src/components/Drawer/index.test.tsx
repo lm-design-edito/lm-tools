@@ -11,7 +11,7 @@ vi.mock('../ResizeObserver/index.js', () => ({
 }))
 
 // Import the right testing lib depending on the context (react vs. preact)
-const { render, fireEvent, screen, cleanup, act } = await (async () => {
+const { render, fireEvent, screen, cleanup } = await (async () => {
   const { RENDERER } = process.env
   if (RENDERER === 'preact') return await import('@testing-library/preact')
   return await import('@testing-library/react')

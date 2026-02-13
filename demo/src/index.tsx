@@ -2,12 +2,36 @@ import { createRoot } from 'react-dom/client'
 import { Disclaimer } from '~/components/Disclaimer/index.js'
 import { Drawer } from '~/components/Drawer/index.js'
 import { EventListenerComponent } from '~/components/EventListener/index.js'
+import { Gallery } from '~/components/Gallery/index.js'
 import { IntersectionObserverComponent } from '~/components/IntersectionObserver/index.js'
 import { ResizeObserverComponent } from '~/components/ResizeObserver/index.js'
 import { ShadowRootComponent } from '~/components/ShadowRoot/index.js'
 import styles from './styles.module.css'
 
 const App = () => <div className={styles['app']}>
+  {/* Gallery */}
+  <h3>Gallery</h3>
+  <p>This is a gallery</p>
+  <Gallery
+    paddingLeft='30%'
+    paddingRight='30%'
+    prevButtonContent='<'
+    nextButtonContent='>'
+    paginationContent={page => `Page ${page}`}>
+    <div style={{ width: '40px', height: '200px', backgroundColor: 'coral', margin: 40 }}>truc</div>
+    <div style={{ width: '400px', height: '200px', backgroundColor: 'cadetblue', margin: 40 }}>trac</div>
+    <div style={{ width: '800px', height: '200px', backgroundColor: 'chartreuse', margin: 40 }}>troc</div>
+    <div style={{ width: '80px', height: '200px', backgroundColor: 'coral', margin: 40 }}>truc</div>
+    <div style={{ width: '120px', height: '200px', backgroundColor: 'cadetblue', margin: 40 }}>trac</div>
+    <div style={{ width: '1200px', height: '200px', backgroundColor: 'chartreuse', margin: 40 }}>troc</div>
+    <div style={{ width: '40px', height: '200px', backgroundColor: 'coral', margin: 40 }}>truc</div>
+    <div style={{ width: '400px', height: '200px', backgroundColor: 'cadetblue', margin: 40 }}>trac</div>
+    <div style={{ width: '800px', height: '200px', backgroundColor: 'chartreuse', margin: 40 }}>troc</div>
+    <div style={{ width: '80px', height: '200px', backgroundColor: 'coral', margin: 40 }}>truc</div>
+    <div style={{ width: '120px', height: '200px', backgroundColor: 'cadetblue', margin: 40 }}>trac</div>
+    <div style={{ width: '1200px', height: '200px', backgroundColor: 'chartreuse', margin: 40 }}>troc</div>
+  </Gallery>
+
   {/* Drawer */}
   <h3>Drawer</h3>
   <p>This is a drawer</p>

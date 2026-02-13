@@ -31,16 +31,14 @@ import cssModule from './styles.module.css'
  * Receives the created `ShadowRoot` instance.
  * @property children - React children rendered inside the Shadow Root via a React portal.
  */
-export type Props = PropsWithChildren<
-  WithClassName<{
-    mode?: 'open' | 'closed'
-    delegatesFocus?: boolean
-    slotAssignment?: 'named' | 'manual'
-    adoptedStyleSheets?: CSSStyleSheet[]
-    injectedStyles?: string
-    onMount?: (shadowRoot: ShadowRoot) => void
-  }>
->
+export type Props = PropsWithChildren<WithClassName<{
+  mode?: 'open' | 'closed'
+  delegatesFocus?: boolean
+  slotAssignment?: 'named' | 'manual'
+  adoptedStyleSheets?: CSSStyleSheet[]
+  injectedStyles?: string
+  onMount?: (shadowRoot: ShadowRoot) => void
+}>>
 
 /**
  * Component that creates a Shadow Root on its host element and renders
@@ -64,10 +62,11 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
   const hostRef = useRef<HTMLDivElement | null>(null)
   const [shadowRoot, setShadowRoot] = useState<ShadowRoot | null>(null)
   useEffect(() => {
-    if (!hostRef.current || shadowRoot) return
+    if (hostRef.current === null || shadowRoot === null) return
     const root = hostRef.current.attachShadow({ mode, delegatesFocus, slotAssignment })
-    if (adoptedStyleSheets && 'adoptedStyleSheets' in root) { root.adoptedStyleSheets = adoptedStyleSheets }
-    if (injectedStyles) {
+    if (adoptedStyleSheets !== undefined
+      && 'adoptedStyleSheets' in root) { root.adoptedStyleSheets = adoptedStyleSheets }
+    if (injectedStyles !== undefined) {
       const styleEl = document.createElement('style')
       styleEl.textContent = injectedStyles
       root.appendChild(styleEl)
@@ -90,6 +89,6 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
   return <div
     ref={hostRef}
     className={rootClss}>
-    {shadowRoot && createPortal(children, shadowRoot)}
+    {shadowRoot !== null && createPortal(children, shadowRoot)}
   </div>
 }

@@ -2,7 +2,7 @@ import {
   type PropsWithChildren,
   type JSX,
   type FunctionComponent,
-  ReactNode,
+  type ReactNode,
   useState
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
@@ -94,9 +94,9 @@ export const Drawer: FunctionComponent<Props> = ({
   const closerClss = c('closer')
   const contentClss = c('content')
   const dimensions = { width, height }
-  const customCssProps = Object
+  const customCssProps: Record<string, string> = Object
     .entries(dimensions)
-    .reduce<Record<string, string>>((acc, [key, val]) => {
+    .reduce((acc, [key, val]) => {
       if (val === undefined) return acc
       return {
         ...acc,
@@ -104,9 +104,9 @@ export const Drawer: FunctionComponent<Props> = ({
         [`--${publicClassName}-content-${key}px`]: `${val}px`
       }
     }, {})
-  const dataAttributes = Object
+  const dataAttributes: Record<string, string> = Object
     .entries(dimensions)
-    .reduce<Record<string, string>>((acc, [key, val]) => {
+    .reduce((acc, [key, val]) => {
       if (val === undefined) return acc
       return { ...acc, [`data-content-${key}`]: `${val}` }
     }, {})

@@ -4,7 +4,7 @@ import {
   useState,
   type PropsWithChildren,
   type JSX,
-  FunctionComponent
+  type FunctionComponent
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'

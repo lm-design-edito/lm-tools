@@ -1,6 +1,7 @@
 export const disclaimer = 'dsed-disclaimer'
 export const drawer = 'dsed-drawer'
 export const eventListener = 'dsed-event-listener'
+export const gallery = 'dsed-gallery'
 export const intersectionObserver = 'dsed-intersection-observer'
 export const resizeObserver = 'dsed-resize-observer'
 export const shadowRoot = 'dsed-shadow-root'
