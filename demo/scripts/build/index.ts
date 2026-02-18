@@ -1,8 +1,12 @@
 import esbuild, { BuildOptions } from 'esbuild'
 import path from 'node:path'
-import { sassPlugin, postcssModules } from 'esbuild-sass-plugin'
-import inlineImageModule from 'esbuild-plugin-inline-image'
+import { fileURLToPath } from 'node:url'
 
+// PATHS
+const ROOT_DIR = path.join(fileURLToPath(import.meta.url), '../../../')
+const NODE_MODULES = path.join(ROOT_DIR, 'node_modules')
+
+// SCRIPT FLAGS
 const PREACT = process.env.PREACT === 'true'
 const WATCH = process.env.WATCH === 'true'
 
@@ -19,13 +23,8 @@ const options: BuildOptions = {
   target: ['esnext'],
   tsconfig: path.join(process.cwd(), 'src/tsconfig.json'),
   logLevel: 'info',
-  jsxFactory: PREACT ? 'h' : 'React.createElement',
-  jsxFragment: PREACT ? 'FRAGMENT' : 'React.Fragment',
-  plugins: [
-    // inlineImageModule({ limit: -1 }),
-    // sassPlugin({ filter: /\.module\.scss$/, type: 'css', transform: postcssModules({}) }),
-    // sassPlugin({ filter: /.scss$/, type: 'css' })
-  ],
+  jsx: 'automatic',
+  plugins: [],
   alias: {
     '~/agnostic': '../src/agnostic',
     '~/components': '../src/components',
@@ -35,7 +34,11 @@ const options: BuildOptions = {
       'react-dom/test-utils': 'preact/test-utils',
       'react-dom': 'preact/compat',
       'react/jsx-runtime': 'preact/jsx-runtime'
-    } : {})
+    } : {
+      'react': path.join(NODE_MODULES, 'react'),
+      'react-dom': path.join(NODE_MODULES, 'react-dom'),
+      'react/jsx-runtime': path.join(NODE_MODULES, 'react/jsx-runtime')
+    })
   }
 }
 

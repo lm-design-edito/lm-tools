@@ -151,7 +151,6 @@ export const Gallery: FunctionComponent<Props> = ({
   const prevBtnClss = c('prev')
   const nextBtnClss = c('next')
   const paginationClss = c('pagination')
-  const pageClss = c('page')
   const dataAttributes: Record<string, string> = { 'data-current': `${activeIndex}` }
   const actualPaddingLeft = typeof paddingLeft === 'number'
     ? `${paddingLeft}px`
@@ -207,16 +206,19 @@ export const Gallery: FunctionComponent<Props> = ({
 
     {/* Pagination */}
     <div className={paginationClss}>
-      {Children.map(children, (_, pos) => <div
-        className={pageClss}
-        data-page={pos}
-        onClick={() => handleActivateSlot(pos)}>
-        {typeof paginationContent === 'string'
-          ? paginationContent
-          : typeof paginationContent === 'function'
-            ? paginationContent(pos)
-            : pos}
-      </div>)}
+      {Children.map(children, (_, pos) => {
+        const pageClss = c('page', { current: pos === activeIndex })
+        return <div
+          className={pageClss}
+          data-page={pos}
+          onClick={() => handleActivateSlot(pos)}>
+          {typeof paginationContent === 'string'
+            ? paginationContent
+            : typeof paginationContent === 'function'
+              ? paginationContent(pos)
+              : pos}
+        </div>
+      })}
     </div>
   </div>
 }

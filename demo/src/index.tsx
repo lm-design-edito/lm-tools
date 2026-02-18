@@ -4,11 +4,22 @@ import { Drawer } from '~/components/Drawer/index.js'
 import { EventListenerComponent } from '~/components/EventListener/index.js'
 import { Gallery } from '~/components/Gallery/index.js'
 import { IntersectionObserverComponent } from '~/components/IntersectionObserver/index.js'
+import { Paginator } from '~/components/Paginator/index.js'
 import { ResizeObserverComponent } from '~/components/ResizeObserver/index.js'
 import { ShadowRootComponent } from '~/components/ShadowRoot/index.js'
 import styles from './styles.module.css'
 
 const App = () => <div className={styles['app']}>
+  {/* Paginator */}
+  <h3>Paginator</h3>
+  <p>This is a gallery</p>
+  <Paginator thresholdOffsetPercent={80}>
+    <div style={{ width: '100%', height: '120vh', backgroundColor: 'darkgrey' }}>Page 1</div>
+    <div style={{ width: '100%', height: '120vh', backgroundColor: 'tan' }}>Page 2</div>
+    <div style={{ width: '100%', height: '120vh', backgroundColor: 'plum' }}>Page 3</div>
+  </Paginator>
+
+
   {/* Gallery */}
   <h3>Gallery</h3>
   <p>This is a gallery</p>
