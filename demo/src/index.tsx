@@ -6,10 +6,16 @@ import { Gallery } from '~/components/Gallery/index.js'
 import { IntersectionObserverComponent } from '~/components/IntersectionObserver/index.js'
 import { Paginator } from '~/components/Paginator/index.js'
 import { ResizeObserverComponent } from '~/components/ResizeObserver/index.js'
+import { Scrllgngn } from '~/components/Scrllgngn/index.js'
 import { ShadowRootComponent } from '~/components/ShadowRoot/index.js'
 import styles from './styles.module.css'
 
 const App = () => <div className={styles['app']}>
+  {/* Scrllgngn */}
+  <h3>Scrllgngn</h3>
+  <p>This is a gallery</p>
+  <Scrllgngn />
+
   {/* Paginator */}
   <h3>Paginator</h3>
   <p>This is a gallery</p>

@@ -12,25 +12,31 @@ import { mergeClassNames } from '../utils/index.js'
 import { paginator as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
-export type Props = PropsWithChildren<WithClassName<{
-  thresholdOffsetPercent?: number
-}>>
-
-// [WIP] on page change
-
 type PageState = {
   position: 'prev' | 'curr' | 'next'
   currCount: number
 }
 
+type PagesState = Map<number, PageState>
+
+type DirectionState = 'forwards' | 'backwards' | null
+
+export type Props = PropsWithChildren<WithClassName<{
+  thresholdOffsetPercent?: number
+  onDirectionChange?: (direction: DirectionState) => void
+  onPageChange?: (pages: PagesState) => void
+}>>
+
 export const Paginator: FunctionComponent<Props> = ({
   thresholdOffsetPercent,
+  onDirectionChange,
+  onPageChange,
   className,
   children
 }) => {
   // State, refs, effects
-  const [pagesState, setPagesState] = useState<Map<number, PageState>>(new Map())
-  const [directionState, setDirectionState] = useState<'forwards' | 'backwards' | null>(null)
+  const [pagesState, setPagesState] = useState<PagesState>(new Map())
+  const [directionState, setDirectionState] = useState<DirectionState>(null)
   const pagesRef = useRef<HTMLDivElement>(null)
 
   // Catch scroll direction listening on scroll events
@@ -42,12 +48,10 @@ export const Paginator: FunctionComponent<Props> = ({
       if (now - lastCall < 100) return
       lastCall = now
       const currentScrollY = window.scrollY
-      setDirectionState(
-        currentScrollY > lastScrollY
-          ? 'forwards'
-          : 'backwards'
-      )
+      const direction = currentScrollY > lastScrollY ? 'forwards' : 'backwards'
+      setDirectionState(direction)
       lastScrollY = currentScrollY
+      if (onDirectionChange !== undefined) onDirectionChange(direction)
     }
     window.addEventListener('scroll', handleScroll)
     window.addEventListener('resize', handleScroll)
@@ -69,7 +73,8 @@ export const Paginator: FunctionComponent<Props> = ({
       setPagesState(prevState => {
         const nextState = new Map(prevState)
         entries.forEach(entry => {
-          const index = Number((entry.target as HTMLElement).dataset.page)
+          const index = pageIndexMap.get(entry.target)
+          if (index === undefined) return
           const prev = prevState.get(index)
           const position: PageState['position'] = entry.isIntersecting
             ? 'curr'
@@ -81,12 +86,19 @@ export const Paginator: FunctionComponent<Props> = ({
             : (prev?.currCount ?? 0)
           nextState.set(index, { position, currCount })
         })
+        if (onPageChange !== undefined) onPageChange(nextState)
         return nextState
       })
     }, { rootMargin: observerRootMargin })
-    pages.forEach(page => observer.observe(page))
+
+    const pageIndexMap = new Map<Element, number>()
+    pages.forEach((page, index) => {
+      pageIndexMap.set(page, index)
+      observer.observe(page)
+    })
+
     return () => observer.disconnect()
-  }, [thresholdOffsetPercent])
+  }, [thresholdOffsetPercent, children])
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
@@ -115,7 +127,8 @@ export const Paginator: FunctionComponent<Props> = ({
         return <div
           className={pageClss}
           data-page={pos}
-          data-curr-count={state?.currCount ?? 0}>
+          data-curr-count={state?.currCount ?? 0}
+          key={pos}>
           {child}
         </div>
       })}
