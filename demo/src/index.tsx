@@ -19,7 +19,6 @@ const App = () => <div className={styles['app']}>
     <div style={{ width: '100%', height: '120vh', backgroundColor: 'plum' }}>Page 3</div>
   </Paginator>
 
-
   {/* Gallery */}
   <h3>Gallery</h3>
   <p>This is a gallery</p>
