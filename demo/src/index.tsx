@@ -8,6 +8,7 @@ import { Paginator } from '~/components/Paginator/index.js'
 import { ResizeObserverComponent } from '~/components/ResizeObserver/index.js'
 import { Scrllgngn } from '~/components/Scrllgngn/index.js'
 import { ShadowRootComponent } from '~/components/ShadowRoot/index.js'
+import { Subtitles } from '~/components/Subtitles/index.js'
 import styles from './styles.module.css'
 
 const App = () => <div className={styles['app']}>
@@ -124,6 +125,10 @@ const App = () => <div className={styles['app']}>
       height: 400
     }} />
   </IntersectionObserverComponent>
+
+  {/* Subtitles */}
+  <h3>Subtitles</h3>
+  <Subtitles subsSrc="https://assets-decodeurs.lemonde.fr/redacweb/2305-audio-quote-assets/chantal.srt" subsGroups={[1, 10]} timecodeInMs={29752} />
 </div>
 
 const target = document.querySelector('.root')
