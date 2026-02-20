@@ -24,7 +24,7 @@ type DirectionState = 'forwards' | 'backwards' | null
 export type Props = PropsWithChildren<WithClassName<{
   thresholdOffsetPercent?: number
   onDirectionChange?: (direction: DirectionState) => void
-  onPageChange?: (pages: PagesState) => void
+  onPageChange?: (pages: PageState[]) => void
 }>>
 
 export const Paginator: FunctionComponent<Props> = ({
@@ -86,17 +86,19 @@ export const Paginator: FunctionComponent<Props> = ({
             : (prev?.currCount ?? 0)
           nextState.set(index, { position, currCount })
         })
-        if (onPageChange !== undefined) onPageChange(nextState)
+        if (onPageChange !== undefined) onPageChange(
+          Array
+            .from(nextState)
+            .map(([, state]) => state)
+        )
         return nextState
       })
     }, { rootMargin: observerRootMargin })
-
     const pageIndexMap = new Map<Element, number>()
     pages.forEach((page, index) => {
       pageIndexMap.set(page, index)
       observer.observe(page)
     })
-
     return () => observer.disconnect()
   }, [thresholdOffsetPercent, children])
 

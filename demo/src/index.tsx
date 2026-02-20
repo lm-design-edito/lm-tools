@@ -16,6 +16,7 @@ const App = () => <div className={styles['app']}>
   <h3>Scrllgngn</h3>
   <p>This is a gallery</p>
   <Scrllgngn
+    thresholdOffsetPercent={80}
     pages={[
       { id: 'premiere-page',
         blocks: [{
@@ -23,7 +24,7 @@ const App = () => <div className={styles['app']}>
           depth: 'scroll',
           children: <div style={{
             width: 300,
-            height: 300,
+            height: 2000,
             backgroundColor: 'linen'
           }}>scrl-blk-1</div>
         }]
@@ -35,7 +36,7 @@ const App = () => <div className={styles['app']}>
           depth: 'scroll',
           children: <div style={{
             width: 300,
-            height: 300,
+            height: 2000,
             backgroundColor: 'gold'
           }}>scrl-blk-2</div>
         }]
@@ -47,7 +48,7 @@ const App = () => <div className={styles['app']}>
           depth: 'scroll',
           children: <div style={{
             width: 300,
-            height: 300,
+            height: 2000,
             backgroundColor: 'honeydew'
           }}>scrl-blk-3</div>
         }]

@@ -47,14 +47,17 @@ export type Props = WithClassName<{
 }>
 
 export const Scrllgngn: FunctionComponent<Props> = ({
-  className,
-  pages
+  pages,
+  thresholdOffsetPercent,
+  className
 }) => {
   const [topVisible, setTopVis] = useState(false)
   const [contentVisible, setCntVis] = useState(false)
   const [bottomVisible, setBtmVis] = useState(false)
 
-  const fixedBlocks = pages
+  const fixedBlocks = pages?.map(page => {
+
+  })
 
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(
@@ -67,20 +70,25 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   )
   return <div className={rootClss}>
     {/* Top bound detection */}
-    <IntersectionObserverComponent onIntersection={({ ioEntry }) => setTopVis(ioEntry?.isIntersecting ?? false)} />
-    
+    <IntersectionObserverComponent
+      onIntersection={e => setTopVis(e.ioEntry?.isIntersecting ?? false)} />
+
     {/* Content */}
-    <IntersectionObserverComponent onIntersection={({ ioEntry }) => setCntVis(ioEntry?.isIntersecting ?? false)}>
-      <Paginator>
+    <IntersectionObserverComponent
+      onIntersection={e => setCntVis(e.ioEntry?.isIntersecting ?? false)}>
+      <Paginator
+        thresholdOffsetPercent={thresholdOffsetPercent}
+        onPageChange={e => console.log(e)}>
         {pages?.map(page => {
           const scrollBlocks = page.blocks
             ?.filter(b => b.depth === 'scroll') ?? []
-          return <>{scrollBlocks.map(block => block.children)}</>
+          return <>{scrollBlocks.map(b => b.children)}</>
         })}
       </Paginator>
     </IntersectionObserverComponent>
-    
+
     {/* Bottom bound detection */}
-    <IntersectionObserverComponent onIntersection={({ ioEntry }) => setBtmVis(ioEntry?.isIntersecting ?? false)} />
+    <IntersectionObserverComponent
+      onIntersection={e => setBtmVis(e.ioEntry?.isIntersecting ?? false)} />
   </div>
 }
