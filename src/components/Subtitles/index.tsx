@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState, type FunctionComponent, type PropsWithChildren } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import type { FunctionComponent, PropsWithChildren } from 'react'
 import type { WithClassName } from '../utils/types.js'
-import { clss, type ClssMaker } from '../../agnostic/css/clss/index.js'
+import { clss } from '../../agnostic/css/clss/index.js'
+import type { ClssMaker } from '../../agnostic/css/clss/index.js'
 import { subtitles as publicClassName } from '../public-classnames.js'
 import { mergeClassNames } from '../utils/index.js'
 import cssModule from './styles.module.css'
@@ -15,7 +17,7 @@ export type Props = PropsWithChildren<WithClassName<{
   onSubsError?: (error?: Error) => void
 }>>
 
-type SubData = {
+type ParsedSub = {
   id: number
   start?: number
   end?: number
@@ -36,7 +38,7 @@ export const Subtitles: FunctionComponent<Props> = ({
   onSubsLoad,
   onSubsError
 }) => {
-  const [parsedSubs, setParsedSubs] = useState<SubData[]>([])
+  const [parsedSubs, setParsedSubs] = useState<ParsedSub[]>([])
 
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(
@@ -55,31 +57,28 @@ export const Subtitles: FunctionComponent<Props> = ({
     return result
   }
 
-  const parseSubs = (rawSubs: string): SubData[] => {
+  const parseSubs = (rawSubs: string): ParsedSub[] => {
     const numberRegex = /^\d+$/
     const timecodeRegex = /^[0-9]+:[0-9]+:[0-9]+,[0-9]+\s*-->\s*[0-9]+:[0-9]+:[0-9]+,[0-9]+$/
-
-    const parsedSubs: SubData[] = []
+    const parsedSubs: ParsedSub[] = []
     rawSubs.split('\n').forEach(line => {
       if (line.trim() === '') return
-      const lastAddedElement = parsedSubs[parsedSubs.length - 1] as SubData | undefined
+      const lastAddedElement = parsedSubs[parsedSubs.length - 1] as ParsedSub | undefined
       const looksLikeId = line.match(numberRegex)
       const looksLikeTimecode = line.match(timecodeRegex)
-
       // id
       if (looksLikeId !== null) {
         if (lastAddedElement === undefined) {
-          const subData: SubData = { id: parseInt(line) }
-          parsedSubs.push(subData)
+          const ParsedSub: ParsedSub = { id: parseInt(line) }
+          parsedSubs.push(ParsedSub)
           return
         }
         if (lastAddedElement.content !== undefined) {
-          const subData: SubData = { id: parseInt(line) }
-          parsedSubs.push(subData)
+          const ParsedSub: ParsedSub = { id: parseInt(line) }
+          parsedSubs.push(ParsedSub)
           return
         }
       }
-
       // timecode
       if (looksLikeTimecode !== null) {
         if (lastAddedElement?.id !== undefined) {
@@ -107,20 +106,21 @@ export const Subtitles: FunctionComponent<Props> = ({
     return parsedSubs
   }
 
-  const getSubtitlesContent = (c: ClssMaker, parsedSubs: SubData[], subsGroups?: number[], timecodeInMs?: number): React.ReactNode => {
-    if (timecodeInMs === undefined) return null
-
-    const alreadyPronouncedSubs = parsedSubs.filter(({ start }) => (start != null) && start < timecodeInMs)
-    const lastPronouncedSub = alreadyPronouncedSubs[alreadyPronouncedSubs.length - 1] ?? null
-    const highestSubId = Math.max(...parsedSubs.map(sub => sub.id))
-
-    const subsGroupsWithBoundaries: SubGroupBoundaries[] = subsGroups?.reduce(
+  const computeSubGroupsWithBoundaries = (
+    subsGroups: number[] | undefined,
+    highestSubId: number
+  ): SubGroupBoundaries[] => {
+    const fallback = [{ startId: 1, endId: highestSubId }]
+    if (subsGroups === undefined || subsGroups.length === 0) {
+      return fallback
+    }
+    const emptySubGroupBoundaries: SubGroupBoundaries[] = []
+    return subsGroups?.reduce(
       (acc, curr, currIndex) => {
         const lastInAcc = acc[acc.length - 1]
         const startId = lastInAcc === undefined ? 1 : lastInAcc.endId + 1
         const endId = curr
-        if (currIndex === (subsGroups?.length ?? 0) - 1
-          && endId !== highestSubId) {
+        if (currIndex === (subsGroups?.length ?? 0) - 1 && endId !== highestSubId) {
           return [
             ...acc,
             { startId, endId },
@@ -129,59 +129,108 @@ export const Subtitles: FunctionComponent<Props> = ({
         }
         return [...acc, { startId, endId }]
       },
-      [] as SubGroupBoundaries[]
-    ) ?? []
-    const alreadyPronouncedGroups = subsGroupsWithBoundaries.filter(group => group.startId <= (lastPronouncedSub?.id ?? 0))
-
-    const activeGroup = alreadyPronouncedGroups.length === 0
-      ? (isEnded === true
-          ? subsGroupsWithBoundaries[subsGroupsWithBoundaries.length - 1]
-          : subsGroupsWithBoundaries[0])
-      : alreadyPronouncedGroups[alreadyPronouncedGroups.length - 1]
-
-    const subsArray: React.ReactNode[] = []
-    subsGroupsWithBoundaries.forEach((group) => {
-      const groupSubs = parsedSubs.filter(sub => sub.id >= group.startId && sub.id <= group.endId)
-      const subsNodes: React.ReactNode[] = []
-      groupSubs.forEach((sub, subIndex, array) => {
-        let subText = sub.content?.trim() ?? ''
-        if (subIndex !== array.length - 1) subText += ' '
-
-        const subModifiers = []
-        if (isEnded !== true && sub.start !== undefined && lastPronouncedSub?.start !== undefined && sub.start <= lastPronouncedSub.start) {
-          subModifiers.push('pronounced')
-        }
-
-        if (sub.start !== undefined && timecodeInMs >= sub.start && sub.end !== undefined && timecodeInMs <= sub.end) {
-          subModifiers.push('active')
-        }
-
-        const subClass = c('sub', subModifiers)
-        subsNodes.push(<span key={sub.id} className={subClass}>{subText}</span>)
-      })
-
-      const groupModifiers = []
-      if (activeGroup?.startId === group.startId) {
-        groupModifiers.push('active')
-      }
-
-      const groupClass = c('group', groupModifiers)
-      subsArray.push(<div className={groupClass} key={group.startId}>{subsNodes}</div>)
-    })
-
-    return subsArray
+      emptySubGroupBoundaries
+    ) ?? fallback
   }
 
+  const getActiveGroup = (
+    subsGroupsWithBoundaries: SubGroupBoundaries[],
+    lastPronouncedSubId: number | undefined,
+    isEnded: boolean | undefined
+  ): SubGroupBoundaries | undefined => {
+    const alreadyPronouncedGroups = subsGroupsWithBoundaries.filter(
+      group => group.startId <= (lastPronouncedSubId ?? 0)
+    )
+
+    if (alreadyPronouncedGroups.length === 0) {
+      return isEnded === true
+        ? subsGroupsWithBoundaries[subsGroupsWithBoundaries.length - 1]
+        : subsGroupsWithBoundaries[0]
+    }
+    return alreadyPronouncedGroups[alreadyPronouncedGroups.length - 1]
+  }
+
+  const renderSubtitle = (
+    c: ClssMaker,
+    sub: ParsedSub,
+    subIndex: number,
+    totalSubs: number,
+    timecodeInMs: number,
+    lastPronouncedStart: number | undefined,
+    isEnded: boolean | undefined
+  ): React.ReactNode => {
+    let subText = sub.content?.trim() ?? ''
+    if (subIndex !== totalSubs - 1) subText += ' '
+    const subModifiers = []
+    if (isEnded !== true && sub.start !== undefined && lastPronouncedStart !== undefined && sub.start <= lastPronouncedStart) {
+      subModifiers.push('pronounced')
+    }
+    if (sub.start !== undefined && timecodeInMs >= sub.start && sub.end !== undefined && timecodeInMs <= sub.end) {
+      subModifiers.push('active')
+    }
+    const subClass = c('sub', subModifiers)
+    return <span key={sub.id} className={subClass}>{subText}</span>
+  }
+
+  const renderSubGroup = (
+    c: ClssMaker,
+    group: SubGroupBoundaries,
+    parsedSubs: ParsedSub[],
+    timecodeInMs: number,
+    lastPronouncedStart: number | undefined,
+    isActiveGroup: boolean,
+    isEnded: boolean | undefined
+  ): React.ReactNode => {
+    const groupSubs = parsedSubs.filter(sub => sub.id >= group.startId && sub.id <= group.endId)
+
+    // eslint-disable-next-line @typescript-eslint/promise-function-async
+    const subsNodes = groupSubs.map((sub, subIndex) => {
+      return renderSubtitle(c, sub, subIndex, groupSubs.length, timecodeInMs, lastPronouncedStart, isEnded)
+    })
+    const groupModifiers = isActiveGroup ? ['active'] : []
+    const groupClass = c('group', groupModifiers)
+    return <div className={groupClass} key={group.startId}>{subsNodes}</div>
+  }
+
+  const renderSubtitles = (
+    c: ClssMaker,
+    parsedSubs: ParsedSub[],
+    subsGroups?: number[],
+    timecodeInMs?: number
+  ): React.ReactNode => {
+    if (timecodeInMs === undefined) return null
+    if (parsedSubs.length === 0) return null
+
+    const alreadyPronouncedSubs = parsedSubs.filter(({ start }) => start != null && start < timecodeInMs)
+    const lastPronouncedSub = alreadyPronouncedSubs[alreadyPronouncedSubs.length - 1]
+    const highestSubId = Math.max(...parsedSubs.map(sub => sub.id))
+
+    const subsGroupsWithBoundaries = computeSubGroupsWithBoundaries(subsGroups, highestSubId)
+    const activeGroup = getActiveGroup(subsGroupsWithBoundaries, lastPronouncedSub?.id, isEnded)
+
+    // eslint-disable-next-line @typescript-eslint/promise-function-async
+    return subsGroupsWithBoundaries.map(group =>
+      renderSubGroup(
+        c,
+        group,
+        parsedSubs,
+        timecodeInMs,
+        lastPronouncedSub?.start,
+        activeGroup?.startId === group.startId,
+        isEnded
+      )
+    )
+  }
   const fetchAndParseSubs = useCallback(async (src?: string): Promise<void> => {
     if (src === undefined) {
       return
     }
     try {
       const response = await fetch(src)
-      const subsData = await response.text()
-      const parsedSubs = parseSubs(subsData)
+      const srtContent = await response.text()
+      const parsedSubs = parseSubs(srtContent)
       setParsedSubs(parsedSubs)
-      onSubsLoad?.(subsData)
+      onSubsLoad?.(srtContent)
     } catch (error) {
       console.error(error)
       onSubsError?.(toError(error))
@@ -194,7 +243,7 @@ export const Subtitles: FunctionComponent<Props> = ({
 
   return (
     <div className={rootClss}>
-      {getSubtitlesContent(c, parsedSubs, subsGroups, timecodeInMs)}
+    {renderSubtitles(c, parsedSubs, subsGroups, timecodeInMs)}
     </div>
   )
 }

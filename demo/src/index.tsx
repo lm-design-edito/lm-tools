@@ -128,6 +128,7 @@ const App = () => <div className={styles['app']}>
 
   {/* Subtitles */}
   <h3>Subtitles</h3>
+  <Subtitles subsSrc="https://assets-decodeurs.lemonde.fr/redacweb/2305-audio-quote-assets/chantal.srt" timecodeInMs={29752} />
   <Subtitles subsSrc="https://assets-decodeurs.lemonde.fr/redacweb/2305-audio-quote-assets/chantal.srt" subsGroups={[1, 10]} timecodeInMs={29752} />
 </div>
 
