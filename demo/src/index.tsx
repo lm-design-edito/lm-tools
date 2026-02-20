@@ -15,7 +15,44 @@ const App = () => <div className={styles['app']}>
   {/* Scrllgngn */}
   <h3>Scrllgngn</h3>
   <p>This is a gallery</p>
-  <Scrllgngn />
+  <Scrllgngn
+    pages={[
+      { id: 'premiere-page',
+        blocks: [{
+          id: 'scr-blk-1',
+          depth: 'scroll',
+          children: <div style={{
+            width: 300,
+            height: 300,
+            backgroundColor: 'linen'
+          }}>scrl-blk-1</div>
+        }]
+      },
+      {
+        id: 'deuz-page',
+        blocks: [{
+          id: 'scr-blk-2',
+          depth: 'scroll',
+          children: <div style={{
+            width: 300,
+            height: 300,
+            backgroundColor: 'gold'
+          }}>scrl-blk-2</div>
+        }]
+      },
+      {
+        id: 'troiz-page',
+        blocks: [{
+          id: 'scr-blk-3',
+          depth: 'scroll',
+          children: <div style={{
+            width: 300,
+            height: 300,
+            backgroundColor: 'honeydew'
+          }}>scrl-blk-3</div>
+        }]
+      }
+    ]} />
 
   {/* Paginator */}
   <h3>Paginator</h3>
