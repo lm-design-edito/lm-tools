@@ -29,11 +29,38 @@ type SubGroupBoundaries = {
   endId: number
 }
 
+/**
+ * Subtitles component for displaying and synchronizing subtitles (SRT) with a media timeline.
+ *
+ * @component
+ * @param subSrc - URL of the subtitles file (SRT format). If undefined, no fetch is performed.
+ * @param subGroups - Optional array of subtitle IDs to define group boundaries. If undefined, all subtitles are in a single group.
+ * @param timecodeInMs - Current time in milliseconds. Determines which subtitles are active/pronounced.
+ * @param isEnded - If true, marks the last group as active (useful when media playback is finished).
+ * @param className - Additional class name(s) for the root element.
+ * @param onSubsLoad - Callback called with the raw SRT content after successful fetch and parse.
+ * @param onSubsError - Callback called with an Error if fetching or parsing fails.
+ * @param children - Optional children rendered inside the root container, after the subtitles.
+ *
+ * @example
+ * <Subtitles
+ *   subsSrc="/subs/movie.srt"
+ *   timecodeInMs={currentTime}
+ *   subsGroups={[10, 20]}
+ *   onSubsLoad={handleSubsLoad}
+ *   onSubsError={handleSubsError}
+ * >
+ *   <div>Custom footer or overlay</div>
+ * </Subtitles>
+ *
+ * @returns Render a div containing the subtitles and any children passed as props. Subtitles are grouped and given classnames according to their timing and state (active, pronounced, etc).
+ */
 export const Subtitles: FunctionComponent<Props> = ({
   subsSrc,
   subsGroups,
   timecodeInMs,
   isEnded,
+  children,
   className,
   onSubsLoad,
   onSubsError
@@ -244,6 +271,7 @@ export const Subtitles: FunctionComponent<Props> = ({
   return (
     <div className={rootClss}>
     {renderSubtitles(c, parsedSubs, subsGroups, timecodeInMs)}
+    {children}
     </div>
   )
 }
