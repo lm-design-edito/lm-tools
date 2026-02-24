@@ -10,7 +10,10 @@ import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import { drawer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
-import { ResizeObserverComponent } from '../ResizeObserver/index.js'
+import {
+  ResizeObserverComponent,
+  type Props as RSOProps
+} from '../ResizeObserver/index.js'
 
 /**
  * Props for the Drawer component.
@@ -79,7 +82,7 @@ export const Drawer: FunctionComponent<Props> = ({
     setInternalIsOpened(false)
     onToggle?.(false)
   }
-  const handleROCompResize = (entry?: ResizeObserverEntry): void => {
+  const handleROCompResize: RSOProps['onResize'] = ({ entry }): void => {
     const { width, height } = entry?.contentRect ?? {}
     setContentDimensions({ width, height })
   }

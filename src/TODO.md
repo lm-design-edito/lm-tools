@@ -73,9 +73,7 @@ Après le dev :
 - re build, lint et corrections éventuelles des erreurs du linter
 - pull add commit push 🎉
 
-
 ## Composant Vidéo
-
 
 /components/Video
 
@@ -159,7 +157,63 @@ const {
   - data-playback-speed (.25-4)
 - un span "playback speed (.25-4)"
 
-### En
+### Suite [WIP]
+
+## Composant Theatre
+
+En gros, je repense au composant fullscreen que tu (Léa T) avais fait. L'idée c'est d'avoir un composant dédié à l'affichage fullscreen d'éléments (différent du fs du comp video, qui utilise le fullscreen natif de l'élément vidéo).
+
+Une fois qu'on aura ce composant, on fera un composant Image, qui aura les props "canTheatre", et "theatre: boolean". Faudra qu'on parle de cette distinction parce que canTheatre DÉLÈGUE le comportement fullscreen au state interne du comp Image (genre, je clique, ça se met en grand, je clique sur close, ça ferme), et la prop theatre PILOTE le statut fullscreen ou non de l'image, et donc écrase canTheatre. Bon, on reparle de ça.
+
+```tsx
+type Props = {
+  className,
+  children,
+  closeBtnContent,
+  onCloseClick
+}
+
+<div class="dsed-theatre">
+  <div class="dsed-theatre__close">{closeBtnContent ?? 'close'}</div>
+  {children}
+</div>
+```
+
+## Get diff from commit hash
+
+```ts
+export type GetDiffOptions = {
+  cwd?: string
+}
+
+// Pas certain de Array<string> mais c'est peut-être suffisant,
+// l'idée c'est d'avoir une liste descriptive des changements successifs sur un fichier (genre le contenu brut de git diff)
+export type Diff = Record<string, Array<string>>
+
+// Ou pas async si pas nécessaire
+export async function getDiffFrom (
+  commitHash: string,
+  options: GetDiffOptions = {}
+): Promise<Diff> {
+  const { cwd } = options
+  return {}
+}
+```
+
+## Generate commit message from diff
+
+```ts
+export type GenerateDiffDescriptionOptions = {
+  customPromptOrSomething?: string // juste une idée comme ça, sais pas si c'est pertinent
+  // Ptet c'est là qu'il faut dire "je veux plutôt un changelog, ou plutôt un message de commit"
+}
+
+export async function generateDiffDescription (
+  diff: Diff,
+  options: GenerateDiffDescriptionOptions = {}): Promise<string> {
+  return ''
+}
+```
 
 ## Tests & JSDOC
 

@@ -82,6 +82,7 @@ export const Paginator: FunctionComponent<Props> = ({
               ? 'prev'
               : 'next'
           const currCount = position === 'curr'
+            && prev?.position !== 'curr'
             ? (prev?.currCount ?? 0) + 1
             : (prev?.currCount ?? 0)
           nextState.set(index, { position, currCount })

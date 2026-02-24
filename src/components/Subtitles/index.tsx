@@ -1,12 +1,23 @@
-import { useCallback, useEffect, useState } from 'react'
-import type { FunctionComponent, PropsWithChildren } from 'react'
-import type { WithClassName } from '../utils/types.js'
-import { clss } from '../../agnostic/css/clss/index.js'
-import type { ClssMaker } from '../../agnostic/css/clss/index.js'
-import { subtitles as publicClassName } from '../public-classnames.js'
-import { mergeClassNames } from '../utils/index.js'
-import cssModule from './styles.module.css'
+import {
+  type FunctionComponent,
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useState
+} from 'react'
+import {
+  type ClssMaker,
+  clss
+} from '../../agnostic/css/clss/index.js'
 import { toError } from '../../agnostic/misc/cast/index.js'
+import type { WithClassName } from '../utils/types.js'
+import { mergeClassNames } from '../utils/index.js'
+import { subtitles as publicClassName } from '../public-classnames.js'
+import type {
+  ParsedSub,
+  SubGroupBoundaries
+} from './types.js'
+import cssModule from './styles.module.css'
 
 export type Props = PropsWithChildren<WithClassName<{
   subsSrc?: string
@@ -16,18 +27,6 @@ export type Props = PropsWithChildren<WithClassName<{
   onSubsLoad?: (subs?: string) => void
   onSubsError?: (error?: Error) => void
 }>>
-
-type ParsedSub = {
-  id: number
-  start?: number
-  end?: number
-  content?: string
-}
-
-type SubGroupBoundaries = {
-  startId: number
-  endId: number
-}
 
 /**
  * Subtitles component for displaying and synchronizing subtitles (SRT) with a media timeline.
@@ -65,14 +64,8 @@ export const Subtitles: FunctionComponent<Props> = ({
   onSubsLoad,
   onSubsError
 }) => {
+  // State
   const [parsedSubs, setParsedSubs] = useState<ParsedSub[]>([])
-
-  const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(
-    c(null, {
-    }),
-    className
-  )
 
   const getTimecodeToMs = (timecode: string): number => {
     const [hours = '0', minutes = '0', secondsAndMs = '0,0'] = timecode.split(':')
@@ -189,10 +182,16 @@ export const Subtitles: FunctionComponent<Props> = ({
     let subText = sub.content?.trim() ?? ''
     if (subIndex !== totalSubs - 1) subText += ' '
     const subModifiers = []
-    if (isEnded !== true && sub.start !== undefined && lastPronouncedStart !== undefined && sub.start <= lastPronouncedStart) {
+    if (isEnded !== true
+      && sub.start !== undefined
+      && lastPronouncedStart !== undefined
+      && sub.start <= lastPronouncedStart) {
       subModifiers.push('pronounced')
     }
-    if (sub.start !== undefined && timecodeInMs >= sub.start && sub.end !== undefined && timecodeInMs <= sub.end) {
+    if (sub.start !== undefined
+      && timecodeInMs >= sub.start
+      && sub.end !== undefined
+      && timecodeInMs <= sub.end) {
       subModifiers.push('active')
     }
     const subClass = c('sub', subModifiers)
@@ -210,6 +209,7 @@ export const Subtitles: FunctionComponent<Props> = ({
   ): React.ReactNode => {
     const groupSubs = parsedSubs.filter(sub => sub.id >= group.startId && sub.id <= group.endId)
 
+    // [WIP] pk eslint-disable ? 🧐
     // eslint-disable-next-line @typescript-eslint/promise-function-async
     const subsNodes = groupSubs.map((sub, subIndex) => {
       return renderSubtitle(c, sub, subIndex, groupSubs.length, timecodeInMs, lastPronouncedStart, isEnded)
@@ -248,10 +248,11 @@ export const Subtitles: FunctionComponent<Props> = ({
       )
     )
   }
+
+  // Effects
+  // [WIP] vraie question aussi : ça sert à quoi useCallback ?
   const fetchAndParseSubs = useCallback(async (src?: string): Promise<void> => {
-    if (src === undefined) {
-      return
-    }
+    if (src === undefined) return
     try {
       const response = await fetch(src)
       const srtContent = await response.text()
@@ -265,9 +266,13 @@ export const Subtitles: FunctionComponent<Props> = ({
   }, [onSubsError, onSubsLoad])
 
   useEffect(() => {
+    // [WIP] pk void ? (vraie question)
     void fetchAndParseSubs(subsSrc)
   }, [fetchAndParseSubs, subsSrc])
 
+  // Rendering
+  const c = clss(publicClassName, { cssModule })
+  const rootClss = mergeClassNames(c(null), className)
   return (
     <div className={rootClss}>
     {renderSubtitles(c, parsedSubs, subsGroups, timecodeInMs)}

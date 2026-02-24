@@ -1,0 +1,74 @@
+.root {
+  position: relative;
+}
+
+/* MAIN LAYOUTS (back/front blocks, scrolling content) */
+
+.back-blocks {
+  z-index: 1;
+}
+
+.scrolling-content {
+  z-index: 2;
+}
+
+.front-blocks {
+  z-index: 3;
+}
+
+/* Scrllgngn entering the viewport, blocks not fixed yet */
+.back-blocks,
+.front-blocks,
+.root.root--top-visible.root--content-visible .back-blocks,
+.root.root--top-visible.root--content-visible .front-blocks {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+}
+
+/*
+Scrllgngn well in the viewport, fixed blocks
+OR
+Force stick blocks option
+*/
+.root.root--content-visible .back-blocks,
+.root.root--content-visible .front-blocks,
+
+.root.root--top-visible.root--content-visible.root--force-stick-blocks-before .back-blocks,
+.root.root--top-visible.root--content-visible.root--force-stick-blocks-before .front-blocks,
+.root.root--top-visible.root--content-visible.root--force-stick-blocks-both .back-blocks,
+.root.root--top-visible.root--content-visible.root--force-stick-blocks-both .front-blocks,
+
+.root.root--bottom-visible.root--content-visible.root--force-stick-blocks-after .back-blocks,
+.root.root--bottom-visible.root--content-visible.root--force-stick-blocks-after .front-blocks,
+.root.root--bottom-visible.root--content-visible.root--force-stick-blocks-both .back-blocks,
+.root.root--bottom-visible.root--content-visible.root--force-stick-blocks-both .front-blocks {
+  position: fixed;
+  top: 0;
+  left: var(--PRIVATE-left);
+  width: var(--PRIVATE-width);
+  height: 100vh;
+}
+
+/* Scrllgngn leaving the viewport, blocks not fixed but have offset */
+.root.root--bottom-visible.root--content-visible .back-blocks,
+.root.root--bottom-visible.root--content-visible .front-blocks {
+  position: absolute;
+  top: calc(var(--PRIVATE-height) - 100vh);
+  left: 0;
+  right: 0;
+  height: 100vh;
+}
+
+/* INDIVIDUAL FIXED BLOCKS */
+
+.back-block,
+.front-block {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}

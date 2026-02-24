@@ -12,6 +12,11 @@ import { mergeClassNames } from '../utils/index.js'
 import { resizeObserver as publicClassName } from '../public-classnames.js'
 import cssModule from './style.module.css'
 
+type ResizeObserverEntryWithBoundingRect = {
+  entry: ResizeObserverEntry
+  boundingClientRect: DOMRect
+}
+
 /**
  * Props for the ResizeObserverComponent.
  *
@@ -21,7 +26,7 @@ import cssModule from './style.module.css'
  * @property children - React children rendered inside the root element. Only the root element is observed
  */
 export type Props = PropsWithChildren<WithClassName<{
-  onResize?: (entry: ResizeObserverEntry | undefined) => void
+  onResize?: (entry: ResizeObserverEntryWithBoundingRect) => void
 }>>
 
 /**
@@ -38,7 +43,7 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
   children
 }): JSX.Element => {
   // Refs, effects & handlers
-  const [roEntry, setRoEntry] = useState<ResizeObserverEntry>()
+  const [roEntry, setRoEntry] = useState<ResizeObserverEntryWithBoundingRect>()
   const rootRef = useRef<HTMLDivElement | null>(null)
   const observerRef = useRef<ResizeObserver | null>(null)
   const createObserver = (): void => {
@@ -47,9 +52,16 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
     if (root === null) return
     observerRef.current = new ResizeObserver(entries => {
       const firstEntry = entries[0]
-      if (firstEntry !== undefined) setRoEntry(firstEntry)
-      if (onResize === undefined) return
-      onResize(firstEntry)
+      if (firstEntry !== undefined) {
+        const boundingClientRect = firstEntry.target.getBoundingClientRect()
+        const fullEntry: ResizeObserverEntryWithBoundingRect = {
+          entry: firstEntry,
+          boundingClientRect
+        }
+        setRoEntry(fullEntry)
+        if (onResize === undefined) return
+        onResize(fullEntry)
+      }
     })
     observerRef.current.observe(root)
   }
@@ -59,7 +71,16 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
   }, [onResize])
 
   // Data attributes, CSS custom props & Rendering
-  const { x, y, top, left, bottom, right, width, height } = roEntry?.contentRect ?? {}
+  const {
+    x,
+    y,
+    top,
+    left,
+    bottom,
+    right,
+    width,
+    height
+  } = roEntry?.entry.contentRect ?? {}
   const contentRect = { x, y, top, left, bottom, right, width, height }
   const dataAttributes = Object
     .entries(contentRect)
