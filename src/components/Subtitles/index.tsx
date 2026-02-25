@@ -67,63 +67,57 @@ export const Subtitles: FunctionComponent<Props> = ({
 
   const c = clss(publicClassName, { cssModule })
 
-  const renderSubGroup = (
-    group: SubGroupBoundaries,
-    parsedSubs: ParsedSub[],
-    timecodeMs: number,
-    lastPreviousStart: number | undefined,
-    isCurrentGroup: boolean,
-    isEnded: boolean | undefined
-  ): React.ReactNode => {
-    const groupSubs = parsedSubs.filter(sub => sub.id >= group.startId && sub.id <= group.endId)
-    const totalSubs = groupSubs.length
-
-    // [WIP] pk eslint-disable ? 🧐
-    // eslint-disable-next-line @typescript-eslint/promise-function-async
-    const subsNodes = groupSubs.map((sub, subIndex) => {
-      let subText = sub.content?.trim() ?? ''
-      if (subIndex !== totalSubs - 1) subText += ' '
-
-      const isPrev = sub.start !== undefined && lastPreviousStart !== undefined && sub.start <= lastPreviousStart
-      const isCurr = sub.start !== undefined && timecodeMs >= sub.start && sub.end !== undefined && timecodeMs <= sub.end
-      const subClass = c('sub', {
-        prev: isPrev,
-        curr: isCurr
-      })
-      return <span key={sub.id} className={subClass}>{subText}</span>
-    })
-    const groupClass = c('group', {
-      curr: isCurrentGroup
-    })
-    return <div className={groupClass} key={group.startId} data-start-sub-pos={group.startId} data-end-sub-pos={group.endId}>{subsNodes}</div>
-  }
-
+  /**
+   * Rend tous les groupes de sous-titres et leurs sous-titres.
+   * @param parsedSubs - Sous-titres parsés
+   * @param subsGroups - Groupes de sous-titres
+   * @param timecodeMs - Timecode courant
+   * @param isEnded - Indique si la lecture est terminée
+   * @returns React nodes pour tous les groupes
+   */
   const renderSubtitles = (
     parsedSubs: ParsedSub[],
     subsGroups?: number[],
-    timecodeMs?: number
+    timecodeMs?: number,
+    isEnded?: boolean
   ): React.ReactNode => {
-    if (timecodeMs === undefined) return null
-    if (parsedSubs.length === 0) return null
+    if (timecodeMs === undefined || parsedSubs.length === 0) return null
 
     const prevSubs = parsedSubs.filter(({ start }) => start != null && start < timecodeMs)
     const lastPrevSub = prevSubs[prevSubs.length - 1]
     const highestSubId = Math.max(...parsedSubs.map(sub => sub.id))
-
     const subsGroupsWithBoundaries = computeSubGroupsWithBoundaries(subsGroups, highestSubId)
     const currentGroup = getCurrentGroup(subsGroupsWithBoundaries, lastPrevSub?.id, isEnded)
 
-    // eslint-disable-next-line @typescript-eslint/promise-function-async
-    return subsGroupsWithBoundaries.map(group =>
-      renderSubGroup(
-        group,
-        parsedSubs,
-        timecodeMs,
-        lastPrevSub?.start,
-        currentGroup?.startId === group.startId,
-        isEnded
+    return subsGroupsWithBoundaries.map(group => {
+      const groupSubs = parsedSubs.filter(sub => sub.id >= group.startId && sub.id <= group.endId)
+      const totalSubs = groupSubs.length
+      const groupClass = c('group', {
+        curr: currentGroup?.startId === group.startId
+      })
+
+      const subsNodes = groupSubs.map((sub, subIndex) => {
+        let subText = sub.content?.trim() ?? ''
+        if (subIndex !== totalSubs - 1) subText += ' '
+        
+        const subClass = c('sub', {
+          prev: sub.start !== undefined && lastPrevSub?.start !== undefined && sub.start <= lastPrevSub.start,
+          curr: sub.start !== undefined && timecodeMs >= sub.start && sub.end !== undefined && timecodeMs <= sub.end
+        })
+        return <span key={sub.id} className={subClass}>{subText}</span>
+      })
+
+      return (
+        <div
+          className={groupClass}
+          key={group.startId}
+          data-start-sub-pos={group.startId}
+          data-end-sub-pos={group.endId}
+        >
+          {subsNodes}
+        </div>
       )
-    )
+    })
   }
 
   // Effects
@@ -152,7 +146,7 @@ export const Subtitles: FunctionComponent<Props> = ({
   const rootClss = mergeClassNames(c(null), className)
   return (
     <div className={rootClss}>
-      {renderSubtitles(parsedSubs, subsGroups, timecodeMs)}
+      {renderSubtitles(parsedSubs, subsGroups, timecodeMs, isEnded)}
       {children}
     </div>
   )
