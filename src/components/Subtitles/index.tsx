@@ -18,7 +18,8 @@ import cssModule from './styles.module.css'
 import { computeSubGroupsWithBoundaries, getCurrentGroup, parseSubs } from './utils.js'
 
 export type Props = PropsWithChildren<WithClassName<{
-  subsSrc?: string
+  src?: string
+  srtFileContent?: string
   subsGroups?: number[]
   timecodeMs?: number
   isEnded?: boolean
@@ -41,7 +42,7 @@ export type Props = PropsWithChildren<WithClassName<{
  *
  * @example
  * <Subtitles
- *   subsSrc="/subs/movie.srt"
+ *   src="/subs/movie.srt"
  *   timecodeMs={currentTime}
  *   subsGroups={[10, 20]}
  *   onSubsLoad={handleSubsLoad}
@@ -53,7 +54,8 @@ export type Props = PropsWithChildren<WithClassName<{
  * @returns Render a div containing the subtitles and any children passed as props. Subtitles are grouped and given classnames according to their timing and state (current, prev, etc).
  */
 export const Subtitles: FunctionComponent<Props> = ({
-  subsSrc,
+  src,
+  srtFileContent,
   subsGroups,
   timecodeMs,
   isEnded,
@@ -104,7 +106,7 @@ export const Subtitles: FunctionComponent<Props> = ({
           prev: sub.start !== undefined && lastPrevSub?.start !== undefined && sub.start <= lastPrevSub.start,
           curr: sub.start !== undefined && timecodeMs >= sub.start && sub.end !== undefined && timecodeMs <= sub.end
         })
-        return <span key={sub.id} className={subClass}>{subText}</span>
+        return <span key={sub.id} className={subClass} data-sub-pos={sub.id}>{subText}</span>
       })
 
       return (
@@ -122,8 +124,17 @@ export const Subtitles: FunctionComponent<Props> = ({
 
   // Effects
   // [WIP] vraie question aussi : ça sert à quoi useCallback ?
-  const fetchAndParseSubs = useCallback(async (src?: string): Promise<void> => {
-    if (src === undefined) return
+  const fetchAndParseSubs = useCallback(async (src?: string, srtFileContent?: string): Promise<void> => {
+    if (srtFileContent) {
+      const parsedSubs = parseSubs(srtFileContent)
+      setParsedSubs(parsedSubs)
+      return;
+    }
+
+    if (src === undefined) {
+      return;
+    }
+
     try {
       const response = await fetch(src)
       const srtContent = await response.text()
@@ -137,10 +148,10 @@ export const Subtitles: FunctionComponent<Props> = ({
   }, [onSubsError, onSubsLoad])
 
   useEffect(() => {
-    fetchAndParseSubs(subsSrc).catch((error) => {
+    fetchAndParseSubs(src, srtFileContent).catch((error) => {
       console.error(error)
     })
-  }, [fetchAndParseSubs, subsSrc])
+  }, [fetchAndParseSubs, src, srtFileContent])
 
   // Rendering
   const rootClss = mergeClassNames(c(null), className)

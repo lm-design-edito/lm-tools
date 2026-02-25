@@ -34,14 +34,30 @@ describe('Subtitles', () => {
     expect(div).toHaveClass('my-class')
   })
 
-  it('fetches and parses subtitles when subsSrc is provided', async () => {
-    const mockSubs = `1
-00:00:00,000 --> 00:00:02,000
-First subtitle
 
-2
-00:00:02,000 --> 00:00:04,000
-Second subtitle`
+  it('parses subtitles when srtFileContent is provided', () => {
+    const mockSubs = `1\n00:00:00,000 --> 00:00:02,000\nFirst subtitle\n\n2\n00:00:02,000 --> 00:00:04,000\nSecond subtitle`
+    const { container } = render(<Subtitles srtFileContent={mockSubs} timecodeMs={1000} />)
+    const currSub = container.querySelector('[class*="sub--curr"]')
+    expect(currSub?.textContent).toContain('First subtitle')
+    expect(currSub?.textContent).not.toContain('Second subtitle')
+  })
+
+  it('parses and displays correct subtitle from srtFileContent when timecode changes', () => {
+    const mockSubs = `1\n00:00:00,000 --> 00:00:02,000\nFirst subtitle\n\n2\n00:00:02,000 --> 00:00:04,000\nSecond subtitle`
+    const { rerender, container } = render(<Subtitles srtFileContent={mockSubs} timecodeMs={1000} />)
+    let currSub = container.querySelector('[class*="sub--curr"]')
+    expect(currSub?.textContent).toContain('First subtitle')
+    expect(currSub?.textContent).not.toContain('Second subtitle')
+    rerender(<Subtitles srtFileContent={mockSubs} timecodeMs={3000} />)
+
+    currSub = container.querySelector('[class*="sub--curr"]')
+    expect(currSub?.textContent).toContain('Second subtitle')
+    expect(currSub?.textContent).not.toContain('First subtitle')
+  })
+
+  it('fetches and parses subtitles when src is provided', async () => {
+    const mockSubs = `1\n00:00:00,000 --> 00:00:02,000\nFirst subtitle\n\n2\n00:00:02,000 --> 00:00:04,000\nSecond subtitle`
 
     const onSubsLoad = vi.fn()
     ;(global.fetch as any).mockResolvedValueOnce({
@@ -49,7 +65,7 @@ Second subtitle`
     })
 
     render(<Subtitles
-      subsSrc='/path/to/subs.srt'
+      src='/path/to/subs.srt'
       onSubsLoad={onSubsLoad}
       timecodeMs={1000} />)
 
@@ -65,7 +81,7 @@ Second subtitle`
     ;(global.fetch as any).mockRejectedValueOnce(mockError)
 
     render(<Subtitles
-      subsSrc='/path/to/subs.srt'
+      src='/path/to/subs.srt'
       onSubsError={onSubsError} />)
 
     await waitFor(() => {
@@ -87,7 +103,7 @@ Second subtitle`
     })
 
     const { rerender } = render(<Subtitles
-      subsSrc='/path/to/subs.srt'
+      src='/path/to/subs.srt'
       timecodeMs={1000} />)
 
     await waitFor(() => {
@@ -95,7 +111,7 @@ Second subtitle`
     })
 
     rerender(<Subtitles
-      subsSrc='/path/to/subs.srt'
+      src='/path/to/subs.srt'
       timecodeMs={3000} />)
 
     await waitFor(() => {
@@ -121,7 +137,7 @@ Third subtitle`
     })
 
     const { container } = render(<Subtitles
-      subsSrc='/path/to/subs.srt'
+      src='/path/to/subs.srt'
       subsGroups={[2]}
       timecodeMs={1000} />)
 
@@ -146,7 +162,7 @@ Second subtitle`
     })
 
     const { container } = render(<Subtitles
-      subsSrc='/path/to/subs.srt'
+      src='/path/to/subs.srt'
       timecodeMs={5000} />)
 
     await waitFor(() => {
@@ -170,7 +186,7 @@ Second subtitle`
     })
 
     const { container } = render(<Subtitles
-      subsSrc='/path/to/subs.srt'
+      src='/path/to/subs.srt'
       timecodeMs={1000} />)
 
     await waitFor(() => {
@@ -190,7 +206,7 @@ First subtitle`
     })
 
     const { container } = render(<Subtitles
-      subsSrc='/path/to/subs.srt'
+      src='/path/to/subs.srt'
       subsGroups={[1]}
       timecodeMs={1000}
       isEnded={true} />)
@@ -202,12 +218,12 @@ First subtitle`
     })
   })
 
-  it('does not fetch when subsSrc is undefined', () => {
+  it('does not fetch when src is undefined', () => {
     render(<Subtitles timecodeMs={1000} />)
     expect(global.fetch).not.toHaveBeenCalled()
   })
 
-  it('re-fetches when subsSrc changes', async () => {
+  it('re-fetches when src changes', async () => {
     const mockSubs1 = `1
 00:00:00,000 --> 00:00:02,000
 First subtitle`
@@ -221,7 +237,7 @@ Different subtitle`
       .mockResolvedValueOnce({ text: async () => await Promise.resolve(mockSubs2) })
 
     const { rerender } = render(<Subtitles
-      subsSrc='/path/to/subs1.srt'
+      src='/path/to/subs1.srt'
       timecodeMs={1000} />)
 
     await waitFor(() => {
@@ -229,7 +245,7 @@ Different subtitle`
     })
 
     rerender(<Subtitles
-      subsSrc='/path/to/subs2.srt'
+      src='/path/to/subs2.srt'
       timecodeMs={1000} />)
 
     await waitFor(() => {

@@ -221,8 +221,21 @@ const App = () => <div className={styles['app']}>
 
   {/* Subtitles */}
   <h3>Subtitles</h3>
-  <Subtitles subsSrc="https://assets-decodeurs.lemonde.fr/redacweb/2305-audio-quote-assets/chantal.srt" timecodeMs={29752} />
-  <Subtitles subsSrc="https://assets-decodeurs.lemonde.fr/redacweb/2305-audio-quote-assets/chantal.srt" subsGroups={[1, 10]} timecodeMs={29752} />
+  <Subtitles src="https://assets-decodeurs.lemonde.fr/redacweb/2305-audio-quote-assets/chantal.srt" timecodeMs={29752} />
+  -----
+  <Subtitles src="https://assets-decodeurs.lemonde.fr/redacweb/2305-audio-quote-assets/chantal.srt" srtFileContent="
+1
+00:00:00,599 --> 00:00:00,608
+Il faut
+
+2
+00:00:00,709 --> 00:00:00,888
+que
+
+3
+00:00:01,000 --> 00:00:01,012
+j'enlève
+"  timecodeMs={0} />
 
   {/* Vidéo */}
   <h3>Vidéo</h3>
