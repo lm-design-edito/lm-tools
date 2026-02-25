@@ -23,10 +23,6 @@ import { mergeClassNames } from '../utils/index.js'
 import { scrllgngn as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
-// [WIP] transitions ?
-
-/* Props */
-
 type PropsCommonBlock = PropsWithChildren<{
   id?: string
   trackScroll?: boolean
@@ -49,8 +45,6 @@ type PropsPage = {
 }
 
 export type Props = WithClassName<{
-  // stickyBlocksViewportHeight?: string // [WIP] No relative units, maybe some regex checks here?
-  // stickyBlocksOffsetTop?: number // [WIP] this does not work well
   pages?: PropsPage[]
   thresholdOffsetPercent?: number
   stickyBlocksLazyLoadDistance?: number
@@ -164,9 +158,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
       'bottom-visible': bottomVisible,
       'force-stick-blocks-before': forceStickBlocks === 'before',
       'force-stick-blocks-after': forceStickBlocks === 'after',
-      'force-stick-blocks-both': forceStickBlocks === 'both',
-      'force-stick-blocks-none': forceStickBlocks === 'none'
-        || forceStickBlocks === undefined
+      'force-stick-blocks-both': forceStickBlocks === 'both'
     }),
     className
   )
@@ -200,9 +192,10 @@ export const Scrllgngn: FunctionComponent<Props> = ({
       {/* Back blocks */}
       <div className={c('back-blocks')}>
         {lazyLoadedBackBlocks.map((block, blockPos) => {
+          const isActive = block.displayOnPages.includes(currentPagePos)
           const blockClss = c('back-block', {
-            active: block.displayOnPages.includes(currentPagePos),
-            'lazy-loaded': !block.displayOnPages.includes(currentPagePos)
+            active: isActive,
+            'lazy-loaded': !isActive
           })
           return <div
             className={blockClss}
@@ -215,9 +208,10 @@ export const Scrllgngn: FunctionComponent<Props> = ({
       {/* Front blocks */}
       <div className={c('front-blocks')}>
         {lazyLoadedFrontBlocks.map((block, blockPos) => {
+          const isActive = block.displayOnPages.includes(currentPagePos)
           const blockClss = c('front-block', {
-            active: block.displayOnPages.includes(currentPagePos),
-            'lazy-loaded': !block.displayOnPages.includes(currentPagePos)
+            active: isActive,
+            'lazy-loaded': !isActive
           })
           return <div
             className={blockClss}
