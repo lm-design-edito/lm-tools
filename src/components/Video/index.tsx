@@ -80,12 +80,18 @@ export const Video: FunctionComponent<Props> = ({
     $video.current.volume = volume
   }, [])
 
-  const onPlayBtnClick = useCallback(() => {
+  const triggerPlay = useCallback(async () => {
     if ($video.current === null) return
-    $video.current.play().catch((e) => {
+    try {
+      await $video.current.play()
+    } catch (e) {
       console.error('Error playing video:', e)
-    })
+    }
   }, [])
+
+  const onPlayBtnClick = useCallback(() => {
+    triggerPlay().catch(e => console.error('Error playing video:', e))
+  }, [triggerPlay])
 
   const onPauseBtnClick = useCallback(() => {
     if ($video.current === null) return
@@ -102,7 +108,7 @@ export const Video: FunctionComponent<Props> = ({
     $video.current.muted = true
   }, [])
 
-  const onFullScreenBtnClick = useCallback(async () => {
+  const requestFullscreen = useCallback(async () => {
     if ($video.current === null) return
     const isFullscreen = document.fullscreenElement === $video.current
 
@@ -123,6 +129,10 @@ export const Video: FunctionComponent<Props> = ({
       console.error('Error entering fullscreen:', e)
     }
   }, [])
+
+  const onFullScreenBtnClick = useCallback(() => {
+    requestFullscreen().catch(e => console.error('Error toggling fullscreen:', e))
+  }, [requestFullscreen])
 
   const onPlaybackSpeedRangeChange = useCallback((e: React.FormEvent<HTMLInputElement>) => {
     const speed = Number(e.currentTarget.value)
