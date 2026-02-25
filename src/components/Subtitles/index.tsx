@@ -58,7 +58,6 @@ export const Subtitles: FunctionComponent<Props> = ({
   subsGroups,
   timecodeMs,
   isEnded,
-  children,
   className,
   onSubsLoad,
   onSubsError
@@ -157,7 +156,6 @@ export const Subtitles: FunctionComponent<Props> = ({
   return (
     <div className={rootClss}>
       {renderSubtitles(parsedSubs, subsGroups, timecodeMs, isEnded)}
-      {children}
     </div>
   )
 }

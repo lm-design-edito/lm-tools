@@ -9,6 +9,7 @@ import { ResizeObserverComponent } from '~/components/ResizeObserver/index.js'
 import { Scrllgngn } from '~/components/Scrllgngn/index.js'
 import { ShadowRootComponent } from '~/components/ShadowRoot/index.js'
 import { Subtitles } from '~/components/Subtitles/index.js'
+import { Video } from '~/components/Video/index.js'
 import styles from './styles.module.css'
 
 const App = () => <div className={styles['app']}>
@@ -239,6 +240,26 @@ j'enlève
 
   {/* Vidéo */}
   <h3>Vidéo</h3>
+  <Video sources="https://assets-decodeurs.lemonde.fr/redacweb/2507-st-louis/siege.mp4" controls autoPlay loop /> 
+  <Video
+    pauseBtnContent="Mettre en pause"
+    playBtnContent="Lire"
+    soundOnBtnContent="Activer le son"
+    soundOffBtnContent="Désactiver le son"
+    fullscreenBtnContent="Passer en plein écran"
+  sources={
+    [
+      { src: "https://assets-decodeurs.lemonde.fr/redacweb/2507-st-louis/siege.mp4", type: 'video/mp4' }
+    ]
+  } controls autoPlay loop tracks={[
+    {
+    kind: 'subtitles',
+      src: 'https://assets-decodeurs.lemonde.fr/redacweb/2305-audio-quote-assets/chantal.srt',
+      srcLang: 'fr',
+      label: 'Français',
+      default: true
+    }
+  ]} />
 </div>
 
 const target = document.querySelector('.root')
