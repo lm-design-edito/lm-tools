@@ -11,8 +11,7 @@ import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import { subtitles as publicClassName } from '../public-classnames.js'
 import type {
-  ParsedSub,
-  SubGroupBoundaries
+  ParsedSub
 } from './types.js'
 import cssModule from './styles.module.css'
 import { computeSubGroupsWithBoundaries, getCurrentGroup, parseSubs } from './utils.js'
@@ -101,7 +100,7 @@ export const Subtitles: FunctionComponent<Props> = ({
       const subsNodes = groupSubs.map((sub, subIndex) => {
         let subText = sub.content?.trim() ?? ''
         if (subIndex !== totalSubs - 1) subText += ' '
-        
+
         const subClass = c('sub', {
           prev: sub.start !== undefined && lastPrevSub?.start !== undefined && sub.start <= lastPrevSub.start,
           curr: sub.start !== undefined && timecodeMs >= sub.start && sub.end !== undefined && timecodeMs <= sub.end
@@ -125,14 +124,14 @@ export const Subtitles: FunctionComponent<Props> = ({
   // Effects
   // [WIP] vraie question aussi : ça sert à quoi useCallback ?
   const fetchAndParseSubs = useCallback(async (src?: string, srtFileContent?: string): Promise<void> => {
-    if (srtFileContent) {
+    if (srtFileContent !== undefined) {
       const parsedSubs = parseSubs(srtFileContent)
       setParsedSubs(parsedSubs)
-      return;
+      return
     }
 
     if (src === undefined) {
-      return;
+      return
     }
 
     try {

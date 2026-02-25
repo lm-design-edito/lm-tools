@@ -34,9 +34,8 @@ describe('Subtitles', () => {
     expect(div).toHaveClass('my-class')
   })
 
-
   it('parses subtitles when srtFileContent is provided', () => {
-    const mockSubs = `1\n00:00:00,000 --> 00:00:02,000\nFirst subtitle\n\n2\n00:00:02,000 --> 00:00:04,000\nSecond subtitle`
+    const mockSubs = '1\n00:00:00,000 --> 00:00:02,000\nFirst subtitle\n\n2\n00:00:02,000 --> 00:00:04,000\nSecond subtitle'
     const { container } = render(<Subtitles srtFileContent={mockSubs} timecodeMs={1000} />)
     const currSub = container.querySelector('[class*="sub--curr"]')
     expect(currSub?.textContent).toContain('First subtitle')
@@ -44,7 +43,7 @@ describe('Subtitles', () => {
   })
 
   it('parses and displays correct subtitle from srtFileContent when timecode changes', () => {
-    const mockSubs = `1\n00:00:00,000 --> 00:00:02,000\nFirst subtitle\n\n2\n00:00:02,000 --> 00:00:04,000\nSecond subtitle`
+    const mockSubs = '1\n00:00:00,000 --> 00:00:02,000\nFirst subtitle\n\n2\n00:00:02,000 --> 00:00:04,000\nSecond subtitle'
     const { rerender, container } = render(<Subtitles srtFileContent={mockSubs} timecodeMs={1000} />)
     let currSub = container.querySelector('[class*="sub--curr"]')
     expect(currSub?.textContent).toContain('First subtitle')
@@ -57,7 +56,7 @@ describe('Subtitles', () => {
   })
 
   it('fetches and parses subtitles when src is provided', async () => {
-    const mockSubs = `1\n00:00:00,000 --> 00:00:02,000\nFirst subtitle\n\n2\n00:00:02,000 --> 00:00:04,000\nSecond subtitle`
+    const mockSubs = '1\n00:00:00,000 --> 00:00:02,000\nFirst subtitle\n\n2\n00:00:02,000 --> 00:00:04,000\nSecond subtitle'
 
     const onSubsLoad = vi.fn()
     ;(global.fetch as any).mockResolvedValueOnce({
