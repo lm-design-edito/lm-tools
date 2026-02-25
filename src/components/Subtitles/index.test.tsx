@@ -51,7 +51,7 @@ Second subtitle`
     render(<Subtitles
       subsSrc='/path/to/subs.srt'
       onSubsLoad={onSubsLoad}
-      timecodeInMs={1000} />)
+      timecodeMs={1000} />)
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/path/to/subs.srt')
@@ -88,7 +88,7 @@ Second subtitle`
 
     const { rerender } = render(<Subtitles
       subsSrc='/path/to/subs.srt'
-      timecodeInMs={1000} />)
+      timecodeMs={1000} />)
 
     await waitFor(() => {
       expect(screen.getByText(/First subtitle/)).toBeDefined()
@@ -96,7 +96,7 @@ Second subtitle`
 
     rerender(<Subtitles
       subsSrc='/path/to/subs.srt'
-      timecodeInMs={3000} />)
+      timecodeMs={3000} />)
 
     await waitFor(() => {
       expect(screen.getByText(/Second subtitle/)).toBeDefined()
@@ -123,7 +123,7 @@ Third subtitle`
     const { container } = render(<Subtitles
       subsSrc='/path/to/subs.srt'
       subsGroups={[2]}
-      timecodeInMs={1000} />)
+      timecodeMs={1000} />)
 
     await waitFor(() => {
       // eslint-disable-next-line @typescript-eslint/promise-function-async
@@ -132,7 +132,7 @@ Third subtitle`
     })
   })
 
-  it('marks subtitles as pronounced when they have been read', async () => {
+  it('marks subtitles as prev when they have been read', async () => {
     const mockSubs = `1
 00:00:00,000 --> 00:00:02,000
 First subtitle
@@ -147,16 +147,16 @@ Second subtitle`
 
     const { container } = render(<Subtitles
       subsSrc='/path/to/subs.srt'
-      timecodeInMs={5000} />)
+      timecodeMs={5000} />)
 
     await waitFor(() => {
       // eslint-disable-next-line @typescript-eslint/promise-function-async
-      const pronouncedSubs = container.querySelectorAll('[class*="pronounced"]')
-      expect(pronouncedSubs.length).toBeGreaterThan(0)
+      const prevSubs = container.querySelectorAll('[class*="prev"]')
+      expect(prevSubs.length).toBeGreaterThan(0)
     })
   })
 
-  it('marks active subtitle based on timecode', async () => {
+  it('marks current subtitle based on timecode', async () => {
     const mockSubs = `1
 00:00:00,000 --> 00:00:02,000
 First subtitle
@@ -171,12 +171,12 @@ Second subtitle`
 
     const { container } = render(<Subtitles
       subsSrc='/path/to/subs.srt'
-      timecodeInMs={1000} />)
+      timecodeMs={1000} />)
 
     await waitFor(() => {
       // eslint-disable-next-line @typescript-eslint/promise-function-async
-      const activeSub = container.querySelector('[class*="active"]')
-      expect(activeSub).not.toBe(null)
+      const currSub = container.querySelector('[class*="curr"]')
+      expect(currSub).not.toBe(null)
     })
   })
 
@@ -192,18 +192,18 @@ First subtitle`
     const { container } = render(<Subtitles
       subsSrc='/path/to/subs.srt'
       subsGroups={[1]}
-      timecodeInMs={1000}
+      timecodeMs={1000}
       isEnded={true} />)
 
     await waitFor(() => {
       // eslint-disable-next-line @typescript-eslint/promise-function-async
-      const activeGroup = container.querySelector('[class*="active"]')
-      expect(activeGroup).not.toBe(null)
+      const currGroup = container.querySelector('[class*="curr"]')
+      expect(currGroup).not.toBe(null)
     })
   })
 
   it('does not fetch when subsSrc is undefined', () => {
-    render(<Subtitles timecodeInMs={1000} />)
+    render(<Subtitles timecodeMs={1000} />)
     expect(global.fetch).not.toHaveBeenCalled()
   })
 
@@ -222,7 +222,7 @@ Different subtitle`
 
     const { rerender } = render(<Subtitles
       subsSrc='/path/to/subs1.srt'
-      timecodeInMs={1000} />)
+      timecodeMs={1000} />)
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/path/to/subs1.srt')
@@ -230,7 +230,7 @@ Different subtitle`
 
     rerender(<Subtitles
       subsSrc='/path/to/subs2.srt'
-      timecodeInMs={1000} />)
+      timecodeMs={1000} />)
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/path/to/subs2.srt')
