@@ -1,4 +1,12 @@
-import { type FunctionComponent, type PropsWithChildren, type VideoHTMLAttributes, useCallback, useMemo, useRef, useState } from 'react'
+import {
+  type FunctionComponent,
+  type PropsWithChildren,
+  type VideoHTMLAttributes,
+  useCallback,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../utils/index.js'
 import { formatTime, secondsToMs } from './utils.js'
@@ -10,6 +18,7 @@ type SourceData = {
   src?: string
   type?: string
 }
+
 type TrackData = {
   src?: string
   kind?: 'subtitles' | 'captions' | 'descriptions' | 'chapters' | 'metadata'
@@ -17,6 +26,7 @@ type TrackData = {
   label?: string
   default?: boolean
 }
+
 export type Props = PropsWithChildren<WithClassName<{
   sources?: string | string[] | SourceData[]
   tracks?: string | string[] | TrackData[]

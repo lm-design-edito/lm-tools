@@ -19,6 +19,15 @@
   background: transparent;
 }
 
+.root.root--controlled .scroller {
+  overflow-x: hidden;
+}
+
+.root.root--no-snap .scroller {
+  scroll-snap-type: unset;
+  scroll-behavior: unset;
+}
+
 .slot {
   scroll-snap-align: center;
 }

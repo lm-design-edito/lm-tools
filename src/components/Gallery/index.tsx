@@ -1,11 +1,11 @@
 import {
   type FunctionComponent,
   type PropsWithChildren,
+  type ReactNode,
   Children,
   useEffect,
   useState,
-  useRef,
-  type ReactNode
+  useRef
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
@@ -31,6 +31,15 @@ import cssModule from './styles.module.css'
  * - A ReactNode used for all pages,
  * - A function receiving the page index and returning a ReactNode,
  * - Undefined, in which case the page index is displayed.
+ * @property initActive - Optional. When uncontrolled mode, sets the default active slot at mount
+ * @property active - Optional controlled index. When provided, the active slot is driven by this
+ * value instead of internal scroll-derived state. When omitted, the component manages its own
+ * active index based on scroll position.
+ * @property noSnap - Optional, defines if scroll is free in side the scroller or not (defaults to false)
+ * @property onPrevClick - Called when the "previous" control is clicked. Receives the current active index before navigation occurs.
+ * @property onNextClick - Called when the "next" control is clicked. Receives the current active index before navigation occurs.
+ * @property onPaginationClick - Called when a pagination item is clicked. Receives the current active index and the target index.
+ * @property onSlotChange - Called when the active slot changes due to scrolling. Receives the new active index.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Elements rendered as gallery slots. Each child is wrapped in a slot container.
  */
@@ -41,13 +50,20 @@ export type Props = PropsWithChildren<WithClassName<{
   prevButtonContent?: ReactNode
   nextButtonContent?: ReactNode
   paginationContent?: ReactNode | ((page: number) => ReactNode)
+  initActive?: number
+  active?: number
+  noSnap?: boolean
+  onPrevClick?: (activePos: number) => void
+  onNextClick?: (activePos: number) => void
+  onPaginationClick?: (activePos: number, targetPos: number) => void
+  onSlotChange?: (activePos: number) => void
 }>>
 
 /**
  * Horizontally scrollable gallery component with navigation controls and pagination.
  *
  * Tracks the active slot based on scroll position and exposes state through CSS class names
- * and a `data-current` attribute on the root element.
+ * and a `data-active` attribute on the root element.
  *
  * @param props - Component properties.
  * @see {@link Props}
@@ -63,6 +79,13 @@ export const Gallery: FunctionComponent<Props> = ({
   prevButtonContent,
   nextButtonContent,
   paginationContent,
+  initActive,
+  active,
+  noSnap,
+  onPrevClick,
+  onNextClick,
+  onPaginationClick,
+  onSlotChange,
   children,
   className
 }) => {
@@ -97,6 +120,7 @@ export const Gallery: FunctionComponent<Props> = ({
       setActiveIndex(closestIndex)
       setCanGoLeft(scrollLeft > 0)
       setCanGoRight(scrollLeft + clientWidth < scrollWidth)
+      if (onSlotChange !== undefined) onSlotChange(closestIndex)
     }
     const onScroll = (): void => {
       if (animationFrame !== null) return
@@ -110,34 +134,58 @@ export const Gallery: FunctionComponent<Props> = ({
     }
   }, [])
 
-  // Forced slot activation handler
-  const handleActivateSlot = (targetPos: number): void => {
-    if (targetPos < 0) { targetPos = 0 }
-    if (targetPos >= childrenCount) { targetPos = childrenCount }
-    if (targetPos === activeIndex) return
-    if (targetPos < activeIndex && !canGoLeft) return
-    if (targetPos > activeIndex && !canGoRight) return
-    const scrollerElt = scrollerRef.current
-    if (scrollerElt === null) return
-    const minPos = Math.min(targetPos, activeIndex)
-    const maxPos = Math.max(targetPos, activeIndex)
-    const absScrollDist = Array.from(scrollerElt.children)
-      .reduce((acc, curr, pos) => {
-        if (pos < minPos || pos > maxPos) return acc
-        const slotWidth = curr.getBoundingClientRect().width
-        if (pos === minPos || pos === maxPos) return acc + (slotWidth / 2)
-        return acc + slotWidth
-      }, 0)
-    scrollerElt.scrollBy({
-      left: targetPos < activeIndex ? -1 * absScrollDist : absScrollDist,
-      behavior: 'smooth'
+  // Sync scroll position to 'active' prop at mount time
+  useEffect(() => {
+    const toActivate = active ?? initActive
+    if (toActivate === undefined) return
+    const id = setTimeout(() => forceActivateSlot(toActivate, false), 50)
+    return () => clearTimeout(id)
+  }, [])
+
+  // Sync scroll position to 'active' prop
+  useEffect(() => {
+    if (active === undefined) return
+    forceActivateSlot(active)
+  }, [active])
+
+  // Forced slot activation
+  const forceActivateSlot = (
+    targetPos: number,
+    smooth: boolean = true
+  ): void => {
+    const scroller = scrollerRef.current
+    if (scroller === null) return
+    const children = Array.from(scroller.children) as HTMLElement[]
+    if (children[targetPos] === undefined) return
+    const target = children[targetPos]
+    const offset = target.offsetLeft -
+      (scroller.clientWidth / 2 - target.offsetWidth / 2)
+    scroller.scrollTo({
+      left: offset,
+      behavior: smooth ? 'smooth' : 'instant'
     })
+  }
+
+  // Actions handlers
+  const handlePrevClick = () => {
+    if (onPrevClick !== undefined) onPrevClick(activeIndex)
+    if (active === undefined) forceActivateSlot(activeIndex - 1)
+  }
+  const handleNextClick = () => {
+    if (onNextClick !== undefined) onNextClick(activeIndex)
+    if (active === undefined) forceActivateSlot(activeIndex + 1)
+  }
+  const handlePaginationClick = (pos: number) => {
+    if (onPaginationClick !== undefined) onPaginationClick(activeIndex, pos)
+    if (active === undefined) forceActivateSlot(pos)
   }
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(
     c(null, {
+      'controlled': active !== undefined,
+      'no-snap': noSnap === true,
       'at-first': activeIndex === 0,
       'at-last': activeIndex === childrenCount - 1,
       'can-go-left': canGoLeft,
@@ -146,12 +194,11 @@ export const Gallery: FunctionComponent<Props> = ({
     className
   )
   const scrollerClss = c('scroller')
-  const childClss = c('slot')
   const actionsClss = c('actions')
   const prevBtnClss = c('prev')
   const nextBtnClss = c('next')
   const paginationClss = c('pagination')
-  const dataAttributes: Record<string, string> = { 'data-current': `${activeIndex}` }
+  const dataAttributes: Record<string, string> = { 'data-active': `${activeIndex}` }
   const actualPaddingLeft = typeof paddingLeft === 'number'
     ? `${paddingLeft}px`
     : typeof paddingLeft === 'string'
@@ -173,6 +220,7 @@ export const Gallery: FunctionComponent<Props> = ({
     {/* Scroller */}
     <div className={scrollerClss} ref={scrollerRef}>
       {Children.map(children, (child, pos) => {
+        const slotClss = c('slot', { active: pos === activeIndex })
         const style: Record<string, string | undefined> = {
           'margin-left': pos === 0
             ? actualPaddingLeft
@@ -183,8 +231,9 @@ export const Gallery: FunctionComponent<Props> = ({
         }
         return <div
           key={pos}
-          className={`${childClss} thing-${pos}`}
-          style={{ ...style }}>
+          className={`${slotClss}`}
+          style={{ ...style }}
+          data-slot={pos}>
           {child}
         </div>
       })}
@@ -194,12 +243,12 @@ export const Gallery: FunctionComponent<Props> = ({
     <div className={actionsClss}>
       <div
         className={prevBtnClss}
-        onClick={() => handleActivateSlot(activeIndex - 1)}>
+        onClick={handlePrevClick}>
         {prevButtonContent ?? 'prev'}
       </div>
       <div
         className={nextBtnClss}
-        onClick={() => handleActivateSlot(activeIndex + 1)}>
+        onClick={handleNextClick}>
         {nextButtonContent ?? 'next'}
       </div>
     </div>
@@ -207,11 +256,11 @@ export const Gallery: FunctionComponent<Props> = ({
     {/* Pagination */}
     <div className={paginationClss}>
       {Children.map(children, (_, pos) => {
-        const pageClss = c('page', { current: pos === activeIndex })
+        const pageClss = c('page', { active: pos === activeIndex })
         return <div
           className={pageClss}
           data-page={pos}
-          onClick={() => handleActivateSlot(pos)}>
+          onClick={() => handlePaginationClick(pos)}>
           {typeof paginationContent === 'string'
             ? paginationContent
             : typeof paginationContent === 'function'
