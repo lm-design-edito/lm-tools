@@ -10,11 +10,13 @@ import { toError } from '../../agnostic/misc/cast/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import { subtitles as publicClassName } from '../public-classnames.js'
-import type {
-  ParsedSub
-} from './types.js'
+import type { ParsedSub } from './types.js'
+import {
+  computeSubGroupsWithBoundaries,
+  getCurrentGroup,
+  parseSubs
+} from './utils.js'
 import cssModule from './styles.module.css'
-import { computeSubGroupsWithBoundaries, getCurrentGroup, parseSubs } from './utils.js'
 
 export type Props = PropsWithChildren<WithClassName<{
   src?: string
@@ -50,7 +52,8 @@ export type Props = PropsWithChildren<WithClassName<{
  *   <div>Custom footer or overlay</div>
  * </Subtitles>
  *
- * @returns Render a div containing the subtitles and any children passed as props. Subtitles are grouped and given classnames according to their timing and state (current, prev, etc).
+ * @returns Render a div containing the subtitles and any children passed as props.
+ * Subtitles are grouped and given classnames according to their timing and state (current, prev, etc).
  */
 export const Subtitles: FunctionComponent<Props> = ({
   src,
@@ -66,6 +69,15 @@ export const Subtitles: FunctionComponent<Props> = ({
   const [parsedSubs, setParsedSubs] = useState<ParsedSub[]>([])
 
   const c = clss(publicClassName, { cssModule })
+
+  /* [WIP] est-ce qu'il y a vraiment besoin d'une fonction renderSubtitles ici ?
+    genre avant return de Subtitles, tes variables de prevSubs à currentGroup
+    puis dans le return {
+      timeCodeMs !== undefined
+      && parsedSubs.length > 0
+      && subsGroupsWithBoundaries.map(...)
+    }
+  */
 
   /**
    * Rend tous les groupes de sous-titres et leurs sous-titres.
@@ -121,18 +133,9 @@ export const Subtitles: FunctionComponent<Props> = ({
   }
 
   // Effects
-  // [WIP] vraie question aussi : ça sert à quoi useCallback ?
   const fetchAndParseSubs = useCallback(async (src?: string, srtFileContent?: string): Promise<void> => {
-    if (srtFileContent !== undefined) {
-      const parsedSubs = parseSubs(srtFileContent)
-      setParsedSubs(parsedSubs)
-      return
-    }
-
-    if (src === undefined) {
-      return
-    }
-
+    if (src === undefined) return
+    if (srtFileContent !== undefined) return setParsedSubs(parseSubs(srtFileContent))
     try {
       const response = await fetch(src)
       const srtContent = await response.text()
@@ -146,9 +149,8 @@ export const Subtitles: FunctionComponent<Props> = ({
   }, [onSubsError, onSubsLoad])
 
   useEffect(() => {
-    fetchAndParseSubs(src, srtFileContent).catch((error) => {
-      console.error(error)
-    })
+    fetchAndParseSubs(src, srtFileContent)
+      .catch((error) => { console.error(error) })
   }, [fetchAndParseSubs, src, srtFileContent])
 
   // Rendering

@@ -56,6 +56,9 @@ export const CompDisplayer: FunctionComponent<Props> = ({
     }
   })
 
+  console.log('!!!')
+  console.log(strDemoProps)
+
   return <div
     id={id}
     className={cssModule['root']}>
@@ -82,12 +85,12 @@ export const CompDisplayer: FunctionComponent<Props> = ({
           <button>↑ Close</button>
           <label> Custom demo Props</label>
         </>}>
-        <><pre>{strDemoProps}</pre></>
-        {/* <SyntaxHighlighter
+        {/* <><pre>{strDemoProps}</pre></> */}
+        <SyntaxHighlighter
           language='javascript'
           style={docco}>
           {strDemoProps}
-        </SyntaxHighlighter> */}
+        </SyntaxHighlighter>
       </Drawer>
     </div>}
     {/* {strDemoProps !== undefined && <div className={cssModule['demo-css']}>
@@ -123,6 +126,10 @@ export const CompDisplayer: FunctionComponent<Props> = ({
         openerContent={<>
           <button>↓ See</button>
           <label> Custom demo CSS</label>
+          <button onClick={e => {
+            e.stopPropagation()
+            handleToggleCss()
+          }}>{withCss ? 'Disable' : 'Enable'}</button>
         </>}
         closerContent={<>
           <button>↑ Close</button>
