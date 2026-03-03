@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import '@testing-library/jest-dom'
 import { ResizeObserverComponent } from './index.js'
+import { resizeObserver as publicClassName } from '../public-classnames.js'
 
 // Import the right testing lib depending on the context (react vs. preact)
 const { render, screen, cleanup, act } = await (async () => {
@@ -111,9 +112,9 @@ describe('ResizeObserverComponent', () => {
 
     // Check presence of CSS custom properties
     const style = div?.style
-    expect(style?.getPropertyValue('--dsed-resize-observer-width')).toBe('100')
-    expect(style?.getPropertyValue('--dsed-resize-observer-height')).toBe('50')
-    expect(style?.getPropertyValue('--dsed-resize-observer-width-px')).toBe('100px')
-    expect(style?.getPropertyValue('--dsed-resize-observer-height-px')).toBe('50px')
+    expect(style?.getPropertyValue(`--${publicClassName}-width`)).toBe('100')
+    expect(style?.getPropertyValue(`--${publicClassName}-height`)).toBe('50')
+    expect(style?.getPropertyValue(`--${publicClassName}-width-px`)).toBe('100px')
+    expect(style?.getPropertyValue(`--${publicClassName}-height-px`)).toBe('50px')
   })
 })

@@ -65,10 +65,17 @@ export const Disclaimer: FunctionComponent<Props> = ({
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null, { on: isOn, off: !isOn }), className)
+  const rootClss = mergeClassNames(
+    c(null, {
+      on: isOn,
+      off: !isOn
+    }),
+    className
+  )
   const panelClss = c('panel')
   const contentClss = c('content')
   const btnClss = c('toggler')
+  const sensitiveClss = c('sensitive')
   return <div className={rootClss}>
     <div className={panelClss}>
       {isNotFalsy(content) && <div
@@ -81,6 +88,8 @@ export const Disclaimer: FunctionComponent<Props> = ({
         {togglerContent}
       </div>}
     </div>
-    {children}
+    <div className={sensitiveClss}>
+      {children}
+    </div>
   </div>
 }

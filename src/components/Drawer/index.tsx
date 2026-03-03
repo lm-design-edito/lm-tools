@@ -104,7 +104,7 @@ export const Drawer: FunctionComponent<Props> = ({
       return {
         ...acc,
         [`--${publicClassName}-content-${key}`]: `${val}`,
-        [`--${publicClassName}-content-${key}px`]: `${val}px`
+        [`--${publicClassName}-content-${key}-px`]: `${val}px`
       }
     }, {})
   const dataAttributes: Record<string, string> = Object

@@ -1,6 +1,6 @@
 .root {
-  font-family: monospace;
   font-size: 16px;
+  padding-top: 24px;
 }
 
 .name {
@@ -9,8 +9,50 @@
 }
 
 .description {
-  font-family: monospace;
   margin: 16px 16px 32px 16px;
+}
+
+.description code {
+  border-radius: 4px;
+  background-color: #eee;
+  color: #555;
+  padding-left: 4px;
+  padding-right: 4px;
+  font-family: monospace;
+}
+
+.demo-css,
+.demo-props {
+  margin: 16px 16px 32px 16px;
+}
+
+.demo-css :global(.dsed-drawer.dsed-drawer--closed .dsed-drawer__closer),
+.demo-props :global(.dsed-drawer.dsed-drawer--closed .dsed-drawer__closer) {
+  display: none;
+}
+
+.demo-css :global(.dsed-drawer.dsed-drawer--opened .dsed-drawer__opener),
+.demo-props :global(.dsed-drawer.dsed-drawer--opened .dsed-drawer__opener) {
+  display: none;
+}
+
+.demo-css :global(.dsed-drawer.dsed-drawer--closed .dsed-drawer__content),
+.demo-props :global(.dsed-drawer.dsed-drawer--closed .dsed-drawer__content) {
+  pointer-events: none;
+  height: 0;
+  opacity: 0;
+  transition: 
+    opacity 400ms,
+    height 400ms 400ms;
+}
+
+.demo-css :global(.dsed-drawer.dsed-drawer--opened .dsed-drawer__content),
+.demo-props :global(.dsed-drawer.dsed-drawer--opened .dsed-drawer__content) {
+  height: var(--dsed-drawer-content-height-px);
+  opacity: 1;
+  transition: 
+    opacity 400ms 400ms,
+    height 400ms;
 }
 
 .details {
@@ -31,4 +73,5 @@
 .content {
   border-top: 1px solid #ddd;
   padding-top: 16px;
+  margin-bottom: 48px;
 }
