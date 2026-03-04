@@ -28,6 +28,8 @@ export type Props = PropsWithChildren<WithClassName<{
   onSubsError?: (error?: Error) => void
 }>>
 
+// [WIP] JSDOC pas à jour
+
 /**
  * Subtitles component for displaying and synchronizing subtitles (SRT) with a media timeline.
  *
