@@ -5,18 +5,38 @@ import {
 } from '~/components/Video/index.js'
 import { CompDisplayer } from '../CompDisplayer/index.js'
 
+import { video as publicClassName } from '~/components/public-classnames.js'
+
 const name = 'Video'
-const description = 'Some description'
+const description = <>
+  Component to display a video.<br /><br />
+  Wordings can be customed. <br />
+</>
 const tsxDetails = `'Use wisely'`
 
-const props1: VideoProps = {
-  sources: 'https://assets-decodeurs.lemonde.fr/redacweb/2507-st-louis/siege.mp4',
-  controls: true,
-  autoPlay: true,
-  loop: true
-}
 
-const props2: VideoProps = {
+/* Demo CSS */
+const demoStyles = `
+
+.${publicClassName}__timeline {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  background-color: lightgray;
+}
+.${publicClassName}__timeline:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: red;
+  transform-origin: left;
+  transform: scaleX(var(--progress));
+}
+`
+
+const props: VideoProps = {
   pauseBtnContent: 'Mettre en pause',
   playBtnContent: 'Lire',
   soundOnBtnContent: 'Activer le son',
@@ -42,8 +62,10 @@ export const VideoDemo: FunctionComponent = () => {
   return <CompDisplayer
     name={name}
     description={description}
-    tsxDetails={tsxDetails}>
-    <Video {...props1} />
-    <Video {...props2} />
+    tsxDetails={tsxDetails}
+    demoStyles={demoStyles}
+    demoProps={props}
+    >
+    <Video {...props} />
   </CompDisplayer>
 }

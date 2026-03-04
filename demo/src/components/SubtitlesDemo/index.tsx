@@ -7,7 +7,10 @@ import { CompDisplayer } from '../CompDisplayer/index.js'
 import { subtitles as publicClassName } from '~/components/public-classnames.js'
 
 const name = 'Subtitles'
-const description = 'Some description'
+const description = <>
+  A component to display subtitles from a srt file or a src url.<br /><br />
+  The timecode is given in ms and can be updated to sync the subtitles with a video for example.<br />
+</>
 const tsxDetails = `'Use wisely'`
 
 
@@ -28,6 +31,7 @@ const demoStyles = `
 .${publicClassName}__sub--curr,
 .${publicClassName}__sub--prev {
   opacity: 1;
+}
 `
 
 const props1: SubtitlesProps = {
@@ -72,12 +76,12 @@ export const SubtitlesDemo: FunctionComponent = () => {
     return () => clearInterval(interval)  
   }, []);
 
-  console.log('timecodeMs', timecodeMs)
 
   return <CompDisplayer
     name={name}
     demoStyles={demoStyles}
     description={description}
+    demoProps={{ ...props1, timecodeMs }}
     tsxDetails={tsxDetails}>
     <Subtitles {...props1} timecodeMs={timecodeMs} />
     <Subtitles {...props2} timecodeMs={timecodeMs} />

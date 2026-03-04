@@ -19,6 +19,7 @@ import { SubtitlesDemo } from './components/SubtitlesDemo/index.js'
 
 import cssModule from './styles.module.css'
 import { Drawer } from '~/components/Drawer/index.js'
+import { VideoDemo } from 'components/VideoDemo/index.js'
 
 const components: Array<{
   name: string,
@@ -34,7 +35,7 @@ const components: Array<{
   { name: 'Scrllgngn', comp: <ScrllgngnDemo /> },
   { name: 'ShadowRoot', comp: <ShadowRootDemo /> },
   { name: 'Subtitles', comp: <SubtitlesDemo /> },
-  { name: 'Video', comp: <>Video Tab !!!</> }
+  { name: 'Video', comp: <VideoDemo /> }
 ]
 
 const App = () => {
