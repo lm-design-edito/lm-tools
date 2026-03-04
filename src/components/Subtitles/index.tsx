@@ -70,68 +70,6 @@ export const Subtitles: FunctionComponent<Props> = ({
 
   const c = clss(publicClassName, { cssModule })
 
-  /* [WIP] est-ce qu'il y a vraiment besoin d'une fonction renderSubtitles ici ?
-    genre avant return de Subtitles, tes variables de prevSubs à currentGroup
-    puis dans le return {
-      timeCodeMs !== undefined
-      && parsedSubs.length > 0
-      && subsGroupsWithBoundaries.map(...)
-    }
-  */
-
-  /**
-   * Rend tous les groupes de sous-titres et leurs sous-titres.
-   * @param parsedSubs - Sous-titres parsés
-   * @param subsGroups - Groupes de sous-titres
-   * @param timecodeMs - Timecode courant
-   * @param isEnded - Indique si la lecture est terminée
-   * @returns React nodes pour tous les groupes
-   */
-  const renderSubtitles = (
-    parsedSubs: ParsedSub[],
-    subsGroups?: number[],
-    timecodeMs?: number,
-    isEnded?: boolean
-  ): React.ReactNode => {
-    if (timecodeMs === undefined || parsedSubs.length === 0) return null
-
-    const prevSubs = parsedSubs.filter(({ start }) => start != null && start < timecodeMs)
-    const lastPrevSub = prevSubs[prevSubs.length - 1]
-    const highestSubId = Math.max(...parsedSubs.map(sub => sub.id))
-    const subsGroupsWithBoundaries = computeSubGroupsWithBoundaries(subsGroups, highestSubId)
-    const currentGroup = getCurrentGroup(subsGroupsWithBoundaries, lastPrevSub?.id, isEnded)
-
-    return subsGroupsWithBoundaries.map(group => {
-      const groupSubs = parsedSubs.filter(sub => sub.id >= group.startId && sub.id <= group.endId)
-      const totalSubs = groupSubs.length
-      const groupClass = c('group', {
-        curr: currentGroup?.startId === group.startId
-      })
-
-      const subsNodes = groupSubs.map((sub, subIndex) => {
-        let subText = sub.content?.trim() ?? ''
-        if (subIndex !== totalSubs - 1) subText += ' '
-
-        const subClass = c('sub', {
-          prev: sub.start !== undefined && lastPrevSub?.start !== undefined && sub.start <= lastPrevSub.start,
-          curr: sub.start !== undefined && timecodeMs >= sub.start && sub.end !== undefined && timecodeMs <= sub.end
-        })
-        return <span key={sub.id} className={subClass} data-sub-pos={sub.id}>{subText}</span>
-      })
-
-      return (
-        <div
-          className={groupClass}
-          key={group.startId}
-          data-start-sub-pos={group.startId}
-          data-end-sub-pos={group.endId}
-        >
-          {subsNodes}
-        </div>
-      )
-    })
-  }
-
   // Effects
   const fetchAndParseSubs = useCallback(async (src?: string, srtFileContent?: string): Promise<void> => {
     if (src === undefined) return
@@ -155,9 +93,48 @@ export const Subtitles: FunctionComponent<Props> = ({
 
   // Rendering
   const rootClss = mergeClassNames(c(null), className)
+
+  const prevSubs = parsedSubs.filter(({ start }) => start != null && start < timecodeMs)
+  const lastPrevSub = prevSubs[prevSubs.length - 1]
+  const highestSubId = Math.max(...parsedSubs.map(sub => sub.id))
+  const subsGroupsWithBoundaries = computeSubGroupsWithBoundaries(subsGroups, highestSubId)
+  const currentGroup = getCurrentGroup(subsGroupsWithBoundaries, lastPrevSub?.id, isEnded)
+
   return (
     <div className={rootClss}>
-      {renderSubtitles(parsedSubs, subsGroups, timecodeMs, isEnded)}
+      {
+        timecodeMs !== undefined
+        && parsedSubs.length > 0
+        && subsGroupsWithBoundaries.map(group => {
+          const groupSubs = parsedSubs.filter(sub => sub.id >= group.startId && sub.id <= group.endId)
+          const totalSubs = groupSubs.length
+          const groupClass = c('group', {
+            curr: currentGroup?.startId === group.startId
+          })
+
+          const subsNodes = groupSubs.map((sub, subIndex) => {
+            let subText = sub.content?.trim() ?? ''
+            if (subIndex !== totalSubs - 1) subText += ' '
+
+            const subClass = c('sub', {
+              prev: sub.start !== undefined && lastPrevSub?.start !== undefined && sub.start <= lastPrevSub.start,
+              curr: sub.start !== undefined && timecodeMs >= sub.start && sub.end !== undefined && timecodeMs <= sub.end
+            })
+            return <span key={sub.id} className={subClass} data-sub-pos={sub.id}>{subText}</span>
+          })
+
+          return (
+            <div
+              className={groupClass}
+              key={group.startId}
+              data-start-sub-pos={group.startId}
+              data-end-sub-pos={group.endId}
+            >
+              {subsNodes}
+            </div>
+          )
+        })
+      }
     </div>
   )
 }
