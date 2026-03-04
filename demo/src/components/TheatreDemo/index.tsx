@@ -24,7 +24,6 @@ const demoStyles = `
 
 const props: TheatreProps = {
   isTheatreOn: false,
-  canTheatre: true,
   openBtnContent: 'Ouvrir le théâtre',
   closeBtnContent: 'Fermer le théâtre'
 }

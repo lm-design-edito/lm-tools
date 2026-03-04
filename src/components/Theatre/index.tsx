@@ -14,14 +14,12 @@ export type Props = PropsWithChildren<WithClassName<{
   closeBtnContent?: ReactNode
   openBtnContent?: ReactNode
   isTheatreOn?: boolean
-  canTheatre?: boolean
   onTheatreToggle?: (open: boolean) => void
 }>>
 
 export const Theatre: FunctionComponent<Props> = ({
   closeBtnContent,
   openBtnContent,
-  canTheatre,
   isTheatreOn,
   onTheatreToggle,
 
@@ -33,24 +31,24 @@ export const Theatre: FunctionComponent<Props> = ({
   const previousZIndex = useRef(0)
 
   const onOpenTheatre = useCallback((e) => {
-    if (canTheatre === undefined || !canTheatre || isTheatreOn === true) {
+    if (isTheatreOn === true) {
       return
     }
     e.preventDefault()
     if (onTheatreToggle !== undefined) {
       onTheatreToggle(true)
     }
-  }, [canTheatre, isTheatreOn, onTheatreToggle])
+  }, [isTheatreOn, onTheatreToggle])
 
   const onCloseTheatre = useCallback((e) => {
-    if (canTheatre === undefined || !canTheatre || isTheatreOn === false) {
+    if (isTheatreOn === false) {
       return
     }
     e.preventDefault()
     if (onTheatreToggle !== undefined) {
       onTheatreToggle(false)
     }
-  }, [canTheatre, isTheatreOn, onTheatreToggle])
+  }, [isTheatreOn, onTheatreToggle])
 
   const toggleBlockBodyScroll = useCallback((shouldBlock: boolean) => {
     if (shouldBlock) {
@@ -103,12 +101,8 @@ export const Theatre: FunctionComponent<Props> = ({
 
   return (
     <div className={rootClss}>
-      { canTheatre === true
-        && <>
-          <button onClick={onOpenTheatre}>{ openBtnContent ?? 'Open Theatre' }</button>
-          <button onClick={onCloseTheatre}>{ closeBtnContent ?? 'Close Theatre' }</button>
-        </>
-      }
+      <div onClick={onOpenTheatre}>{ openBtnContent ?? 'Open Theatre' }</div>
+      <div onClick={onCloseTheatre}>{ closeBtnContent ?? 'Close Theatre' }</div>
       { children }
       { content }
     </div>

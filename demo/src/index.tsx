@@ -21,6 +21,7 @@ import { TheatreDemo } from './components/TheatreDemo/index.js'
 import cssModule from './styles.module.css'
 import { Drawer } from '~/components/Drawer/index.js'
 import { VideoDemo } from 'components/VideoDemo/index.js'
+import { ImageDemo } from 'components/ImageDemo/index.js'
 
 const components: Array<{
   name: string,
@@ -38,6 +39,7 @@ const components: Array<{
   { name: 'Subtitles', comp: <SubtitlesDemo /> },
   { name: 'Video', comp: <VideoDemo /> },
   { name: 'Theatre', comp: <TheatreDemo /> },
+  { name: 'Image', comp: <ImageDemo /> }
 ]
 
 const App = () => {
