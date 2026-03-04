@@ -16,6 +16,7 @@ import { ResizeObserverDemo } from './components/ResizeObserverDemo/index.js'
 import { ScrllgngnDemo } from './components/ScrllgngnDemo/index.js'
 import { ShadowRootDemo } from './components/ShadowRootDemo/index.js'
 import { SubtitlesDemo } from './components/SubtitlesDemo/index.js'
+import { TheatreDemo } from './components/TheatreDemo/index.js'
 
 import cssModule from './styles.module.css'
 import { Drawer } from '~/components/Drawer/index.js'
@@ -35,7 +36,8 @@ const components: Array<{
   { name: 'Scrllgngn', comp: <ScrllgngnDemo /> },
   { name: 'ShadowRoot', comp: <ShadowRootDemo /> },
   { name: 'Subtitles', comp: <SubtitlesDemo /> },
-  { name: 'Video', comp: <VideoDemo /> }
+  { name: 'Video', comp: <VideoDemo /> },
+  { name: 'Theatre', comp: <TheatreDemo /> },
 ]
 
 const App = () => {
