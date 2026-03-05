@@ -9,6 +9,7 @@ import { Gallery } from '~/components/Gallery/index.js'
 import { DisclaimerDemo } from './components/DisclaimerDemo/index.js'
 import { DrawerDemo } from './components/DrawerDemo/index.js'
 import { EventListenerDemo } from './components/EventListenerDemo/index.js'
+import { ImageDemo } from './components/ImageDemo/index.js'
 import { IntersectionObserverDemo } from './components/IntersectionObserverDemo/index.js'
 import { GalleryDemo } from './components/GalleryDemo/index.js'
 import { PaginatorDemo } from './components/PaginatorDemo/index.js'
@@ -17,33 +18,31 @@ import { ScrllgngnDemo } from './components/ScrllgngnDemo/index.js'
 import { ShadowRootDemo } from './components/ShadowRootDemo/index.js'
 import { SubtitlesDemo } from './components/SubtitlesDemo/index.js'
 import { TheatreDemo } from './components/TheatreDemo/index.js'
+import { VideoDemo } from './components/VideoDemo/index.js'
 
 import cssModule from './styles.module.css'
-import { Drawer } from '~/components/Drawer/index.js'
-import { VideoDemo } from 'components/VideoDemo/index.js'
-import { ImageDemo } from 'components/ImageDemo/index.js'
 
 const components: Array<{
-  name: string,
+  name: string
   comp: ReactNode
 }> = [
   { name: 'Disclaimer', comp: <DisclaimerDemo /> },
   { name: 'Drawer', comp: <DrawerDemo /> },
   { name: 'EventListener', comp: <EventListenerDemo /> },
   { name: 'Gallery', comp: <GalleryDemo /> },
+  { name: 'Image', comp: <ImageDemo /> },
   { name: 'IntersectionObserver', comp: <IntersectionObserverDemo /> },
   { name: 'Paginator', comp: <PaginatorDemo /> },
   { name: 'ResizeObserver', comp: <ResizeObserverDemo /> },
   { name: 'Scrllgngn', comp: <ScrllgngnDemo /> },
   { name: 'ShadowRoot', comp: <ShadowRootDemo /> },
   { name: 'Subtitles', comp: <SubtitlesDemo /> },
-  { name: 'Video', comp: <VideoDemo /> },
   { name: 'Theatre', comp: <TheatreDemo /> },
-  { name: 'Image', comp: <ImageDemo /> }
+  { name: 'Video', comp: <VideoDemo /> }
 ]
 
 const App = () => {
-  const initActiveTab = 0
+  const initActiveTab = 3
   const [activeTab, setActiveTab] = useState(initActiveTab)
   return <div className={cssModule['app']}>
     <Gallery

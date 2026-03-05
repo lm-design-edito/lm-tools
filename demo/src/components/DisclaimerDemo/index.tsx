@@ -11,27 +11,19 @@ const name = 'Disclaimer'
 
 /* Description */
 const description = <>
-  Simple component that hides its content behind a disclaimer panel.<br /><br />
+  Hides its content behind a disclaimer panel.<br /><br />
   If <code>isOn</code> prop is not undefined, the component becomes controlled by it.<br />
   Otherwise, the click on the toggler sets the internal state to <code>disclosed</code>.
 </>
 
 /* TSX Details */
 const tsxDetails = `
-/* Props structure */
-
 type Props = PropsWithChildren<WithClassName<{
   content?: ReactNode
   togglerContent?: ReactNode
   isOn?: boolean
   onDismissed?: () => void
 }>>
-  
-/* Usage */
-
-<Disclaimer {...props}>
-  Sensitive content
-</Disclaimer>
 
 `
 
@@ -85,7 +77,6 @@ const demoProps: DisclaimerProps = {
 }
 
 export const DisclaimerDemo: FunctionComponent = () => {
-  const [isOn, setIsOn] = useState<boolean>()
   return <CompDisplayer
     name={name}
     description={description}

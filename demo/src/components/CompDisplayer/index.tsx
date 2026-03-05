@@ -9,6 +9,7 @@ import {
 import SyntaxHighlighter from 'react-syntax-highlighter'
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 import { randomHash } from '~/agnostic/random/uuid/index.js'
+import { isNonNullObject } from '~/agnostic/objects/is-object/index.js'
 import { Drawer } from '~/components/Drawer/index.js'
 import cssModule from './styles.module.css'
 
@@ -36,16 +37,24 @@ export const CompDisplayer: FunctionComponent<Props> = ({
   useEffect(() => {
     try {
       let toStringify: Record<string, unknown> = {}
-      Object.entries(demoProps ?? {}).map(([key, val]) => {
+      Object.entries(demoProps ?? {}).forEach(([key, val]) => {
+        if (val === undefined) return
         if (typeof val === 'string'
           || typeof val === 'number'
           || typeof val === 'boolean'
           || val === null
-          || typeof val === 'function'
         ) {
           toStringify[key] = val
         } else if (isValidElement(val)) {
-          toStringify[key] = '[React.element]'
+          toStringify[key] = `[React Element]`
+        } else if (typeof val === 'function') {
+          toStringify[key] = val.toString()
+        } else if (isNonNullObject(val)
+          && 'toString' in val
+          && typeof val.toString === 'function') {
+          toStringify[key] = val.toString()
+        } else {
+          toStringify[key] = '[Unknown]'
         }
       })
       const str = JSON.stringify(toStringify, null, 2)
@@ -55,9 +64,6 @@ export const CompDisplayer: FunctionComponent<Props> = ({
       console.warn(`Failed serializing demo props`, demoProps)
     }
   })
-
-  console.log('!!!')
-  console.log(strDemoProps)
 
   return <div
     id={id}
@@ -75,7 +81,7 @@ export const CompDisplayer: FunctionComponent<Props> = ({
     </div>}
 
     {/* Demo Props */}
-    {strDemoProps !== undefined && <div className={cssModule['demo-css']}>
+    {strDemoProps !== undefined && <div className={cssModule['demo-props']}>
       <Drawer
         openerContent={<>
           <button>↓ See</button>
@@ -85,7 +91,6 @@ export const CompDisplayer: FunctionComponent<Props> = ({
           <button>↑ Close</button>
           <label> Custom demo Props</label>
         </>}>
-        {/* <><pre>{strDemoProps}</pre></> */}
         <SyntaxHighlighter
           language='javascript'
           style={docco}>
@@ -93,35 +98,10 @@ export const CompDisplayer: FunctionComponent<Props> = ({
         </SyntaxHighlighter>
       </Drawer>
     </div>}
-    {/* {strDemoProps !== undefined && <div className={cssModule['demo-css']}>
-      <Drawer
-        initialIsOpened={false}
-        openerContent={<div style={{
-          borderBottom: '1px solid #ddd',
-          paddingBottom: '8px'
-        }}>
-          <button>↓ See</button>
-          <label> Custom demo Props</label>
-        </div>}
-        closerContent={<div style={{
-          borderBottom: '1px solid #ddd',
-          paddingBottom: '8px'
-        }}>
-          <button>↑ Close</button>
-          <label> Custom demo Props</label>
-        </div>}>
-        <br />
-        <SyntaxHighlighter
-          language='javascript'
-          style={docco}>
-          {strDemoProps}
-        </SyntaxHighlighter>
-      </Drawer>
-    </div>} */}
 
     {/* Demo CSS */}
-    {demoStyles !== undefined && withCss && <style>{`#${id} {\n${demoStyles}\n}`}</style>}
-    {demoStyles !== undefined && <div className={cssModule['demo-css']}>
+    {(demoStyles ?? '').trim() !== '' && withCss && <style>{`#${id} {\n${demoStyles}\n}`}</style>}
+    {(demoStyles ?? '').trim() !== '' && <div className={cssModule['demo-css']}>
       <Drawer
         openerContent={<>
           <button>↓ See</button>
@@ -138,69 +118,10 @@ export const CompDisplayer: FunctionComponent<Props> = ({
         <SyntaxHighlighter
           language='css'
           style={docco}>
-          {demoStyles}
+          {demoStyles ?? ''}
         </SyntaxHighlighter>
       </Drawer>
     </div>}
-    {/* {demoStyles !== undefined && <div className={cssModule['demo-css']}>
-      <Drawer
-        initialIsOpened={false}
-        openerContent={<div style={{
-          borderBottom: '1px solid #ddd',
-          paddingBottom: '8px'
-        }}>
-          <button>↓ See</button>
-          <label> Custom demo CSS </label>
-          <button onClick={e => {
-            e.stopPropagation()
-            handleToggleCss()
-          }}>{withCss ? 'Disable' : 'Enable'}</button>
-        </div>}
-        closerContent={<div style={{
-          borderBottom: '1px solid #ddd',
-          paddingBottom: '8px'
-        }}>
-          <button>↑ Close</button>
-          <label> Custom demo CSS </label>
-          <button onClick={e => {
-            e.stopPropagation()
-            handleToggleCss()
-          }}>{withCss ? 'Disable' : 'Enable'}</button>
-        </div>}>
-        <br />
-        <SyntaxHighlighter
-          language='css'
-          style={docco}>
-          {demoStyles}
-        </SyntaxHighlighter>
-      </Drawer>
-    </div>} */}
-
-    {/* {demoProps !== undefined && <div className={cssModule['demo-props']}>
-      <Drawer
-        initialIsOpened={false}
-        openerContent={<div style={{
-          borderBottom: '1px solid #ddd',
-          paddingBottom: '8px'
-        }}>
-          <button>↓ See</button>
-          <label> Custom demo Props</label>
-        </div>}
-        closerContent={<div style={{
-          borderBottom: '1px solid #ddd',
-          paddingBottom: '8px'
-        }}>
-          <button>↑ Close</button>
-          <label> Custom demo Props</label>
-        </div>}>
-        <br />
-        <SyntaxHighlighter
-          language='javascript'
-          style={docco}>
-          {strDemoProps}
-        </SyntaxHighlighter>
-      </Drawer>
-    </div>} */}
 
     {/* Content */}
     {children !== undefined && <>

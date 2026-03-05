@@ -55,6 +55,11 @@
     height 400ms;
 }
 
+.demo-css :global(button),
+.demo-props :global(button) {
+  cursor: pointer;
+}
+
 .details {
   margin: 16px 16px 32px 16px;
 }

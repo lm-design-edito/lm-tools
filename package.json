@@ -84,6 +84,7 @@
     "chalk": "^5.6.2",
     "express": "^5.2.1",
     "multer": "^2.0.0",
+    "preact-render-to-string": "^6.6.6",
     "quantize": "^1.0.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

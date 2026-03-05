@@ -3,13 +3,36 @@ import {
   Gallery,
   type Props as GalleryProps
 } from '~/components/Gallery/index.js'
+import { gallery as publicClassName } from '~/components/public-classnames.js'
 import { CompDisplayer } from '../CompDisplayer/index.js'
 
 const name = 'Gallery'
 const description = 'Some description'
-const tsxDetails = `'Use wisely'`
+const tsxDetails = `
+type Props = PropsWithChildren<WithClassName<{
+  paddingLeft?: string | number
+  paddingRight?: string | number
+  padding?: string | number
+  prevButtonContent?: ReactNode
+  nextButtonContent?: ReactNode
+  paginationContent?: ReactNode | ((page: number) => ReactNode)
+  initActive?: number
+  active?: number
+  noSnap?: boolean
+  onPrevClick?: (activePos: number) => void
+  onNextClick?: (activePos: number) => void
+  onPaginationClick?: (activePos: number, targetPos: number) => void
+  onSlotChange?: (activePos: number) => void
+}>>
 
-const props: GalleryProps = {
+`
+
+const demoStyles = `
+/* thing */
+
+`
+
+const demoProps: GalleryProps = {
   paddingLeft: '30%',
   paddingRight: '30%',
   prevButtonContent: '<',
@@ -37,7 +60,9 @@ export const GalleryDemo: FunctionComponent = () => {
   return <CompDisplayer
     name={name}
     description={description}
-    tsxDetails={tsxDetails}>
+    tsxDetails={tsxDetails}
+    demoProps={demoProps}
+    demoStyles={demoStyles}>
     <div>
       Force specific slot:
       <button onClick={() => setSlot(undefined)}>{slot === undefined ? <strong>undefined</strong> : 'undefined'}</button>
@@ -47,7 +72,7 @@ export const GalleryDemo: FunctionComponent = () => {
       <button onClick={() => setSlot(3)}>{slot === 3 ? <strong>3</strong> : '3'}</button>
     </div>
     <Gallery
-      {...props}
+      {...demoProps}
       active={slot} />
   </CompDisplayer>
 }
