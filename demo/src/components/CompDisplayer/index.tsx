@@ -10,6 +10,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter'
 import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 import { randomHash } from '~/agnostic/random/uuid/index.js'
 import { isNonNullObject } from '~/agnostic/objects/is-object/index.js'
+import { recordMap } from '~/agnostic/objects/record-map/index.js'
 import { Drawer } from '~/components/Drawer/index.js'
 import cssModule from './styles.module.css'
 
@@ -92,7 +93,7 @@ export const CompDisplayer: FunctionComponent<Props> = ({
           <label> Custom demo Props</label>
         </>}>
         <SyntaxHighlighter
-          language='javascript'
+          language='json'
           style={docco}>
           {strDemoProps}
         </SyntaxHighlighter>
@@ -105,7 +106,7 @@ export const CompDisplayer: FunctionComponent<Props> = ({
       <Drawer
         openerContent={<>
           <button>↓ See</button>
-          <label> Custom demo CSS</label>
+          <label> Custom demo CSS </label>
           <button onClick={e => {
             e.stopPropagation()
             handleToggleCss()
@@ -113,7 +114,7 @@ export const CompDisplayer: FunctionComponent<Props> = ({
         </>}
         closerContent={<>
           <button>↑ Close</button>
-          <label> Custom demo CSS</label>
+          <label> Custom demo CSS </label>
         </>}>
         <SyntaxHighlighter
           language='css'

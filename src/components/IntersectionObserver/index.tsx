@@ -38,9 +38,25 @@ export type ObserverOptions = {
 /**
  * Props for the IntersectionObserverComponent.
  *
+ * @property dispatchedEventType - Optional name of a global DOM event to dispatch
+ * on {@link Window} whenever an intersection change occurs. When defined, the
+ * component emits a {@link CustomEvent} with this name using `window.dispatchEvent`.
+ * The event payload is available in `event.detail` and contains the current
+ * {@link IntersectionObserverEntry} and the active {@link IntersectionObserver}
+ * instance.
+ *
+ * Example:
+ * ```js
+ * window.addEventListener('hero:intersection', (event) => {
+ *   const { ioEntry, observer } = event.detail
+ * })
+ * ```
+ *
  * @property onIntersection - Callback invoked whenever an intersection change
- * is reported. Receives an object containing the current IntersectionObserverEntry
- * (if available) and the active IntersectionObserver instance.
+ * is reported. Receives an object containing the current
+ * {@link IntersectionObserverEntry} (if available) and the active
+ * {@link IntersectionObserver} instance.
+ *
  * @property root - See {@link ObserverOptions.root}.
  * @property rootMargin - See {@link ObserverOptions.rootMargin}.
  * @property threshold - See {@link ObserverOptions.threshold}.
@@ -48,6 +64,7 @@ export type ObserverOptions = {
  * @property children - React children rendered inside the observed element.
  */
 export type Props = PropsWithChildren<WithClassName<{
+  dispatchedEventType?: string
   onIntersection?: (details: {
     ioEntry?: IOE | undefined
     observer: IO
@@ -64,11 +81,14 @@ export type Props = PropsWithChildren<WithClassName<{
  * @returns A div element wrapping `children`, observed for intersection changes.
  *
  * @remarks
- * - Automatically creates and disconnects the IntersectionObserver instance.
+ * - Automatically creates and disconnects the {@link IntersectionObserver} instance.
  * - Re-observes the element shortly after mount to handle late layout changes.
  * - Adds an `is-intersecting` modifier class when the element is intersecting.
+ * - Can optionally dispatch a global {@link CustomEvent} on {@link Window} when
+ *   `dispatchedEventType` is provided. The event `detail` contains `{ ioEntry, observer }`.
  */
 export const IntersectionObserverComponent: FunctionComponent<Props> = ({
+  dispatchedEventType,
   onIntersection,
   root,
   rootMargin,
@@ -88,6 +108,14 @@ export const IntersectionObserverComponent: FunctionComponent<Props> = ({
       ioEntry: thisEntry,
       observer
     })
+    if (dispatchedEventType !== undefined) window.dispatchEvent(
+      new CustomEvent(dispatchedEventType, {
+        detail: {
+          ioEntry: thisEntry,
+          observer
+        }
+      })
+    )
     setIoEntry(thisEntry)
   }, [onIntersection])
 

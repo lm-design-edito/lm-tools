@@ -7,7 +7,10 @@ import { gallery as publicClassName } from '~/components/public-classnames.js'
 import { CompDisplayer } from '../CompDisplayer/index.js'
 
 const name = 'Gallery'
-const description = 'Some description'
+const description = <>
+  Horizontal scroller, scroll is either snaped or not depending on <code>noSnap</code> prop.
+  Behavior is controlled when <code>active</code> prop is provided and the element becomes not user scrollable when controlled.
+</>
 const tsxDetails = `
 type Props = PropsWithChildren<WithClassName<{
   paddingLeft?: string | number
@@ -28,15 +31,56 @@ type Props = PropsWithChildren<WithClassName<{
 `
 
 const demoStyles = `
-/* thing */
+.${publicClassName} {
+  position: relative;
+}
+
+.${publicClassName}__actions {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.${publicClassName}__actions button {
+  cursor: pointer;
+  margin : 8px;
+}
+
+.${publicClassName}__pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.${publicClassName}__page {
+  width: 8px;
+  height: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  background-color: black;
+  opacity: .4;
+  transition: opacity 200ms;
+  font-size: 0;
+}
+
+.${publicClassName}__page:hover {
+  opacity: .6;
+}
+
+.${publicClassName}__page.${publicClassName}__page--active {
+  opacity: 1;
+}
 
 `
 
 const demoProps: GalleryProps = {
   paddingLeft: '30%',
   paddingRight: '30%',
-  prevButtonContent: '<',
-  nextButtonContent: '>',
+  prevButtonContent: <button>‹</button>,
+  nextButtonContent: <button>›</button>,
   paginationContent: page => `${page}`,
   noSnap: true,
   children: [
