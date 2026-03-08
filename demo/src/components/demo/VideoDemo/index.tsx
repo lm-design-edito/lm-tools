@@ -3,7 +3,7 @@ import {
   Video,
   type Props as VideoProps
 } from '~/components/Video/index.js'
-import { CompDisplayer } from '../CompDisplayer/index.js'
+import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 
 import { video as publicClassName } from '~/components/public-classnames.js'
 
@@ -17,7 +17,6 @@ const tsxDetails = `'Use wisely'`
 
 /* Demo CSS */
 const demoStyles = `
-
 .${publicClassName}__timeline {
   position: relative;
   width: 100%;
@@ -33,10 +32,9 @@ const demoStyles = `
   background-color: red;
   transform-origin: left;
   transform: scaleX(var(--progress));
-}
-`
+}`
 
-const props: VideoProps = {
+const props: Record<string, unknown> = {
   pauseBtnContent: 'Mettre en pause',
   playBtnContent: 'Lire',
   soundOnBtnContent: 'Activer le son',
@@ -56,7 +54,7 @@ const props: VideoProps = {
     label: 'Français',
     default: true
   }]
-}
+} satisfies VideoProps
 
 export const VideoDemo: FunctionComponent = () => {
   return <CompDisplayer
@@ -64,8 +62,7 @@ export const VideoDemo: FunctionComponent = () => {
     description={description}
     tsxDetails={tsxDetails}
     demoStyles={demoStyles}
-    demoProps={props}
-    >
+    demoProps={props}>
     <Video {...props} />
   </CompDisplayer>
 }

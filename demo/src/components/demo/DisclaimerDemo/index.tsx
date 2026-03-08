@@ -1,31 +1,49 @@
-import { useState, type FunctionComponent } from 'react'
+import { type FunctionComponent } from 'react'
 import {
   Disclaimer,
   type Props as DisclaimerProps
 } from '~/components/Disclaimer/index.js'
 import { disclaimer as publicClassName } from '~/components/public-classnames.js'
-import { CompDisplayer } from '../CompDisplayer/index.js'
+import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 
 /* Name */
 const name = 'Disclaimer'
 
 /* Description */
-const description = <>
-  Hides its content behind a disclaimer panel.<br /><br />
-  If <code>isOn</code> prop is not undefined, the component becomes controlled by it.<br />
-  Otherwise, the click on the toggler sets the internal state to <code>disclosed</code>.
-</>
+const description = `
+Component that displays a dismissible disclaimer panel.
+
+Supports both controlled (\`isOn\` provided) and uncontrolled modes.
+
+@param props - Component properties.
+@see {@link Props}
+
+@remarks
+- In controlled mode, visibility is driven by \`isOn\` and internal state
+  does not toggle automatically.
+- In uncontrolled mode, the component manages its own visibility state.
+- Applies \`on\` and \`off\` modifier classes depending on visibility state.`
 
 /* TSX Details */
-const tsxDetails = `
-type Props = PropsWithChildren<WithClassName<{
+const tsxDetails = `/**
+ * Props for the Disclaimer component.
+ *
+ * @property content - Content displayed inside the disclaimer panel.
+ * @property togglerContent - Content rendered inside the dismiss toggler.
+ * If not provided, the toggler is not rendered.
+ * @property isOn - Controls the visibility state. When defined, the component
+ * behaves as a controlled component.
+ * @property onDismissed - Callback invoked after the disclaimer is dismissed
+ * in uncontrolled mode.
+ * @property className - Optional additional class name(s) applied to the root element.
+ * @property children - Additional content rendered below the disclaimer panel.
+ */
+export type Props = PropsWithChildren<WithClassName<{
   content?: ReactNode
   togglerContent?: ReactNode
   isOn?: boolean
   onDismissed?: () => void
-}>>
-
-`
+}>>`
 
 /* Demo CSS */
 const demoStyles = `
@@ -63,7 +81,6 @@ const demoStyles = `
   position: relative;
   z-index: 0;
 }
-
 `
 
 /* Demo props */

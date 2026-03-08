@@ -3,7 +3,7 @@ import {
   Image,
   type Props as ImageProps
 } from '~/components/Image/index.js'
-import { CompDisplayer } from '../CompDisplayer/index.js'
+import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 import { image as publicClassName } from '~/components/public-classnames.js'
 
 const name = 'Image'

@@ -3,7 +3,7 @@ import {
   ShadowRootComponent,
   type Props as SRCompProps
 } from '~/components/ShadowRoot/index.js'
-import { CompDisplayer } from '../CompDisplayer/index.js'
+import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 
 const name = 'ShadowRootComponent'
 const description = 'Some description'

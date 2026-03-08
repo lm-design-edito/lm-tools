@@ -3,7 +3,7 @@ import {
   Scrllgngn,
   type Props as ScrllgngnProps
 } from '~/components/Scrllgngn/index.js'
-import { CompDisplayer } from '../CompDisplayer/index.js'
+import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 
 const name = 'Scrllgngn'
 const description = 'Some description'

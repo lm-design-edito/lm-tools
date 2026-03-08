@@ -50,29 +50,6 @@ type DirectionState = 'forwards' | 'backwards' | null
  * @property onPageChange - Callback invoked whenever any page's {@link PageState}
  * changes. Receives a flat array of all pages' states, ordered by position.
  *
- * @property dispatchedDirectionChangeEventType - Optional name of a global DOM event
- * to dispatch on {@link Window} when the scroll direction changes. When defined, the
- * component emits a {@link CustomEvent} with this name via `window.dispatchEvent`.
- * The new {@link DirectionState} is available in `event.detail`.
- *
- * Example:
- * ```js
- * window.addEventListener('my-paginator:direction', (event) => {
- *   console.log(event.detail) // 'forwards' | 'backwards'
- * })
- * ```
- *
- * @property dispatchedPageChangeEventType - Optional name of a global DOM event
- * to dispatch on {@link Window} when any page state changes. The event `detail`
- * contains a flat array of all current {@link PageState} values.
- *
- * Example:
- * ```js
- * window.addEventListener('my-paginator:page', (event) => {
- *   console.log(event.detail) // PageState[]
- * })
- * ```
- *
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Each direct child is treated as an individual page slot.
  */
@@ -80,8 +57,6 @@ export type Props = PropsWithChildren<WithClassName<{
   thresholdOffsetPercent?: number
   onDirectionChange?: (direction: DirectionState) => void
   onPageChange?: (pages: PageState[]) => void
-  dispatchedDirectionChangeEventType?: string
-  dispatchedPageChangeEventType?: string
 }>>
 
 /**
@@ -113,8 +88,6 @@ export const Paginator: FunctionComponent<Props> = ({
   thresholdOffsetPercent,
   onDirectionChange,
   onPageChange,
-  dispatchedDirectionChangeEventType: dirChgEvtType,
-  dispatchedPageChangeEventType: pgChgEvtType,
   className,
   children
 }) => {
@@ -139,10 +112,6 @@ export const Paginator: FunctionComponent<Props> = ({
         directionRef.current = direction
         setDirectionState(direction)
         if (onDirectionChange !== undefined) onDirectionChange(direction)
-        if (dirChgEvtType !== undefined) window.dispatchEvent(new CustomEvent(
-          dirChgEvtType,
-          { detail: direction }
-        ))
       }
     }
     window.addEventListener('scroll', handleScroll)
@@ -181,7 +150,6 @@ export const Paginator: FunctionComponent<Props> = ({
         })
         const dispatchedState = Array.from(nextState).map(([, state]) => state)
         if (onPageChange !== undefined) onPageChange(dispatchedState)
-        if (pgChgEvtType !== undefined) window.dispatchEvent(new CustomEvent(pgChgEvtType, { detail: dispatchedState }))
         return nextState
       })
     }, { rootMargin: observerRootMargin })

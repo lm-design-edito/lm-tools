@@ -4,7 +4,6 @@ export function mergeClassNames (...names: Array<string | null | undefined | Arr
     if (Array.isArray(name)) return mergeClassNames(...name)
     if (name.trim() === '') return false
     return name.trim()
-  })
-    .filter((name): name is string => typeof name === 'string')
+  }).filter((name): name is string => typeof name === 'string')
     .join(' ')
 }

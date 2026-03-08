@@ -3,7 +3,7 @@ import {
   Subtitles,
   type Props as SubtitlesProps
 } from '~/components/Subtitles/index.js'
-import { CompDisplayer } from '../CompDisplayer/index.js'
+import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 import { subtitles as publicClassName } from '~/components/public-classnames.js'
 
 const name = 'Subtitles'

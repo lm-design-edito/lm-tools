@@ -1,0 +1,4 @@
+.root :global(pre) {
+  padding: 16px;
+  overflow: scroll;
+}

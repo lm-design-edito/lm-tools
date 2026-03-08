@@ -4,15 +4,54 @@ import {
   type Props as GalleryProps
 } from '~/components/Gallery/index.js'
 import { gallery as publicClassName } from '~/components/public-classnames.js'
-import { CompDisplayer } from '../CompDisplayer/index.js'
+import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 
 const name = 'Gallery'
-const description = <>
-  Horizontal scroller, scroll is either snaped or not depending on <code>noSnap</code> prop.
-  Behavior is controlled when <code>active</code> prop is provided and the element becomes not user scrollable when controlled.
-</>
+const description = `
+Horizontally scrollable gallery component with navigation controls and pagination.
+
+Tracks the active slot based on scroll position and exposes state through CSS class names
+and a \`data-active\` attribute on the root element.
+
+@param props - Component properties.
+@see {@link Props}
+@returns A container element wrapping:
+- A scrollable area containing each child in a slot wrapper,
+- Previous/next navigation controls,
+- Pagination controls allowing direct slot activation.`
+
 const tsxDetails = `
-type Props = PropsWithChildren<WithClassName<{
+/**
+ * Props for the Gallery component.
+ *
+ * @property paddingLeft - Left padding applied to the first slot. Accepts a number (pixels) or any valid CSS length value.
+ * If not provided, falls back to \`padding\` or \`0px\`.
+ * @property paddingRight - Right padding applied to the last slot. Accepts a number (pixels) or any valid CSS length value.
+ * If not provided, falls back to \`padding\` or \`0px\`.
+ * @property padding - Shorthand horizontal padding applied to both ends when \`paddingLeft\` and/or \`paddingRight\`
+ * are not explicitly defined. Accepts a number (pixels) or any valid CSS length value.
+ * @property prevButtonContent - Content rendered inside the "previous" navigation control.
+ * Defaults to the string \`"prev"\` when not provided.
+ * @property nextButtonContent - Content rendered inside the "next" navigation control.
+ * Defaults to the string \`"next"\` when not provided.
+ * @property paginationContent - Content rendered inside each pagination item.
+ * Can be:
+ * - A ReactNode used for all pages,
+ * - A function receiving the page index and returning a ReactNode,
+ * - Undefined, in which case the page index is displayed.
+ * @property initActive - Optional. When uncontrolled mode, sets the default active slot at mount
+ * @property active - Optional controlled index. When provided, the active slot is driven by this
+ * value instead of internal scroll-derived state. When omitted, the component manages its own
+ * active index based on scroll position.
+ * @property noSnap - Optional, defines if scroll is free in side the scroller or not (defaults to false)
+ * @property onPrevClick - Called when the "previous" control is clicked. Receives the current active index before navigation occurs.
+ * @property onNextClick - Called when the "next" control is clicked. Receives the current active index before navigation occurs.
+ * @property onPaginationClick - Called when a pagination item is clicked. Receives the current active index and the target index.
+ * @property onSlotChange - Called when the active slot changes due to scrolling. Receives the new active index.
+ * @property className - Optional additional class name(s) applied to the root element.
+ * @property children - Elements rendered as gallery slots. Each child is wrapped in a slot container.
+ */
+export type Props = PropsWithChildren<WithClassName<{
   paddingLeft?: string | number
   paddingRight?: string | number
   padding?: string | number
@@ -26,9 +65,7 @@ type Props = PropsWithChildren<WithClassName<{
   onNextClick?: (activePos: number) => void
   onPaginationClick?: (activePos: number, targetPos: number) => void
   onSlotChange?: (activePos: number) => void
-}>>
-
-`
+}>>`
 
 const demoStyles = `
 .${publicClassName} {
@@ -42,11 +79,13 @@ const demoStyles = `
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .${publicClassName}__actions button {
   cursor: pointer;
   margin : 8px;
+  pointer-events: all;
 }
 
 .${publicClassName}__pagination {
@@ -72,9 +111,7 @@ const demoStyles = `
 
 .${publicClassName}__page.${publicClassName}__page--active {
   opacity: 1;
-}
-
-`
+}`
 
 const demoProps: GalleryProps = {
   paddingLeft: '30%',

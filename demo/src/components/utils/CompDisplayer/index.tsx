@@ -6,13 +6,12 @@ import {
   useEffect,
   isValidElement
 } from 'react'
-import SyntaxHighlighter from 'react-syntax-highlighter'
-import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 import { randomHash } from '~/agnostic/random/uuid/index.js'
 import { isNonNullObject } from '~/agnostic/objects/is-object/index.js'
-import { recordMap } from '~/agnostic/objects/record-map/index.js'
 import { Drawer } from '~/components/Drawer/index.js'
+import { SyntaxHighlighter } from '../SyntaxHighlighter/index.js'
 import cssModule from './styles.module.css'
+
 
 export type Props = PropsWithChildren<{
   name?: ReactNode
@@ -70,15 +69,16 @@ export const CompDisplayer: FunctionComponent<Props> = ({
     id={id}
     className={cssModule['root']}>
     {name !== undefined && <h3 className={cssModule['name']}>{name}</h3>}
-    {description !== undefined && <p className={cssModule['description']}>{description}</p>}
-    
+    {typeof description === 'string' && <pre className={cssModule['description']}>{description.trim()}</pre>}
+    {description !== undefined
+      && typeof description !== 'string'
+      && <p className={cssModule['description']}>{description}</p>}
     {/* TSX Details */}
     {tsxDetails !== undefined && <div className={cssModule['details']}>
       <SyntaxHighlighter
-        language='tsx'
-        style={docco}>
-        {tsxDetails}
-      </SyntaxHighlighter>
+        code={tsxDetails.trim()}
+        lang='tsx'
+        theme='github-dark' />
     </div>}
 
     {/* Demo Props */}
@@ -93,10 +93,9 @@ export const CompDisplayer: FunctionComponent<Props> = ({
           <label> Custom demo Props</label>
         </>}>
         <SyntaxHighlighter
-          language='json'
-          style={docco}>
-          {strDemoProps}
-        </SyntaxHighlighter>
+          lang='json'
+          code={strDemoProps.trim()}
+          theme='github-dark' />
       </Drawer>
     </div>}
 
@@ -117,10 +116,9 @@ export const CompDisplayer: FunctionComponent<Props> = ({
           <label> Custom demo CSS </label>
         </>}>
         <SyntaxHighlighter
-          language='css'
-          style={docco}>
-          {demoStyles ?? ''}
-        </SyntaxHighlighter>
+          code={demoStyles?.trim() ?? ''}
+          lang='css'
+          theme='github-dark' />
       </Drawer>
     </div>}
 

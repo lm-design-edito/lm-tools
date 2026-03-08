@@ -49,13 +49,12 @@ export type Props = PropsWithChildren<WithClassName<{
  *   timecodeMs={currentTime}
  *   subsGroups={[10, 20]}
  *   onSubsLoad={handleSubsLoad}
- *   onSubsError={handleSubsError}
- * >
+ *   onSubsError={handleSubsError}>
  *   <div>Custom footer or overlay</div>
  * </Subtitles>
  *
  * @returns Render a div containing the subtitles and any children passed as props.
- * Subtitles are grouped and given classnames according to their timing and state (current, prev, etc).
+ * Subtitles are grouped and given class names according to their timing and state (current, prev, etc).
  */
 export const Subtitles: FunctionComponent<Props> = ({
   src,

@@ -45,7 +45,7 @@
   opacity: 0;
   transition: 
     opacity 400ms,
-    height 400ms 400ms;
+    height 400ms 100ms;
 }
 
 .demo-css :global(.dsed-drawer.dsed-drawer--opened .dsed-drawer__content),
@@ -53,7 +53,7 @@
   height: var(--dsed-drawer-content-height-px);
   opacity: 1;
   transition: 
-    opacity 400ms 400ms,
+    opacity 400ms 100ms,
     height 400ms;
 }
 

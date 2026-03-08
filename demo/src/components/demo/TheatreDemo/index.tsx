@@ -3,7 +3,7 @@ import {
   Theatre,
   type Props as TheatreProps
 } from '~/components/Theatre/index.js'
-import { CompDisplayer } from '../CompDisplayer/index.js'
+import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 import { theatre as publicClassName } from '~/components/public-classnames.js'
 
 const name = 'Theatre'
