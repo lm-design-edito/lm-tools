@@ -18,6 +18,27 @@ import {
 } from './utils.js'
 import cssModule from './styles.module.css'
 
+/**
+ * Props for the {@link Subtitles} component.
+ *
+ * @property src - URL of an SRT file to fetch. Ignored if `srtFileContent` is provided.
+ * If both are undefined, no subtitles are loaded.
+ * @property srtFileContent - Raw SRT string used directly, bypassing any network fetch.
+ * Takes precedence over `src`.
+ * @property subsGroups - Optional array of subtitle IDs that act as group boundaries,
+ * splitting the full subtitle list into named sections. If omitted, all subtitles
+ * belong to a single group.
+ * @property timecodeMs - Current media position in milliseconds. Drives which subtitles
+ * receive the `--prev` and `--curr` modifiers. When `undefined`, nothing is rendered.
+ * @property isEnded - When `true`, forces the last group to be treated as current,
+ * regardless of `timecodeMs`. Useful to keep the final subtitle group visible after
+ * media playback finishes.
+ * @property onSubsLoad - Callback invoked with the raw SRT string after a successful
+ * fetch and parse. Not called when `srtFileContent` is used directly.
+ * @property onSubsError - Callback invoked with an `Error` if the fetch or parse step fails.
+ * @property className - Optional additional class name(s) applied to the root element.
+ * @property children - React children rendered inside the root element, after the subtitle groups.
+ */
 export type Props = PropsWithChildren<WithClassName<{
   src?: string
   srtFileContent?: string
@@ -28,33 +49,27 @@ export type Props = PropsWithChildren<WithClassName<{
   onSubsError?: (error?: Error) => void
 }>>
 
-// [WIP] JSDOC pas à jour
-
 /**
- * Subtitles component for displaying and synchronizing subtitles (SRT) with a media timeline.
+ * Subtitle synchronization component. Fetches or receives an SRT source, parses it,
+ * and renders subtitle groups whose individual spans are styled according to the
+ * current media timecode.
  *
- * @component
- * @param subSrc - URL of the subtitles file (SRT format). If undefined, no fetch is performed.
- * @param subGroups - Optional array of subtitle IDs to define group boundaries. If undefined, all subtitles are in a single group.
- * @param timecodeMs - Current time in milliseconds. Determines which subtitles are current/prev.
- * @param isEnded - If true, marks the last group as current (useful when media playback is finished).
- * @param className - Additional class name(s) for the root element.
- * @param onSubsLoad - Callback called with the raw SRT content after successful fetch and parse.
- * @param onSubsError - Callback called with an Error if fetching or parsing fails.
- * @param children - Optional children rendered inside the root container, after the subtitles.
+ * ### Group elements
+ * Each subtitle group is a `<div>` with the following:
+ * - `--curr` modifier when the group contains the subtitle at the current timecode.
+ * - `data-start-sub-pos` — ID of the first subtitle in the group.
+ * - `data-end-sub-pos` — ID of the last subtitle in the group.
  *
- * @example
- * <Subtitles
- *   src="/subs/movie.srt"
- *   timecodeMs={currentTime}
- *   subsGroups={[10, 20]}
- *   onSubsLoad={handleSubsLoad}
- *   onSubsError={handleSubsError}>
- *   <div>Custom footer or overlay</div>
- * </Subtitles>
+ * ### Subtitle span elements
+ * Each individual subtitle is a `<span>` with the following:
+ * - `--prev` modifier when the subtitle's start time is at or before the last elapsed subtitle.
+ * - `--curr` modifier when `timecodeMs` falls within the subtitle's `[start, end]` interval.
+ * - `data-sub-pos` — the subtitle's numeric ID from the SRT source.
  *
- * @returns Render a div containing the subtitles and any children passed as props.
- * Subtitles are grouped and given class names according to their timing and state (current, prev, etc).
+ * @param props - Component properties.
+ * @see {@link Props}
+ * @returns A root `<div>` containing the rendered subtitle groups, or an empty `<div>`
+ * when `timecodeMs` is undefined or no subtitles have been parsed yet.
  */
 export const Subtitles: FunctionComponent<Props> = ({
   src,

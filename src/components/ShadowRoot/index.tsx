@@ -61,16 +61,13 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
   // Refs, state & effects
   const hostRef = useRef<HTMLDivElement | null>(null)
   const [shadowRoot, setShadowRoot] = useState<ShadowRoot | null>(null)
+  const [styles, setStyles] = useState<string | undefined>(injectedStyles)
   useEffect(() => {
-    if (hostRef.current === null || shadowRoot === null) return
+    if (hostRef.current === null || shadowRoot !== null) return
     const root = hostRef.current.attachShadow({ mode, delegatesFocus, slotAssignment })
     if (adoptedStyleSheets !== undefined
       && 'adoptedStyleSheets' in root) { root.adoptedStyleSheets = adoptedStyleSheets }
-    if (injectedStyles !== undefined) {
-      const styleEl = document.createElement('style')
-      styleEl.textContent = injectedStyles
-      root.appendChild(styleEl)
-    }
+    if (injectedStyles !== undefined) setStyles(injectedStyles)
     setShadowRoot(root)
     onMount?.(root)
   }, [
@@ -79,8 +76,7 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
     slotAssignment,
     adoptedStyleSheets,
     injectedStyles,
-    onMount,
-    shadowRoot
+    onMount
   ])
 
   // Rendering
@@ -89,6 +85,10 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
   return <div
     ref={hostRef}
     className={rootClss}>
-    {shadowRoot !== null && createPortal(children, shadowRoot)}
+    
+    {shadowRoot !== null && createPortal(<>
+      {styles !== undefined && <style>{styles}</style>}
+      {children}
+    </>, shadowRoot)}
   </div>
 }

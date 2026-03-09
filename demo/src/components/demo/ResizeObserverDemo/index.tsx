@@ -6,9 +6,17 @@ import {
 import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 
 const name = 'ResizeObserverComponent'
-const description = 'Some description'
+
+const description = `
+Component that observes its own size changes and exposes the dimensions.
+Updates are exposed both via data attributes (e.g., \`data-width\`) and CSS custom properties
+(e.g., \`--<prefix>-width\`, \`--<prefix>-width-px\`) for styling or scripting purposes.
+@param props - Component properties
+@see {@link Props}
+@returns A div wrapping \`children\`, with resize observation applied.`
+
 const tsxDetails = `
-type ResizeObserverEntryWithBoundingRect = {
+type ROEntryWithBoundingRect = {
   entry: ResizeObserverEntry
   boundingClientRect: DOMRect
 }
@@ -22,7 +30,7 @@ type ResizeObserverEntryWithBoundingRect = {
  * @property children - React children rendered inside the root element. Only the root element is observed
  */
 export type Props = PropsWithChildren<WithClassName<{
-  onResize?: (entry: ResizeObserverEntryWithBoundingRect) => void
+  onResize?: (entry: ROEntryWithBoundingRect) => void
 }>>`
 
 const demoProps: RSOProps = {

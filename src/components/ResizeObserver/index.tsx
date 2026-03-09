@@ -12,7 +12,7 @@ import { mergeClassNames } from '../utils/index.js'
 import { resizeObserver as publicClassName } from '../public-classnames.js'
 import cssModule from './style.module.css'
 
-type ResizeObserverEntryWithBoundingRect = {
+type ROEntryWithBoundingRect = {
   entry: ResizeObserverEntry
   boundingClientRect: DOMRect
 }
@@ -26,7 +26,7 @@ type ResizeObserverEntryWithBoundingRect = {
  * @property children - React children rendered inside the root element. Only the root element is observed
  */
 export type Props = PropsWithChildren<WithClassName<{
-  onResize?: (entry: ResizeObserverEntryWithBoundingRect) => void
+  onResize?: (entry: ROEntryWithBoundingRect) => void
 }>>
 
 /**
@@ -43,7 +43,7 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
   children
 }): JSX.Element => {
   // Refs, effects & handlers
-  const [roEntry, setRoEntry] = useState<ResizeObserverEntryWithBoundingRect>()
+  const [roEntry, setRoEntry] = useState<ROEntryWithBoundingRect>()
   const rootRef = useRef<HTMLDivElement | null>(null)
   const observerRef = useRef<ResizeObserver | null>(null)
   const createObserver = (): void => {
@@ -54,7 +54,7 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
       const firstEntry = entries[0]
       if (firstEntry !== undefined) {
         const boundingClientRect = firstEntry.target.getBoundingClientRect()
-        const fullEntry: ResizeObserverEntryWithBoundingRect = {
+        const fullEntry: ROEntryWithBoundingRect = {
           entry: firstEntry,
           boundingClientRect
         }

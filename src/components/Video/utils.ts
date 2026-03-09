@@ -9,7 +9,6 @@ export function formatTime (ms: number, format: string, fps: number = 25): strin
   const seconds = Math.floor(totalSeconds % 60)
   const frames = Math.floor(((ms % 1000) / 1000) * fps)
   const msRest = Math.floor(ms % 1000)
-
   const tokens: Record<string, string | number> = {
     hh: String(hours).padStart(2, '0'),
     mm: String(minutes).padStart(2, '0'),
@@ -21,10 +20,12 @@ export function formatTime (ms: number, format: string, fps: number = 25): strin
     s: seconds,
     f: frames
   }
-
-  let result = format
-  Object.keys(tokens).forEach(token => {
-    result = result.replace(new RegExp(token, 'g'), String(tokens[token]))
-  })
+  const result = Object
+    .keys(tokens)
+    .sort((a, b) => b.length - a.length)
+    .reduce(
+      (acc, t) => acc.replace(new RegExp(t, 'g'), String(tokens[t])),
+      format
+    )
   return result
 }

@@ -1,67 +1,6 @@
 # To do
 
-## Composant Subtitles
-
-lm-tools/src/components/Subtitles/index.tsx
-
-```tsx
-<Subtitles
-  src='srt.file.url'
-  srtFileContent='Contenu srt brut, si présent la prop src est ignorée.'
-  subsGroups={[3, 4, 5]}
-  timecodeMs={10000}>
-</Subtitles>
-```
-
-```html
-<div class="dsed-subtitles">
-  <!-- Groupe passé (donc que sub prev dedans) -->
-  <div
-    class="dsed-subtitles__group dsed-subtitles__group--prev"
-    data-start-sub-pos="0"
-    data-end-sub-pos="1">
-    <span class="dsed-subtitles__sub dsed-subtitles__sub--prev" data-sub-pos="0">
-      Some sub
-    </span>
-  </div>
-  <!-- Groupe courant (mix de sub prev, curr et next) -->
-  <div
-    class="dsed-subtitles__group dsed-subtitles__group--curr"
-    data-start-timecode="00:02:16,612"
-    data-end-timecode="00:02:16,612"
-    data-start-time-ms="34754382"
-    data-end-time-ms="34754382"
-    data-start-sub-pos="0"
-    data-end-sub-pos="1">
-    <span
-      class="dsed-subtitles__sub dsed-subtitles__sub--curr"
-      data-start-timecode="00:02:16,612"
-      data-end-timecode="00:02:16,612"
-      data-start-time-ms="34754382"
-      data-end-time-ms="34754382">
-      Some sub
-    </span>
-  </div>
-  <!-- Groupe à venir -->
-  <div
-    class="dsed-subtitles__group dsed-subtitles__group--prev"
-    data-start-timecode="00:02:16,612"
-    data-end-timecode="00:02:16,612"
-    data-start-time-ms="34754382"
-    data-end-time-ms="34754382"
-    data-start-sub-pos="0"
-    data-end-sub-pos="1">
-    <span
-      class="dsed-subtitles__sub dsed-subtitles__sub--prev"
-      data-start-timecode="00:02:16,612"
-      data-end-timecode="00:02:16,612"
-      data-start-time-ms="34754382"
-      data-end-time-ms="34754382">
-      Some sub
-    </span>
-  </div>
-</div>
-```
+# -
 
 Après le dev :
 - envoyer le code à GPT + Claude, leur demander:
@@ -72,6 +11,9 @@ Après le dev :
 - ensuite une fois que c'est bon, fournir à GPT/Claude un exemple de JSDOC issu d'un autre composant, Gallery par ex, + le code actuel de Subtitles, et lui demander de générer le JSDOC pour tous les exported members de Subtitles (Props et Subtitles à priori). Juste le JSDOC, pas répéter le code, parfois en générant tout il glisse des erreurs en répétant le code.
 - re build, lint et corrections éventuelles des erreurs du linter
 - pull add commit push 🎉
+
+
+# Composants
 
 ## Composant Vidéo
 
@@ -89,7 +31,7 @@ Ce composant permet un workaround d'une petite bizzarerie de react avec l'attrib
 // "int/obs triggers"
 // disclaimer
 // subs
-    
+
 - une vidéo :
 ```tsx
 type SourceData = {
@@ -159,25 +101,79 @@ const {
 
 ### Suite [WIP]
 
-## Composant Theatre
 
-En gros, je repense au composant fullscreen que tu (Léa T) avais fait. L'idée c'est d'avoir un composant dédié à l'affichage fullscreen d'éléments (différent du fs du comp video, qui utilise le fullscreen natif de l'élément vidéo).
 
-Une fois qu'on aura ce composant, on fera un composant Image, qui aura les props "canTheatre", et "theatre: boolean". Faudra qu'on parle de cette distinction parce que canTheatre DÉLÈGUE le comportement fullscreen au state interne du comp Image (genre, je clique, ça se met en grand, je clique sur close, ça ferme), et la prop theatre PILOTE le statut fullscreen ou non de l'image, et donc écrase canTheatre. Bon, on reparle de ça.
+
+
+
+## Composant Subtitles
+
+lm-tools/src/components/Subtitles/index.tsx
 
 ```tsx
-type Props = {
-  className,
-  children,
-  closeBtnContent,
-  onCloseClick
-}
+<Subtitles
+  src='srt.file.url'
+  srtFileContent='Contenu srt brut, si présent la prop src est ignorée.'
+  subsGroups={[3, 4, 5]}
+  timecodeMs={10000}>
+</Subtitles>
+```
 
-<div class="dsed-theatre">
-  <div class="dsed-theatre__close">{closeBtnContent ?? 'close'}</div>
-  {children}
+```html
+<div class="dsed-subtitles">
+  <!-- Groupe passé (donc que sub prev dedans) -->
+  <div
+    class="dsed-subtitles__group dsed-subtitles__group--prev"
+    data-start-sub-pos="0"
+    data-end-sub-pos="1">
+    <span class="dsed-subtitles__sub dsed-subtitles__sub--prev" data-sub-pos="0">
+      Some sub
+    </span>
+  </div>
+  <!-- Groupe courant (mix de sub prev, curr et next) -->
+  <div
+    class="dsed-subtitles__group dsed-subtitles__group--curr"
+    data-start-timecode="00:02:16,612"
+    data-end-timecode="00:02:16,612"
+    data-start-time-ms="34754382"
+    data-end-time-ms="34754382"
+    data-start-sub-pos="0"
+    data-end-sub-pos="1">
+    <span
+      class="dsed-subtitles__sub dsed-subtitles__sub--curr"
+      data-start-timecode="00:02:16,612"
+      data-end-timecode="00:02:16,612"
+      data-start-time-ms="34754382"
+      data-end-time-ms="34754382">
+      Some sub
+    </span>
+  </div>
+  <!-- Groupe à venir -->
+  <div
+    class="dsed-subtitles__group dsed-subtitles__group--prev"
+    data-start-timecode="00:02:16,612"
+    data-end-timecode="00:02:16,612"
+    data-start-time-ms="34754382"
+    data-end-time-ms="34754382"
+    data-start-sub-pos="0"
+    data-end-sub-pos="1">
+    <span
+      class="dsed-subtitles__sub dsed-subtitles__sub--prev"
+      data-start-timecode="00:02:16,612"
+      data-end-timecode="00:02:16,612"
+      data-start-time-ms="34754382"
+      data-end-time-ms="34754382">
+      Some sub
+    </span>
+  </div>
 </div>
 ```
+
+
+
+
+# CLI Utils
+
 
 ## Get diff from commit hash
 
@@ -215,7 +211,10 @@ export async function generateDiffDescription (
 }
 ```
 
-## Tests & JSDOC
+
+
+
+# Tests & JSDOC
 
 - [ ] Tests manquants (garder la forme describe('funcName') { it('does something') {} })
   - [ ] agnostic/html/hyper-json -> nécessaire mais trop compliqué/long
@@ -242,24 +241,23 @@ export async function generateDiffDescription (
   - [ ] node/images
   - [ ] node/process
   - [ ] node/sftp
-  - [x] agnostic/css/bem -> DEPRECATED
-  - [x] agnostic/css/styles-set -> DEPRECATED
-  - [x] agnostic/errors/register -> pas nécessaire
-  - [x] agnostic/html/sanitization/html -> DEPRECATED
-  - [x] agnostic/misc/assert -> DEPRECATED
-  - [x] agnostic/misc/logs/logger -> presque DEPRECATED
-  - [x] agnostic/misc/logs/styles -> pas nécessaire tout de suite
-  - [x] agnostic/strings/normalize-indent -> pas nécessaire tout de suite, fonction à repenser
-  - [x] agnostic/strings/replace-all -> DEPRECATED
 
-## Misc
+  - Pas utile
+  - [ ] agnostic/css/bem -> DEPRECATED
+  - [ ] agnostic/css/styles-set -> DEPRECATED
+  - [ ] agnostic/errors/register -> pas nécessaire
+  - [ ] agnostic/html/sanitization/html -> DEPRECATED
+  - [ ] agnostic/misc/assert -> DEPRECATED
+  - [ ] agnostic/misc/logs/logger -> presque DEPRECATED
+  - [ ] agnostic/misc/logs/styles -> pas nécessaire tout de suite
+  - [ ] agnostic/strings/normalize-indent -> pas nécessaire tout de suite, fonction à repenser
+  - [ ] agnostic/strings/replace-all -> DEPRECATED
+
+
+
+# Misc
 
 - [ ] Repenser agnostic/optim/throttle-debounce ?
 - [ ] Repenser agnostic/strings/normalize-indent ?
 - [ ] Get rid of namespaces in hyper-json ?
 - [ ] agnostic/misc/logs/styles, se repencher dessus, viser à substituer totalement chalk (styles génériques, bold, red, bgBlue, etc...) + continuer à exporter des "styles nommés" comme actuellement
-- [x] agnostic/misc/logs/styles, écrire à la main les ansi machins et se passer de chalk ?
-- [x] Migrate to v3 of aws-sdk (then remove workaround plugin in lm-publisher)
-- [x] JSDOC everywhere
-- [x] Really not sure about the centralized error codes
-- [x] create empty (export {}) index.js files in directories without index files so that import is easyer on the consumer side

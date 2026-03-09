@@ -42,7 +42,7 @@ const components: Array<{
 ]
 
 const App = () => {
-  const initActiveTab = 6
+  const initActiveTab = 11
   const [activeTab, setActiveTab] = useState(initActiveTab)
   return <div className={cssModule['app']}>
     <Gallery

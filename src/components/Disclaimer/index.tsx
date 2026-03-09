@@ -5,7 +5,6 @@ import {
   type JSX,
   type FunctionComponent
 } from 'react'
-import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
@@ -20,8 +19,10 @@ import cssModule from './styles.module.css'
  * If not provided, the toggler is not rendered.
  * @property isOn - Controls the visibility state. When defined, the component
  * behaves as a controlled component.
+ * @property defaultIsOn - Default visibility state for uncontrolled mode.
  * @property onDismissed - Callback invoked after the disclaimer is dismissed
  * in uncontrolled mode.
+ * @property onDismissClick - Callback invoked before the disclaimer is dismissed
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Additional content rendered below the disclaimer panel.
  */
@@ -29,7 +30,9 @@ export type Props = PropsWithChildren<WithClassName<{
   content?: ReactNode
   togglerContent?: ReactNode
   isOn?: boolean
+  defaultIsOn?: boolean
   onDismissed?: () => void
+  onDismissClick?: () => void
 }>>
 
 /**
@@ -50,14 +53,17 @@ export const Disclaimer: FunctionComponent<Props> = ({
   content,
   togglerContent,
   isOn: isOnProp,
+  defaultIsOn: defaultIsOnProp,
   onDismissed,
+  onDismissClick,
   children,
   className
 }): JSX.Element => {
   // State & handlers
-  const [internalIsOn, setInternalIsOn] = useState(isOnProp ?? true)
+  const [internalIsOn, setInternalIsOn] = useState(isOnProp ?? defaultIsOnProp ?? true)
   const isOn = isOnProp ?? internalIsOn
   const handleDismissClick = (): void => {
+    onDismissClick?.()
     if (isOnProp !== undefined) return
     setInternalIsOn(false)
     onDismissed?.()
@@ -78,11 +84,11 @@ export const Disclaimer: FunctionComponent<Props> = ({
   const sensitiveClss = c('sensitive')
   return <div className={rootClss}>
     <div className={panelClss}>
-      {isNotFalsy(content) && <div
+      {content !== undefined && <div
         className={contentClss}>
         {content}
       </div>}
-      {isNotFalsy(togglerContent) && <div
+      {togglerContent !== undefined && <div
         className={btnClss}
         onClick={handleDismissClick}>
         {togglerContent}

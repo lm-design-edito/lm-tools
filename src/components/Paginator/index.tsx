@@ -81,8 +81,6 @@ export type Props = PropsWithChildren<WithClassName<{
  *   that is recreated when `thresholdOffsetPercent` or `children` change.
  * - `currCount` on each {@link PageState} increments each time a page transitions
  *   into the `'curr'` position, making it useful as a re-entry counter.
- * - Can optionally dispatch global {@link CustomEvent}s on {@link Window} for both
- *   direction and page changes when the corresponding event type props are provided.
  */
 export const Paginator: FunctionComponent<Props> = ({
   thresholdOffsetPercent,

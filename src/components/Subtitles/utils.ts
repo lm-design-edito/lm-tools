@@ -32,7 +32,8 @@ export const parseSubs = (rawSubs: string): ParsedSub[] => {
     const matchTimecode = line.match(timecodeRegex)
     // id
     if (matchId !== null) {
-      if (lastParsedSub === undefined || lastParsedSub.content !== undefined) {
+      if (lastParsedSub === undefined
+        || lastParsedSub.content !== undefined) {
         const parsedSub: ParsedSub = { id: parseInt(line) }
         parsedSubs.push(parsedSub)
         return
@@ -77,9 +78,7 @@ export const computeSubGroupsWithBoundaries = (
   highestSubId: number
 ): SubGroupBoundaries[] => {
   const fallback = [{ startId: 1, endId: highestSubId }]
-  if (subsGroups === undefined || subsGroups.length === 0) {
-    return fallback
-  }
+  if (subsGroups === undefined || subsGroups.length === 0) return fallback
   const emptySubGroupBoundaries: SubGroupBoundaries[] = []
   return subsGroups?.reduce(
     (acc, curr, currIndex) => {
@@ -111,14 +110,9 @@ export const getCurrentGroup = (
   lastPrevSubId: number | undefined,
   isEnded: boolean | undefined
 ): SubGroupBoundaries | undefined => {
-  const previousGroups = subsGroupsWithBoundaries.filter(
-    group => group.startId <= (lastPrevSubId ?? 0)
-  )
-
-  if (previousGroups.length === 0) {
-    return isEnded === true
-      ? subsGroupsWithBoundaries[subsGroupsWithBoundaries.length - 1]
-      : subsGroupsWithBoundaries[0]
-  }
+  const previousGroups = subsGroupsWithBoundaries.filter(group => group.startId <= (lastPrevSubId ?? 0))
+  if (previousGroups.length === 0) return isEnded === true
+    ? subsGroupsWithBoundaries[subsGroupsWithBoundaries.length - 1]
+    : subsGroupsWithBoundaries[0]
   return previousGroups[previousGroups.length - 1]
 }
