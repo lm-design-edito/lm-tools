@@ -21,7 +21,17 @@ import {
 import { mergeClassNames } from '../utils/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { video as publicClassName } from '../public-classnames.js'
-import { formatTime, secondsToMs } from './utils.js'
+import {
+  formatTime,
+  secondsToMs,
+  muteAttributeWorkaround,
+  forcePlay,
+  forcePause,
+  forceLoud,
+  forceMute,
+  forceFullScreen,
+  forceExitFullScreen
+} from './utils.js'
 import cssModule from './styles.module.css'
 
 /**
@@ -159,7 +169,7 @@ export const Video: FunctionComponent<Props> = ({
   ...intrinsicVideoAttributes
 }) => {
   // State & refs
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isSoundOn, setIsSoundOn] = useState(false)
   const [elapsedTime, setElapsedTime] = useState(0)
@@ -181,85 +191,54 @@ export const Video: FunctionComponent<Props> = ({
   const $video = useRef<HTMLVideoElement>(null)
   const $root = useRef<HTMLElement>(null)
 
-  const muteAttributeWorkaround = useCallback(() => {
-    if ($video.current === null) return
-    const muted = intrinsicVideoAttributes.muted
-    if (muted !== true) return
-    const video = $video.current
-    const currentMuted = video.getAttribute('muted')
-    if (currentMuted !== null) return
-    video.setAttribute('muted', '')
-    video.load()
-  }, [intrinsicVideoAttributes.muted])
-
-  const forceMute = useCallback(() => {
-    const { current } = $video
-    if (current === null) return
-    current.muted = true
-    setIsSoundOn(false)
-  }, [])
-
-  const forceLoud = useCallback(() => {
-    const { current } = $video
-    if (current === null) return
-    current.muted = false
-    setIsSoundOn(true)
-  }, [])
-
-  const forcePlay = useCallback(async () => {
-    if (shouldDisclaimerBeOn) return
-    if ($video.current === null) return
-    try {
-      await $video.current.play()
-    } catch (e) {
-      console.error(e)
-    }
-  }, [shouldDisclaimerBeOn])
-
-  const forcePause = useCallback(() => {
-    if ($video.current === null) return
-    try {
-      $video.current.pause()
-    } catch (e) {
-      console.error(e)
-    }
-  }, [])
-
-  const forceFullScreen = useCallback(async () => {
-    if ($video.current === null) return
-    try {
-      await $video.current.requestFullscreen()
-      setIsFullscreen(true)
-    } catch (e) {
-      setIsFullscreen(false)
-    }
-  }, [])
-
-  const forceExitFullScreen = useCallback(async () => {
-    if ($video.current === null) return
-    try {
-      await document.exitFullscreen()
-      setIsFullscreen(false)
-    } catch (e) {}
-  }, [])
-
-  // Load handler
-  const handleMetadataLoad = useCallback(() => {
+  // Intrinsic event handlers
+  const handleMetadataLoadEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     if ($video.current === null) return
     const video = $video.current
-    muteAttributeWorkaround()
+    muteAttributeWorkaround(
+      video,
+      intrinsicVideoAttributes.muted ?? false,
+      setIsSoundOn
+    )
     setTotalTime(video.duration)
     setPlaybackSpeed(video.playbackRate)
     setSoundVolume(video.volume)
     setIsSoundOn(!video.muted)
+    intrinsicVideoAttributes.onLoadedMetadata?.(e)
   }, [])
 
-  const handleVolumeChange = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
+  const handleVolumeChangeEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     const { volume } = e.currentTarget
     setSoundVolume(volume)
+    intrinsicVideoAttributes.onVolumeChange?.(e)
   }, [])
 
+  const handlePlayEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
+    setIsPlaying(true)
+    setHasBeenAutoPlayed(true)
+    intrinsicVideoAttributes.onPlay?.(e)
+  }, [])
+
+  const handlePauseEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
+    setIsPlaying(false)
+    intrinsicVideoAttributes.onPause?.(e)
+  }, [])
+
+  const handleRateChangeEvent = useCallback((e: React.ChangeEvent<HTMLVideoElement>) => {
+    const speed = e.currentTarget.playbackRate
+    setPlaybackSpeed(speed)
+    intrinsicVideoAttributes.onRateChange?.(e)
+  }, [])
+
+  const handleTimeUpdateEvent = useCallback((e: React.ChangeEvent<HTMLVideoElement>) => {
+    const currentTime = e.currentTarget.currentTime
+    setElapsedTime(currentTime)
+    intrinsicVideoAttributes?.onTimeUpdate?.(e)
+  }, [totalTime])
+
+  // User action handlers
   const handleVolumeRangeChange = useCallback((e: React.SyntheticEvent<HTMLInputElement>) => {
+    // [WIP] faire un forceVolume dans utils.ts
     const volumePercent = Number(e.currentTarget.value)
     const volume = volumePercent / 100
     if ($video.current === null) return
@@ -267,51 +246,37 @@ export const Video: FunctionComponent<Props> = ({
   }, [])
 
   const handleSoundOnButtonClick = useCallback(() => {
-    forceLoud()
+    forceLoud($video.current, setIsSoundOn)
   }, [forceLoud])
 
   const handleSoundOffButtonClick = useCallback(() => {
-    forceMute()
+    forceMute($video.current, setIsSoundOn)
   }, [])
 
   const handlePlayButtonClick = useCallback(() => {
-    forcePlay().catch(e => console.error(e))
-  }, [forcePlay])
+    forcePlay($video.current, shouldDisclaimerBeOn, setIsPlaying)
+  }, [forcePlay, shouldDisclaimerBeOn])
 
   const handlePauseButtonClick = useCallback(() => {
-    if ($video.current === null) return
-    $video.current.pause()
+    forcePause($video.current, setIsPlaying)
   }, [])
 
-  const handleVideoPlayEvent = useCallback(() => {
-    setIsVideoPlaying(true)
-    setHasBeenAutoPlayed(true)
-  }, [])
-
-  const handleVideoPauseEvent = useCallback(() => {
-    setIsVideoPlaying(false)
-  }, [])
-
-  // Fullscreen handler
   const handleFullScreenButtonClick = useCallback(() => {
-    if (isFullscreen) void forceExitFullScreen()
-    else void forceFullScreen()
-  }, [isFullscreen])
+    if (isFullscreen) void forceExitFullScreen($video.current, setIsFullscreen)
+    else void forceFullScreen($video.current, shouldDisclaimerBeOn, setIsFullscreen)
+  }, [isFullscreen, shouldDisclaimerBeOn])
 
-  // Playback speed handler
-  const handlePlaybackRateRangeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRateRangeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    // [WIP] faire un forcePlaybackRate dans utils.ts
+    // Penser à mettre à jour le tableau de deps
     const speed = Number(e.currentTarget.value)
     if ($video.current === null) return
     $video.current.playbackRate = speed
   }, [])
 
-  const handlePlaybackRateChange = useCallback((e: React.ChangeEvent<HTMLVideoElement>) => {
-    const speed = e.currentTarget.playbackRate
-    setPlaybackSpeed(speed)
-  }, [])
-
-  // Timeline handler
   const handleTimelineClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    // [WIP] faire un forceCurrentTime dans utils.ts
+    // Penser à mettre à jour le tableau de deps
     if ($video.current === null) return
     const timelineRect = e.currentTarget.getBoundingClientRect()
     const position = e.clientX - timelineRect.left
@@ -319,10 +284,29 @@ export const Video: FunctionComponent<Props> = ({
     $video.current.currentTime = progress * totalTime
   }, [])
 
-  const handleTimeChange = useCallback((e: React.ChangeEvent<HTMLVideoElement>) => {
-    const currentTime = e.currentTarget.currentTime
-    setElapsedTime(currentTime)
-  }, [totalTime])
+  // Disclaimer handlers
+  const handleDisclaimerDismiss = useCallback(() => {
+    setIsDisclaimerOn(false)
+    if (intrinsicVideoAttributes.autoPlay === true
+      && !hasBeenAutoPlayed) void forcePlay($video.current, shouldDisclaimerBeOn, setIsPlaying)
+  }, [disclaimer, intrinsicVideoAttributes.autoPlay, shouldDisclaimerBeOn])
+
+  useEffect(() => {
+    if (isDisclaimerOn !== shouldDisclaimerBeOn) setIsDisclaimerOn(shouldDisclaimerBeOn)
+    if (shouldDisclaimerBeOn) {
+      forceMute($video.current, setIsSoundOn)
+      forcePause($video.current, setIsPlaying)
+      void forceExitFullScreen($video.current, setIsFullscreen)
+    } else if (intrinsicVideoAttributes.autoPlay === true) {
+      if ($video.current === null) return
+      if (hasBeenAutoPlayed) return
+      if ($video.current.paused) void forcePlay($video.current, shouldDisclaimerBeOn, setIsPlaying)
+    }
+  }, [
+    shouldDisclaimerBeOn,
+    intrinsicVideoAttributes,
+    hasBeenAutoPlayed
+  ])
 
   // Parsing sources & tracks props
   const parsedSources = useMemo(() => {
@@ -347,43 +331,19 @@ export const Video: FunctionComponent<Props> = ({
     return []
   }, [tracks])
 
-  // Disclaimer handlers
-  const handleDisclaimerDismiss = useCallback(() => {
-    setIsDisclaimerOn(false)
-    if (intrinsicVideoAttributes.autoPlay === true
-      && !hasBeenAutoPlayed) void forcePlay()
-  }, [disclaimer, intrinsicVideoAttributes.autoPlay])
-
-  useEffect(() => {
-    if (isDisclaimerOn !== shouldDisclaimerBeOn) setIsDisclaimerOn(shouldDisclaimerBeOn)
-    if (shouldDisclaimerBeOn) {
-      forceMute()
-      forcePause()
-      void forceExitFullScreen()
-    } else if (intrinsicVideoAttributes.autoPlay === true) {
-      if ($video.current === null) return
-      if (hasBeenAutoPlayed) return
-      if ($video.current.paused) void forcePlay()
-    }
-  }, [
-    shouldDisclaimerBeOn,
-    intrinsicVideoAttributes,
-    hasBeenAutoPlayed
-  ])
-
   // Rendering
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null, {
-    'play-on': isVideoPlaying,
-    'play-off': !isVideoPlaying,
+    'play-on': isPlaying,
+    'play-off': !isPlaying,
     'fullscreen-on': isFullscreen,
     'fullscreen-off': !isFullscreen,
     'sound-on': isSoundOn,
     'sound-off': !isSoundOn
   }), className)
   const rootAttributes = {
-    'data-play-on': isVideoPlaying ? '' : undefined,
-    'data-play-off': !isVideoPlaying ? '' : undefined,
+    'data-play-on': isPlaying ? '' : undefined,
+    'data-play-off': !isPlaying ? '' : undefined,
     'data-fullscreen-on': isFullscreen ? '' : undefined,
     'data-fullscreen-off': !isFullscreen ? '' : undefined,
     'data-sound-on': isSoundOn ? '' : undefined,
@@ -420,12 +380,12 @@ export const Video: FunctionComponent<Props> = ({
     <video
       ref={$video}
       className={videoClss}
-      onVolumeChange={handleVolumeChange}
-      onLoadedMetadata={handleMetadataLoad}
-      onPlay={handleVideoPlayEvent}
-      onPause={handleVideoPauseEvent}
-      onTimeUpdate={handleTimeChange}
-      onRateChange={handlePlaybackRateChange}
+      onVolumeChange={handleVolumeChangeEvent}
+      onLoadedMetadata={handleMetadataLoadEvent}
+      onPlay={handlePlayEvent}
+      onPause={handlePauseEvent}
+      onTimeUpdate={handleTimeUpdateEvent}
+      onRateChange={handleRateChangeEvent}
       {...intrinsicVideoAttributes}
       autoPlay={shouldDisclaimerBeOn ? false : intrinsicVideoAttributes.autoPlay}
       muted={shouldDisclaimerBeOn ? true : intrinsicVideoAttributes.muted}>
@@ -481,7 +441,7 @@ export const Video: FunctionComponent<Props> = ({
         type="range"
         className={playbackSpeedRangeClss}
         value={playbackSpeed}
-        onChange={handlePlaybackRateRangeChange}
+        onChange={handleRateRangeChange}
         min={0.25}
         max={4}
         step={0.25} />
@@ -525,16 +485,16 @@ export const Video: FunctionComponent<Props> = ({
     || autoPauseWhenHidden === true
     ? <IntersectionObserverComponent onIntersected={({ ioEntry }) => {
       const { isIntersecting = false } = ioEntry ?? {}
-      if (autoMuteWhenHidden === true && !isIntersecting) forceMute()
-      if (autoPauseWhenHidden === true && !isIntersecting) forcePause()
+      if (autoMuteWhenHidden === true && !isIntersecting) forceMute($video.current, setIsSoundOn)
+      if (autoPauseWhenHidden === true && !isIntersecting) forcePause($video.current, setIsPlaying)
       if (autoPlayWhenVisible === true
         && !hasBeenAutoPlayed
         && !shouldDisclaimerBeOn
-        && isIntersecting) void forcePlay()
+        && isIntersecting) void forcePlay($video.current, shouldDisclaimerBeOn, setIsPlaying)
       if (autoLoudWhenVisible === true
         && !hasBeenAutoPlayed
         && !shouldDisclaimerBeOn
-        && isIntersecting) forceLoud()
+        && isIntersecting) forceLoud($video.current, setIsSoundOn)
     }}>
       {disclaimedContent}
     </IntersectionObserverComponent>

@@ -1,3 +1,113 @@
+import type {
+  Dispatch,
+  SetStateAction
+} from 'react'
+
+/* Video element triggers */
+
+export const muteAttributeWorkaround = (
+  video: HTMLVideoElement | null,
+  shouldMute: boolean,
+  setIsSoundOn: Dispatch<SetStateAction<boolean>>
+) => {
+  if (video === null) return
+  if (shouldMute !== true) return
+  const currentMuted = video.getAttribute('muted')
+  if (currentMuted !== null) return
+  video.setAttribute('muted', '')
+  video.load()
+  setIsSoundOn(false)
+}
+
+export const forceMute = (
+  video: HTMLVideoElement | null,
+  setIsSoundOn: Dispatch<SetStateAction<boolean>>
+) => {
+  if (video === null) return
+  video.muted = true
+  setIsSoundOn(false)
+}
+
+export const forceLoud = (
+  video: HTMLVideoElement | null,
+  setIsSoundOn: Dispatch<SetStateAction<boolean>>
+) => {
+  if (video === null) return
+  video.muted = false
+  setIsSoundOn(true)
+}
+
+export const forcePlay = async (
+  video: HTMLVideoElement | null,
+  shouldDisclaimerBeOn: boolean,
+  setIsPlaying: Dispatch<SetStateAction<boolean>>
+) => {
+  if (shouldDisclaimerBeOn) {
+    setIsPlaying(false)
+    return
+  }
+  if (video === null) return
+  try {
+    await video.play()
+    setIsPlaying(true)
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+export const forcePause = (
+  video: HTMLVideoElement | null,
+  setIsPlaying: Dispatch<SetStateAction<boolean>>
+) => {
+  if (video === null) {
+    setIsPlaying(false)
+    return
+  }
+  try {
+    video.pause()
+    setIsPlaying(false)
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+export const forceFullScreen = async (
+  video: HTMLVideoElement | null,
+  shouldDisclaimerBeOn: boolean,
+  setIsFullscreen: Dispatch<SetStateAction<boolean>>
+) => {
+  if (shouldDisclaimerBeOn) return
+  if (video === null) {
+    setIsFullscreen(false)
+    return
+  }
+  try {
+    await video.requestFullscreen()
+    setIsFullscreen(true)
+  } catch (e) {
+    setIsFullscreen(false)
+    console.error(e)
+  }
+}
+
+export const forceExitFullScreen = async (
+  video: HTMLVideoElement | null,
+  setIsFullscreen: Dispatch<SetStateAction<boolean>>
+) => {
+  if (video === null) {
+    setIsFullscreen(false)
+    return
+  }
+  try {
+    await document.exitFullscreen()
+    setIsFullscreen(false)
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+/* Time & formats */
+
 export function secondsToMs (seconds: number): number {
   return seconds * 1000
 }
