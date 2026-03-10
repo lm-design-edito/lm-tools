@@ -31,41 +31,17 @@ its own observed page slot div.
 
 const tsxDetails = `
 /**
- * State associated with a single page slot.
- *
- * @property position - The current position of the page relative to the viewport:
- * - \`'prev'\` — the page has been scrolled past.
- * - \`'curr'\` — the page is currently visible in the viewport.
- * - \`'next'\` — the page has not yet been reached.
- * @property currCount - The number of times this page has entered the \`'curr'\` position.
- */
-type PageState = {
-  position: 'prev' | 'curr' | 'next'
-  currCount: number
-}
-
-type PagesState = Map<number, PageState>
-
-/**
- * Represents the scroll direction state of the paginator.
- * - \`'forwards'\` — the user is scrolling down.
- * - \`'backwards'\` — the user is scrolling up.
- * - \`null\` — no scroll has been detected yet.
- */
-type DirectionState = 'forwards' | 'backwards' | null
-
-/**
  * Props for the {@link Paginator} component.
  *
  * @property thresholdOffsetPercent - Optional percentage offset used to compute
  * the {@link IntersectionObserver} root margin. Determines how far into the viewport
  * a page must be before it is considered \`'curr'\`. Defaults to \`0\`.
  *
- * @property onDirectionChange - Callback invoked when the scroll direction changes.
+ * @property onDirectionChanged - Callback invoked when the scroll direction changes.
  * Receives the new {@link DirectionState}. Only fires when the direction actually
  * changes — repeated scrolls in the same direction do not trigger it again.
  *
- * @property onPageChange - Callback invoked whenever any page's {@link PageState}
+ * @property onPageChanged - Callback invoked whenever any page's {@link PageState}
  * changes. Receives a flat array of all pages' states, ordered by position.
  *
  * @property className - Optional additional class name(s) applied to the root element.
@@ -73,8 +49,8 @@ type DirectionState = 'forwards' | 'backwards' | null
  */
 export type Props = PropsWithChildren<WithClassName<{
   thresholdOffsetPercent?: number
-  onDirectionChange?: (direction: DirectionState) => void
-  onPageChange?: (pages: PageState[]) => void
+  onDirectionChanged?: (direction: DirectionState) => void
+  onPageChanged?: (pages: PageState[]) => void
 }>>`
 
 const demoProps: PaginatorProps = {
@@ -84,8 +60,8 @@ const demoProps: PaginatorProps = {
     <div style={{ width: '100%', height: '120vh', backgroundColor: 'tan' }}>Page 2</div>,
     <div style={{ width: '100%', height: '120vh', backgroundColor: 'plum' }}>Page 3</div>
   ],
-  onDirectionChange: dir => console.log('Direction changed', dir),
-  onPageChange: pages => console.log('Page changed', pages),
+  onDirectionChanged: dir => console.log('Direction changed', dir),
+  onPageChanged: pages => console.log('Page changed', pages),
 }
 
 export const PaginatorDemo: FunctionComponent = () => {

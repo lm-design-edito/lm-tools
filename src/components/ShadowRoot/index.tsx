@@ -27,7 +27,7 @@ import cssModule from './styles.module.css'
  * assigned to `shadowRoot.adoptedStyleSheets` (if supported by the browser).
  * @property injectedStyles - Raw CSS string injected into the Shadow Root inside a `<style>` element.
  * Useful as a fallback when constructable stylesheets are not used.
- * @property onMount - Callback invoked once the Shadow Root is created.
+ * @property onMounted - Callback invoked once the Shadow Root is created.
  * Receives the created `ShadowRoot` instance.
  * @property children - React children rendered inside the Shadow Root via a React portal.
  */
@@ -37,7 +37,7 @@ export type Props = PropsWithChildren<WithClassName<{
   slotAssignment?: 'named' | 'manual'
   adoptedStyleSheets?: CSSStyleSheet[]
   injectedStyles?: string
-  onMount?: (shadowRoot: ShadowRoot) => void
+  onMounted?: (shadowRoot: ShadowRoot) => void
 }>>
 
 /**
@@ -54,7 +54,7 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
   slotAssignment,
   adoptedStyleSheets,
   injectedStyles,
-  onMount,
+  onMounted,
   className,
   children
 }) => {
@@ -66,17 +66,19 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
     if (hostRef.current === null || shadowRoot !== null) return
     const root = hostRef.current.attachShadow({ mode, delegatesFocus, slotAssignment })
     if (adoptedStyleSheets !== undefined
-      && 'adoptedStyleSheets' in root) { root.adoptedStyleSheets = adoptedStyleSheets }
+      && 'adoptedStyleSheets' in root) {
+      root.adoptedStyleSheets = adoptedStyleSheets
+    }
     if (injectedStyles !== undefined) setStyles(injectedStyles)
     setShadowRoot(root)
-    onMount?.(root)
+    onMounted?.(root)
   }, [
     mode,
     delegatesFocus,
     slotAssignment,
     adoptedStyleSheets,
     injectedStyles,
-    onMount
+    onMounted
   ])
 
   // Rendering
@@ -85,7 +87,7 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
   return <div
     ref={hostRef}
     className={rootClss}>
-    
+
     {shadowRoot !== null && createPortal(<>
       {styles !== undefined && <style>{styles}</style>}
       {children}

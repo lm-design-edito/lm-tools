@@ -9,13 +9,19 @@ import {
   useState
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
-import { Disclaimer, Props as DisclaimerProps } from '../Disclaimer/index.js'
+import {
+  Disclaimer,
+  type Props as DisclaimerProps
+} from '../Disclaimer/index.js'
 import { IntersectionObserverComponent } from '../IntersectionObserver/index.js'
-import { Subtitles, Props as SubsProps } from '../Subtitles/index.js'
+import {
+  Subtitles,
+  type Props as SubsProps
+} from '../Subtitles/index.js'
 import { mergeClassNames } from '../utils/index.js'
-import { formatTime, secondsToMs } from './utils.js'
 import type { WithClassName } from '../utils/types.js'
 import { video as publicClassName } from '../public-classnames.js'
+import { formatTime, secondsToMs } from './utils.js'
 import cssModule from './styles.module.css'
 
 /**
@@ -230,7 +236,6 @@ export const Video: FunctionComponent<Props> = ({
   }, [forceLoud])
 
   const onSoundOffBtnClick = useCallback(() => {
-    console.log('mute!!!!')
     forceMute()
   }, [])
 
@@ -245,7 +250,7 @@ export const Video: FunctionComponent<Props> = ({
     }
   }, [shouldDisclaimerBeOn])
 
-  const forcePause = useCallback(async () => {
+  const forcePause = useCallback(() => {
     if ($video.current === null) return
     try {
       $video.current.pause()
@@ -269,7 +274,7 @@ export const Video: FunctionComponent<Props> = ({
   }, [])
 
   const onVideoPause = useCallback(() => {
-    setIsVideoPlaying(false) 
+    setIsVideoPlaying(false)
   }, [])
 
   // Fullscreen handler
@@ -294,12 +299,12 @@ export const Video: FunctionComponent<Props> = ({
   const toggleFullScreen = useCallback(async () => {
     if ($video.current === null) return
     const isFullscreen = document.fullscreenElement === $video.current
-    if (isFullscreen) forceExitFullScreen()
-    else forceFullScreen()
+    if (isFullscreen) await forceExitFullScreen()
+    else await forceFullScreen()
   }, [])
 
   const onFullScreenBtnClick = useCallback(() => {
-    toggleFullScreen().catch(e => console.error(e))
+    void toggleFullScreen()
   }, [toggleFullScreen])
 
   // Playback speed handler
@@ -326,7 +331,6 @@ export const Video: FunctionComponent<Props> = ({
   const onVideoTimeUpdate = useCallback((e: React.ChangeEvent<HTMLVideoElement>) => {
     const currentTime = e.currentTarget.currentTime
     setElapsedTime(currentTime)
-    if ($root.current === null) return
   }, [totalTime])
 
   // Parsing sources & tracks props
@@ -356,7 +360,7 @@ export const Video: FunctionComponent<Props> = ({
   const onDisclaimerDismissClick = useCallback(() => {
     setIsDisclaimerOn(false)
     if (intrinsicVideoAttributes.autoPlay === true
-      && !hasBeenAutoPlayed) forcePlay()
+      && !hasBeenAutoPlayed) void forcePlay()
   }, [disclaimer, intrinsicVideoAttributes.autoPlay])
 
   useEffect(() => {
@@ -364,18 +368,17 @@ export const Video: FunctionComponent<Props> = ({
     if (shouldDisclaimerBeOn) {
       forceMute()
       forcePause()
-      forceExitFullScreen()
+      void forceExitFullScreen()
     } else if (intrinsicVideoAttributes.autoPlay === true) {
       if ($video.current === null) return
       if (hasBeenAutoPlayed) return
-      if ($video.current.paused) forcePlay()
+      if ($video.current.paused) void forcePlay()
     }
   }, [
-      shouldDisclaimerBeOn,
-      intrinsicVideoAttributes,
-      hasBeenAutoPlayed
-    ]
-  )
+    shouldDisclaimerBeOn,
+    intrinsicVideoAttributes,
+    hasBeenAutoPlayed
+  ])
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
@@ -416,7 +419,7 @@ export const Video: FunctionComponent<Props> = ({
   const volumeRangeClss = c('volume-range')
   const playbackSpeedRangeClss = c('playback-speed-range')
   const playbackSpeedClss = c('playback-speed')
-  const timeControlsClss =  c('time-controls')
+  const timeControlsClss = c('time-controls')
   const elapsedTimeClss = c('elapsed-time')
   const totalTimeClss = c('total-time')
   const timelineClss = c('timeline')
@@ -461,7 +464,7 @@ export const Video: FunctionComponent<Props> = ({
       {/* Children */}
       { children }
     </video>
-    
+
     {/* Video Controls */}
     <div className={videoControlsClss}>
       {/* Play / pause */}
@@ -487,7 +490,7 @@ export const Video: FunctionComponent<Props> = ({
         type="range"
         className={playbackSpeedRangeClss}
         value={playbackSpeed}
-        onChange={onPlaybackSpeedRangeChange} 
+        onChange={onPlaybackSpeedRangeChange}
         min={0.25}
         max={4}
         step={0.25} />
@@ -498,12 +501,10 @@ export const Video: FunctionComponent<Props> = ({
     <div className={timeControlsClss}>
       {/* Elapsed time */}
       <span className={elapsedTimeClss}>
-        {/* <span className={elapsedTimeLabelClss}>Temps écoulé:</span> */}
         {formatTime(elapsedTimeMs, 'mm:ss:ms')}
       </span>
       {/* Total time */}
       <span className={totalTimeClss}>
-        {/* <span className={totalTimeLabelClss}>Temps total:</span> */}
         {formatTime(totalTimeMs, 'mm:ss:ms')}
       </span>
       {/* Timeline */}
@@ -525,22 +526,22 @@ export const Video: FunctionComponent<Props> = ({
     </Disclaimer>
     : sensitiveContent
 
-  const observedContent = autoLoudWhenVisible
-    || autoMuteWhenHidden
-    || autoPlayWhenVisible
-    || autoPauseWhenHidden
+  const observedContent = autoLoudWhenVisible === true
+    || autoMuteWhenHidden === true
+    || autoPlayWhenVisible === true
+    || autoPauseWhenHidden === true
     ? <IntersectionObserverComponent
-      onIntersection={({ ioEntry }) => {
+      onIntersected={({ ioEntry }) => {
         const { isIntersecting = false } = ioEntry ?? {}
-        if (autoMuteWhenHidden && !isIntersecting) forceMute()
-        if (autoPauseWhenHidden && !isIntersecting) forcePause()
-        if (autoPlayWhenVisible 
+        if (autoMuteWhenHidden === true && !isIntersecting) forceMute()
+        if (autoPauseWhenHidden === true && !isIntersecting) forcePause()
+        if (autoPlayWhenVisible === true
           && !hasBeenAutoPlayed
-          && shouldDisclaimerBeOn === false
-          && isIntersecting) forcePlay()
-        if (autoLoudWhenVisible
+          && !shouldDisclaimerBeOn
+          && isIntersecting) void forcePlay()
+        if (autoLoudWhenVisible === true
           && !hasBeenAutoPlayed
-          && shouldDisclaimerBeOn === false
+          && !shouldDisclaimerBeOn
           && isIntersecting) forceLoud()
       }}>
       {disclaimedContent}

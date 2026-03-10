@@ -45,9 +45,10 @@ const tsxDetails = `
  * @property isEnded - When \`true\`, forces the last group to be treated as current,
  * regardless of \`timecodeMs\`. Useful to keep the final subtitle group visible after
  * media playback finishes.
- * @property onSubsLoad - Callback invoked with the raw SRT string after a successful
- * fetch and parse. Not called when \`srtFileContent\` is used directly.
- * @property onSubsError - Callback invoked with an \`Error\` if the fetch or parse step fails.
+ * @property onLoaded - Callback invoked with the raw SRT string after a successful
+ * fetch. Not called when \`srtFileContent\` is used directly.
+ * @property onParsed - Callback invoked with the raw SRT string has been parsed.
+ * @property onLoadError - Callback invoked with an \`Error\` if the fetch or parse step fails.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React children rendered inside the root element, after the subtitle groups.
  */
@@ -57,8 +58,9 @@ export type Props = PropsWithChildren<WithClassName<{
   subsGroups?: number[]
   timecodeMs?: number
   isEnded?: boolean
-  onSubsLoad?: (subs?: string) => void
-  onSubsError?: (error?: Error) => void
+  onLoaded?: (subs: string) => void
+  onParsed?: (subs: ParsedSub[]) => void
+  onLoadError?: (error: Error) => void
 }>>`
 
 

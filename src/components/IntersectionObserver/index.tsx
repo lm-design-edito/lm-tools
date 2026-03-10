@@ -39,7 +39,7 @@ export type ObserverOptions = {
 /**
  * Props for the IntersectionObserverComponent.
  *
- * @property onIntersection - Callback invoked whenever an intersection change
+ * @property onIntersected - Callback invoked whenever an intersection change
  * is reported. Receives an object containing the current
  * {@link IntersectionObserverEntry} (if available) and the active
  * {@link IntersectionObserver} instance.
@@ -51,7 +51,7 @@ export type ObserverOptions = {
  * @property children - React children rendered inside the observed element.
  */
 export type Props = PropsWithChildren<WithClassName<{
-  onIntersection?: (details: {
+  onIntersected?: (details: {
     ioEntry?: IOE | undefined
     observer: IO
   }) => void
@@ -72,7 +72,7 @@ export type Props = PropsWithChildren<WithClassName<{
  * - Adds an `is-intersecting` modifier class when the element is intersecting.
  */
 export const IntersectionObserverComponent: FunctionComponent<Props> = ({
-  onIntersection,
+  onIntersected,
   root,
   rootMargin,
   threshold,
@@ -87,12 +87,9 @@ export const IntersectionObserverComponent: FunctionComponent<Props> = ({
   const observation = useCallback((entries: IOE[], observer: IO): void => {
     const thisEntry = entries[0]
     if (thisEntry === undefined) return setIoEntry(null)
-    if (onIntersection !== undefined) onIntersection({
-      ioEntry: thisEntry,
-      observer
-    })
+    onIntersected?.({ ioEntry: thisEntry, observer })
     setIoEntry(thisEntry)
-  }, [onIntersection])
+  }, [onIntersected])
 
   const forceObservation = useCallback((): void => {
     const rootEl = rootRef.current

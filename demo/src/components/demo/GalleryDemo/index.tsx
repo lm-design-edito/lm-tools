@@ -47,7 +47,7 @@ const tsxDetails = `
  * @property onPrevClick - Called when the "previous" control is clicked. Receives the current active index before navigation occurs.
  * @property onNextClick - Called when the "next" control is clicked. Receives the current active index before navigation occurs.
  * @property onPaginationClick - Called when a pagination item is clicked. Receives the current active index and the target index.
- * @property onSlotChange - Called when the active slot changes due to scrolling. Receives the new active index.
+ * @property onSlotChanged - Called when the active slot changes due to scrolling. Receives the new active index.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Elements rendered as gallery slots. Each child is wrapped in a slot container.
  */
@@ -64,7 +64,7 @@ export type Props = PropsWithChildren<WithClassName<{
   onPrevClick?: (activePos: number) => void
   onNextClick?: (activePos: number) => void
   onPaginationClick?: (activePos: number, targetPos: number) => void
-  onSlotChange?: (activePos: number) => void
+  onSlotChanged?: (activePos: number) => void
 }>>`
 
 const demoStyles = `

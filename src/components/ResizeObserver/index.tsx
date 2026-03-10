@@ -21,12 +21,12 @@ type ROEntryWithBoundingRect = {
  * Props for the ResizeObserverComponent.
  *
  * @property className - Optional additional class name(s) applied to the root element.
- * @property onResize - Callback invoked when the element is resized.
+ * @property onResized - Callback invoked when the element is resized.
  * Receives the `ResizeObserverEntry` from the observed element, or `undefined` if none.
  * @property children - React children rendered inside the root element. Only the root element is observed
  */
 export type Props = PropsWithChildren<WithClassName<{
-  onResize?: (entry: ROEntryWithBoundingRect) => void
+  onResized?: (entry: ROEntryWithBoundingRect) => void
 }>>
 
 /**
@@ -39,7 +39,7 @@ export type Props = PropsWithChildren<WithClassName<{
  */
 export const ResizeObserverComponent: FunctionComponent<Props> = ({
   className,
-  onResize,
+  onResized,
   children
 }): JSX.Element => {
   // Refs, effects & handlers
@@ -59,8 +59,8 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
           boundingClientRect
         }
         setRoEntry(fullEntry)
-        if (onResize === undefined) return
-        onResize(fullEntry)
+        if (onResized === undefined) return
+        onResized(fullEntry)
       }
     })
     observerRef.current.observe(root)
@@ -68,7 +68,7 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
   useEffect(() => {
     createObserver()
     return () => observerRef.current?.disconnect()
-  }, [onResize])
+  }, [onResized])
 
   // Data attributes, CSS custom props & Rendering
   const {

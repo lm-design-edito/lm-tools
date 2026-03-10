@@ -40,11 +40,15 @@ const tsxDetails = `/**
  * @property closeBtnContent - Custom content rendered inside the close/exit button.
  * @property openBtnContent - Custom content rendered inside the open/enter button.
  * @property isOn - Controlled theatre mode state. When provided, overrides the
- * internal state. Use together with {@link Props.onTheatreToggleClick} for fully
+ * internal state. Use together with {@link Props.onToggleClick} for fully
  * controlled usage.
- * @property onTheatreToggleClick - Callback invoked when either the open or close
+ * @property defaultIsOn - Default state for the theatre mode.
+ * @property exitOnEscape — When uncontrolled and on, toggles internal state to off when 'esc' key is pressed
+ * @property exitOnBgClick — When uncontrolled and on, toggles internal state to off when the background is clicked
+ * @property onToggleClick - Callback invoked when either the open or close
  * button is clicked. Receives the theatre state value (\`isOn\`) at the time of the click,
  * i.e. the previous state before the toggle.
+ * @property onToggled - Callback invoked after the state changed
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Content rendered both in the default slot and, when theatre
  * mode is active, duplicated inside the stage element.
@@ -53,7 +57,11 @@ export type Props = PropsWithChildren<WithClassName<{
   closeBtnContent?: ReactNode
   openBtnContent?: ReactNode
   isOn?: boolean
-  onTheatreToggleClick?: (prevIsOn: boolean) => void
+  defaultIsOn?: boolean
+  exitOnEscape?: boolean
+  exitOnBgClick?: boolean
+  onToggleClick?: (prevIsOn: boolean) => void
+  onToggled?: (isOn: boolean) => void
 }>>`
 
 /* Demo CSS */
@@ -116,7 +124,10 @@ export const TheatreDemo: FunctionComponent = () => {
     isOn: isTheatreOn,
     openBtnContent: <button>Ouvrir le théâtre</button>,
     closeBtnContent: <button>Fermer le théâtre</button>,
-    onTheatreToggleClick: prev => prev === true && setIsTheatreOn(false)
+    exitOnEscape: true,
+    exitOnBgClick: true,
+    onToggleClick: prev => prev === true && setIsTheatreOn(false),
+    onToggled: isOn => console.log('Theatre toggled. Is on:', isOn)
   }
 
   return <CompDisplayer
@@ -126,9 +137,9 @@ export const TheatreDemo: FunctionComponent = () => {
     demoProps={demoProps}
     tsxDetails={tsxDetails}>
     <span>isOn: </span>
-    <button onClick={() => setIsTheatreOn(undefined)}>{isTheatreOn === undefined ? <strong>{'undefined'}</strong> : 'undefined'}</button>
-    <button onClick={() => setIsTheatreOn(true)}>{isTheatreOn === true ? <strong>{'true'}</strong> : 'true'}</button>
-    <button onClick={() => setIsTheatreOn(false)}>{isTheatreOn === false ? <strong>{'false'}</strong> : 'false'}</button>
+    <button onClick={() => setIsTheatreOn(undefined)}>{isTheatreOn === undefined ? <strong>undefined</strong> : 'undefined'}</button>
+    <button onClick={() => setIsTheatreOn(true)}>{isTheatreOn === true ? <strong>true</strong> : 'true'}</button>
+    <button onClick={() => setIsTheatreOn(false)}>{isTheatreOn === false ? <strong>false</strong> : 'false'}</button>
     <Theatre
       {...demoProps}>
       <div style={{

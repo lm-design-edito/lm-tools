@@ -47,7 +47,7 @@ export type ObserverOptions = {
 /**
  * Props for the IntersectionObserverComponent.
  *
- * @property onIntersection - Callback invoked whenever an intersection change
+ * @property onIntersected - Callback invoked whenever an intersection change
  * is reported. Receives an object containing the current
  * {@link IntersectionObserverEntry} (if available) and the active
  * {@link IntersectionObserver} instance.
@@ -59,14 +59,14 @@ export type ObserverOptions = {
  * @property children - React children rendered inside the observed element.
  */
 export type Props = PropsWithChildren<WithClassName<{
-  onIntersection?: (details: {
+  onIntersected?: (details: {
     ioEntry?: IOE | undefined
     observer: IO
   }) => void
 } & ObserverOptions>>`
 
 const demoProps: IOCompProps = {
-  onIntersection: details => console.log('onIntersection handler', details),
+  onIntersected: details => console.log('onIntersected handler', details),
   children: <div style={{
     backgroundColor: 'red',
     width: 400,

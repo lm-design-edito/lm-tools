@@ -3,10 +3,12 @@ import {
   type PropsWithChildren,
   useCallback,
   useEffect,
+  useRef,
   useState
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { toError } from '../../agnostic/misc/cast/index.js'
+import { unknownToString } from '../../agnostic/errors/unknown-to-string/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import { subtitles as publicClassName } from '../public-classnames.js'
@@ -33,9 +35,10 @@ import cssModule from './styles.module.css'
  * @property isEnded - When `true`, forces the last group to be treated as current,
  * regardless of `timecodeMs`. Useful to keep the final subtitle group visible after
  * media playback finishes.
- * @property onSubsLoad - Callback invoked with the raw SRT string after a successful
+ * @property onLoaded - Callback invoked with the raw SRT string after a successful
  * fetch and parse. Not called when `srtFileContent` is used directly.
- * @property onSubsError - Callback invoked with an `Error` if the fetch or parse step fails.
+ * @property onParsed - Callback invoked with the raw SRT string has been parsed.
+ * @property onLoadFailed - Callback invoked with an `Error` if the fetch or parse step fails.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React children rendered inside the root element, after the subtitle groups.
  */
@@ -45,8 +48,9 @@ export type Props = PropsWithChildren<WithClassName<{
   subsGroups?: number[]
   timecodeMs?: number
   isEnded?: boolean
-  onSubsLoad?: (subs?: string) => void
-  onSubsError?: (error?: Error) => void
+  onLoaded?: (subs: string) => void
+  onParsed?: (subs: ParsedSub[]) => void
+  onLoadFailed?: (error: Error) => void
 }>>
 
 /**
@@ -78,27 +82,47 @@ export const Subtitles: FunctionComponent<Props> = ({
   timecodeMs,
   isEnded,
   className,
-  onSubsLoad,
-  onSubsError
+  onLoaded,
+  onParsed,
+  onLoadFailed
 }) => {
   // State
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadError, setLoadError] = useState<Error | null>(null)
   const [parsedSubs, setParsedSubs] = useState<ParsedSub[]>([])
+  const pParsedSubs = useRef(parsedSubs)
+
+  // State change handlers
+  useEffect(() => {
+    if (pParsedSubs.current === parsedSubs) return
+    onParsed?.(parsedSubs)
+  }, [parsedSubs])
 
   // Effects
-  const fetchAndParseSubs = useCallback(async (src?: string, srtFileContent?: string): Promise<void> => {
+  const fetchAndParseSubs = useCallback(async (
+    src?: string,
+    srtFileContent?: string
+  ): Promise<void> => {
     if (src === undefined) return
     if (srtFileContent !== undefined) return setParsedSubs(parseSubs(srtFileContent))
+    setIsLoading(true)
+    setLoadError(null)
     try {
       const response = await fetch(src)
       const srtContent = await response.text()
+      onLoaded?.(srtContent)
       const parsedSubs = parseSubs(srtContent)
       setParsedSubs(parsedSubs)
-      onSubsLoad?.(srtContent)
     } catch (error) {
+      setLoadError(error instanceof Error
+        ? error
+        : new Error(unknownToString(error)))
       console.error(error)
-      onSubsError?.(toError(error))
+      onLoadFailed?.(toError(error))
+    } finally {
+      setIsLoading(false)
     }
-  }, [onSubsError, onSubsLoad])
+  }, [onLoadFailed, onLoaded])
 
   useEffect(() => {
     fetchAndParseSubs(src, srtFileContent)
@@ -107,13 +131,18 @@ export const Subtitles: FunctionComponent<Props> = ({
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null), className)
+  const rootClss = mergeClassNames(
+    c(null, {
+      loading: isLoading,
+      error: loadError !== null
+    }),
+    className
+  )
   const prevSubs = parsedSubs.filter(({ start }) => start != null && start < (timecodeMs ?? 0))
   const lastPrevSub = prevSubs[prevSubs.length - 1]
   const highestSubId = Math.max(...parsedSubs.map(sub => sub.id))
   const subsGroupsWithBoundaries = computeSubGroupsWithBoundaries(subsGroups, highestSubId)
   const currentGroup = getCurrentGroup(subsGroupsWithBoundaries, lastPrevSub?.id, isEnded)
-
   return <div className={rootClss}>{
     timecodeMs !== undefined
     && parsedSubs.length > 0

@@ -43,11 +43,11 @@ type DirectionState = 'forwards' | 'backwards' | null
  * the {@link IntersectionObserver} root margin. Determines how far into the viewport
  * a page must be before it is considered `'curr'`. Defaults to `0`.
  *
- * @property onDirectionChange - Callback invoked when the scroll direction changes.
+ * @property onDirectionChanged - Callback invoked when the scroll direction changes.
  * Receives the new {@link DirectionState}. Only fires when the direction actually
  * changes — repeated scrolls in the same direction do not trigger it again.
  *
- * @property onPageChange - Callback invoked whenever any page's {@link PageState}
+ * @property onPageChanged - Callback invoked whenever any page's {@link PageState}
  * changes. Receives a flat array of all pages' states, ordered by position.
  *
  * @property className - Optional additional class name(s) applied to the root element.
@@ -55,8 +55,8 @@ type DirectionState = 'forwards' | 'backwards' | null
  */
 export type Props = PropsWithChildren<WithClassName<{
   thresholdOffsetPercent?: number
-  onDirectionChange?: (direction: DirectionState) => void
-  onPageChange?: (pages: PageState[]) => void
+  onDirectionChanged?: (direction: DirectionState) => void
+  onPageChanged?: (pages: PageState[]) => void
 }>>
 
 /**
@@ -84,8 +84,8 @@ export type Props = PropsWithChildren<WithClassName<{
  */
 export const Paginator: FunctionComponent<Props> = ({
   thresholdOffsetPercent,
-  onDirectionChange,
-  onPageChange,
+  onDirectionChanged,
+  onPageChanged,
   className,
   children
 }) => {
@@ -94,6 +94,17 @@ export const Paginator: FunctionComponent<Props> = ({
   const [directionState, setDirectionState] = useState<DirectionState>(null)
   const pagesRef = useRef<HTMLDivElement>(null)
   const directionRef = useRef<DirectionState>(null)
+
+  // State change handlers
+  useEffect(() => {
+    onPageChanged?.(Array
+      .from(pagesState)
+      .map(([, state]) => state))
+  }, [pagesState])
+
+  useEffect(() => {
+    onDirectionChanged?.(directionState)
+  }, [directionState])
 
   // Catch scroll direction listening on scroll events
   useEffect(() => {
@@ -109,7 +120,6 @@ export const Paginator: FunctionComponent<Props> = ({
       if (direction !== directionRef.current) {
         directionRef.current = direction
         setDirectionState(direction)
-        if (onDirectionChange !== undefined) onDirectionChange(direction)
       }
     }
     window.addEventListener('scroll', handleScroll)
@@ -146,8 +156,6 @@ export const Paginator: FunctionComponent<Props> = ({
             : (prev?.currCount ?? 0)
           nextState.set(index, { position, currCount })
         })
-        const dispatchedState = Array.from(nextState).map(([, state]) => state)
-        if (onPageChange !== undefined) onPageChange(dispatchedState)
         return nextState
       })
     }, { rootMargin: observerRootMargin })

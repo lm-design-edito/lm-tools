@@ -174,7 +174,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
 
   // Sticky blocks calculations
   useEffect(() => {
-    let consolidatedBlocks = new Map<string, PropsBlock & BlockConsolidatedData>()
+    const consolidatedBlocks = new Map<string, PropsBlock & BlockConsolidatedData>()
     for (const page of pages ?? []) {
       const pageIndex = pages?.indexOf(page) ?? -1
       for (const block of page.blocks ?? []) {
@@ -194,7 +194,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
         })
       }
     }
-    let consolidatedStickyBlocks = new Map(Array
+    const consolidatedStickyBlocks = new Map(Array
       .from(consolidatedBlocks)
       .filter((e): e is [string, PropsStickyBlock & BlockConsolidatedData] => {
         const block = e[1]
@@ -229,15 +229,15 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     })
 
   // Handlers
-  const handleTopBoundDetect: IOCompProps['onIntersection'] = e => setTopVis(e.ioEntry?.isIntersecting ?? false)
-  const handleCntDetect: IOCompProps['onIntersection'] = e => setCntVis(e.ioEntry?.isIntersecting ?? false)
-  const handleBtmBoundDetect: IOCompProps['onIntersection'] = e => setBtmVis(e.ioEntry?.isIntersecting ?? false)
-  const handlePageChange: PaginatorProps['onPageChange'] = pages => {
+  const handleTopBoundDetect: IOCompProps['onIntersected'] = e => setTopVis(e.ioEntry?.isIntersecting ?? false)
+  const handleCntDetect: IOCompProps['onIntersected'] = e => setCntVis(e.ioEntry?.isIntersecting ?? false)
+  const handleBtmBoundDetect: IOCompProps['onIntersected'] = e => setBtmVis(e.ioEntry?.isIntersecting ?? false)
+  const handlePageChange: PaginatorProps['onPageChanged'] = pages => {
     const curPagePos = pages.findIndex(page => page.position === 'curr')
     if (curPagePos === -1) return
     return setCurrentPagePos(curPagePos)
   }
-  const handleResize: RSOCompProps['onResize'] = ({ boundingClientRect }) => {
+  const handleResize: RSOCompProps['onResized'] = ({ boundingClientRect }) => {
     if (partialBoundingRect === undefined
       || boundingClientRect.left !== partialBoundingRect.left
       || boundingClientRect.right !== partialBoundingRect.right
@@ -261,7 +261,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   )
   const customCssProps: Record<string, string> = {}
   if (partialBoundingRect?.left !== undefined) {
-    customCssProps[`--${publicClassName}-screen-left`] = `${partialBoundingRect.left}px`,
+    customCssProps[`--${publicClassName}-screen-left`] = `${partialBoundingRect.left}px`
     customCssProps['--PRIVATE-left'] = `${partialBoundingRect.left}px`
   }
   if (partialBoundingRect?.right !== undefined) {
@@ -280,10 +280,10 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     className={rootClss}
     data-current-page-pos={currentPagePos}
     style={{ ...customCssProps }}>
-    <ResizeObserverComponent onResize={handleResize}>
+    <ResizeObserverComponent onResized={handleResize}>
       {/* Top bound detection */}
       <div className={c('top-bound')}>
-        <IntersectionObserverComponent onIntersection={handleTopBoundDetect} />
+        <IntersectionObserverComponent onIntersected={handleTopBoundDetect} />
       </div>
 
       {/* Back blocks */}
@@ -320,14 +320,14 @@ export const Scrllgngn: FunctionComponent<Props> = ({
 
       {/* Scrolling content */}
       <div className={c('scrolling-content')}>
-        <IntersectionObserverComponent onIntersection={handleCntDetect}>
+        <IntersectionObserverComponent onIntersected={handleCntDetect}>
           <Paginator
             thresholdOffsetPercent={thresholdOffsetPercent}
-            onPageChange={handlePageChange}>
+            onPageChanged={handlePageChange}>
             {pages?.map(page => {
               const scrollBlocks = page.blocks
-                ?.filter(b => b.depth === 'scroll'
-                  || b.depth === undefined) ?? []
+                ?.filter(b => b.depth === 'scroll' || b.depth === undefined) ?? []
+              // eslint-disable-next-line @typescript-eslint/promise-function-async
               return <>{scrollBlocks.map(b => b.children)}</>
             })}
           </Paginator>
@@ -336,7 +336,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
 
       {/* Bottom bound detection */}
       <div className={c('bottom-bound')}>
-        <IntersectionObserverComponent onIntersection={handleBtmBoundDetect} />
+        <IntersectionObserverComponent onIntersected={handleBtmBoundDetect} />
       </div>
     </ResizeObserverComponent>
   </div>

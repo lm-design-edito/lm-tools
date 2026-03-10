@@ -68,7 +68,7 @@ describe('ResizeObserverComponent', () => {
   it('calls onResize when children change size', async () => {
     const onResize = vi.fn()
     render(<ResizeObserverComponent
-      onResize={onResize}>
+      onResized={onResize}>
       <div style={{ width: 100, height: 50 }} />
     </ResizeObserverComponent>)
     // Trigger manual resize callback

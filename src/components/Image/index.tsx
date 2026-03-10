@@ -8,11 +8,11 @@ import {
 import { clss } from '../../agnostic/css/clss/index.js'
 import {
   Disclaimer,
-  Props as DisclaimerProps
+  type Props as DisclaimerProps
 } from '../Disclaimer/index.js'
 import {
   Theatre,
-  Props as TheatreProps
+  type Props as TheatreProps
 } from '../Theatre/index.js'
 import { mergeClassNames } from '../utils/index.js'
 import type { WithClassName } from '../utils/types.js'
@@ -82,6 +82,7 @@ export const Image: FunctionComponent<Props> = ({
   className,
   ...intrinsicImgAttributes
 }) => {
+  // State
   const [isDisclaimerOn, setIsDisclaimerOn] = useState(
     disclaimer?.isOn === true
     || disclaimer?.defaultIsOn === true
@@ -90,7 +91,6 @@ export const Image: FunctionComponent<Props> = ({
   let shouldDisclaimerBeOn = isDisclaimerOn
   if (disclaimer?.isOn === true) shouldDisclaimerBeOn = true
   if (disclaimer?.isOn === false) shouldDisclaimerBeOn = false
-
   const parsedSources = useMemo(() => {
     if (sources === undefined) return []
     if (typeof sources === 'string') return [{ srcSet: sources }]
@@ -102,15 +102,18 @@ export const Image: FunctionComponent<Props> = ({
     return []
   }, [sources])
 
-  const onDisclaimerDismissClick = useCallback(() => {
+  // User actions handlers
+  const handleDisclaimerDismissClick = useCallback(() => {
+    disclaimer?.onDismissClick?.(isDisclaimerOn)
     setIsDisclaimerOn(false)
   }, [])
 
+  // Rendering
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(), className)
   const rootAttributes = {}
   const pictureClss = c('picture')
-  const imgClss = c('img')
+  const imgClss = c('image')
 
   const sensitiveContent = <picture className={pictureClss}>
     {parsedSources.map((source, index) => <source
@@ -137,7 +140,7 @@ export const Image: FunctionComponent<Props> = ({
     ? <Disclaimer
         {...disclaimer}
         isOn={shouldDisclaimerBeOn}
-        onDismissClick={onDisclaimerDismissClick}>
+        onDismissClick={handleDisclaimerDismissClick}>
         {theatricalContent}
       </Disclaimer>
     : theatricalContent

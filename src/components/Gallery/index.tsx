@@ -11,6 +11,7 @@ import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import { gallery as publicClassName } from '../public-classnames.js'
+import { forceActivateSlot } from './utils.js'
 import cssModule from './styles.module.css'
 
 /**
@@ -39,7 +40,7 @@ import cssModule from './styles.module.css'
  * @property onPrevClick - Called when the "previous" control is clicked. Receives the current active index before navigation occurs.
  * @property onNextClick - Called when the "next" control is clicked. Receives the current active index before navigation occurs.
  * @property onPaginationClick - Called when a pagination item is clicked. Receives the current active index and the target index.
- * @property onSlotChange - Called when the active slot changes due to scrolling. Receives the new active index.
+ * @property onSlotChanged - Called when the active slot changes due to scrolling. Receives the new active index.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Elements rendered as gallery slots. Each child is wrapped in a slot container.
  */
@@ -56,7 +57,7 @@ export type Props = PropsWithChildren<WithClassName<{
   onPrevClick?: (activePos: number) => void
   onNextClick?: (activePos: number) => void
   onPaginationClick?: (activePos: number, targetPos: number) => void
-  onSlotChange?: (activePos: number) => void
+  onSlotChanged?: (activePos: number) => void
 }>>
 
 /**
@@ -85,7 +86,7 @@ export const Gallery: FunctionComponent<Props> = ({
   onPrevClick,
   onNextClick,
   onPaginationClick,
-  onSlotChange,
+  onSlotChanged,
   children,
   className
 }) => {
@@ -95,6 +96,25 @@ export const Gallery: FunctionComponent<Props> = ({
   const [canGoLeft, setCanGoLeft] = useState(false)
   const [canGoRight, setCanGoRight] = useState(false)
   const childrenCount = Children.count(children)
+
+  // State change handlers
+  useEffect(() => {
+    onSlotChanged?.(activeIndex)
+  }, [activeIndex])
+
+  // User actions handlers
+  const handlePrevClick = (): void => {
+    onPrevClick?.(activeIndex)
+    if (active === undefined) forceActivateSlot(scrollerRef.current, activeIndex - 1)
+  }
+  const handleNextClick = (): void => {
+    onNextClick?.(activeIndex)
+    if (active === undefined) forceActivateSlot(scrollerRef.current, activeIndex + 1)
+  }
+  const handlePaginationClick = (pos: number): void => {
+    onPaginationClick?.(activeIndex, pos)
+    if (active === undefined) forceActivateSlot(scrollerRef.current, pos)
+  }
 
   // Scroll position calculation
   useEffect(() => {
@@ -120,7 +140,6 @@ export const Gallery: FunctionComponent<Props> = ({
       setActiveIndex(closestIndex)
       setCanGoLeft(scrollLeft > 0)
       setCanGoRight(scrollLeft + clientWidth < scrollWidth)
-      if (onSlotChange !== undefined) onSlotChange(closestIndex)
     }
     const onScroll = (): void => {
       if (animationFrame !== null) return
@@ -138,47 +157,15 @@ export const Gallery: FunctionComponent<Props> = ({
   useEffect(() => {
     const toActivate = active ?? initActive
     if (toActivate === undefined) return
-    const id = setTimeout(() => forceActivateSlot(toActivate, false), 50)
+    const id = setTimeout(() => forceActivateSlot(scrollerRef.current, toActivate, false), 50)
     return () => clearTimeout(id)
   }, [])
 
   // Sync scroll position to 'active' prop
   useEffect(() => {
     if (active === undefined) return
-    forceActivateSlot(active)
+    forceActivateSlot(scrollerRef.current, active)
   }, [active])
-
-  // Forced slot activation
-  const forceActivateSlot = (
-    targetPos: number,
-    smooth: boolean = true
-  ): void => {
-    const scroller = scrollerRef.current
-    if (scroller === null) return
-    const children = Array.from(scroller.children) as HTMLElement[]
-    if (children[targetPos] === undefined) return
-    const target = children[targetPos]
-    const offset = target.offsetLeft -
-      (scroller.clientWidth / 2 - target.offsetWidth / 2)
-    scroller.scrollTo({
-      left: offset,
-      behavior: smooth ? 'smooth' : 'instant'
-    })
-  }
-
-  // Actions handlers
-  const handlePrevClick = () => {
-    if (onPrevClick !== undefined) onPrevClick(activeIndex)
-    if (active === undefined) forceActivateSlot(activeIndex - 1)
-  }
-  const handleNextClick = () => {
-    if (onNextClick !== undefined) onNextClick(activeIndex)
-    if (active === undefined) forceActivateSlot(activeIndex + 1)
-  }
-  const handlePaginationClick = (pos: number) => {
-    if (onPaginationClick !== undefined) onPaginationClick(activeIndex, pos)
-    if (active === undefined) forceActivateSlot(pos)
-  }
 
   // Rendering
   const c = clss(publicClassName, { cssModule })

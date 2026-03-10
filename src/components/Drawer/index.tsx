@@ -3,7 +3,9 @@ import {
   type JSX,
   type FunctionComponent,
   type ReactNode,
-  useState
+  useState,
+  useRef,
+  useEffect
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
@@ -24,7 +26,7 @@ import {
  * Ignored when `isOpened` is provided.
  * @property isOpened - Controlled open state. When defined, the component
  * behaves as a controlled component and internal state is ignored.
- * @property onToggle - Callback invoked when the open state changes due to
+ * @property onToggled - Callback invoked when the open state changes due to
  * user interaction (only in uncontrolled mode). Receives the next state.
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Drawer content.
@@ -34,7 +36,7 @@ export type Props = PropsWithChildren<WithClassName<{
   closerContent?: ReactNode
   initialIsOpened?: boolean
   isOpened?: boolean
-  onToggle?: (isOpen: boolean) => void
+  onToggled?: (isOpen: boolean) => void
 }>>
 
 /**
@@ -61,28 +63,36 @@ export const Drawer: FunctionComponent<Props> = ({
   closerContent,
   initialIsOpened = false,
   isOpened: isOpenedProp,
-  onToggle,
+  onToggled,
   className,
   children
 }): JSX.Element => {
   // State & handlers
   const [internalIsOpened, setInternalIsOpened] = useState(isOpenedProp ?? initialIsOpened)
   const isOpened = isOpenedProp ?? internalIsOpened
+  const pIsOpened = useRef(isOpened)
   const [{ width, height }, setContentDimensions] = useState<{
     width?: number
     height?: number
   }>({})
+
+  // State change handlers
+  useEffect(() => {
+    if (pIsOpened.current === isOpened) return
+    pIsOpened.current = isOpened
+    onToggled?.(isOpened)
+  }, [isOpened])
+
+  // User action handlers
   const handleOpenerClick = (): void => {
     if (isOpenedProp !== undefined) return
     setInternalIsOpened(true)
-    onToggle?.(true)
   }
   const handleCloserClick = (): void => {
     if (isOpenedProp !== undefined) return
     setInternalIsOpened(false)
-    onToggle?.(false)
   }
-  const handleROCompResize: RSOProps['onResize'] = ({ entry }): void => {
+  const handleROCompResize: RSOProps['onResized'] = ({ entry }): void => {
     const { width, height } = entry?.contentRect ?? {}
     setContentDimensions({ width, height })
   }
@@ -120,7 +130,7 @@ export const Drawer: FunctionComponent<Props> = ({
     <div className={openerClss} onClick={handleOpenerClick}>{openerContent}</div>
     <div className={closerClss} onClick={handleCloserClick}>{closerContent}</div>
     <div className={contentClss}>
-      <ResizeObserverComponent onResize={handleROCompResize}>
+      <ResizeObserverComponent onResized={handleROCompResize}>
         {children}
       </ResizeObserverComponent>
     </div>
