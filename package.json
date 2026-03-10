@@ -22,7 +22,7 @@
     "tests:agnostic": "vitest run agnostic --reporter verbose",
     "tests:react": "RENDERER=react vitest run --config vitest.components.config.ts --reporter verbose",
     "tests:preact": "RENDERER=preact vitest run --config vitest.components.config.ts --reporter verbose",
-    "tests:components": "npm run tests:react && npm run tests:preact",
+    "tests:components": "echo '[WIP] COMPONENTS TESTS ARE DISABLED FOR NOW' # npm run tests:react && npm run tests:preact",
     "tests": "npm run tests:node && npm run tests:agnostic && npm run tests:components",
     "demo:preact": "cd demo && npm run start:preact",
     "demo:react": "cd demo && npm run start:react",

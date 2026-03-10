@@ -24,10 +24,12 @@ import cssModule from './styles.module.css'
  * @property defaultIsOn - Default state for the theatre mode.
  * @property exitOnEscape — When uncontrolled and on, toggles internal state to off when 'esc' key is pressed
  * @property exitOnBgClick — When uncontrolled and on, toggles internal state to off when the background is clicked
- * @property onToggleClick - Callback invoked when either the open or close
- * button is clicked. Receives the theatre state value (`isOn`) at the time of the click,
+ * @property stateHandlers - Callbacks called after the internal state changed
+ * @property stateHandlers.toggled - Callback invoked after the state changed
+ * @property actionHandlers - Callbacks called after a user action on children elements
+ * @property actionHandlers.toggleTrigger - Callback invoked when either the open or close
+ * button is clicked, the 'esc' key pressed or the background clicked. Receives the theatre state value (`isOn`) at the time of the click,
  * i.e. the previous state before the toggle.
- * @property onToggled - Callback invoked after the state changed
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Content rendered both in the default slot and, when theatre
  * mode is active, duplicated inside the stage element.
@@ -39,8 +41,12 @@ export type Props = PropsWithChildren<WithClassName<{
   defaultIsOn?: boolean
   exitOnEscape?: boolean
   exitOnBgClick?: boolean
-  onToggleClick?: (prevIsOn: boolean) => void
-  onToggled?: (isOn: boolean) => void
+  stateHandlers?: {
+    toggled?: (isOn: boolean) => void
+  }
+  actionHandlers?: {
+    toggleTrigger?: (prevIsOn: boolean) => void
+  }
 }>>
 
 /**
@@ -76,8 +82,8 @@ export const Theatre: FunctionComponent<Props> = ({
   defaultIsOn,
   exitOnEscape,
   exitOnBgClick,
-  onToggleClick,
-  onToggled,
+  stateHandlers,
+  actionHandlers,
   children,
   className
 }) => {
@@ -89,27 +95,28 @@ export const Theatre: FunctionComponent<Props> = ({
 
   // Handlers
   const handleCloseBtnClick: MouseEventHandler<HTMLDivElement> = () => {
-    onToggleClick?.(isTheatreOn)
+    actionHandlers?.toggleTrigger?.(isTheatreOn)
     if (isOn === undefined) setInternalIsOn(false)
   }
   const handleOpenBtnClick: MouseEventHandler<HTMLDivElement> = () => {
-    onToggleClick?.(isTheatreOn)
+    actionHandlers?.toggleTrigger?.(isTheatreOn)
     if (isOn === undefined) setInternalIsOn(true)
   }
 
   const handleStageBgClick: MouseEventHandler<HTMLDivElement> = e => {
     if (exitOnBgClick !== true) return
     if (e.target !== stageRef.current) return
+    actionHandlers?.toggleTrigger?.(isTheatreOn)
     if (isOn === undefined) setInternalIsOn(false)
   }
 
   // Effects
   useEffect(() => {
     if (prevIsTheatreOnRef.current !== isTheatreOn) {
-      onToggled?.(isTheatreOn)
+      stateHandlers?.toggled?.(isTheatreOn)
       prevIsTheatreOnRef.current = isTheatreOn
     }
-  }, [isTheatreOn, onToggled])
+  }, [isTheatreOn, stateHandlers])
 
   useEffect(() => {
     if (exitOnEscape === true
@@ -117,6 +124,7 @@ export const Theatre: FunctionComponent<Props> = ({
       || isOn !== undefined) return
     const listener = (e: KeyboardEvent): void => {
       if (e.key !== 'Escape') return
+      actionHandlers?.toggleTrigger?.(isTheatreOn)
       setInternalIsOn(false)
     }
     window.addEventListener('keydown', listener)

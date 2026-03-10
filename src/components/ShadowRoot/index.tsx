@@ -27,8 +27,6 @@ import cssModule from './styles.module.css'
  * assigned to `shadowRoot.adoptedStyleSheets` (if supported by the browser).
  * @property injectedStyles - Raw CSS string injected into the Shadow Root inside a `<style>` element.
  * Useful as a fallback when constructable stylesheets are not used.
- * @property onMounted - Callback invoked once the Shadow Root is created.
- * Receives the created `ShadowRoot` instance.
  * @property children - React children rendered inside the Shadow Root via a React portal.
  */
 export type Props = PropsWithChildren<WithClassName<{
@@ -37,7 +35,6 @@ export type Props = PropsWithChildren<WithClassName<{
   slotAssignment?: 'named' | 'manual'
   adoptedStyleSheets?: CSSStyleSheet[]
   injectedStyles?: string
-  onMounted?: (shadowRoot: ShadowRoot) => void
 }>>
 
 /**
@@ -54,7 +51,6 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
   slotAssignment,
   adoptedStyleSheets,
   injectedStyles,
-  onMounted,
   className,
   children
 }) => {
@@ -71,14 +67,12 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
     }
     if (injectedStyles !== undefined) setStyles(injectedStyles)
     setShadowRoot(root)
-    onMounted?.(root)
   }, [
     mode,
     delegatesFocus,
     slotAssignment,
     adoptedStyleSheets,
-    injectedStyles,
-    onMounted
+    injectedStyles
   ])
 
   // Rendering

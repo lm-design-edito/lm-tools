@@ -37,10 +37,12 @@ import cssModule from './styles.module.css'
  * value instead of internal scroll-derived state. When omitted, the component manages its own
  * active index based on scroll position.
  * @property noSnap - Optional, defines if scroll is free in side the scroller or not (defaults to false)
- * @property onPrevClick - Called when the "previous" control is clicked. Receives the current active index before navigation occurs.
- * @property onNextClick - Called when the "next" control is clicked. Receives the current active index before navigation occurs.
- * @property onPaginationClick - Called when a pagination item is clicked. Receives the current active index and the target index.
- * @property onSlotChanged - Called when the active slot changes due to scrolling. Receives the new active index.
+ * @property stateHandlers - Callbacks called after the state changed
+ * @property stateHandlers.slotChanged - Called when the active slot changes due to scrolling. Receives the new active index.
+ * @property actionHandlers - Callbacks called after a user interaction
+ * @property actionHandlers.prevClick - Called when the "previous" control is clicked. Receives the current active index before navigation occurs.
+ * @property actionHandlers.nextClick - Called when the "next" control is clicked. Receives the current active index before navigation occurs.
+ * @property actionHandlers.paginationClick - Called when a pagination item is clicked. Receives the current active index and the target index.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Elements rendered as gallery slots. Each child is wrapped in a slot container.
  */
@@ -54,10 +56,14 @@ export type Props = PropsWithChildren<WithClassName<{
   initActive?: number
   active?: number
   noSnap?: boolean
-  onPrevClick?: (activePos: number) => void
-  onNextClick?: (activePos: number) => void
-  onPaginationClick?: (activePos: number, targetPos: number) => void
-  onSlotChanged?: (activePos: number) => void
+  stateHandlers?: {
+    slotChanged?: (activePos: number) => void
+  }
+  actionHandlers?: {
+    prevClick?: (activePos: number) => void
+    nextClick?: (activePos: number) => void
+    paginationClick?: (activePos: number, targetPos: number) => void
+  }
 }>>
 
 /**
@@ -83,10 +89,8 @@ export const Gallery: FunctionComponent<Props> = ({
   initActive,
   active,
   noSnap,
-  onPrevClick,
-  onNextClick,
-  onPaginationClick,
-  onSlotChanged,
+  stateHandlers,
+  actionHandlers,
   children,
   className
 }) => {
@@ -99,20 +103,20 @@ export const Gallery: FunctionComponent<Props> = ({
 
   // State change handlers
   useEffect(() => {
-    onSlotChanged?.(activeIndex)
+    stateHandlers?.slotChanged?.(activeIndex)
   }, [activeIndex])
 
   // User actions handlers
   const handlePrevClick = (): void => {
-    onPrevClick?.(activeIndex)
+    actionHandlers?.prevClick?.(activeIndex)
     if (active === undefined) forceActivateSlot(scrollerRef.current, activeIndex - 1)
   }
   const handleNextClick = (): void => {
-    onNextClick?.(activeIndex)
+    actionHandlers?.nextClick?.(activeIndex)
     if (active === undefined) forceActivateSlot(scrollerRef.current, activeIndex + 1)
   }
   const handlePaginationClick = (pos: number): void => {
-    onPaginationClick?.(activeIndex, pos)
+    actionHandlers?.paginationClick?.(activeIndex, pos)
     if (active === undefined) forceActivateSlot(scrollerRef.current, pos)
   }
 

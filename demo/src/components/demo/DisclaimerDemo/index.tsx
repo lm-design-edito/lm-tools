@@ -25,8 +25,8 @@ Supports both controlled (\`isOn\` provided) and uncontrolled modes.
 - Applies \`on\` and \`off\` modifier classes depending on visibility state.`
 
 /* TSX Details */
-const tsxDetails = `/**
- /**
+const tsxDetails = `
+/**
  * Props for the Disclaimer component.
  *
  * @property content - Content displayed inside the disclaimer panel.
@@ -35,9 +35,10 @@ const tsxDetails = `/**
  * @property isOn - Controls the visibility state. When defined, the component
  * behaves as a controlled component.
  * @property defaultIsOn - Default visibility state for uncontrolled mode.
- * @property onDismissed - Callback invoked after the disclaimer is dismissed
- * in uncontrolled mode.
- * @property onDismissClick - Callback invoked before the disclaimer is dismissed
+ * @property stateHandlers - Callbacks invoked after state changes.
+ * @property stateHandlers.toggled - Callback invoked after the disclaimer state changes.
+ * @property actionHandlers - Callbacks invoked before actions are committed.
+ * @property actionHandlers.dismissClick - Callback invoked before the disclaimer is dismissed.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Additional content rendered below the disclaimer panel.
  */
@@ -46,8 +47,12 @@ export type Props = PropsWithChildren<WithClassName<{
   togglerContent?: ReactNode
   isOn?: boolean
   defaultIsOn?: boolean
-  onDismissed?: () => void
-  onDismissClick?: () => void
+  stateHandlers?: {
+    toggled?: (isOn: boolean) => void
+  }
+  actionHandlers?: {
+    dismissClick?: (prevIsOn: boolean) => void
+  }
 }>>`
 
 /* Demo CSS */

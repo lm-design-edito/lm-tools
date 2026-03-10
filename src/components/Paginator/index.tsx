@@ -43,11 +43,12 @@ type DirectionState = 'forwards' | 'backwards' | null
  * the {@link IntersectionObserver} root margin. Determines how far into the viewport
  * a page must be before it is considered `'curr'`. Defaults to `0`.
  *
- * @property onDirectionChanged - Callback invoked when the scroll direction changes.
+ * @property stateHandlers - Callbacks called after the internal state changed
+ * @property stateHandlers.directionChanged - Callback invoked when the scroll direction changes.
  * Receives the new {@link DirectionState}. Only fires when the direction actually
  * changes — repeated scrolls in the same direction do not trigger it again.
  *
- * @property onPageChanged - Callback invoked whenever any page's {@link PageState}
+ * @property stateHandlers.pageChanged - Callback invoked whenever any page's {@link PageState}
  * changes. Receives a flat array of all pages' states, ordered by position.
  *
  * @property className - Optional additional class name(s) applied to the root element.
@@ -55,8 +56,10 @@ type DirectionState = 'forwards' | 'backwards' | null
  */
 export type Props = PropsWithChildren<WithClassName<{
   thresholdOffsetPercent?: number
-  onDirectionChanged?: (direction: DirectionState) => void
-  onPageChanged?: (pages: PageState[]) => void
+  stateHandlers?: {
+    directionChanged?: (direction: DirectionState) => void
+    pageChanged?: (pages: PageState[]) => void
+  }
 }>>
 
 /**
@@ -84,8 +87,7 @@ export type Props = PropsWithChildren<WithClassName<{
  */
 export const Paginator: FunctionComponent<Props> = ({
   thresholdOffsetPercent,
-  onDirectionChanged,
-  onPageChanged,
+  stateHandlers,
   className,
   children
 }) => {
@@ -97,13 +99,13 @@ export const Paginator: FunctionComponent<Props> = ({
 
   // State change handlers
   useEffect(() => {
-    onPageChanged?.(Array
+    stateHandlers?.pageChanged?.(Array
       .from(pagesState)
       .map(([, state]) => state))
   }, [pagesState])
 
   useEffect(() => {
-    onDirectionChanged?.(directionState)
+    stateHandlers?.directionChanged?.(directionState)
   }, [directionState])
 
   // Catch scroll direction listening on scroll events

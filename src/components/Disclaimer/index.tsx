@@ -22,8 +22,10 @@ import cssModule from './styles.module.css'
  * @property isOn - Controls the visibility state. When defined, the component
  * behaves as a controlled component.
  * @property defaultIsOn - Default visibility state for uncontrolled mode.
- * @property onDismissClick - Callback invoked before the disclaimer is dismissed
- * @property onToggled - Callback invoked after the disclaimer state changes.
+ * @property stateHandlers - Callbacks invoked after state changes.
+ * @property stateHandlers.toggled - Callback invoked after the disclaimer state changes.
+ * @property actionHandlers - Callbacks invoked before actions are committed.
+ * @property actionHandlers.dismissClick - Callback invoked before the disclaimer is dismissed.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Additional content rendered below the disclaimer panel.
  */
@@ -32,8 +34,12 @@ export type Props = PropsWithChildren<WithClassName<{
   togglerContent?: ReactNode
   isOn?: boolean
   defaultIsOn?: boolean
-  onDismissClick?: (prevIsOn: boolean) => void
-  onToggled?: (isOn: boolean) => void
+  stateHandlers?: {
+    toggled?: (isOn: boolean) => void
+  }
+  actionHandlers?: {
+    dismissClick?: (prevIsOn: boolean) => void
+  }
 }>>
 
 /**
@@ -55,8 +61,8 @@ export const Disclaimer: FunctionComponent<Props> = ({
   togglerContent,
   isOn: isOnProp,
   defaultIsOn: defaultIsOnProp,
-  onToggled,
-  onDismissClick,
+  stateHandlers,
+  actionHandlers,
   children,
   className
 }): JSX.Element => {
@@ -68,13 +74,13 @@ export const Disclaimer: FunctionComponent<Props> = ({
   // State change handlers
   useEffect(() => {
     if (pIsOn.current === isOn) return
-    onToggled?.(isOn)
+    stateHandlers?.toggled?.(isOn)
     pIsOn.current = isOn
   }, [isOn])
 
   // User actions handlers
   const handleDismissClick = (): void => {
-    onDismissClick?.(isOn)
+    actionHandlers?.dismissClick?.(isOn)
     if (isOnProp !== undefined) return
     setInternalIsOn(false)
   }

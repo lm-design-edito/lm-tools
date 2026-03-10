@@ -26,8 +26,8 @@ import {
  * Ignored when `isOpened` is provided.
  * @property isOpened - Controlled open state. When defined, the component
  * behaves as a controlled component and internal state is ignored.
- * @property onToggled - Callback invoked when the open state changes due to
- * user interaction (only in uncontrolled mode). Receives the next state.
+ * @property stateHandlers - Callbacks invoked after the state changes
+ * @property stateHandlers.toggled - Callbacks invoked after the isOpened state has changed
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Drawer content.
  */
@@ -36,7 +36,9 @@ export type Props = PropsWithChildren<WithClassName<{
   closerContent?: ReactNode
   initialIsOpened?: boolean
   isOpened?: boolean
-  onToggled?: (isOpen: boolean) => void
+  stateHandlers?: {
+    toggled?: (isOpen: boolean) => void
+  }
 }>>
 
 /**
@@ -63,7 +65,7 @@ export const Drawer: FunctionComponent<Props> = ({
   closerContent,
   initialIsOpened = false,
   isOpened: isOpenedProp,
-  onToggled,
+  stateHandlers,
   className,
   children
 }): JSX.Element => {
@@ -80,7 +82,7 @@ export const Drawer: FunctionComponent<Props> = ({
   useEffect(() => {
     if (pIsOpened.current === isOpened) return
     pIsOpened.current = isOpened
-    onToggled?.(isOpened)
+    stateHandlers?.toggled?.(isOpened)
   }, [isOpened])
 
   // User action handlers
