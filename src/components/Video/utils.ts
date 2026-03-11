@@ -9,9 +9,9 @@ export const muteAttributeWorkaround = (
   video: HTMLVideoElement | null,
   shouldMute: boolean,
   setIsSoundOn: Dispatch<SetStateAction<boolean>>
-) => {
+): void => {
   if (video === null) return
-  if (shouldMute !== true) return
+  if (!shouldMute) return
   const currentMuted = video.getAttribute('muted')
   if (currentMuted !== null) return
   video.setAttribute('muted', '')
@@ -22,7 +22,7 @@ export const muteAttributeWorkaround = (
 export const forceMute = (
   video: HTMLVideoElement | null,
   setIsSoundOn: Dispatch<SetStateAction<boolean>>
-) => {
+): void => {
   if (video === null) return
   video.muted = true
   setIsSoundOn(false)
@@ -31,7 +31,7 @@ export const forceMute = (
 export const forceLoud = (
   video: HTMLVideoElement | null,
   setIsSoundOn: Dispatch<SetStateAction<boolean>>
-) => {
+): void => {
   if (video === null) return
   video.muted = false
   setIsSoundOn(true)
@@ -41,7 +41,7 @@ export const forcePlay = async (
   video: HTMLVideoElement | null,
   shouldDisclaimerBeOn: boolean,
   setIsPlaying: Dispatch<SetStateAction<boolean>>
-) => {
+): Promise<void> => {
   if (shouldDisclaimerBeOn) {
     setIsPlaying(false)
     return
@@ -58,7 +58,7 @@ export const forcePlay = async (
 export const forcePause = (
   video: HTMLVideoElement | null,
   setIsPlaying: Dispatch<SetStateAction<boolean>>
-) => {
+): void => {
   if (video === null) {
     setIsPlaying(false)
     return
@@ -75,7 +75,7 @@ export const forceFullScreen = async (
   video: HTMLVideoElement | null,
   shouldDisclaimerBeOn: boolean,
   setIsFullscreen: Dispatch<SetStateAction<boolean>>
-) => {
+): Promise<void> => {
   if (shouldDisclaimerBeOn) return
   if (video === null) {
     setIsFullscreen(false)
@@ -93,7 +93,7 @@ export const forceFullScreen = async (
 export const forceExitFullScreen = async (
   video: HTMLVideoElement | null,
   setIsFullscreen: Dispatch<SetStateAction<boolean>>
-) => {
+): Promise<void> => {
   if (video === null) {
     setIsFullscreen(false)
     return

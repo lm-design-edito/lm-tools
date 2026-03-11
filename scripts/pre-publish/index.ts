@@ -109,14 +109,21 @@ for await (const file of indexJsFiles) {
   const importPath = file.replace(/\/?index.js$/, '')
   const fileAbsPath = path.join(LIB, file)
   const dTsAbsPath = path.join(LIB, file).replace(/index.js$/, 'index.d.ts')
+  const realImportPath = importPath === '' ? '.' : `./${importPath}`
   try {
     await fs.access(dTsAbsPath)
-    exports[importPath === '' ? '.' : `./${importPath}`] = {
+    exports[realImportPath] = {
       import: `./${path.relative(LIB, fileAbsPath)}`,
       types: `./${path.relative(LIB, dTsAbsPath)}`
     }
+    exports[`${realImportPath}/${path.basename(fileAbsPath)}`] = {
+      import: `./${path.relative(LIB, fileAbsPath)}`
+    }
   } catch (err) {
-    exports[importPath === '' ? '.' : `./${importPath}`] = {
+    exports[realImportPath] = {
+      import: `./${path.relative(LIB, fileAbsPath)}`
+    }
+    exports[`${realImportPath}/${path.basename(fileAbsPath)}`] = {
       import: `./${path.relative(LIB, fileAbsPath)}`
     }
   }
@@ -208,4 +215,3 @@ await new Promise(resolve => {
 
 console.log('Pre publish: done')
 process.exit(1)
-

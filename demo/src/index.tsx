@@ -15,6 +15,7 @@ import { GalleryDemo } from './components/demo/GalleryDemo/index.js'
 import { PaginatorDemo } from './components/demo/PaginatorDemo/index.js'
 import { ResizeObserverDemo } from './components/demo/ResizeObserverDemo/index.js'
 import { ScrllgngnDemo } from './components/demo/ScrllgngnDemo/index.js'
+import { SequencerDemo } from './components/demo/SequencerDemo/index.js'
 import { ShadowRootDemo } from './components/demo/ShadowRootDemo/index.js'
 import { SubtitlesDemo } from './components/demo/SubtitlesDemo/index.js'
 import { TheatreDemo } from './components/demo/TheatreDemo/index.js'
@@ -35,6 +36,7 @@ const components: Array<{
   { name: 'Paginator', comp: <PaginatorDemo /> },
   { name: 'ResizeObserver', comp: <ResizeObserverDemo /> },
   { name: 'Scrllgngn', comp: <ScrllgngnDemo /> },
+  { name: 'Sequencer', comp: <SequencerDemo /> },
   { name: 'ShadowRoot', comp: <ShadowRootDemo /> },
   { name: 'Subtitles', comp: <SubtitlesDemo /> },
   { name: 'Theatre', comp: <TheatreDemo /> },
@@ -42,7 +44,7 @@ const components: Array<{
 ]
 
 const App = () => {
-  const initActiveTab = 11
+  const initActiveTab = 9
   const [activeTab, setActiveTab] = useState(initActiveTab)
   return <div className={cssModule['app']}>
     <Gallery

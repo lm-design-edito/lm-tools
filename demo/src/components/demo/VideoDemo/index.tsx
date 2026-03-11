@@ -171,9 +171,9 @@ export const VideoDemo: FunctionComponent = () => {
   const demoProps: Record<string, unknown> = {
     pauseBtnContent: 'Mettre en pause',
     playBtnContent: 'Lire',
-    soundOnBtnContent: 'Activer le son',
-    soundOffBtnContent: 'Désactiver le son',
-    fullscreenBtnContent: 'Passer en plein écran',
+    loudBtnContent: 'Activer le son',
+    muteBtnContent: 'Désactiver le son',
+    fullScreenBtnContent: 'Passer en plein écran',
     sources: [{
       src: 'https://assets-decodeurs.lemonde.fr/redacweb/2507-st-louis/siege.mp4',
       type: 'video/mp4'
