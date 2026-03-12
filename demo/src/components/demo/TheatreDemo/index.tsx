@@ -45,10 +45,12 @@ const tsxDetails = `/**
  * @property defaultIsOn - Default state for the theatre mode.
  * @property exitOnEscape — When uncontrolled and on, toggles internal state to off when 'esc' key is pressed
  * @property exitOnBgClick — When uncontrolled and on, toggles internal state to off when the background is clicked
- * @property onToggleClick - Callback invoked when either the open or close
- * button is clicked. Receives the theatre state value (\`isOn\`) at the time of the click,
+ * @property stateHandlers - Callbacks called after the internal state changed
+ * @property stateHandlers.toggled - Callback invoked after the state changed
+ * @property actionHandlers - Callbacks called after a user action on children elements
+ * @property actionHandlers.toggleClick - Callback invoked when either the open or close
+ * button is clicked, the 'esc' key pressed or the background clicked. Receives the theatre state value (\`isOn\`) at the time of the click,
  * i.e. the previous state before the toggle.
- * @property onToggled - Callback invoked after the state changed
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Content rendered both in the default slot and, when theatre
  * mode is active, duplicated inside the stage element.
@@ -60,8 +62,12 @@ export type Props = PropsWithChildren<WithClassName<{
   defaultIsOn?: boolean
   exitOnEscape?: boolean
   exitOnBgClick?: boolean
-  onToggleClick?: (prevIsOn: boolean) => void
-  onToggled?: (isOn: boolean) => void
+  stateHandlers?: {
+    toggled?: (isOn: boolean) => void
+  }
+  actionHandlers?: {
+    toggleClick?: (prevIsOn: boolean) => void
+  }
 }>>`
 
 /* Demo CSS */
@@ -75,7 +81,7 @@ export const demoStyles = `
   transition: background 0.3s ease-in;
 }
 
-.dsed-theatre__stage {
+.${publicClassName}__stage {
   position: fixed;
   top: env(safe-area-inset-top, 0);
   left: env(safe-area-inset-left, 0);
@@ -91,14 +97,14 @@ export const demoStyles = `
   transition: background 200ms, opacity 200ms;
 }
 
-.${publicClassName}.${publicClassName}--on .dsed-theatre__stage {
+.${publicClassName}.${publicClassName}--on .${publicClassName}__stage {
   background-color: rgb(15, 15, 15, 0.95);
   display: flex;
   opacity: 1;
   pointer-events: auto;
 }
 
-.${publicClassName}.${publicClassName}--on .dsed-theatre__stage > * {
+.${publicClassName}.${publicClassName}--on .${publicClassName}__stage > * {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
@@ -111,7 +117,7 @@ export const demoStyles = `
   pointer-events: none;
   transition: opacity 200ms;
 }
-  
+
 .${publicClassName}.${publicClassName}--on .${publicClassName}__close-btn {
   opacity: 1;
   pointer-events: auto;
@@ -126,8 +132,12 @@ export const TheatreDemo: FunctionComponent = () => {
     closeBtnContent: <button>Fermer le théâtre</button>,
     exitOnEscape: true,
     exitOnBgClick: true,
-    onToggleClick: prev => prev === true && setIsTheatreOn(false),
-    onToggled: isOn => console.log('Theatre toggled. Is on:', isOn)
+    actionHandlers: {
+      toggleClick: prev => prev === true && setIsTheatreOn(false)
+    },
+    stateHandlers: {
+      toggled: isOn => console.log('Theatre toggled. Is on:', isOn)
+    }
   }
 
   return <CompDisplayer

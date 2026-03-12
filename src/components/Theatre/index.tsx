@@ -27,7 +27,7 @@ import cssModule from './styles.module.css'
  * @property stateHandlers - Callbacks called after the internal state changed
  * @property stateHandlers.toggled - Callback invoked after the state changed
  * @property actionHandlers - Callbacks called after a user action on children elements
- * @property actionHandlers.toggleTrigger - Callback invoked when either the open or close
+ * @property actionHandlers.toggleClick - Callback invoked when either the open or close
  * button is clicked, the 'esc' key pressed or the background clicked. Receives the theatre state value (`isOn`) at the time of the click,
  * i.e. the previous state before the toggle.
  * @property className - Optional additional class name(s) applied to the root element.
@@ -45,7 +45,7 @@ export type Props = PropsWithChildren<WithClassName<{
     toggled?: (isOn: boolean) => void
   }
   actionHandlers?: {
-    toggleTrigger?: (prevIsOn: boolean) => void
+    toggleClick?: (prevIsOn: boolean) => void
   }
 }>>
 
@@ -95,18 +95,18 @@ export const Theatre: FunctionComponent<Props> = ({
 
   // Handlers
   const handleCloseBtnClick: MouseEventHandler<HTMLDivElement> = () => {
-    actionHandlers?.toggleTrigger?.(isTheatreOn)
+    actionHandlers?.toggleClick?.(isTheatreOn)
     if (isOn === undefined) setInternalIsOn(false)
   }
   const handleOpenBtnClick: MouseEventHandler<HTMLDivElement> = () => {
-    actionHandlers?.toggleTrigger?.(isTheatreOn)
+    actionHandlers?.toggleClick?.(isTheatreOn)
     if (isOn === undefined) setInternalIsOn(true)
   }
 
   const handleStageBgClick: MouseEventHandler<HTMLDivElement> = e => {
     if (exitOnBgClick !== true) return
     if (e.target !== stageRef.current) return
-    actionHandlers?.toggleTrigger?.(isTheatreOn)
+    actionHandlers?.toggleClick?.(isTheatreOn)
     if (isOn === undefined) setInternalIsOn(false)
   }
 
@@ -124,7 +124,7 @@ export const Theatre: FunctionComponent<Props> = ({
       || isOn !== undefined) return
     const listener = (e: KeyboardEvent): void => {
       if (e.key !== 'Escape') return
-      actionHandlers?.toggleTrigger?.(isTheatreOn)
+      actionHandlers?.toggleClick?.(isTheatreOn)
       setInternalIsOn(false)
     }
     window.addEventListener('keydown', listener)

@@ -20,8 +20,7 @@ and a \`data-active\` attribute on the root element.
 - Previous/next navigation controls,
 - Pagination controls allowing direct slot activation.`
 
-const tsxDetails = `
-/**
+const tsxDetails = `/**
  * Props for the Gallery component.
  *
  * @property paddingLeft - Left padding applied to the first slot. Accepts a number (pixels) or any valid CSS length value.
@@ -52,7 +51,26 @@ const tsxDetails = `
  * @property actionHandlers.paginationClick - Called when a pagination item is clicked. Receives the current active index and the target index.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Elements rendered as gallery slots. Each child is wrapped in a slot container.
- */`
+ */
+export type Props = PropsWithChildren<WithClassName<{
+  paddingLeft?: string | number
+  paddingRight?: string | number
+  padding?: string | number
+  prevButtonContent?: ReactNode
+  nextButtonContent?: ReactNode
+  paginationContent?: ReactNode | ((page: number) => ReactNode)
+  initActive?: number
+  active?: number
+  noSnap?: boolean
+  stateHandlers?: {
+    slotChanged?: (activePos: number) => void
+  }
+  actionHandlers?: {
+    prevClick?: (activePos: number) => void
+    nextClick?: (activePos: number) => void
+    paginationClick?: (activePos: number, targetPos: number) => void
+  }
+}>>`
 
 const demoStyles = `
 .${publicClassName} {
