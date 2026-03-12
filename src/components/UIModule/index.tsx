@@ -8,7 +8,6 @@ import { clss } from '../../agnostic/css/clss/index.js'
 import { unknownToString } from '../../agnostic/errors/unknown-to-string/index.js'
 import { isNonNullObject } from '../../agnostic/objects/is-object/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
-import { wait } from '../../agnostic/time/wait/index.js'
 import { mergeClassNames } from '../utils/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { uiModule as publicClassName } from '../public-classnames.js'
@@ -111,11 +110,11 @@ export const UIModule: FunctionComponent<Props> = ({
   const rootRef = useRef<HTMLDivElement>(null)
   const loadedModuleRef = useRef<ModuleData | Error | null>(null)
   const moduleTargetRef = useRef<Element | null>(null)
-  const setLoadedModule = (data: ModuleData | Error | null) => {
+  const setLoadedModule = (data: ModuleData | Error | null): void => {
     loadedModuleRef.current = data
     _setLoadedModule(data)
   }
-  const setModuleTarget = (data: Element | null) => {
+  const setModuleTarget = (data: Element | null): void => {
     moduleTargetRef.current = data
     _setModuleTarget(data)
   }
@@ -131,40 +130,45 @@ export const UIModule: FunctionComponent<Props> = ({
     if (src === undefined) return
     try {
       setLoading(true)
-      import(src).then(data => {
-        setLoading(false)
-        const errs = {
-          notMod: new Error('Not a module'),
-          initFunc: new Error('Module exported member `init` must be a function'),
-          destroyFunc: new Error('Module exported member `destroy` must be a function'),
-          cssStrArr: new Error('Module exported member `css` must be an array of strings'),
-          updFunc: new Error('Module exported member `update` must be a function'),
-          initRetElt: new Error('Module exported function `init` must return an Element'),
-          initRetFirstElt: new Error('Module exported function `init` must return an array containing an Element in its first position'),
-        }
-        if (!isNonNullObject(data)) return setLoadedModule(errs.notMod)
-        if (!('init' in data)) return setLoadedModule(errs.initFunc)
-        if (typeof data.init !== 'function') return setLoadedModule(errs.initFunc)
-        if (!('destroy' in data) || typeof data.destroy !== 'function') return setLoadedModule(errs.destroyFunc) 
-        if ('css' in data) {
-          if (!Array.isArray(data.css)) return setLoadedModule(errs.cssStrArr) 
-          if (data.css.some(i => typeof i !== 'string')) return setLoadedModule(errs.cssStrArr) 
-        }
-        if ('update' in data && typeof data.update !== 'function') return setLoadedModule(errs.updFunc)
-        const module = data as ModuleData
-        setLoadedModule(module)
-        try {
-          const target = module.init(props ?? {})
-          if (!(target instanceof Element)) return setLoadedModule(errs.initRetElt)
-          setModuleTarget(target)
-        } catch (err) {
+      import(src)
+        .then(data => {
+          setLoading(false)
+          const errs = {
+            notMod: new Error('Not a module'),
+            initFunc: new Error('Module exported member `init` must be a function'),
+            destroyFunc: new Error('Module exported member `destroy` must be a function'),
+            cssStrArr: new Error('Module exported member `css` must be an array of strings'),
+            updFunc: new Error('Module exported member `update` must be a function'),
+            initRetElt: new Error('Module exported function `init` must return an Element'),
+            initRetFirstElt: new Error('Module exported function `init` must return an array containing an Element in its first position')
+          }
+          if (!isNonNullObject(data)) return setLoadedModule(errs.notMod)
+          if (!('init' in data)) return setLoadedModule(errs.initFunc)
+          if (typeof data.init !== 'function') return setLoadedModule(errs.initFunc)
+          if (!('destroy' in data) || typeof data.destroy !== 'function') return setLoadedModule(errs.destroyFunc)
+          if ('css' in data) {
+            if (!Array.isArray(data.css)) return setLoadedModule(errs.cssStrArr)
+            if (data.css.some(i => typeof i !== 'string')) return setLoadedModule(errs.cssStrArr)
+          }
+          if ('update' in data && typeof data.update !== 'function') return setLoadedModule(errs.updFunc)
+          const module = data as ModuleData
+          setLoadedModule(module)
+          try {
+            const target = module.init(props ?? {})
+            if (!(target instanceof Element)) return setLoadedModule(errs.initRetElt)
+            setModuleTarget(target)
+          } catch (err) {
+            setModuleTarget(null)
+            const e = err instanceof Error
+              ? err
+              : new Error(unknownToString(err))
+            setLoadedModule(e)
+          }
+        }).catch(err => {
+          setLoading(false)
+          setLoadedModule(err instanceof Error ? err : new Error(unknownToString(err)))
           setModuleTarget(null)
-          const e = err instanceof Error
-            ? err
-            : new Error(unknownToString(err))
-          setLoadedModule(e)
-        }
-      })
+        })
     } catch (err) {
       if (err instanceof Error) return setLoadedModule(err)
       const errStr = unknownToString(err)
@@ -194,7 +198,7 @@ export const UIModule: FunctionComponent<Props> = ({
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(
     c(null, {
-      'loading': loading,
+      loading,
       'no-module': loadedModule === null,
       'error': loadedModule instanceof Error,
       'loaded': !loading && loadedModule !== null && !(loadedModule instanceof Error),

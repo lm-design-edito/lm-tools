@@ -12,7 +12,7 @@ import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import {
   IntersectionObserverComponent,
-  Props as IOProps
+  type Props as IOProps
 } from '../IntersectionObserver/index.js'
 import { scrollListener as publicClassName } from '../public-classnames.js'
 import { register, unregister, type ScrollState } from './utils.js'
@@ -77,7 +77,7 @@ export const ScrollListener: FunctionComponent<Props> = ({
   useEffect(() => {
     stateHandlers?.scrollDataChanged?.(scrollData)
   }, [scrollData])
-  
+
   // Fx. no dep. - register / unregister to scroll listeners
   useEffect(() => {
     register({ id: privateId, rootRef, setData: setScrollData })
@@ -92,26 +92,28 @@ export const ScrollListener: FunctionComponent<Props> = ({
   }, [startOnVisible, stopOnHidden])
 
   // Rendering
-  const customProps: Record<string, number | string> = Object.entries(scrollData !== undefined ? {
-    // Global
-    [`--${publicClassName}-window-width`]: scrollData.global.win.width,
-    [`--${publicClassName}-window-height`]: scrollData.global.win.height,
-    [`--${publicClassName}-html-width`]: scrollData.global.html.width,
-    [`--${publicClassName}-html-height`]: scrollData.global.html.height,
-    [`--${publicClassName}-scroll-x`]: scrollData.global.scroll.x,
-    [`--${publicClassName}-scroll-y`]: scrollData.global.scroll.y,
-    // Local
-    [`--${publicClassName}-width`]: scrollData.local.width,
-    [`--${publicClassName}-height`]: scrollData.local.height,
-    [`--${publicClassName}-offset-x`]: scrollData.local.offsetX,
-    [`--${publicClassName}-offset-y`]: scrollData.local.offsetY,
-  } : {}).reduce<Record<string, number | string>>((acc, [key, val]) => {
-    return {
+  const customProps: Record<string, number | string> = Object
+    .entries(scrollData !== undefined
+      ? {
+          // Global
+          [`--${publicClassName}-window-width`]: scrollData.global.win.width,
+          [`--${publicClassName}-window-height`]: scrollData.global.win.height,
+          [`--${publicClassName}-html-width`]: scrollData.global.html.width,
+          [`--${publicClassName}-html-height`]: scrollData.global.html.height,
+          [`--${publicClassName}-scroll-x`]: scrollData.global.scroll.x,
+          [`--${publicClassName}-scroll-y`]: scrollData.global.scroll.y,
+          // Local
+          [`--${publicClassName}-width`]: scrollData.local.width,
+          [`--${publicClassName}-height`]: scrollData.local.height,
+          [`--${publicClassName}-offset-x`]: scrollData.local.offsetX,
+          [`--${publicClassName}-offset-y`]: scrollData.local.offsetY
+        }
+      : {}
+    ).reduce((acc, [key, val]) => ({
       ...acc,
       [key]: val,
       [`${key}-px`]: `${val}px`
-    }
-  }, {})
+    }), {})
 
   if (scrollData !== undefined) {
     customProps[`--${publicClassName}-window-scrolled-x-ratio`] = (scrollData.global.scroll.x) / Math.max((scrollData.global.html.width - scrollData.global.win.width), 1)

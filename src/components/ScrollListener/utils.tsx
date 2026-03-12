@@ -40,7 +40,7 @@ export type ScrollState = {
 export const globalDocumentScrollListener = (): GlobalScrollData => {
   const win = {
     height: window.innerHeight,
-    width: window.innerWidth,
+    width: window.innerWidth
   }
   const html = {
     width: document.body.parentElement?.offsetWidth ?? 0,
@@ -88,13 +88,13 @@ export type RegisterEntry = {
   setData: Dispatch<SetStateAction<ScrollState | undefined>>
 }
 
-export const registeredIds: Map<string, RegisterEntry> = new Map()
+export const registeredIds = new Map<string, RegisterEntry>()
 
-export const register = (props: RegisterEntry) => {
+export const register = (props: RegisterEntry): void => {
   const { id, rootRef, setData } = props
   registeredIds.set(id, { id, rootRef, setData })
 }
 
-export const unregister = (id: string) => {
+export const unregister = (id: string): void => {
   registeredIds.delete(id)
 }
