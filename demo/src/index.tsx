@@ -30,6 +30,7 @@ const components: Array<{
   name: string
   comp: ReactNode
 }> = [
+
   { name: 'Disclaimer', comp: <DisclaimerDemo /> },
   { name: 'Drawer', comp: <DrawerDemo /> },
   { name: 'EventListener', comp: <EventListenerDemo /> },
@@ -46,14 +47,11 @@ const components: Array<{
   { name: 'Theatre', comp: <TheatreDemo /> },
   { name: 'UIModule', comp: <UIModuleDemo /> },
   { name: 'Video', comp: <VideoDemo /> },
-  { name: 'BeforeAfter', comp: <BeforeAfterDemo />}
+  { name: 'BeforeAfter', comp: <BeforeAfterDemo /> }
 ]
 
 const App = () => {
   const initActiveTab = components.findIndex(e => e.name === 'ScrollListener')
-
-const App = () => {
-  const initActiveTab = 14
   const [activeTab, setActiveTab] = useState(initActiveTab)
   return <div className={cssModule['app']}>
     <Gallery
