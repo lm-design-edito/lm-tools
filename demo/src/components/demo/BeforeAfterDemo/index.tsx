@@ -10,7 +10,28 @@ import {
 
 const name = 'BeforeAfter'
 
-const description = ``
+const description = `
+Uncontrolled, self-updating before/after slider component. Drives a
+{@link BeforeAfterControlled} instance with internal ratio state and direction,
+supporting both controlled and uncontrolled usage.
+
+Supports mixed controlled/uncontrolled usage: passing \`ratio\` disables internal ratio state,
+but still allows direction and stateHandlers to be used. Passing \`defaultRatio\` sets the initial ratio.
+
+### Forwarded modifiers to {@link BeforeAfterControlled}
+The following \`_modifiers\` are computed and injected automatically:
+- \`horizontal\` — \`true\` when the slider is horizontal.
+- \`vertical\` — \`true\` when the slider is vertical.
+
+### Forwarded CSS custom properties to {@link BeforeAfterControlled}
+- \`--before-after-ratio\` — the current ratio value (0 to 1, fixed to 8 decimals).
+- \`--before-after-ratio-percent\` — the current ratio as a percentage (0 to 100).
+
+@param props - Component properties.
+@see {@link Props}
+@see {@link BeforeAfterControlled}
+@returns A {@link BeforeAfterControlled} with computed ratio and orientation modifiers applied.
+`
 
 /* Demo CSS */
 const demoStyles = `
@@ -59,8 +80,63 @@ const demoStyles = `
 `
 
 /* TSX Details */
+
 const tsxDetails = `
-`
+/**
+ * Props for the {@link BeforeAfterControlled} component.
+ *
+ * This is the low-level controlled interface. All state is driven externally —
+ * the component holds no internal state of its own. For the uncontrolled
+ * version that reacts to external events and derives these props automatically,
+ * see the default export of the parent module.
+ *
+ * @property beforeContent - Content shown "before" (left or top).
+ * @property afterContent - Content shown "after" (right or bottom).
+ * @property ratio - Split ratio (0 to 1). Controlled by parent.
+ * @property actionHandlers - Optional pointer (drag) callbacks:
+ *   - \`pointer\` — called on pointer events with ratio and element info.
+ * @property _modifiers - Orientation modifiers: \`horizontal\` or \`vertical\`.
+ * @property className - Custom CSS class.
+ * @property children - Optional children rendered inside the slider.
+ */
+export type ControlledProps = PropsWithChildren<WithClassName<{
+  beforeContent?: React.ReactNode
+  afterContent?: React.ReactNode
+  ratio?: number
+  actionHandlers?: {
+    pointer?: (
+      e: PointerEvent,
+      targetHRatio: number,
+      targetVRatio: number,
+      ratio: number | null,
+      element: HTMLDivElement
+    ) => void
+  }
+  _modifiers?: {
+    horizontal?: boolean
+    vertical?: boolean
+  }
+  className?: string
+}>>`
+
+/**
+ * Props for the {@link BeforeAfter} component.
+ *
+ * Extends {@link ControlledProps} with uncontrolled ratio and direction management.
+ *
+ * @property defaultRatio - Initial ratio value (0 to 1). Used if `ratio` is not provided. Defaults to `0`.
+ * @property direction - Slider orientation: `'horizontal'` (default) or `'vertical'`.
+ * @property stateHandlers - Optional callbacks invoked when derived state changes:
+ *   - `ratio` — called with the new ratio whenever it changes.
+ */
+export type Props = ControlledProps & {
+  defaultRatio?: number
+  direction?: 'horizontal' | 'vertical'
+  stateHandlers?: {
+    ratio?: (ratio: number) => void
+  }
+}
+
 
 const demoProps1: BeforeAfterProps = {
   defaultRatio: 0.2,

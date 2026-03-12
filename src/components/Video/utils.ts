@@ -125,7 +125,7 @@ export const forceExitFullScreen = async (
   video: HTMLVideoElement | null,
   setIsFullscreen: Dispatch<SetStateAction<boolean>>
 ): Promise<void> => {
-  if (video === null) {
+  if (video === null || document.fullscreenElement !== video) {
     setIsFullscreen(false)
     return
   }

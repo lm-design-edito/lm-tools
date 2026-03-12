@@ -32,6 +32,37 @@ export type Props = WithClassName<{
   }
 }> & HTMLAttributes<HTMLDivElement>
 
+/**
+ * Props for the {@link BeforeAfterControlled} component.
+ *
+ * @property beforeContent - Content shown first.
+ * @property afterContent - Content shown second.
+ * @property ratio - Split ratio (0 to 1). Controlled by parent.
+ * @property actionHandlers - Optional pointer (drag) callbacks:
+ *   - `pointer` — called on pointer events with ratio and element info.
+ * @property _modifiers - Orientation modifiers: `horizontal` or `vertical`.
+ * @property className - Custom CSS class.
+ *
+ * @see {@link BeforeAfter}
+ */
+
+/**
+ * Controlled before/after slider component. Renders two contents separated by a slider,
+ * whose ratio is managed by the parent component. Handles pointer interactions (mouse/touch/pen)
+ * to update the ratio via callbacks.
+ *
+ * ### Forwarded CSS custom properties
+ * - `--before-after-ratio` — the current ratio value (0 to 1, fixed to 8 decimals).
+ * - `--before-after-ratio-percent` — the current ratio as a percentage (0 to 100).
+ *
+ * ### Forwarded data attributes
+ * - `data-ratio` — the current ratio value.
+ *
+ * @param props - Component properties.
+ * @see {@link Props}
+ * @see {@link BeforeAfter}
+ * @returns A div containing used to render "before/after" content, with pointer event handling for ratio updates.
+ */
 export const BeforeAfterControlled: FunctionComponent<Props> = ({
   beforeContent,
   afterContent,
