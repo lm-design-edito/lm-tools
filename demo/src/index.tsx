@@ -1,11 +1,8 @@
-import {
-  type ReactNode,
-  useState
-} from 'react'
+import { type ReactNode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-
 import { Gallery } from '~/components/Gallery/index.js'
-
+// Demo components
+import { BeforeAfterDemo } from './components/demo/BeforeAfterDemo/index.js'
 import { DisclaimerDemo } from './components/demo/DisclaimerDemo/index.js'
 import { DrawerDemo } from './components/demo/DrawerDemo/index.js'
 import { EventListenerDemo } from './components/demo/EventListenerDemo/index.js'
@@ -22,15 +19,14 @@ import { SubtitlesDemo } from './components/demo/SubtitlesDemo/index.js'
 import { TheatreDemo } from './components/demo/TheatreDemo/index.js'
 import { UIModuleDemo } from './components/demo/UIModuleDemo/index.js'
 import { VideoDemo } from './components/demo/VideoDemo/index.js'
-
+// Demo styles
 import cssModule from './styles.module.css'
-import { BeforeAfterDemo } from './components/demo/BeforeAfterDemo/index.js'
 
 const components: Array<{
   name: string
   comp: ReactNode
 }> = [
-
+  { name: 'BeforeAfter', comp: <BeforeAfterDemo /> },
   { name: 'Disclaimer', comp: <DisclaimerDemo /> },
   { name: 'Drawer', comp: <DrawerDemo /> },
   { name: 'EventListener', comp: <EventListenerDemo /> },
@@ -46,12 +42,11 @@ const components: Array<{
   { name: 'Subtitles', comp: <SubtitlesDemo /> },
   { name: 'Theatre', comp: <TheatreDemo /> },
   { name: 'UIModule', comp: <UIModuleDemo /> },
-  { name: 'Video', comp: <VideoDemo /> },
-  { name: 'BeforeAfter', comp: <BeforeAfterDemo /> }
+  { name: 'Video', comp: <VideoDemo /> }
 ]
 
 const App = () => {
-  const initActiveTab = components.findIndex(e => e.name === 'ScrollListener')
+  const initActiveTab = components.findIndex(e => e.name === 'BeforeAfter')
   const [activeTab, setActiveTab] = useState(initActiveTab)
   return <div className={cssModule['app']}>
     <Gallery
