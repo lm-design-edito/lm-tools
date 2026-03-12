@@ -24,6 +24,7 @@ import { UIModuleDemo } from './components/demo/UIModuleDemo/index.js'
 import { VideoDemo } from './components/demo/VideoDemo/index.js'
 
 import cssModule from './styles.module.css'
+import { BeforeAfterDemo } from './components/demo/BeforeAfterDemo/index.js'
 
 const components: Array<{
   name: string
@@ -44,11 +45,15 @@ const components: Array<{
   { name: 'Subtitles', comp: <SubtitlesDemo /> },
   { name: 'Theatre', comp: <TheatreDemo /> },
   { name: 'UIModule', comp: <UIModuleDemo /> },
-  { name: 'Video', comp: <VideoDemo /> }
+  { name: 'Video', comp: <VideoDemo /> },
+  { name: 'BeforeAfter', comp: <BeforeAfterDemo />}
 ]
 
 const App = () => {
   const initActiveTab = components.findIndex(e => e.name === 'ScrollListener')
+
+const App = () => {
+  const initActiveTab = 14
   const [activeTab, setActiveTab] = useState(initActiveTab)
   return <div className={cssModule['app']}>
     <Gallery

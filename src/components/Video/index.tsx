@@ -370,28 +370,28 @@ export const Video: FunctionComponent<Props> = ({
   ])
 
   useEffect(() => {
-    if (stateHandlers?.isPlaying) stateHandlers.isPlaying(isPlaying)
-  }, [isPlaying])
+    stateHandlers?.isPlaying?.(isPlaying)
+  }, [isPlaying, stateHandlers?.isPlaying])
 
   useEffect(() => {
-    if (stateHandlers?.isFullScreen) stateHandlers.isFullScreen(isFullScreen)
-  }, [isFullScreen])
+    stateHandlers?.isFullScreen?.(isFullScreen)
+  }, [isFullScreen, stateHandlers?.isFullScreen])
 
   useEffect(() => {
-    if (stateHandlers?.isLoud) stateHandlers.isLoud(isLoud)
-  }, [isLoud])
+    stateHandlers?.isLoud?.(isLoud)
+  }, [isLoud, stateHandlers?.isLoud])
 
   useEffect(() => {
-    if (stateHandlers?.volume) stateHandlers.volume(volume)
-  }, [volume])
+    stateHandlers?.volume?.(volume)
+  }, [volume, stateHandlers?.volume])
 
   useEffect(() => {
-    if (stateHandlers?.playbackRate) stateHandlers.playbackRate(playbackRate)
-  }, [playbackRate])
+    stateHandlers?.playbackRate?.(playbackRate)
+  }, [playbackRate, stateHandlers?.playbackRate])
 
   useEffect(() => {
-    if (stateHandlers?.currentTime) stateHandlers.currentTime(currentTime)
-  }, [currentTime])
+    stateHandlers?.currentTime?.(currentTime)
+  }, [currentTime, stateHandlers?.currentTime])
 
   // Parsing sources & tracks props
   const parsedSources = useMemo(() => {
