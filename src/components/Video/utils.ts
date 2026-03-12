@@ -37,6 +37,27 @@ export const forceLoud = (
   setIsSoundOn(true)
 }
 
+export const forceVolume = (
+  video: HTMLVideoElement | null,
+  volumePercent: number,
+  setVolume: Dispatch<SetStateAction<number>>
+): void => {
+  if (video === null) return
+  const volume = volumePercent / 100
+  video.volume = volume
+  setVolume(volume)
+}
+
+export const forceCurrentTime = (
+  video: HTMLVideoElement | null,
+  time: number,
+  setCurrentTime: Dispatch<SetStateAction<number>>
+): void => {
+  if (video === null) return
+  video.currentTime = time
+  setCurrentTime(time)
+}
+
 export const forcePlay = async (
   video: HTMLVideoElement | null,
   shouldDisclaimerBeOn: boolean,
@@ -69,6 +90,16 @@ export const forcePause = (
   } catch (e) {
     console.error(e)
   }
+}
+
+export const forcePlaybackRate = (
+  video: HTMLVideoElement | null,
+  rate: number,
+  setPlaybackRate: Dispatch<SetStateAction<number>>
+): void => {
+  if (video === null) return
+  video.playbackRate = rate
+  setPlaybackRate(rate)
 }
 
 export const forceFullScreen = async (
@@ -138,4 +169,16 @@ export function formatTime (ms: number, format: string, fps: number = 25): strin
       format
     )
   return result
+}
+
+export const getTimelineClickProgress = (
+  event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  timeline: HTMLDivElement | null,
+  video: HTMLVideoElement | null
+): number => {
+  if (video === null || timeline === null) return 0
+  const timelineRect = event.currentTarget.getBoundingClientRect()
+  const position = event.clientX - timelineRect.left
+  const progress = Math.min(1, Math.max(0, position / timelineRect.width))
+  return progress
 }

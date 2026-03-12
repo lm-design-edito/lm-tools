@@ -129,6 +129,25 @@ export type Props = PropsWithChildren<WithClassName<{
   autoPauseWhenHidden?: boolean
   autoLoudWhenVisible?: boolean
   autoMuteWhenHidden?: boolean
+  actionHandlers?: {
+    playButtonClick?: (e: MouseEvent<HTMLDivElement>, isPlaying: boolean, videoEl: HTMLVideoElement | null) => void
+    pauseButtonClick?: (e: MouseEvent<HTMLDivElement>, isPlaying: boolean, videoEl: HTMLVideoElement | null) => void
+    loudButtonClick?: (e: MouseEvent<HTMLDivElement>, isLoud: boolean, videoEl: HTMLVideoElement | null) => void
+    muteButtonClick?: (e: MouseEvent<HTMLDivElement>, isLoud: boolean, videoEl: HTMLVideoElement | null) => void
+    fullScreenButtonClick?: (e: MouseEvent<HTMLDivElement>, isFullScreen: boolean, videoEl: HTMLVideoElement | null) => void
+    volumeRangeChange?: (e: React.SyntheticEvent<HTMLInputElement>, targetVolume: number, currentVolume: number, videoEl: HTMLVideoElement | null) => void
+    rateRangeChange?: (e: React.SyntheticEvent<HTMLInputElement>, targetRate: number, currentRate: number, videoEl: HTMLVideoElement | null) => void
+    timelineClick?: (e: React.MouseEvent<HTMLDivElement>, time: number, currentTime: number, videoEl: HTMLVideoElement | null) => void
+  },
+  stateHandlers?: {
+    playStateChange?: (isPlaying: boolean) => void
+    soundStateChange?: (isLoud: boolean) => void
+    fullScreenStateChange?: (isFullScreen: boolean) => void
+    volumeChange?: (volume: number) => void
+    playbackRateChange?: (rate: number) => void
+    timeUpdate?: (currentTime: number, totalTime: number) => void
+  }
+}>>
 }> & VideoHTMLAttributes<HTMLVideoElement>>`
 
 
@@ -139,6 +158,7 @@ const demoStyles = `
   width: 100%;
   height: 10px;
   background-color: lightgray;
+  cursor: pointer;
 }
 
 .${publicClassName}__timeline:before {
@@ -201,6 +221,24 @@ export const VideoDemo: FunctionComponent = () => {
       togglerContent: <button>Cliquer pour afficher.</button>,
       defaultIsOn: disclaimerDefaultIsOn,
       isOn: disclaimerIsOn
+    },
+    actionHandlers: {
+      playButtonClick: (e, isPlaying, videoEl) => console.log('play button clicked', { isPlaying, videoEl }),
+      pauseButtonClick: (e, isPlaying, videoEl) => console.log('pause button clicked', { isPlaying, videoEl }),
+      loudButtonClick: (e, isLoud, videoEl) => console.log('loud button clicked', { isLoud, videoEl }),
+      muteButtonClick: (e, isLoud, videoEl) => console.log('mute button clicked', { e, isLoud, videoEl }),
+      fullScreenButtonClick: (e, isFullScreen, videoEl) => console.log('fullscreen button clicked', {  e, isFullScreen, videoEl }),
+      volumeRangeChange: (e, targetVolume, currentVolume, videoEl) => console.log('volume change', {  e, targetVolume, currentVolume, videoEl }),
+      rateRangeChange: (e, targetRate, currentRate, videoEl) => console.log('rate change', { e, targetRate, currentRate, videoEl }),
+      timelineClick: (e, time, currentTime, videoEl) => console.log('timeline click', { e, time, currentTime, videoEl })
+    },
+    stateHandlers: {
+      isPlaying: (isPlaying) => console.log('IsPlaying change', { isPlaying }),
+      isLoud: (isLoud) => console.log('isLoud change', { isLoud }),
+      isFullScreen: (isFullScreen) => console.log('isFullScreen change', { isFullScreen }),
+      volume: (volume) => console.log('Volume change', { volume }),
+      playbackRate: (rate) => console.log('PlaybackRate change', { rate }),
+      currentTime: (currentTime) => console.log('currentTime change', { currentTime })
     }
   } satisfies VideoProps
   return <CompDisplayer

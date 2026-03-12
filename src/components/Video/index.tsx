@@ -30,7 +30,11 @@ import {
   forceLoud,
   forceMute,
   forceFullScreen,
-  forceExitFullScreen
+  forceExitFullScreen,
+  forceVolume,
+  forceCurrentTime,
+  getTimelineClickProgress,
+  forcePlaybackRate
 } from './utils.js'
 import cssModule from './styles.module.css'
 
@@ -60,6 +64,61 @@ type TrackData = {
   srclang?: string
   label?: string
   default?: boolean
+}
+
+type ActionHandlersProps = {
+  playButtonClick?: (
+    e: React.MouseEvent<HTMLButtonElement>,
+    isPlaying: boolean,
+    video: HTMLVideoElement | null
+  ) => void
+  pauseButtonClick?: (
+    e: React.MouseEvent<HTMLButtonElement>,
+    isPlaying: boolean,
+    video: HTMLVideoElement | null
+  ) => void
+  loudButtonClick?: (
+    e: React.MouseEvent<HTMLButtonElement>,
+    isLoud: boolean,
+    video: HTMLVideoElement | null
+  ) => void
+  muteButtonClick?: (
+    e: React.MouseEvent<HTMLButtonElement>,
+    isLoud: boolean,
+    video: HTMLVideoElement | null
+  ) => void
+  volumeRangeChange?: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    targetRangeVolume: number,
+    volume: number,
+    video: HTMLVideoElement | null
+  ) => void
+  fullscreenButtonClick?: (
+    e: React.MouseEvent<HTMLButtonElement>,
+    isFullscreen: boolean,
+    video: HTMLVideoElement | null
+  ) => void
+  rateRangeChange?: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    targetRangeRate: number,
+    rate: number,
+    video: HTMLVideoElement | null
+  ) => void
+  timelineClick?: (
+    e: React.MouseEvent<HTMLDivElement>,
+    targetTimeSec: number,
+    timeSec: number,
+    video: HTMLVideoElement | null
+  ) => void
+}
+
+type StateHandlersProps = {
+  isPlaying?: (isPlaying: boolean) => void
+  isFullScreen?: (isFullScreen: boolean) => void
+  isLoud?: (isLoud: boolean) => void
+  volume?: (volume: number) => void
+  currentTime?: (currentTime: number) => void
+  playbackRate?: (rate: number) => void
 }
 
 /**
@@ -113,6 +172,8 @@ export type Props = PropsWithChildren<WithClassName<{
   autoPauseWhenHidden?: boolean
   autoLoudWhenVisible?: boolean
   autoMuteWhenHidden?: boolean
+  actionHandlers: ActionHandlersProps
+  stateHandlers: StateHandlersProps
 }> & VideoHTMLAttributes<HTMLVideoElement>>
 
 /**
@@ -164,6 +225,8 @@ export const Video: FunctionComponent<Props> = ({
   autoPauseWhenHidden,
   autoLoudWhenVisible,
   autoMuteWhenHidden,
+  actionHandlers,
+  stateHandlers,
   children,
   className,
   ...intrinsicVideoAttributes
@@ -205,84 +268,82 @@ export const Video: FunctionComponent<Props> = ({
     setVolume(video.volume)
     setIsLoud(!video.muted)
     intrinsicVideoAttributes.onLoadedMetadata?.(e)
-  }, [])
+  }, [intrinsicVideoAttributes.onLoadedMetadata, intrinsicVideoAttributes.muted])
 
   const handleVolumeChangeEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
-    const { volume } = e.currentTarget
+    const volume = e.currentTarget.volume
     setVolume(volume)
     intrinsicVideoAttributes.onVolumeChange?.(e)
-  }, [])
+  }, [intrinsicVideoAttributes.onVolumeChange])
 
   const handlePlayEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     setIsPlaying(true)
     setHasBeenAutoPlayed(true)
     intrinsicVideoAttributes.onPlay?.(e)
-  }, [])
+  }, [intrinsicVideoAttributes.onPlay])
 
   const handlePauseEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     setIsPlaying(false)
     intrinsicVideoAttributes.onPause?.(e)
-  }, [])
+  }, [intrinsicVideoAttributes.onPause])
 
   const handleRateChangeEvent = useCallback((e: React.ChangeEvent<HTMLVideoElement>) => {
-    const rate = e.currentTarget.playbackRate
-    setPlaybackRate(rate)
+    const currentRate = e.currentTarget.playbackRate
+    setPlaybackRate(currentRate)
     intrinsicVideoAttributes.onRateChange?.(e)
-  }, [])
+  }, [intrinsicVideoAttributes.onRateChange])
 
   const handleTimeUpdateEvent = useCallback((e: React.ChangeEvent<HTMLVideoElement>) => {
     const currentTime = e.currentTarget.currentTime
     setCurrentTime(currentTime)
     intrinsicVideoAttributes?.onTimeUpdate?.(e)
-  }, [totalTime])
+  }, [totalTime, intrinsicVideoAttributes.onTimeUpdate])
 
   // User action handlers
-  const handleVolumeRangeChange = useCallback((e: React.SyntheticEvent<HTMLInputElement>) => {
-    // [WIP] faire un forceVolume dans utils.ts
-    const volumePercent = Number(e.currentTarget.value)
-    const volume = volumePercent / 100
-    if (videoRef.current === null) return
-    videoRef.current.volume = volume
-  }, [])
+  const handleVolumeRangeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const targetVolume = Number(e.currentTarget.value)
+    actionHandlers?.volumeRangeChange?.(e, targetVolume, volume, videoRef.current)
+    forceVolume(videoRef.current, targetVolume, setVolume)
+  }, [actionHandlers?.volumeRangeChange, volume])
 
-  const handleLoudButtonClick = useCallback(() => {
+  const handleLoudButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    actionHandlers?.loudButtonClick?.(e, isLoud, videoRef.current)
     forceLoud(videoRef.current, setIsLoud)
-  }, [forceLoud])
+  }, [actionHandlers?.loudButtonClick, isLoud])
 
-  const handleMuteButtonClick = useCallback(() => {
+  const handleMuteButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    actionHandlers?.muteButtonClick?.(e, isLoud, videoRef.current)
     forceMute(videoRef.current, setIsLoud)
-  }, [])
+  }, [actionHandlers?.muteButtonClick, isLoud])
 
-  const handlePlayButtonClick = useCallback(() => {
+  const handlePlayButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    actionHandlers?.playButtonClick?.(e, isPlaying, videoRef.current)
     void forcePlay(videoRef.current, shouldDisclaimerBeOn, setIsPlaying)
-  }, [forcePlay, shouldDisclaimerBeOn])
+  }, [actionHandlers?.playButtonClick, isPlaying, shouldDisclaimerBeOn])
 
-  const handlePauseButtonClick = useCallback(() => {
+  const handlePauseButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    actionHandlers?.pauseButtonClick?.(e, isPlaying, videoRef.current)
     forcePause(videoRef.current, setIsPlaying)
-  }, [])
+  }, [actionHandlers?.pauseButtonClick, isPlaying])
 
-  const handleFullScreenButtonClick = useCallback(() => {
+  const handleFullScreenButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    actionHandlers?.fullscreenButtonClick?.(e, isFullScreen, videoRef.current)
     if (isFullScreen) void forceExitFullScreen(videoRef.current, setIsFullScreen)
     else void forceFullScreen(videoRef.current, shouldDisclaimerBeOn, setIsFullScreen)
   }, [isFullScreen, shouldDisclaimerBeOn])
 
   const handleRateRangeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    // [WIP] faire un forceRate dans utils.ts
-    // Penser à mettre à jour le tableau de deps
     const rate = Number(e.currentTarget.value)
-    if (videoRef.current === null) return
-    videoRef.current.playbackRate = rate
-  }, [])
+    actionHandlers?.rateRangeChange?.(e, rate, playbackRate, videoRef.current)
+    forcePlaybackRate(videoRef.current, rate, setPlaybackRate)
+  }, [actionHandlers?.rateRangeChange, playbackRate])
 
   const handleTimelineClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // [WIP] faire un forceCurrentTime dans utils.ts
-    // Penser à mettre à jour le tableau de deps
-    if (videoRef.current === null) return
-    const timelineRect = e.currentTarget.getBoundingClientRect()
-    const position = e.clientX - timelineRect.left
-    const progress = Math.min(1, Math.max(0, position / timelineRect.width))
-    videoRef.current.currentTime = progress * totalTime
-  }, [])
+    const progress = getTimelineClickProgress(e, e.currentTarget, videoRef.current)
+    const time = progress * totalTime
+    actionHandlers?.timelineClick?.(e, time, currentTime, videoRef.current)
+    forceCurrentTime(videoRef.current, time, setCurrentTime)
+  }, [actionHandlers?.timelineClick, totalTime, currentTime])
 
   // Disclaimer handlers
   const handleDisclaimerDismiss = useCallback(() => {
@@ -307,6 +368,30 @@ export const Video: FunctionComponent<Props> = ({
     intrinsicVideoAttributes,
     hasBeenAutoPlayed
   ])
+
+  useEffect(() => {
+    if (stateHandlers?.isPlaying) stateHandlers.isPlaying(isPlaying)
+  }, [isPlaying])
+
+  useEffect(() => {
+    if (stateHandlers?.isFullScreen) stateHandlers.isFullScreen(isFullScreen)
+  }, [isFullScreen])
+
+  useEffect(() => {
+    if (stateHandlers?.isLoud) stateHandlers.isLoud(isLoud)
+  }, [isLoud])
+
+  useEffect(() => {
+    if (stateHandlers?.volume) stateHandlers.volume(volume)
+  }, [volume])
+
+  useEffect(() => {
+    if (stateHandlers?.playbackRate) stateHandlers.playbackRate(playbackRate)
+  }, [playbackRate])
+
+  useEffect(() => {
+    if (stateHandlers?.currentTime) stateHandlers.currentTime(currentTime)
+  }, [currentTime])
 
   // Parsing sources & tracks props
   const parsedSources = useMemo(() => {
@@ -356,7 +441,7 @@ export const Video: FunctionComponent<Props> = ({
     'data-total-time-ms': totalTimeMs
   }
   const rootStyles: Record<string, string> = {
-    [`--${publicClassName}-current-time-ratio`]: (currentTime / totalTime).toFixed(8)
+    [`--${publicClassName}-elapsed-time-ratio`]: (currentTime / totalTime).toFixed(8)
   }
 
   const videoClss = c('video')
