@@ -128,6 +128,24 @@ for await (const file of indexJsFiles) {
     }
   }
 }
+const typesJsFiles = fs.glob('**/types.js', { cwd: LIB })
+for await (const file of typesJsFiles) {
+  const importPath = file.replace(/\/?types.js$/, '')
+  const fileAbsPath = path.join(LIB, file)
+  const dTsAbsPath = path.join(LIB, file).replace(/types.js$/, 'types.d.ts')
+  const realImportPath = importPath === '' ? '.' : `./${importPath}`
+  try {
+    await fs.access(dTsAbsPath)
+    exports[`${realImportPath}/${path.basename(fileAbsPath)}`] = {
+      import: `./${path.relative(LIB, fileAbsPath)}`,
+      types: `./${path.relative(LIB, dTsAbsPath)}`
+    }
+  } catch (err) {
+    exports[`${realImportPath}/${path.basename(fileAbsPath)}`] = {
+      import: `./${path.relative(LIB, fileAbsPath)}`
+    }
+  }
+}
 const exportsSorted = Object.entries(exports).sort((a, b) => {
   const aKey = a[0]
   const bKey = b[0]
