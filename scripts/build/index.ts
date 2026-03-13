@@ -4,7 +4,7 @@ import path from 'node:path'
 import process from 'node:process'
 import { camelCase } from 'change-case'
 import esbuild from 'esbuild'
-import { COMPONENTS, AGNOSTIC, NODE, LIB } from '../_config/index.js'
+import { COMPONENTS, AGNOSTIC, NODE, LIB, externalDeps } from '../_config/index.js'
 import * as Subpaths from '../../src/node/files/subpaths/index.js'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -53,7 +53,7 @@ await new Promise((resolve, reject) => {
     sourcemap: false,
     format: 'esm',
     target: ['esnext'],
-    external: ['*'],
+    external: [...externalDeps],
     logLevel: 'info'
   }).then(() => {
     resolve(true)
