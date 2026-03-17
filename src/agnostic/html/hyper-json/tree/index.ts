@@ -15,7 +15,6 @@ import { array } from '../smart-tags/isolated/array/index.js'
 import { boolean } from '../smart-tags/isolated/boolean/index.js'
 import { element } from '../smart-tags/isolated/element/index.js'
 import { get } from '../smart-tags/isolated/get/index.js'
-import { global } from '../smart-tags/isolated/global/index.js'
 import { guess } from '../smart-tags/isolated/guess/index.js'
 import { nodelist } from '../smart-tags/isolated/nodelist/index.js'
 import { nullFunc } from '../smart-tags/isolated/null/index.js'
@@ -84,7 +83,6 @@ import { trim } from '../smart-tags/coalesced/trim/index.js'
 export namespace Tree {
   export class Tree {
     readonly node: Element | Text
-    readonly options: Types.Tree.Options
     readonly parent: Tree | null
     readonly parents: Tree[]
     readonly pathFromParent: string | number | null
@@ -112,34 +110,23 @@ export namespace Tree {
     static preserveAttribute = '_preserve'
     static literalAttribute = '_literal'
 
-    static defaultOptions: Types.Tree.Options = {
-      globalObject: {},
-      logger: null,
-      loggerThread: 'hyperjson'
-    }
-
-    static from (
-      nodes: Element[],
-      options: Types.Tree.Options): Tree {
+    static from (nodes: Element[]): Tree {
       const merged = Utils.Tree.mergeNodes(nodes)
-      return new Tree(merged, null, null, options)
+      return new Tree(merged, null, null)
     }
 
     constructor (
       node: Element | Text,
       parent: null,
-      pathFromParent: null,
-      options?: Types.Tree.Options)
+      pathFromParent: null)
     constructor (
       node: Element | Text,
       parent: Tree,
-      pathFromParent: string | number,
-      options?: Types.Tree.Options)
+      pathFromParent: string | number)
     constructor (
       node: Element | Text,
       parent: Tree | null,
-      pathFromParent: string | number | null,
-      options?: Types.Tree.Options) {
+      pathFromParent: string | number | null) {
       const { Element, Text, document } = Window.get()
 
       // Bounds
@@ -155,9 +142,6 @@ export namespace Tree {
 
       // node
       this.node = node
-
-      // options
-      this.options = options ?? Tree.defaultOptions
 
       // parent, parents, pathFromParent, root, isRoot
       if (parent !== null && pathFromParent !== null) {
@@ -207,7 +191,7 @@ export namespace Tree {
 
       // smartTagsRegister
       this.smartTagsRegister = new Map<string, Types.SmartTags.SmartTag<any, any, any>>([
-        any, array, boolean, element, get, global, guess, nodelist, nullFunc, number, record, ref, string, text, add, addclass,
+        any, array, boolean, element, get, guess, nodelist, nullFunc, number, record, ref, string, text, add, addclass,
         and, append, at, call, clone, deleteproperties, equals, getattribute, getproperties, getproperty, hjparse, hjstringify,
         ifFunc, initialize, join, length, map, negate, notrailing, or, pickrandom, print, populate, push, pusheach,
         recordtoarray, removeattribute, removeclass, renameproperty, replace, select, set, setattribute, spread,
@@ -290,7 +274,7 @@ export namespace Tree {
             const returnedChildNode = document.createTextNode(textContent)
             mutableSubtrees.set(
               positionnedChildrenCount,
-              new Tree(returnedChildNode, this, positionnedChildrenCount, this.options)
+              new Tree(returnedChildNode, this, positionnedChildrenCount)
             )
             positionnedChildrenCount += 1
           } else {
@@ -298,13 +282,13 @@ export namespace Tree {
             if (propertyName === null) {
               mutableSubtrees.set(
                 positionnedChildrenCount,
-                new Tree(childNode, this, positionnedChildrenCount, this.options)
+                new Tree(childNode, this, positionnedChildrenCount)
               )
               positionnedChildrenCount += 1
             } else {
               mutableSubtrees.set(
                 propertyName,
-                new Tree(childNode, this, propertyName, this.options)
+                new Tree(childNode, this, propertyName)
               )
             }
           }

@@ -1,5 +1,4 @@
 import type * as Outcome from '../../../misc/outcome/index.js'
-import { type Logger } from '../../../misc/logs/logger/index.js'
 import { type Tree as TreeNamespace } from '../tree/index.js'
 import { type Transformer } from '../transformer/index.js'
 import { type Method } from '../method/index.js'
@@ -110,12 +109,6 @@ export namespace Types {
     export type ValueTypeFromNames<N extends ValueTypeName[]> = ValuesTypesNamesIndex[N[number]]
 
     export type Resolver = (path: TreeNamespace.Tree['path']) => TreeNamespace.Tree | undefined
-
-    export type Options = {
-      globalObject: RestingRecordValue
-      logger: Logger | null
-      loggerThread: string | undefined
-    }
 
     export type Serialized = { type: 'null', value: null }
     | { type: 'boolean', value: boolean }

@@ -22,3 +22,5 @@ export namespace HyperJson {
   export import Types = TypesNamespace
   export import Utils = UtilsNamespace
 }
+
+export const parse = TreeNamespace.Tree.from

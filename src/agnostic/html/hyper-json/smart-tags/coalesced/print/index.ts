@@ -21,8 +21,6 @@ export const print = SmartTags.makeSmartTag<Main, Args, Output>({
   },
   argsValueCheck: a => Outcome.makeSuccess(a),
   func: (main, args, details) => {
-    // [WIP] maybe use the logger instead ?
-    // Or think of a crossenv way to perform this ?
     console.group('print')
     console.log('Main:', main)
     console.log('Args:', ...args)
