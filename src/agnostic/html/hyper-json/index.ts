@@ -23,4 +23,4 @@ export namespace HyperJson {
   export import Utils = UtilsNamespace
 }
 
-export const parse = TreeNamespace.Tree.from
+export const parse: ((this: void, nodes: Element[]) => TreeNamespace.Tree) = TreeNamespace.Tree.from
