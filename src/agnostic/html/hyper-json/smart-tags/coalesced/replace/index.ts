@@ -15,7 +15,7 @@ export const replace = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'replace',
   defaultMode: 'coalescion',
   isolationInitType: 'array',
-  mainValueCheck: m => Outcome.makeSuccess(m),
+  mainValueCheck: SmartTags.expectNotUndef,
   argsValueCheck: a => {
     const { makeFailure, makeSuccess } = Outcome
     const { getType, typeCheckMany } = Utils.Tree.TypeChecks

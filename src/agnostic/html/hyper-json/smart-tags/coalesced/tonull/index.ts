@@ -11,7 +11,7 @@ export const tonull = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'tonull',
   defaultMode: 'coalescion',
   isolationInitType: 'array',
-  mainValueCheck: m => Outcome.makeSuccess(m),
+  mainValueCheck: SmartTags.expectNotUndef,
   argsValueCheck: a => Utils.SmartTags.expectEmptyArgs(a),
   func: () => Outcome.makeSuccess(null)
 })

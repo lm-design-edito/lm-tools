@@ -12,7 +12,7 @@ export const torecord = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'torecord',
   defaultMode: 'coalescion',
   isolationInitType: 'array',
-  mainValueCheck: m => Outcome.makeSuccess(m),
+  mainValueCheck: SmartTags.expectNotUndef,
   argsValueCheck: a => Utils.SmartTags.expectEmptyArgs(a),
   func: main => Outcome.makeSuccess(Cast.toRecord(main))
 })

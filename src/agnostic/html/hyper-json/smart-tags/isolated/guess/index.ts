@@ -13,7 +13,7 @@ export const guess = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'guess',
   defaultMode: 'isolation',
   isolationInitType: 'string',
-  mainValueCheck: m => Outcome.makeSuccess(m),
+  mainValueCheck: SmartTags.expectNotUndef,
   argsValueCheck: a => Outcome.makeSuccess(a),
   func: (main, args) => {
     const { typeCheck } = Utils.Tree.TypeChecks

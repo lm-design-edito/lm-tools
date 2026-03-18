@@ -87,7 +87,7 @@ export const hjstringify = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'hjstringify',
   defaultMode: 'coalescion',
   isolationInitType: 'array',
-  mainValueCheck: m => Outcome.makeSuccess(m),
+  mainValueCheck: SmartTags.expectNotUndef,
   argsValueCheck: a => Utils.SmartTags.expectEmptyArgs(a),
   func: main => {
     const stringified = stringify(main)

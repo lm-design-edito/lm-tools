@@ -11,7 +11,7 @@ export const and = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'and',
   defaultMode: 'coalescion',
   isolationInitType: 'array',
-  mainValueCheck: m => Outcome.makeSuccess(m),
+  mainValueCheck: SmartTags.expectNotUndef,
   argsValueCheck: a => Outcome.makeSuccess(a),
   func: (main, args) => {
     const all = [main, ...args]

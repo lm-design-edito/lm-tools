@@ -13,7 +13,7 @@ export const equals = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'equals',
   defaultMode: 'coalescion',
   isolationInitType: 'array',
-  mainValueCheck: m => Outcome.makeSuccess(m),
+  mainValueCheck: SmartTags.expectNotUndef,
   argsValueCheck: a => {
     const [first, ...others] = a
     if (first === undefined) return Outcome.makeFailure(Utils.SmartTags.makeArgsValueError(

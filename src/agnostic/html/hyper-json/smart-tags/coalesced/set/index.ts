@@ -12,7 +12,7 @@ export const set = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'set',
   defaultMode: 'coalescion',
   isolationInitType: 'array',
-  mainValueCheck: m => Outcome.makeSuccess(m),
+  mainValueCheck: SmartTags.expectNotUndef,
   argsValueCheck: a => {
     const { makeFailure, makeSuccess } = Outcome
     const { makeArgsValueError } = Utils.SmartTags

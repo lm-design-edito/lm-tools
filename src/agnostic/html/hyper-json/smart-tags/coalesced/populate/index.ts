@@ -1,5 +1,4 @@
 import * as Outcome from '../../../../../misc/outcome/index.js'
-import { replaceAll } from '../../../../../strings/replace-all/index.js'
 import * as Window from '../../../../../misc/crossenv/window/index.js'
 import { Cast } from '../../../cast/index.js'
 import { Utils } from '../../../utils/index.js'
@@ -57,7 +56,7 @@ export const populate = SmartTags.makeSmartTag<Main, Args, Output>({
     for (const [propName, toReplace] of actions) {
       try {
         const value = deepGetProperty(record, Cast.toString(propName))
-        const replaced = replaceAll(returnedStr, Cast.toString(toReplace), Cast.toString(value))
+        const replaced = returnedStr.replaceAll(Cast.toString(toReplace), Cast.toString(value))
         returnedStr = replaced
       } catch (err) {
         return makeFailure(makeTransformationError({

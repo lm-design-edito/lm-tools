@@ -2,14 +2,14 @@ import { type Transformer } from '../transformer/index.js'
 import { type Types } from '../types/index.js'
 
 export class Method<
-  Main extends Types.Tree.RestingValue = Types.Tree.RestingValue,
+  Main extends Types.Tree.RestingValue | undefined = Types.Tree.RestingValue | undefined,
   Args extends Types.Tree.RestingArrayValue = Types.Tree.RestingArrayValue,
   Output extends Types.Tree.RestingValue = Types.Tree.RestingValue
 > {
   transformer: Transformer<Main, Args, Output>
 
   static clone <
-    Main extends Types.Tree.RestingValue,
+    Main extends Types.Tree.RestingValue | undefined,
     Args extends Types.Tree.RestingArrayValue,
     Output extends Types.Tree.RestingValue
   >(method: Method<Main, Args, Output>): Method<Main, Args, Output> {

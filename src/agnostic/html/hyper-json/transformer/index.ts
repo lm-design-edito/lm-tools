@@ -4,7 +4,7 @@ import { type Tree as TreeNamespace } from '../tree/index.js'
 import { type Types } from '../types/index.js'
 
 export class Transformer<
-  Main extends Types.Tree.RestingValue = Types.Tree.RestingValue,
+  Main extends Types.Tree.RestingValue | undefined = Types.Tree.RestingValue | undefined,
   Args extends Types.Tree.RestingArrayValue = Types.Tree.RestingArrayValue,
   Output extends Types.Tree.RestingValue = Types.Tree.RestingValue
 > {
@@ -12,7 +12,7 @@ export class Transformer<
   mode: Types.Tree.Mode
   innerValue: Types.Tree.RestingValue
   typeChecks: {
-    mainValue: (mainValue: Types.Tree.RestingValue) => Outcome.Either<Main, {
+    mainValue: (mainValue?: Types.Tree.RestingValue) => Outcome.Either<Main, {
       expected: string
       found: string
     }>
@@ -27,7 +27,7 @@ export class Transformer<
   sourceTree: TreeNamespace.Tree
 
   static clone <
-    Main extends Types.Tree.RestingValue,
+    Main extends Types.Tree.RestingValue | undefined,
     Args extends Types.Tree.RestingArrayValue,
     Output extends Types.Tree.RestingValue
   >(transformer: Transformer<Main, Args, Output>): Transformer<Main, Args, Output> {
@@ -58,15 +58,15 @@ export class Transformer<
   }
 
   getMainAndArgsValue (outerValue: Types.Tree.RestingValue): {
-    mainValue: Types.Tree.RestingValue
+    mainValue: Types.Tree.RestingValue | undefined
     argsValue: Types.Tree.RestingArrayValue
   } {
     const { mode, innerValue } = this
-    let mainValue: Types.Tree.RestingValue
+    let mainValue: Types.Tree.RestingValue | undefined
     let argsValue: Types.Tree.RestingArrayValue
     if (mode === 'isolation') {
       if (Array.isArray(innerValue)) {
-        mainValue = innerValue.at(0) ?? []
+        mainValue = innerValue.at(0)
         argsValue = innerValue.slice(1)
       } else {
         mainValue = innerValue
@@ -80,7 +80,7 @@ export class Transformer<
   }
 
   makeMainValueError (
-    mainValue: Types.Tree.RestingValue,
+    mainValue: Types.Tree.RestingValue | undefined,
     argsValue: Types.Tree.RestingArrayValue,
     expected: string,
     found: string,
@@ -100,7 +100,7 @@ export class Transformer<
   }
 
   makeArgsValueError (
-    mainValue: Types.Tree.RestingValue,
+    mainValue: Types.Tree.RestingValue | undefined,
     argsValue: Types.Tree.RestingArrayValue,
     expected: string,
     found: string,
@@ -122,7 +122,7 @@ export class Transformer<
   }
 
   makeTransformationError (
-    mainValue: Types.Tree.RestingValue,
+    mainValue: Types.Tree.RestingValue | undefined,
     argsValue: Types.Tree.RestingArrayValue,
     details?: any
   ): Types.Transformations.TransformationFailurePayload {
@@ -162,7 +162,12 @@ export class Transformer<
       argsChecked.error.position
     ))
     const validArgsValue = argsChecked.payload
-    const called = func(validMainValue, validArgsValue, { name: this.name, sourceTree: this.sourceTree })
+    const called = func(
+      validMainValue,
+      validArgsValue, {
+        name: this.name,
+        sourceTree: this.sourceTree
+      })
     if (!called.success) return Outcome.makeFailure(makeTransformationError(
       mainValue,
       argsValue,

@@ -40,15 +40,19 @@ export namespace Types {
     }
 
     export type Function<
-      Main extends Tree.RestingValue,
+      Main extends Tree.RestingValue | undefined,
       Args extends Tree.Value[],
       Out extends Tree.RestingValue
-    > = (mainValue: Main, args: Args, details: FunctionDetailsArg) => Outcome.Either<Out, FunctionFailurePayload>
+    > = (
+      mainValue: Main,
+      args: Args,
+      details: FunctionDetailsArg
+    ) => Outcome.Either<Out, FunctionFailurePayload>
 
     export type FailurePayloadCore = {
       transformerName: string
       path: string
-      mainValue: Tree.RestingValue
+      mainValue?: Tree.RestingValue
       argsValue: Tree.RestingArrayValue
     }
 
@@ -132,7 +136,7 @@ export namespace Types {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace SmartTags {
     export type SmartTag<
-      Main extends Types.Tree.RestingValue = Types.Tree.RestingValue,
+      Main extends Types.Tree.RestingValue | undefined = Types.Tree.RestingValue | undefined,
       Args extends Types.Tree.RestingArrayValue = Types.Tree.RestingArrayValue,
       Output extends Types.Tree.RestingValue = Types.Tree.RestingValue
     > = {
@@ -145,7 +149,7 @@ export namespace Types {
     }
 
     export type Descriptor<
-      Main extends Types.Tree.RestingValue = Types.Tree.RestingValue,
+      Main extends Types.Tree.RestingValue | undefined = Types.Tree.RestingValue | undefined,
       Args extends Types.Tree.RestingArrayValue = Types.Tree.RestingArrayValue,
       Output extends Types.Tree.RestingValue = Types.Tree.RestingValue
     > = {

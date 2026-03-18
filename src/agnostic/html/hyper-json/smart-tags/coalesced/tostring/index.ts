@@ -12,7 +12,7 @@ export const tostring = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'tostring',
   defaultMode: 'coalescion',
   isolationInitType: 'array',
-  mainValueCheck: m => Outcome.makeSuccess(m),
+  mainValueCheck: SmartTags.expectNotUndef,
   argsValueCheck: a => Utils.SmartTags.expectEmptyArgs(a),
   func: m => Outcome.makeSuccess(Cast.toString(m))
 })

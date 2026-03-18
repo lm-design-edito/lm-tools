@@ -2,7 +2,7 @@ import * as Outcome from '../../../../../misc/outcome/index.js'
 import { type Types } from '../../../types/index.js'
 import { SmartTags } from '../../index.js'
 
-type Main = Types.Tree.RestingValue
+type Main = Types.Tree.RestingValue | undefined
 type Args = Types.Tree.RestingArrayValue
 type Output = Types.Tree.RestingArrayValue
 
@@ -12,5 +12,8 @@ export const array = SmartTags.makeSmartTag<Main, Args, Output>({
   isolationInitType: 'array',
   mainValueCheck: m => Outcome.makeSuccess(m),
   argsValueCheck: a => Outcome.makeSuccess(a),
-  func: (main, args) => Outcome.makeSuccess([main, ...args])
+  func: (main, args) => {
+    if (main === undefined) return Outcome.makeSuccess([...args])
+    return Outcome.makeSuccess([main, ...args])
+  }
 })

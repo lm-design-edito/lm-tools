@@ -12,7 +12,7 @@ export const toelement = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'toelement',
   defaultMode: 'coalescion',
   isolationInitType: 'array',
-  mainValueCheck: m => Outcome.makeSuccess(m),
+  mainValueCheck: SmartTags.expectNotUndef,
   argsValueCheck: a => Utils.Tree.TypeChecks.typeCheckManyWithLength(a, 0, 1, 'string', 'text'),
   func: (m, a) => {
     const [rawTagName] = a

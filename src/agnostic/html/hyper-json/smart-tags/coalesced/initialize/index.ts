@@ -12,7 +12,7 @@ export const initialize = SmartTags.makeSmartTag<Main, Args, Output>({
   name: 'initialize',
   defaultMode: 'coalescion',
   isolationInitType: 'array',
-  mainValueCheck: m => Outcome.makeSuccess(m),
+  mainValueCheck: SmartTags.expectNotUndef,
   argsValueCheck: a => {
     const { makeFailure, makeSuccess } = Outcome
     const { getType, typeCheck } = Utils.Tree.TypeChecks

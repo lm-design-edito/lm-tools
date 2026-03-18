@@ -226,9 +226,17 @@ export namespace Tree {
         if (val === 'method') return false
         return true
       })
-      if (this.mode === 'coalescion') { this.isolationInitType = 'array' } else {
+      if (this.mode === 'coalescion') {
+        this.isolationInitType = 'array'
+      } else {
         const initAttributeValue = hasInitAttribute?.value as Exclude<Types.Tree.ValueTypeName, 'transformer' | 'method'> | undefined
-        if (initAttributeValue !== undefined) { this.isolationInitType = initAttributeValue } else if (this.smartTagData !== null) { this.isolationInitType = this.smartTagData?.isolationInitType ?? 'array' } else { this.isolationInitType = 'nodelist' }
+        if (initAttributeValue !== undefined) {
+          this.isolationInitType = initAttributeValue
+        } else if (this.smartTagData !== null) {
+          this.isolationInitType = this.smartTagData?.isolationInitType ?? 'array'
+        } else {
+          this.isolationInitType = 'nodelist'
+        }
       }
 
       // subtrees
