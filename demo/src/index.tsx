@@ -1,14 +1,16 @@
 import { type ReactNode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Gallery } from '~/components/Gallery/index.js'
+
 // Demo components
 import { BeforeAfterDemo } from './components/demo/BeforeAfterDemo/index.js'
 import { DisclaimerDemo } from './components/demo/DisclaimerDemo/index.js'
 import { DrawerDemo } from './components/demo/DrawerDemo/index.js'
 import { EventListenerDemo } from './components/demo/EventListenerDemo/index.js'
+import { GalleryDemo } from './components/demo/GalleryDemo/index.js'
 import { ImageDemo } from './components/demo/ImageDemo/index.js'
 import { IntersectionObserverDemo } from './components/demo/IntersectionObserverDemo/index.js'
-import { GalleryDemo } from './components/demo/GalleryDemo/index.js'
+import { OverlayerDemo } from './components/demo/OverlayerDemo/index.js'
 import { PaginatorDemo } from './components/demo/PaginatorDemo/index.js'
 import { ResizeObserverDemo } from './components/demo/ResizeObserverDemo/index.js'
 import { ScrllgngnDemo } from './components/demo/ScrllgngnDemo/index.js'
@@ -19,6 +21,7 @@ import { SubtitlesDemo } from './components/demo/SubtitlesDemo/index.js'
 import { TheatreDemo } from './components/demo/TheatreDemo/index.js'
 import { UIModuleDemo } from './components/demo/UIModuleDemo/index.js'
 import { VideoDemo } from './components/demo/VideoDemo/index.js'
+
 // Demo styles
 import cssModule from './styles.module.css'
 
@@ -33,6 +36,7 @@ const components: Array<{
   { name: 'Gallery', comp: <GalleryDemo /> },
   { name: 'Image', comp: <ImageDemo /> },
   { name: 'IntersectionObserver', comp: <IntersectionObserverDemo /> },
+  { name: 'Overlayer', comp: <OverlayerDemo /> },
   { name: 'Paginator', comp: <PaginatorDemo /> },
   { name: 'ResizeObserver', comp: <ResizeObserverDemo /> },
   { name: 'Scrllgngn', comp: <ScrllgngnDemo /> },
@@ -46,7 +50,7 @@ const components: Array<{
 ]
 
 const App = () => {
-  const initActiveTab = components.findIndex(e => e.name === 'BeforeAfter')
+  const initActiveTab = components.findIndex(e => e.name === 'Overlayer')
   const [activeTab, setActiveTab] = useState(initActiveTab)
   return <div className={cssModule['app']}>
     <Gallery
