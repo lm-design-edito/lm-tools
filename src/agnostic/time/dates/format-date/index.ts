@@ -29,6 +29,9 @@
  * - `m` / `mm` : Minutes
  * - `s` / `ss` : Seconds
  *
+ * **Miliseconds**
+ * - `ms` : Miliseconds
+ *
  * **AM/PM**
  * - `A` : AM/PM
  * - `a` : am/pm
@@ -102,6 +105,7 @@ export function formatDate (
     'm': () => String(minutes),
     'ss': () => String(seconds).padStart(2, '0'),
     's': () => String(seconds),
+    'ms': () => String(date.getMilliseconds()).padStart(3, '0'),
     'A': () => (isPM ? 'PM' : 'AM'),
     'a': () => (isPM ? 'pm' : 'am'),
     'th': () => {
@@ -118,7 +122,7 @@ export function formatDate (
     }
   }
 
-  const regexp = /{{(DD|D|dd|d|MM|M|MMMM|MMM|YYYY|YY|HH|H|hh|h|mm|m|ss|s|A|a|th)}}/g
+  const regexp = /{{(DD|D|dd|d|MM|M|MMMM|MMM|YYYY|YY|HH|H|hh|h|mm|m|ss|s|A|a|th|ms)}}/g
   return format.replace(regexp, (match, token) => replacements[token]?.() ?? match)
 }
 
