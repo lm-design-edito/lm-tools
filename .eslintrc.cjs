@@ -21,6 +21,7 @@ module.exports = {
     '@typescript-eslint/consistent-type-definitions': 'off',
     '@typescript-eslint/no-confusing-void-expression': 'off',
     '@typescript-eslint/restrict-template-expressions': 'off',
+    '@typescript-eslint/brace-style': 'off',
     'curly': 'off',
     'operator-linebreak': ['error', 'before', { 'overrides': { '=': 'none' } }],
     'quote-props': 'off'

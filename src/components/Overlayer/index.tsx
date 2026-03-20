@@ -42,7 +42,7 @@ type Overlay = {
  * @property children - Content rendered in the base layer, below all overlays.
  */
 export type Props = PropsWithChildren<WithClassName<{
-  overlays?: Array<Overlay>
+  overlays?: Overlay[]
 }>>
 
 /**
@@ -91,9 +91,9 @@ export const Overlayer: FunctionComponent<Props> = ({
       else if (justify === 'right') { computedTranslateX = '-100%' }
       else { computedTranslateX = '-50%' }
       const overlayCustomProps: Record<string, string> = {
-        [`--PRIVATE-left`]: `${xPercent}%`,
-        [`--PRIVATE-top`]: `${yPercent}%`,
-        [`--PRIVATE-translate-x`]: computedTranslateX
+        '--PRIVATE-left': `${xPercent}%`,
+        '--PRIVATE-top': `${yPercent}%`,
+        '--PRIVATE-translate-x': computedTranslateX
       }
       if (isFalsy(content)) return null
       return <div

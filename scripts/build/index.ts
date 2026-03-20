@@ -53,7 +53,7 @@ await new Promise((resolve, reject) => {
     sourcemap: false,
     format: 'esm',
     target: ['esnext'],
-    external: [...externalDeps],
+    external: [...externalDeps, '*.module.css'],
     logLevel: 'info'
   }).then(() => {
     resolve(true)
