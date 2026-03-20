@@ -34,13 +34,13 @@ export namespace Utils {
   export function coalesceValues (
     currentValue: Types.Tree.RestingValue,
     subpath: string | number,
-    subvalue: Types.Tree.Value): Types.Tree.RestingValue {
+    toCoalesce: Types.Tree.Value
+  ): Types.Tree.RestingValue {
     const { Element, Text, NodeList, document } = Window.get()
-    let actualSubvalue = subvalue
 
-    // If actualSubvalue is a Transformer, apply it then continue the process
-    if (actualSubvalue instanceof Transformer) {
-      const transformer = actualSubvalue
+    // If toCoalesce is a Transformer, apply it then continue the process
+    if (toCoalesce instanceof Transformer) {
+      const transformer = toCoalesce
       const transformationResult = transformer.apply(currentValue)
       if (!transformationResult.success) {
         console.warn({ ...transformationResult.error })
@@ -48,110 +48,111 @@ export namespace Utils {
       }
       const evaluated = transformationResult.payload
       if (transformer.mode === 'isolation') {
-        actualSubvalue = evaluated // We set the actualSubvalue to the result of the evaluation, and process this result below as a non-Transformer value
+        toCoalesce = evaluated // We set toCoalesce to the result of the evaluation, and process this result below as a non-Transformer value
       } else {
         return evaluated // If mode is coalescion, the reduced value is the output of the Transformer
       }
     }
 
-    if (Array.isArray(currentValue)) return [...currentValue, actualSubvalue]
-    if (currentValue === null) return actualSubvalue
-    if (typeof currentValue === 'boolean') return actualSubvalue
-    if (typeof currentValue === 'number') return actualSubvalue
-    if (currentValue instanceof Transformer) return actualSubvalue
-    if (currentValue instanceof Method) return actualSubvalue
+    if (Array.isArray(currentValue)) return [...currentValue, toCoalesce]
+    if (currentValue === null) return toCoalesce
+    if (typeof currentValue === 'boolean') return toCoalesce
+    if (typeof currentValue === 'number') return toCoalesce
+    if (currentValue instanceof Transformer) return toCoalesce
+    if (currentValue instanceof Method) return toCoalesce
 
     if (typeof currentValue === 'string') {
-      if (actualSubvalue === null
-        || typeof actualSubvalue === 'boolean'
-        || typeof actualSubvalue === 'number'
-        || typeof actualSubvalue === 'string'
-      ) return `${currentValue}${actualSubvalue}`
-      if (actualSubvalue instanceof Text) return `${currentValue}${actualSubvalue.textContent}`
-      if (actualSubvalue instanceof Element) {
+      if (toCoalesce === null
+        || typeof toCoalesce === 'boolean'
+        || typeof toCoalesce === 'number'
+        || typeof toCoalesce === 'string'
+      ) return `${currentValue}${toCoalesce}`
+
+      if (toCoalesce instanceof Text) return `${currentValue}${toCoalesce.textContent}`
+      if (toCoalesce instanceof Element) {
         const frag = document.createDocumentFragment()
-        frag.append(currentValue, Utils.clone(actualSubvalue))
+        frag.append(currentValue, Utils.clone(toCoalesce))
         return frag.childNodes as NodeListOf<Element | Text>
       }
-      if (actualSubvalue instanceof NodeList) {
+      if (toCoalesce instanceof NodeList) {
         const frag = document.createDocumentFragment()
-        frag.append(currentValue, ...Array.from(Utils.clone(actualSubvalue)))
+        frag.append(currentValue, ...Array.from(Utils.clone(toCoalesce)))
         return frag.childNodes as NodeListOf<Element | Text>
       }
-      return actualSubvalue
+      return toCoalesce
     }
 
     if (currentValue instanceof Text) {
-      if (actualSubvalue === null
-        || typeof actualSubvalue === 'boolean'
-        || typeof actualSubvalue === 'number'
-        || typeof actualSubvalue === 'string'
-      ) return document.createTextNode(`${currentValue.textContent}${actualSubvalue}`)
-      if (actualSubvalue instanceof Text) return document.createTextNode(`${currentValue.textContent}${actualSubvalue.textContent}`)
-      if (actualSubvalue instanceof Element) {
+      if (toCoalesce === null
+        || typeof toCoalesce === 'boolean'
+        || typeof toCoalesce === 'number'
+        || typeof toCoalesce === 'string'
+      ) return document.createTextNode(`${currentValue.textContent}${toCoalesce}`)
+      if (toCoalesce instanceof Text) return document.createTextNode(`${currentValue.textContent}${toCoalesce.textContent}`)
+      if (toCoalesce instanceof Element) {
         const frag = document.createDocumentFragment()
-        frag.append(clone(currentValue), clone(actualSubvalue))
+        frag.append(clone(currentValue), clone(toCoalesce))
         return frag.childNodes as NodeListOf<Element | Text>
       }
-      if (actualSubvalue instanceof NodeList) {
+      if (toCoalesce instanceof NodeList) {
         const frag = document.createDocumentFragment()
-        frag.append(clone(currentValue), ...Array.from(clone(actualSubvalue)))
+        frag.append(clone(currentValue), ...Array.from(clone(toCoalesce)))
         return frag.childNodes as NodeListOf<Element | Text>
       }
-      return actualSubvalue
+      return toCoalesce
     }
 
     if (currentValue instanceof Element) {
-      if (actualSubvalue === null
-        || typeof actualSubvalue === 'boolean'
-        || typeof actualSubvalue === 'number'
-        || typeof actualSubvalue === 'string'
+      if (toCoalesce === null
+        || typeof toCoalesce === 'boolean'
+        || typeof toCoalesce === 'number'
+        || typeof toCoalesce === 'string'
       ) {
         const frag = document.createDocumentFragment()
-        frag.append(clone(currentValue), `${actualSubvalue}`)
+        frag.append(clone(currentValue), `${toCoalesce}`)
         return frag.childNodes as NodeListOf<Element | Text>
       }
-      if (actualSubvalue instanceof Text || actualSubvalue instanceof Element) {
+      if (toCoalesce instanceof Text || toCoalesce instanceof Element) {
         const frag = document.createDocumentFragment()
-        frag.append(clone(currentValue), clone(actualSubvalue))
+        frag.append(clone(currentValue), clone(toCoalesce))
         return frag.childNodes as NodeListOf<Element | Text>
       }
-      if (actualSubvalue instanceof NodeList) {
+      if (toCoalesce instanceof NodeList) {
         const frag = document.createDocumentFragment()
-        frag.append(clone(currentValue), ...Array.from(clone(actualSubvalue)))
+        frag.append(clone(currentValue), ...Array.from(clone(toCoalesce)))
         return frag.childNodes as NodeListOf<Element | Text>
       }
-      return actualSubvalue
+      return toCoalesce
     }
 
     if (currentValue instanceof NodeList) {
-      if (actualSubvalue === null
-        || typeof actualSubvalue === 'boolean'
-        || typeof actualSubvalue === 'number'
-        || typeof actualSubvalue === 'string'
+      if (toCoalesce === null
+        || typeof toCoalesce === 'boolean'
+        || typeof toCoalesce === 'number'
+        || typeof toCoalesce === 'string'
       ) {
         const frag = document.createDocumentFragment()
-        frag.append(...Array.from(clone(currentValue)), `${actualSubvalue}`)
+        frag.append(...Array.from(clone(currentValue)), `${toCoalesce}`)
         return frag.childNodes as NodeListOf<Element | Text>
       }
-      if (actualSubvalue instanceof Text || actualSubvalue instanceof Element) {
+      if (toCoalesce instanceof Text || toCoalesce instanceof Element) {
         const frag = document.createDocumentFragment()
-        frag.append(...Array.from(clone(currentValue)), clone(actualSubvalue))
+        frag.append(...Array.from(clone(currentValue)), clone(toCoalesce))
         return frag.childNodes as NodeListOf<Element | Text>
       }
-      if (actualSubvalue instanceof NodeList) {
+      if (toCoalesce instanceof NodeList) {
         const frag = document.createDocumentFragment()
-        frag.append(...Array.from(clone(currentValue)), ...Array.from(clone(actualSubvalue)))
+        frag.append(...Array.from(clone(currentValue)), ...Array.from(clone(toCoalesce)))
         return frag.childNodes as NodeListOf<Element | Text>
       }
-      return actualSubvalue
+      return toCoalesce
     }
 
     // current value is a record here
     if (typeof subpath === 'number') return { ...currentValue }
     return {
       ...currentValue,
-      [subpath]: actualSubvalue
+      [subpath]: toCoalesce
     }
   }
 
