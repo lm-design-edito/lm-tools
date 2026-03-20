@@ -32,7 +32,7 @@ import cssModule from './styles.module.css'
  * @property trackScroll - Whether scroll tracking is enabled for this block.
  * @property children - Content rendered inside the block.
  */
-type PropsCommonBlock = PropsWithChildren<{
+export type PropsCommonBlock = PropsWithChildren<{
   id?: string
   trackScroll?: boolean
 }>
@@ -43,7 +43,7 @@ type PropsCommonBlock = PropsWithChildren<{
  * @property depth - When set to `'scroll'` or omitted, the block is rendered
  * inline in the scrolling content layer.
  */
-type PropsScrollBlock = PropsCommonBlock & {
+export type PropsScrollBlock = PropsCommonBlock & {
   depth?: 'scroll'
 }
 
@@ -55,7 +55,7 @@ type PropsScrollBlock = PropsCommonBlock & {
  * @property zIndex - Optional explicit z-index. Sticky blocks are otherwise
  * stacked in the order they appear across pages (ascending).
  */
-type PropsStickyBlock = PropsCommonBlock & {
+export type PropsStickyBlock = PropsCommonBlock & {
   depth: 'back' | 'front'
   zIndex?: number
 }
@@ -66,7 +66,7 @@ type PropsStickyBlock = PropsCommonBlock & {
  * @see {@link PropsScrollBlock}
  * @see {@link PropsStickyBlock}
  */
-type PropsBlock = PropsScrollBlock | PropsStickyBlock
+export type PropsBlock = PropsScrollBlock | PropsStickyBlock
 
 /**
  * Describes a single page in the scrollytelling sequence.
@@ -77,7 +77,7 @@ type PropsBlock = PropsScrollBlock | PropsStickyBlock
  * lifted into their respective layer and consolidated with same-id blocks from
  * other pages.
  */
-type PropsPage = {
+export type PropsPage = {
   id?: string
   blocks?: PropsBlock[]
 }
