@@ -101,6 +101,12 @@ const {
 
 ### Suite [WIP]
 
+[ ] Click sur timeline ne semble pas marcher ?
+[ ] 
+
+- Gérer la partie "controlled behavior" tout d'un coup
+[ ] Idée : quand la vidéo est en mode controlled, 
+
 
 
 
