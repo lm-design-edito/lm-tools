@@ -122,6 +122,17 @@ type StateHandlersProps = {
 }
 
 /**
+ * - play?: boolean
+ * - mute?: boolean
+ * - fullScreen?: boolean
+ * - volume?: number
+ * - playbackRate?: number
+ * - currentTimeMs:? number
+ * - PLUS TARD =
+ * - onPlay, onLoud, etc...
+ */
+
+/**
  * Props for the {@link Video} component.
  *
  * Extends all native `VideoHTMLAttributes<HTMLVideoElement>`, so any standard
