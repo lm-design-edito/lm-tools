@@ -48,7 +48,7 @@ await new Promise((resolve, reject) => {
     outdir: LIB,
     bundle: true,
     minify: false,
-    splitting: true,
+    splitting: false,
     platform: 'node',
     sourcemap: false,
     format: 'esm',
