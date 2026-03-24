@@ -1,12 +1,18 @@
-import process from 'node:process'
 import path from 'node:path'
 import fs from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+
+// [WIP] All this is kindof wrong, import.meta.url will be resolved
+// from the file that imports this config.
+export const THIS = fileURLToPath(import.meta.url)
+export const SCRIPTS = path.join(THIS, '../..')
+export const TEMP = path.join(SCRIPTS, '..')
+export const ROOT = path.join(TEMP, '..')
 
 // ROOT
-export const CWD = process.cwd()
-export const PKG_JSON = path.join(CWD, 'package.json')
-export const LIB = path.join(CWD, 'lib')
-export const SRC = path.join(CWD, 'src')
+export const PKG_JSON = path.join(ROOT, 'package.json')
+export const LIB = path.join(ROOT, 'lib')
+export const SRC = path.join(ROOT, 'src')
 
 // Lib
 export const LIB_INDEX = path.join(LIB, 'index.js')

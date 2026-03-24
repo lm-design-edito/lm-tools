@@ -1,10 +1,8 @@
-import { exec } from 'node:child_process'
-import fs, { glob } from 'node:fs/promises'
+import { spawn, spawnSync } from 'node:child_process'
+import fs from 'node:fs/promises'
 import path from 'node:path'
-import process from 'node:process'
 import { camelCase } from 'change-case'
-import esbuild from 'esbuild'
-import { COMPONENTS, AGNOSTIC, NODE, LIB, externalDeps } from '../_config/index.js'
+import { SRC, COMPONENTS, AGNOSTIC, NODE, LIB } from '../_config/index.js'
 import * as Subpaths from '../../src/node/files/subpaths/index.js'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -13,56 +11,36 @@ import * as Subpaths from '../../src/node/files/subpaths/index.js'
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-const ROOT_DIRS = [COMPONENTS, AGNOSTIC, NODE]
-const entryPoints = (await Promise.all(ROOT_DIRS.map(async dirPath => {
-  return await Subpaths.list(dirPath, {
-    directories: false,
-    files: true,
-    symlinks: false,
-    hidden: false,
-    followSimlinks: false,
-    dedupeSimlinksContents: false,
-    maxDepth: 100,
-    returnRelative: false,
-    filter: async path => {
-      if (path.endsWith('.test.ts')) return false
-      if (path.endsWith('.test.tsx')) return false
-      if (path.endsWith('.test.js')) return false
-      if (path.endsWith('.test.jsx')) return false
-      return path.endsWith('index.ts')
-        || path.endsWith('index.tsx')
-        || path.endsWith('types.ts')
-        || path.endsWith('types.tsx')
-    }
-  })
-}))).flat()
+spawnSync('rm', ['-rf', LIB])
+spawnSync('cp', ['-r', SRC, LIB])
 
-console.log(entryPoints)
-
-await new Promise((resolve, reject) => {
-  esbuild.build({
-    entryPoints,
-    entryNames: '[dir]/[name]',
-    chunkNames: 'chunks/[name]-[hash]',
-    assetNames: 'assets/[name]-[hash]',
-    outdir: LIB,
-    bundle: true,
-    minify: false,
-    splitting: false,
-    platform: 'node',
-    sourcemap: false,
-    format: 'esm',
-    target: ['esnext'],
-    external: [...externalDeps, '*.module.css'],
-    logLevel: 'info'
-  }).then(() => {
-    resolve(true)
-  }).catch(err => {
-    console.error(err)
-    reject(err)
-    process.exit(1)
-  })
+const toDeleteInLib = await Subpaths.list(LIB, {
+  files: true,
+  symlinks: false,
+  hidden: true,
+  followSimlinks: false,
+  dedupeSimlinksContents: false,
+  maxDepth: 100,
+  returnRelative: true,
+  filter: async file => {
+    if (path.basename(file).startsWith('.')) return true
+    if (file.endsWith('.ts')) return true
+    if (file.endsWith('.tsx')) return true
+    if (file.endsWith('.DS_Store')) return true
+    if (file.endsWith('tsconfig.json')) return true
+    return false
+  }
 })
+
+await Promise.all(toDeleteInLib.map(async f => fs.unlink(path.join(LIB, f))))
+
+for (const dir of [AGNOSTIC, NODE, COMPONENTS]) {
+  const p = spawn('tsc', ['-p', path.join(dir, 'tsconfig.json')], { stdio: 'pipe' })
+  p.stdout?.on('data', data => console.log(data.toString().trim()))
+  p.stderr?.on('data', data => console.log(data.toString().trim()))
+  p.on('error', e => console.log(e))
+  await new Promise(res => p.on('close', res))
+}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -120,42 +98,6 @@ await Promise.all(everyDirBuilt.reverse().map(async dirpath => {
   console.log(`Created ${path.relative(LIB, dirpath)}/index.d.ts`)
   return true
 }))
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * *
- *
- * Create type declarations
- * 
- * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-await new Promise(resolve => {
-  const commands = [
-    'npx tsc --jsx react-jsx -p src/agnostic/tsconfig.json --emitDeclarationOnly',
-    'npx tsc --jsx react-jsx -p src/components/tsconfig.json --emitDeclarationOnly',
-    'npx tsc --jsx react-jsx -p src/node/tsconfig.json --emitDeclarationOnly'
-  ]
-  exec(commands.join(' && '), (err, stdout, stderr) => {
-    if (err !== null) console.error(err)
-    if (stdout !== '') console.log(stdout)
-    if (stderr !== '') console.log(stderr)
-    resolve(true)
-    console.log('Type declarations created')
-  })
-})
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * *
- *
- * Copy styles.module.css files
- * 
- * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-const cssModulesFilesIterable = glob(`**/styles.module.css`, { cwd: COMPONENTS })
-for await (const cssModuleRelPath of cssModulesFilesIterable) {
-  await fs.cp(
-    path.join(COMPONENTS, cssModuleRelPath),
-    path.join(LIB, 'components', cssModuleRelPath),
-    { recursive: true }
-  )
-}
 
 console.log('')
 console.log('Done.\n')
