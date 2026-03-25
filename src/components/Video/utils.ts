@@ -1,6 +1,7 @@
 import type {
   Dispatch,
-  SetStateAction
+  SetStateAction,
+  HTMLVideoElement
 } from 'react'
 
 /* Video element triggers */
@@ -19,33 +20,22 @@ export const muteAttributeWorkaround = (
   setIsSoundOn(false)
 }
 
-export const forceMute = (
-  video: HTMLVideoElement | null,
-  setIsSoundOn: Dispatch<SetStateAction<boolean>>
-): void => {
+export const forceMute = (video: HTMLVideoElement | null): void => {
   if (video === null) return
   video.muted = true
-  setIsSoundOn(false)
 }
 
-export const forceLoud = (
-  video: HTMLVideoElement | null,
-  setIsSoundOn: Dispatch<SetStateAction<boolean>>
-): void => {
+export const forceLoud = (video: HTMLVideoElement | null): void => {
   if (video === null) return
   video.muted = false
-  setIsSoundOn(true)
 }
 
 export const forceVolume = (
   video: HTMLVideoElement | null,
-  volumePercent: number,
-  setVolume: Dispatch<SetStateAction<number>>
+  volume: number
 ): void => {
   if (video === null) return
-  const volume = volumePercent / 100
   video.volume = volume
-  setVolume(volume)
 }
 
 export const forceCurrentTime = (
@@ -59,34 +49,27 @@ export const forceCurrentTime = (
 }
 
 export const forcePlay = async (
-  video: HTMLVideoElement | null,
-  shouldDisclaimerBeOn: boolean,
-  setIsPlaying: Dispatch<SetStateAction<boolean>>
-): Promise<void> => {
-  if (shouldDisclaimerBeOn) {
-    setIsPlaying(false)
-    return
-  }
+  video: HTMLVideoElement | null
+): Promise<boolean> => {
   if (video === null) return
+  if (video.paused === false) return true
   try {
-    await video.play()
-    setIsPlaying(true)
+    video.play()
+    return video.paused === false
   } catch (e) {
     console.error(e)
   }
 }
 
-export const forcePause = (
-  video: HTMLVideoElement | null,
-  setIsPlaying: Dispatch<SetStateAction<boolean>>
-): void => {
-  if (video === null) {
-    setIsPlaying(false)
-    return
-  }
+export const forcePause = async (
+  video: HTMLVideoElement | null
+): Promise<boolean> => {
+  if (video === null) return
+  if (video.paused === true) return true
+
   try {
     video.pause()
-    setIsPlaying(false)
+    return video.paused
   } catch (e) {
     console.error(e)
   }
@@ -94,44 +77,33 @@ export const forcePause = (
 
 export const forcePlaybackRate = (
   video: HTMLVideoElement | null,
-  rate: number,
-  setPlaybackRate: Dispatch<SetStateAction<number>>
+  rate: number
 ): void => {
   if (video === null) return
   video.playbackRate = rate
-  setPlaybackRate(rate)
 }
 
-export const forceFullScreen = async (
-  video: HTMLVideoElement | null,
-  shouldDisclaimerBeOn: boolean,
-  setIsFullscreen: Dispatch<SetStateAction<boolean>>
-): Promise<void> => {
-  if (shouldDisclaimerBeOn) return
-  if (video === null) {
-    setIsFullscreen(false)
-    return
-  }
+export const forceFullscreen = async (
+  video: HTMLVideoElement | null
+): Promise<boolean> => {
+  if (video === null) return
   try {
     await video.requestFullscreen()
-    setIsFullscreen(true)
+    return document.fullscreenElement === video
   } catch (e) {
-    setIsFullscreen(false)
     console.error(e)
   }
 }
 
-export const forceExitFullScreen = async (
-  video: HTMLVideoElement | null,
-  setIsFullscreen: Dispatch<SetStateAction<boolean>>
-): Promise<void> => {
+export const forceExitFullscreen = async (
+  video: HTMLVideoElement | null
+): Promise<boolean> => {
   if (video === null || document.fullscreenElement !== video) {
-    setIsFullscreen(false)
     return
   }
   try {
     await document.exitFullscreen()
-    setIsFullscreen(false)
+    return document.fullscreenElement !== video
   } catch (e) {
     console.error(e)
   }
@@ -141,6 +113,10 @@ export const forceExitFullScreen = async (
 
 export function secondsToMs (seconds: number): number {
   return seconds * 1000
+}
+
+export function msToSeconds (ms: number): number {
+  return ms / 1000
 }
 
 export function formatTime (ms: number, format: string, fps: number = 25): string {
@@ -172,7 +148,7 @@ export function formatTime (ms: number, format: string, fps: number = 25): strin
 }
 
 export const getTimelineClickProgress = (
-  event: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  event: React.MouseEvent<HTMLDivElement>,
   timeline: HTMLDivElement | null,
   video: HTMLVideoElement | null
 ): number => {
