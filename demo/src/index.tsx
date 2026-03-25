@@ -50,7 +50,7 @@ const components: Array<{
 ]
 
 const App = () => {
-  const initActiveTab = components.findIndex(e => e.name === 'Overlayer')
+  const initActiveTab = components.findIndex(e => e.name === 'Video')
   const [activeTab, setActiveTab] = useState(initActiveTab)
   return <div className={cssModule['app']}>
     <Gallery

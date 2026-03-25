@@ -1,15 +1,12 @@
 import type {
   Dispatch,
-  SetStateAction,
-  HTMLVideoElement
+  SetStateAction
 } from 'react'
 
 /* Video element triggers */
-
 export const muteAttributeWorkaround = (
   video: HTMLVideoElement | null,
-  shouldMute: boolean,
-  setIsSoundOn: Dispatch<SetStateAction<boolean>>
+  shouldMute: boolean
 ): void => {
   if (video === null) return
   if (!shouldMute) return
@@ -17,7 +14,6 @@ export const muteAttributeWorkaround = (
   if (currentMuted !== null) return
   video.setAttribute('muted', '')
   video.load()
-  setIsSoundOn(false)
 }
 
 export const forceMute = (video: HTMLVideoElement | null): void => {
@@ -51,21 +47,22 @@ export const forceCurrentTime = (
 export const forcePlay = async (
   video: HTMLVideoElement | null
 ): Promise<boolean> => {
-  if (video === null) return
-  if (video.paused === false) return true
+  if (video === null) return false
+  if (!video.paused) return true
   try {
-    video.play()
-    return video.paused === false
+    await video.play()
+    return video.paused
   } catch (e) {
     console.error(e)
   }
+  return false
 }
 
 export const forcePause = async (
   video: HTMLVideoElement | null
 ): Promise<boolean> => {
-  if (video === null) return
-  if (video.paused === true) return true
+  if (video === null) return false
+  if (video.paused) return true
 
   try {
     video.pause()
@@ -73,6 +70,7 @@ export const forcePause = async (
   } catch (e) {
     console.error(e)
   }
+  return false
 }
 
 export const forcePlaybackRate = (
@@ -86,20 +84,21 @@ export const forcePlaybackRate = (
 export const forceFullscreen = async (
   video: HTMLVideoElement | null
 ): Promise<boolean> => {
-  if (video === null) return
+  if (video === null) return false
   try {
     await video.requestFullscreen()
     return document.fullscreenElement === video
   } catch (e) {
     console.error(e)
   }
+  return false
 }
 
 export const forceExitFullscreen = async (
   video: HTMLVideoElement | null
 ): Promise<boolean> => {
   if (video === null || document.fullscreenElement !== video) {
-    return
+    return false
   }
   try {
     await document.exitFullscreen()
@@ -107,6 +106,7 @@ export const forceExitFullscreen = async (
   } catch (e) {
     console.error(e)
   }
+  return false
 }
 
 /* Time & formats */

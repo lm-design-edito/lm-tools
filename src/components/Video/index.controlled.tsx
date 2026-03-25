@@ -1,4 +1,4 @@
-import { type FunctionComponent, type PropsWithChildren, type HTMLVideoElement, type VideoHTMLAttributes, type HTMLButtonElement, type HTMLInputElement, useMemo, useRef, useState, useCallback, useEffect } from 'react'
+import { type FunctionComponent, type PropsWithChildren, type VideoHTMLAttributes, type ReactEventHandler, useMemo, useRef, useState, useCallback, useEffect } from 'react'
 import { clss, type ModsDescriptor } from '../../agnostic/css/clss/index.js'
 import { type WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
@@ -54,14 +54,49 @@ export type ActionHandlersProps = {
   muteButtonClick?: (e: React.MouseEvent<HTMLButtonElement>, isLoud: boolean, video: HTMLVideoElement | null) => void
   volumeRangeChange?: (e: React.ChangeEvent<HTMLInputElement>, targetVolumePercent: number, currentVolumePercent: number, video: HTMLVideoElement | null) => void
   fullscreenButtonClick?: (e: React.MouseEvent<HTMLButtonElement>, isFullscreen: boolean, video: HTMLVideoElement | null) => void
-  rateRangeChange?: (e: React.ChangeEvent<HTMLInputElement>, rate: number, video: HTMLVideoElement | null) => void
+  rateRangeChange?: (e: React.ChangeEvent<HTMLInputElement>, targetRate: number, rate: number, video: HTMLVideoElement | null) => void
   timelineClick?: (e: React.MouseEvent<HTMLDivElement>, time: number, currentTime: number, video: HTMLVideoElement | null) => void
 }
 
-export type StateHandlerProps = {
+export type StateHandlersProps = {
   currentTime?: (currentTime: number) => void
 }
 
+/**
+ * Props for the {@link ControlledVideo} component.
+ *
+ * Extends all native `VideoHTMLAttributes<HTMLVideoElement>`, so any standard
+ * video attribute (`autoPlay`, `muted`, `loop`, `poster`, etc.) can be passed
+ * and will be forwarded to the underlying `<video>` element.
+ *
+ * @property sources - One or more video sources. Accepts:
+ * - a single URL string,
+ * - an array of URL strings,
+ * - an array of {@link SourceData} objects for fine-grained `type` control.
+ * @property tracks - One or more text tracks. Accepts:
+ * - a single URL string,
+ * - an array of URL strings,
+ * - an array of {@link TrackData} objects.
+ * @property playBtnContent - Custom content for the play button.
+ * @property pauseBtnContent - Custom content for the pause button.
+ * @property loudBtnContent - Custom content for the unmute button.
+ * @property muteBtnContent - Custom content for the mute button.
+ * @property fullscreenBtnContent - Custom content for the fullscreen button.
+ * @property subtitles - Props forwarded to the internal {@link Subtitles} component.
+ * `timecodeMs` is injected automatically from the current playback position.
+ * @property play - When `true`, the video will play. When `false`, it will pause. If `undefined`, the play state is uncontrolled and can be toggled by the user.
+ * @property fullscreen - When `true`, the video will enter fullscreen mode. When `false`, it will exit fullscreen. If `undefined`, fullscreen state is uncontrolled and can be toggled by the user.
+ * @property mute - When `true`, the video will be muted. When `false`, it will be unmuted. If `undefined`, mute state is uncontrolled and can be toggled by the user.
+ * @property volume - A number between 0 and 1 representing the volume level. If `undefined`, volume is uncontrolled and can be changed by the user.
+ * @property playbackRate - A number representing the playback speed (e.g. 0.5 for half speed, 2 for double speed). If `undefined`, playback rate is uncontrolled and can be changed by the user.
+ * @property currentTimeMs - Current playback time in milliseconds. If set, the component becomes a controlled component with respect to the current time, and will seek to the given time whenever it changes. If `undefined`, current time is uncontrolled and can be changed by the user.
+ * @property actionHandlers - An object containing callback functions for various user interactions (play/pause toggle, volume change, timeline click, etc.). Each callback receives the relevant event, the new state (e.g. whether the video is now playing or paused), and a reference to the underlying `<video>` element.
+ * @property stateHandlers - An object containing callback functions that are called whenever certain internal state changes occur (e.g. current time update). Each callback receives the new state value.
+ * @property className - Optional additional class name(s) applied to the root element.
+ * @property _modifiers - Optional modifiers object for conditional class application (see {@link clss}).
+ * @property children - React children rendered inside the `<video>` element itself
+ * (e.g. fallback content).
+ */
 export type Props = PropsWithChildren<WithClassName<{
   sources?: string | string[] | SourceData[]
   tracks?: string | string[] | TrackData[]
@@ -78,10 +113,12 @@ export type Props = PropsWithChildren<WithClassName<{
   playbackRate?: number
   currentTimeMs?: number
   actionHandlers?: ActionHandlersProps
+  stateHandlers?: StateHandlersProps
+  onFullscreenChange?: ReactEventHandler<HTMLVideoElement>
   _modifiers?: ModsDescriptor
 }> & VideoHTMLAttributes<HTMLVideoElement>>
 
-export const VideoControlled: FunctionComponent<Props> = ({
+export const ControlledVideo: FunctionComponent<Props> = ({
   sources,
   tracks,
   subtitles,
@@ -94,7 +131,7 @@ export const VideoControlled: FunctionComponent<Props> = ({
   fullscreen,
   mute,
   muted,
-  volume,
+  volume = 1,
   playbackRate = 1,
   currentTimeMs: givenCurrentTimeMs,
   actionHandlers,
@@ -144,12 +181,12 @@ export const VideoControlled: FunctionComponent<Props> = ({
 
   // Custom action handlers
   const handlePlayButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const isPlaying = videoRef.current !== undefined ? Boolean(videoRef.current.paused) : false
+    const isPlaying = videoRef.current !== null ? Boolean(videoRef.current.paused) : false
     actionHandlers?.playButtonClick?.(e, isPlaying, videoRef.current)
   }, [actionHandlers?.playButtonClick])
 
   const handlePauseButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const isPlaying = videoRef.current !== undefined ? Boolean(videoRef.current.paused) : false
+    const isPlaying = videoRef.current !== null ? Boolean(videoRef.current.paused) : false
     actionHandlers?.pauseButtonClick?.(e, isPlaying, videoRef.current)
   }, [actionHandlers?.pauseButtonClick])
 
@@ -164,7 +201,7 @@ export const VideoControlled: FunctionComponent<Props> = ({
   }, [actionHandlers?.muteButtonClick, mute])
 
   const handleFullscreenButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    actionHandlers?.fullscreenButtonClick?.(e, fullscreen, videoRef.current)
+    actionHandlers?.fullscreenButtonClick?.(e, fullscreen ?? false, videoRef.current)
   }, [actionHandlers?.fullscreenButtonClick, fullscreen])
 
   const handleVolumeRangeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
