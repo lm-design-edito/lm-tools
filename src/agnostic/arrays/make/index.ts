@@ -1,5 +1,5 @@
 /** Function that generates a value for each array position. */
-type Filler<T = any> = (pos?: number) => T
+type Filler<T = any> = (pos: number) => T
 
 /**
  * Creates an array of a specified length using a filler function.
