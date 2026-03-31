@@ -6,6 +6,7 @@ import prompts from 'prompts'
 import semver from 'semver'
 import Git from 'simple-git'
 import { PKG_JSON, LIB_PKG_JSON, LIB } from '../_config/index.js'
+import { spawner } from '../../src/node/process/spawner/index.js'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -216,14 +217,21 @@ const { otp } = await prompts({
   message: 'Enter your NPM OTP token'
 })
 
-await new Promise(resolve => {
-  exec(`cd ${LIB} && npm publish --access public --otp=${otp}`, (err, stdout, stderr) => {
-    if (err !== null) console.error(err)
-    if (stdout !== '') console.log(stdout)
-    if (stderr !== '') console.log(stderr)
-    resolve(true)
-  })
-})
+await spawner(
+  'Publishing lib...',
+  'npm',
+  ['publish', '--access', 'public', `--otp=${otp}`],
+  { cwd: LIB }
+)
+
+// await new Promise(resolve => {
+//   exec(`cd ${LIB} && npm publish --access public --otp=${otp}`, (err, stdout, stderr) => {
+//     if (err !== null) console.error(err)
+//     if (stdout !== '') console.log(stdout)
+//     if (stderr !== '') console.log(stderr)
+//     resolve(true)
+//   })
+// })
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
