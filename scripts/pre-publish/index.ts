@@ -219,8 +219,8 @@ const { otp } = await prompts({
 
 await spawner(
   'Publishing lib...',
-  'npm',
-  ['publish', '--access', 'public', `--otp=${otp}`],
+  'command',
+  ['npm', 'publish', '--access', 'public', `--otp=${otp}`],
   { cwd: LIB }
 )
 
