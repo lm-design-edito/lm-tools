@@ -224,15 +224,6 @@ await spawner(
   { cwd: LIB }
 )
 
-// await new Promise(resolve => {
-//   exec(`cd ${LIB} && npm publish --access public --otp=${otp}`, (err, stdout, stderr) => {
-//     if (err !== null) console.error(err)
-//     if (stdout !== '') console.log(stdout)
-//     if (stderr !== '') console.log(stderr)
-//     resolve(true)
-//   })
-// })
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * Prevent npm publish to happen from here
