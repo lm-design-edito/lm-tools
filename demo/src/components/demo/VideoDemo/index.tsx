@@ -44,7 +44,7 @@ the following BEM-style modifier classes:
 - \`data-total-time-ms\` — total duration in milliseconds.
 
 ### CSS custom properties on the root element
-- \`--video-elapsed-time-ratio\` — elapsed / total ratio, fixed to 8 decimals.
+- \`--video-current-time-ratio\` — elapsed / total ratio, fixed to 8 decimals.
 Useful for driving progress-bar animations purely in CSS.
 
 @param props - Component properties.
@@ -169,7 +169,7 @@ const demoStyles = `
   position: absolute;
   left: 0;
   width: calc(
-    var(--${publicClassName}-elapsed-time-ratio)
+    var(--${publicClassName}-current-time-ratio)
     * 100%
   );
   height: 100%;

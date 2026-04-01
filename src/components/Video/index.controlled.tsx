@@ -1,5 +1,5 @@
 import { type FunctionComponent, type PropsWithChildren, type VideoHTMLAttributes, type ReactEventHandler, useMemo, useRef, useState, useCallback, useEffect } from 'react'
-import { clss, type ModsDescriptor } from '../../agnostic/css/clss/index.js'
+import { clss } from '../../agnostic/css/clss/index.js'
 import { type WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import cssModule from './styles.module.css'
@@ -39,6 +39,19 @@ type TrackData = {
   default?: boolean
 }
 
+/**
+ * Callbacks for user actions on the video player controls.
+ * Allows you to intercept user actions on the player's buttons and sliders.
+ *
+ * @property playButtonClick - Called when the play button is clicked. Receives the event, isPlaying state and HTMLVideoElement before any change happens. If the time is not controlled by parent (no currentTime given as props), the component will play to the target time right after.
+ * @property pauseButtonClick - Called when the pause button is clicked. Receives the event, isPlaying state and HTMLVideoElement before any change happens. If the time is not controlled by parent (no currentTime given as props), the component will pause to the target time right after.
+ * @property loudButtonClick - Called when the "loud" (unmute) button is clicked. Receives the event, isLoud state and HTMLVideoElement before any change happens.
+ * @property muteButtonClick - Called when the mute button is clicked. Receives the event, isLoud state and HTMLVideoElement before any change happens.
+ * @property volumeRangeChange - Called when the volume slider is changed. Receives the event, target volume (0 to 1), current volume (0 to 1) and HTMLVideoElement before any change happens.
+ * @property fullscreenButtonClick - Called when the fullscreen button is clicked. Receives the event, isFullscreen state and HTMLVideoElement before any change happens.
+ * @property rateRangeChange - Called when the playback rate slider is changed. Receives the event, target rate, current rate and HTMLVideoElement before any change happens.
+ * @property timelineClick - Called when the timeline is clicked. Receives the event, target time (in seconds), current time (in seconds) and HTMLVideoElement before any change happens. If the time is not controlled by parent (no currentTime given as props), the component will update the video current time to the target time right after.
+ */
 export type ActionHandlersProps = {
   playButtonClick?: (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -58,45 +71,52 @@ export type ActionHandlersProps = {
   timelineClick?: (e: React.MouseEvent<HTMLDivElement>, time: number, currentTime: number, video: HTMLVideoElement | null) => void
 }
 
+/**
+ * Callbacks to synchronize the internal player state with the outside.
+ *
+ * @property isPlaying - Called whenever the play/pause state changes.
+ * @property isFullscreen - Called whenever the fullscreen state changes.
+ * @property isLoud - Called whenever the mute/unmute state changes (true = unmuted, false = muted).
+ * @property volume - Called whenever the volume changes (value between 0 and 1).
+ * @property playbackRate - Called whenever the playback speed changes.
+ * @property currentTime - Called on every change of the current time (in seconds).
+ */
 export type StateHandlersProps = {
+  isPlaying?: (isPlaying: boolean) => void
+  isFullscreen?: (isFullscreen: boolean) => void
+  isLoud?: (isLoud: boolean) => void
+  volume?: (volume: number) => void
+  playbackRate?: (rate: number) => void
   currentTime?: (currentTime: number) => void
 }
 
 /**
- * Props for the {@link ControlledVideo} component.
+ * Props for the ControlledVideo component.
  *
- * Extends all native `VideoHTMLAttributes<HTMLVideoElement>`, so any standard
- * video attribute (`autoPlay`, `muted`, `loop`, `poster`, etc.) can be passed
- * and will be forwarded to the underlying `<video>` element.
+ * @property sources - List of video sources (string, array of strings, or SourceData objects).
+ * @property tracks - List of tracks (subtitles, captions, etc.), string, array of strings, or TrackData objects.
+ * @property subtitles - Props for the Subtitles component.
+ * @property playBtnContent - React content for the play button.
+ * @property pauseBtnContent - React content for the pause button.
+ * @property loudBtnContent - React content for the "loud" (unmute) button.
+ * @property muteBtnContent - React content for the mute button.
+ * @property fullscreenBtnContent - React content for the fullscreen button.
+ * @property play - External control of play state (true = play, false = pause).
+ * @property fullscreen - External control of fullscreen mode.
+ * @property volume - External control of volume (0 to 1).
+ * @property mute - External control of mute (true = muted).
+ * @property playbackRate - External control of playback speed.
+ * @property currentTimeMs - External control of current time (in ms). If given, the component considers the current time to be controlled by the parent, and will not attempt to update it internally on user interactions (play, timeline click, etc.), leaving it up to the parent to update this prop accordingly.
+ * @property actionHandlers - Callbacks for user actions on the controls.
+ * @property stateHandlers - Callbacks to synchronize internal state with the outside.
+ * @property onFullscreenChange - Callback for native fullscreen mode changes.
+ * @property _modifiers - Optional CSS modifiers for the root element.
+ * @property className - Additional CSS class for the root element.
+ * @property children - React content inserted into the <video> tag (fallback, etc).
  *
- * @property sources - One or more video sources. Accepts:
- * - a single URL string,
- * - an array of URL strings,
- * - an array of {@link SourceData} objects for fine-grained `type` control.
- * @property tracks - One or more text tracks. Accepts:
- * - a single URL string,
- * - an array of URL strings,
- * - an array of {@link TrackData} objects.
- * @property playBtnContent - Custom content for the play button.
- * @property pauseBtnContent - Custom content for the pause button.
- * @property loudBtnContent - Custom content for the unmute button.
- * @property muteBtnContent - Custom content for the mute button.
- * @property fullscreenBtnContent - Custom content for the fullscreen button.
- * @property subtitles - Props forwarded to the internal {@link Subtitles} component.
- * `timecodeMs` is injected automatically from the current playback position.
- * @property play - When `true`, the video will play. When `false`, it will pause. If `undefined`, the play state is uncontrolled and can be toggled by the user.
- * @property fullscreen - When `true`, the video will enter fullscreen mode. When `false`, it will exit fullscreen. If `undefined`, fullscreen state is uncontrolled and can be toggled by the user.
- * @property mute - When `true`, the video will be muted. When `false`, it will be unmuted. If `undefined`, mute state is uncontrolled and can be toggled by the user.
- * @property volume - A number between 0 and 1 representing the volume level. If `undefined`, volume is uncontrolled and can be changed by the user.
- * @property playbackRate - A number representing the playback speed (e.g. 0.5 for half speed, 2 for double speed). If `undefined`, playback rate is uncontrolled and can be changed by the user.
- * @property currentTimeMs - Current playback time in milliseconds. If set, the component becomes a controlled component with respect to the current time, and will seek to the given time whenever it changes. If `undefined`, current time is uncontrolled and can be changed by the user.
- * @property actionHandlers - An object containing callback functions for various user interactions (play/pause toggle, volume change, timeline click, etc.). Each callback receives the relevant event, the new state (e.g. whether the video is now playing or paused), and a reference to the underlying `<video>` element.
- * @property stateHandlers - An object containing callback functions that are called whenever certain internal state changes occur (e.g. current time update). Each callback receives the new state value.
- * @property className - Optional additional class name(s) applied to the root element.
- * @property _modifiers - Optional modifiers object for conditional class application (see {@link clss}).
- * @property children - React children rendered inside the `<video>` element itself
- * (e.g. fallback content).
+ * Also inherits all standard HTML props for a <video> element.
  */
+
 export type Props = PropsWithChildren<WithClassName<{
   sources?: string | string[] | SourceData[]
   tracks?: string | string[] | TrackData[]
@@ -112,12 +132,47 @@ export type Props = PropsWithChildren<WithClassName<{
   mute?: boolean
   playbackRate?: number
   currentTimeMs?: number
+  onFullscreenChange?: ReactEventHandler<HTMLVideoElement>
   actionHandlers?: ActionHandlersProps
   stateHandlers?: StateHandlersProps
-  onFullscreenChange?: ReactEventHandler<HTMLVideoElement>
-  _modifiers?: ModsDescriptor
+  _modifiers?: Record<string, boolean>
 }> & VideoHTMLAttributes<HTMLVideoElement>>
 
+/**
+ * Full-featured video player component. Wraps a native `<video>` element with
+ * playback controls, volume, playback rate, a timeline, optional subtitles
+ * and viewport-driven auto-play/mute behaviours.
+ *
+ * ### Root element modifiers
+ * The root `<figure>` receives the public class name defined by `video` and
+ * the following BEM-style modifier classes:
+ * - `--play-on` / `--play-off` — reflects current playback state.
+ * - `--fullscreen-on` / `--fullscreen-off` — reflects fullscreen state.
+ * - `--loud` / `--muted` — reflects mute state.
+ *
+ * ### Data attributes on the root element
+ * - `data-play-on` — present (empty string) when playing.
+ * - `data-play-off` — present (empty string) when paused.
+ * - `data-fullscreen-on` — present (empty string) when in fullscreen.
+ * - `data-fullscreen-off` — present (empty string) when not in fullscreen.
+ * - `data-loud` — present (empty string) when unmuted.
+ * - `data-muted` — present (empty string) when muted.
+ * - `data-volume` — current volume as a `0–1` float.
+ * - `data-volume-percent` — current volume as a `0–100` float.
+ * - `data-playback-rate` — current playback rate (e.g. `1`, `1.5`).
+ * - `data-current-time-ms` — current time in milliseconds, fixed to 2 decimals.
+ * - `data-current-time-ratio` — current / total ratio, fixed to 8 decimals.
+ * - `data-total-time-ms` — total duration in milliseconds.
+ *
+ * ### CSS custom properties on the root element
+ * - `--video-current-time-ratio` — current / total ratio, fixed to 8 decimals.
+ * Useful for driving progress-bar animations purely in CSS.
+ *
+ * @param props - Component properties.
+ * @see {@link Props}
+ * @returns A `<figure>` element containing the video, its controls, optional
+ * subtitles.
+ */
 export const ControlledVideo: FunctionComponent<Props> = ({
   sources,
   tracks,
@@ -226,12 +281,20 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   }, [actionHandlers?.timelineClick, totalTime, currentTime, isTimeControlled])
 
   // Rendering
-  const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null, _modifiers), className)
-
   const isPlaying = play ?? false
-  const isFullscreen = fullscreen ?? false
   const isLoud = mute ?? false
+  const isFullscreen = fullscreen ?? false
+  const c = clss(publicClassName, { cssModule })
+  const rootClss = mergeClassNames(c(null, {
+    'play-on': isPlaying,
+    'play-off': !isPlaying,
+    'fullscreen-on': isFullscreen,
+    'fullscreen-off': !isFullscreen,
+    'loud': isLoud,
+    'muted': !isLoud,
+    ..._modifiers
+  }), className)
+
   const appliedVolume = volume ?? 0
   const rootAttributes = {
     'data-play-on': isPlaying ? '' : undefined,
@@ -249,7 +312,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   }
 
   const rootStyles: Record<string, string> = {
-    [`--${publicClassName}-elapsed-time-ratio`]: (currentTime / totalTime).toFixed(8)
+    [`--${publicClassName}-current-time-ratio`]: (currentTime / totalTime).toFixed(8)
   }
 
   const parsedSources = useMemo(() => {
@@ -333,11 +396,32 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     }
   }, [mute])
 
+  // State handlers
   useEffect(() => {
     if (stateHandlers?.currentTime !== undefined) {
       stateHandlers.currentTime(msToSeconds(currentTimeMs))
     }
   }, [currentTimeMs, stateHandlers?.currentTime])
+
+  useEffect(() => {
+    stateHandlers?.isPlaying?.(isPlaying)
+  }, [isPlaying, stateHandlers?.isPlaying])
+
+  useEffect(() => {
+    stateHandlers?.isFullscreen?.(isFullscreen)
+  }, [isFullscreen, stateHandlers?.isFullscreen])
+
+  useEffect(() => {
+    stateHandlers?.isLoud?.(isLoud)
+  }, [isLoud, stateHandlers?.isLoud])
+
+  useEffect(() => {
+    stateHandlers?.volume?.(volume)
+  }, [volume, stateHandlers?.volume])
+
+  useEffect(() => {
+    stateHandlers?.playbackRate?.(playbackRate)
+  }, [playbackRate, stateHandlers?.playbackRate])
 
   return <figure
     className={rootClss}

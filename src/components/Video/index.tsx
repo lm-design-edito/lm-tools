@@ -22,30 +22,10 @@ import cssModule from './styles.module.css'
 import {
   ControlledVideo,
   type Props as ControlledProps,
-  type ActionHandlersProps as ControlledActionHandlersProps,
-  type StateHandlersProps as ControlledStateHandlersProps
+  type ActionHandlersProps as ControlledActionHandlersProps
 } from './index.controlled.js'
 
 type ActionHandlersProps = ControlledActionHandlersProps
-
-type StateHandlersProps = {
-  isPlaying?: (isPlaying: boolean) => void
-  isFullscreen?: (isFullscreen: boolean) => void
-  isLoud?: (isLoud: boolean) => void
-  volume?: (volume: number) => void
-  playbackRate?: (rate: number) => void
-} & ControlledStateHandlersProps
-
-/**
- * - play?: boolean
- * - mute?: boolean
- * - fullscreen?: boolean
- * - volume?: number
- * - playbackRate?: number
- * - currentTimeMs:? number
- * - PLUS TARD =
- * - onPlay, onLoud, etc...
- */
 
 /**
  * Props for the {@link Video} component.
@@ -62,7 +42,7 @@ type StateHandlersProps = {
  * component intersects the viewport, provided no disclaimer is active.
  * @property autoMuteWhenHidden - When `true`, mutes the video whenever the component
  * leaves the viewport.
- * @property currentTimeMs - When provided, forces the video's current time to the given value (in milliseconds).
+ * @property currentTimeMs - When provided, forces the video's current time to the given value (in milliseconds). Giving the currentTimeMs prop puts the component in a controlled state for the current time, meaning that the parent component is responsible for updating the current time. In this mode, user interactions that would normally change the current time (play, pause, timeline click) will not have an effect unless the parent component updates the currentTimeMs prop accordingly.
  * @property wrapperClassName - Optional additional class name(s) applied to the root wrapper element.
  * @property stateHandlers - Optional callbacks invoked whenever the corresponding
  * state changes. Useful for synchronizing external state with the internal video state.
@@ -77,38 +57,12 @@ export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mu
   autoLoudWhenVisible?: boolean
   autoMuteWhenHidden?: boolean
   wrapperClassName?: string
-  stateHandlers?: StateHandlersProps
 }
 
 /**
  * Full-featured video player component. Wraps a native `<video>` element with
  * playback controls, volume, playback rate, a timeline, optional subtitles,
  * an optional disclaimer gate, and viewport-driven auto-play/mute behaviours.
- *
- * ### Root element modifiers
- * The root `<figure>` receives the public class name defined by `video` and
- * the following BEM-style modifier classes:
- * - `--play-on` / `--play-off` — reflects current playback state.
- * - `--fullscreen-on` / `--fullscreen-off` — reflects fullscreen state.
- * - `--loud` / `--muted` — reflects mute state.
- *
- * ### Data attributes on the root element
- * - `data-play-on` — present (empty string) when playing.
- * - `data-play-off` — present (empty string) when paused.
- * - `data-fullscreen-on` — present (empty string) when in fullscreen.
- * - `data-fullscreen-off` — present (empty string) when not in fullscreen.
- * - `data-loud` — present (empty string) when unmuted.
- * - `data-muted` — present (empty string) when muted.
- * - `data-volume` — current volume as a `0–1` float.
- * - `data-volume-percent` — current volume as a `0–100` float.
- * - `data-playback-rate` — current playback rate (e.g. `1`, `1.5`).
- * - `data-current-time-ms` — current time in milliseconds, fixed to 2 decimals.
- * - `data-current-time-ratio` — current / total ratio, fixed to 8 decimals.
- * - `data-total-time-ms` — total duration in milliseconds.
- *
- * ### CSS custom properties on the root element
- * - `--video-current-time-ratio` — current / total ratio, fixed to 8 decimals.
- * Useful for driving progress-bar animations purely in CSS.
  *
  * @param props - Component properties.
  * @see {@link Props}
@@ -123,7 +77,6 @@ export const Video: FunctionComponent<Props> = ({
   autoPauseWhenHidden,
   autoMuteWhenHidden,
   autoLoudWhenVisible,
-  stateHandlers,
   wrapperClassName,
   ...controlledProps
 }) => {
@@ -273,27 +226,6 @@ export const Video: FunctionComponent<Props> = ({
       setPlay(true)
     }
   }, [shouldDisclaimerBeOn])
-
-  // State handlers
-  useEffect(() => {
-    stateHandlers?.isPlaying?.(play)
-  }, [play, stateHandlers?.isPlaying])
-
-  useEffect(() => {
-    stateHandlers?.isFullscreen?.(fullscreen)
-  }, [fullscreen, stateHandlers?.isFullscreen])
-
-  useEffect(() => {
-    stateHandlers?.isLoud?.(mute)
-  }, [mute, stateHandlers?.isLoud])
-
-  useEffect(() => {
-    stateHandlers?.volume?.(volume)
-  }, [volume, stateHandlers?.volume])
-
-  useEffect(() => {
-    stateHandlers?.playbackRate?.(playbackRate)
-  }, [playbackRate, stateHandlers?.playbackRate])
 
   // Render
   const c = clss(publicClassName, { cssModule })
