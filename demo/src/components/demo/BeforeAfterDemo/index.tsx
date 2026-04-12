@@ -119,14 +119,6 @@ export type ControlledProps = PropsWithChildren<WithClassName<{
   className?: string
 }>>`
 
-export type Props = BeforeAfterProps & {
-  defaultRatio?: number
-  direction?: 'horizontal' | 'vertical'
-  stateHandlers?: {
-    ratio?: (ratio: number) => void
-  }
-}
-
 const demoProps1: BeforeAfterProps = {
   defaultRatio: 0.2,
   beforeContent: <img draggable={false} src="https://assets-decodeurs.lemonde.fr/redacweb/2602-campus-engagement/campus-engagement-ep01-1.jpg" alt="Before" />,
