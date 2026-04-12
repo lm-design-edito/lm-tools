@@ -11,7 +11,10 @@ import { demoStyles as subsDemoStyles } from '../SubtitlesDemo/index.js'
 import { demoStyles as disclaimerDemoStyles } from '../DisclaimerDemo/index.js'
 import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 
-import { video as publicClassName, videoWrapper as wrapperPublicClassName } from '~/components/public-classnames.js'
+import {
+  video as publicClassName,
+  videoWrapper as wrapperPublicClassName
+} from '~/components/public-classnames.js'
 import { ControlledVideo } from '~/components/Video/index.controlled.js'
 import { secondsToMs } from '~/components/Video/utils.js'
 

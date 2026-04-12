@@ -1,8 +1,8 @@
 import { type FunctionComponent } from 'react'
 import {
-  type Props as DemoProps
-} from '~/components/Demo/index.js'
-import { BeforeAfter, type Props as BeforeAfterProps } from '~/components/BeforeAfter/index.js'
+  BeforeAfter,
+  type Props as BeforeAfterProps
+} from '~/components/BeforeAfter/index.js'
 import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 import {
   beforeAfter as publicClassName,
@@ -119,24 +119,13 @@ export type ControlledProps = PropsWithChildren<WithClassName<{
   className?: string
 }>>`
 
-/**
- * Props for the {@link BeforeAfter} component.
- *
- * Extends {@link ControlledProps} with uncontrolled ratio and direction management.
- *
- * @property defaultRatio - Initial ratio value (0 to 1). Used if `ratio` is not provided. Defaults to `0`.
- * @property direction - Slider orientation: `'horizontal'` (default) or `'vertical'`.
- * @property stateHandlers - Optional callbacks invoked when derived state changes:
- *   - `ratio` — called with the new ratio whenever it changes.
- */
-export type Props = ControlledProps & {
+export type Props = BeforeAfterProps & {
   defaultRatio?: number
   direction?: 'horizontal' | 'vertical'
   stateHandlers?: {
     ratio?: (ratio: number) => void
   }
 }
-
 
 const demoProps1: BeforeAfterProps = {
   defaultRatio: 0.2,
@@ -162,7 +151,6 @@ const demoProps2: BeforeAfterProps = {
 }
 
 export const BeforeAfterDemo: FunctionComponent = () => {
-
   return <CompDisplayer
   name={name}
   demoStyles={demoStyles}

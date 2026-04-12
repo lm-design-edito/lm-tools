@@ -4,7 +4,10 @@ import {
   useCallback,
   useEffect
 } from 'react'
-import { BeforeAfterControlled, type Props as ControlledProps } from './index.controlled.js'
+import {
+  BeforeAfterControlled,
+  type Props as ControlledProps
+} from './index.controlled.js'
 
 /**
  * Props for the {@link BeforeAfter} component.
@@ -69,7 +72,13 @@ export const BeforeAfter: FunctionComponent<Props> = ({
   const { actionHandlers, ratio } = controlledProps
   const [internalRatio, setInternalRatio] = useState(ratio ?? defaultRatio ?? 0)
 
-  const handlePointer = useCallback((e: PointerEvent, targetHRatio: number, targetVRatio: number, ratio: number | null, element: HTMLDivElement) => {
+  const handlePointer = useCallback((
+    e: PointerEvent,
+    targetHRatio: number,
+    targetVRatio: number,
+    ratio: number | null,
+    element: HTMLDivElement
+  ) => {
     if (direction === 'vertical') setInternalRatio(targetVRatio)
     else setInternalRatio(targetHRatio)
     actionHandlers?.pointer?.(e, targetHRatio, targetVRatio, ratio, element)
