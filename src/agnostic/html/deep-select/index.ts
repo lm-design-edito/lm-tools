@@ -48,9 +48,9 @@ export const deepSelect = async (
   const traverse = async (root: Element | Document | ShadowRoot): Promise<void> => {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT)
     let node: Node | null = walker.currentNode
-    while (node instanceof Element) {
-      if (node !== root && node.matches(selector)) results.push(node)
-      if (node.shadowRoot !== null) await traverse(node.shadowRoot)
+    while (node !== null) {
+      if (node !== root && node instanceof Element && node.matches(selector)) results.push(node)
+      if (node instanceof Element && node.shadowRoot) await traverse(node.shadowRoot)
       nodeCount++
       if (nodeCount % chunkSize === 0) await yieldToMain(window)
       node = walker.nextNode()
