@@ -1,9 +1,16 @@
+import * as Window from '../../misc/crossenv/window/index.js'
+
 /** Options for `deepSelect`. */
 type Options = {
   /** Root node to start traversal from. Defaults to `document`. */
   fromElement?: Element
   /** Number of element nodes to visit before yielding to the main thread. Defaults to `500`. */
   chunkSize?: number
+}
+
+const yieldToMain = async (windowLike: any): Promise<void> => {
+  if (typeof windowLike.scheduler?.yield === 'function') return windowLike.scheduler.yield()
+  return await new Promise(resolve => setTimeout(resolve, 0))
 }
 
 /**
@@ -32,22 +39,21 @@ export const deepSelect = async (
   selector: string,
   options?: Options
 ): Promise<Element[]> => {
+  const window = Window.get()
+  const { document } = window
   const from = options?.fromElement ?? document
   const results: Element[] = []
   const chunkSize = options?.chunkSize ?? 500
   let nodeCount = 0
-  const traverse = async (root: Element | Document | ShadowRoot) => {
+  const traverse = async (root: Element | Document | ShadowRoot): Promise<void> => {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT)
-    let node = walker.currentNode as Element
-    while (node) {
+    let node: Node | null = walker.currentNode
+    while (node instanceof Element) {
       if (node !== root && node.matches(selector)) results.push(node)
-      if (node.shadowRoot) await traverse(node.shadowRoot)
+      if (node.shadowRoot !== null) await traverse(node.shadowRoot)
       nodeCount++
-      if (nodeCount % chunkSize === 0) await (async () => {
-        if (typeof window.scheduler?.yield === 'function') return window.scheduler.yield()
-        return new Promise(resolve => setTimeout(resolve, 0))
-      })()
-      node = walker.nextNode() as Element
+      if (nodeCount % chunkSize === 0) await yieldToMain(window)
+      node = walker.nextNode()
     }
   }
   await traverse(from)
