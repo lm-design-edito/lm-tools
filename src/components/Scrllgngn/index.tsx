@@ -23,6 +23,8 @@ import { mergeClassNames } from '../utils/index.js'
 import { scrllgngn as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
+// [WIP] current page id should be reflected in an attribute
+
 /**
  * Common properties shared by all block types.
  *

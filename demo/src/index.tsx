@@ -4,10 +4,12 @@ import { Gallery } from '~/components/Gallery/index.js'
 
 // Demo components
 import { BeforeAfterDemo } from './components/demo/BeforeAfterDemo/index.js'
+import { ClippableDemo } from './components/demo/ClippableDemo/index.js'
 import { DisclaimerDemo } from './components/demo/DisclaimerDemo/index.js'
 import { DrawerDemo } from './components/demo/DrawerDemo/index.js'
 import { EventListenerDemo } from './components/demo/EventListenerDemo/index.js'
 import { GalleryDemo } from './components/demo/GalleryDemo/index.js'
+import { IframeDemo } from './components/demo/IframeDemo/index.js'
 import { ImageDemo } from './components/demo/ImageDemo/index.js'
 import { IntersectionObserverDemo } from './components/demo/IntersectionObserverDemo/index.js'
 import { OverlayerDemo } from './components/demo/OverlayerDemo/index.js'
@@ -30,10 +32,12 @@ const components: Array<{
   comp: ReactNode
 }> = [
   { name: 'BeforeAfter', comp: <BeforeAfterDemo /> },
+  { name: 'Clippable', comp: <ClippableDemo /> },
   { name: 'Disclaimer', comp: <DisclaimerDemo /> },
   { name: 'Drawer', comp: <DrawerDemo /> },
   { name: 'EventListener', comp: <EventListenerDemo /> },
   { name: 'Gallery', comp: <GalleryDemo /> },
+  { name: 'Iframe', comp: <IframeDemo /> },
   { name: 'Image', comp: <ImageDemo /> },
   { name: 'IntersectionObserver', comp: <IntersectionObserverDemo /> },
   { name: 'Overlayer', comp: <OverlayerDemo /> },
@@ -50,7 +54,7 @@ const components: Array<{
 ]
 
 const App = () => {
-  const initActiveTab = components.findIndex(e => e.name === 'Video')
+  const initActiveTab = components.findIndex(e => e.name === 'Iframe')
   const [activeTab, setActiveTab] = useState(initActiveTab)
   return <div className={cssModule['app']}>
     <Gallery
