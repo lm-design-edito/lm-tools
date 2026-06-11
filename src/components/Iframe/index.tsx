@@ -2,7 +2,7 @@ import {
   type JSX,
   type FunctionComponent,
   type IframeHTMLAttributes,
-  type ReactNode,
+  type PropsWithChildren,
   useMemo
 } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -33,7 +33,7 @@ import { isNotNullish } from '../../agnostic/misc/is-nullish/index.js'
  * `renderToStaticMarkup` and injected into a complete HTML document:
  * `<!doctype html><html><body>...</body></html>`.
  */
-export type Props = WithClassName<{}> & IframeHTMLAttributes<HTMLIFrameElement>
+export type Props = PropsWithChildren<WithClassName<Record<never, never>>> & Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'children'>
 
 /**
  * Iframe component with React-to-HTML rendering support.
