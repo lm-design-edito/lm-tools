@@ -101,13 +101,22 @@ export type PropsPage = {
  * - `'after'`  — forces blocks from pages after the current one.
  * - `'both'`   — forces blocks on both sides.
  * - `'none'`   — no forcing (default behaviour).
- * @property className - Optional additional class name(s) applied to the root element.
+ * @property stateHandlers - Optional callbacks invoked in response to
+ * component state changes.
+ * @property stateHandlers.pageChanged - Called whenever the current page
+ * changes. Receives the zero-based index of the current page and the
+ * corresponding page definition, if available.
+ * @property className - Optional additional class name(s) applied to the root
+ * element.
  */
 export type Props = WithClassName<{
   pages?: PropsPage[]
   thresholdOffsetPercent?: number
   stickyBlocksLazyLoadDistance?: number
   forceStickBlocks?: 'before' | 'after' | 'both' | 'none'
+  stateHandlers?: {
+    pageChanged?: (currentPagePos: number, pageData?: PropsPage) => void
+  }
 }>
 
 type BlockConsolidatedData = {
@@ -159,6 +168,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   thresholdOffsetPercent,
   stickyBlocksLazyLoadDistance = 2,
   forceStickBlocks,
+  stateHandlers,
   className
 }) => {
   // State
@@ -234,10 +244,13 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   const handleTopBoundDetect: IOCompProps['onIntersected'] = e => setTopVis(e.ioEntry?.isIntersecting ?? false)
   const handleCntDetect: IOCompProps['onIntersected'] = e => setCntVis(e.ioEntry?.isIntersecting ?? false)
   const handleBtmBoundDetect: IOCompProps['onIntersected'] = e => setBtmVis(e.ioEntry?.isIntersecting ?? false)
-  const handlePageChange: NonNullable<PaginatorProps['stateHandlers']>['pageChanged'] = pages => {
-    const curPagePos = pages.findIndex(page => page.position === 'curr')
-    if (curPagePos === -1) return
-    return setCurrentPagePos(curPagePos)
+  const handlePageChange: NonNullable<PaginatorProps['stateHandlers']>['pageChanged'] = statePages => {
+    const curPagePos = statePages.findIndex(page => page.position === 'curr')
+    if (curPagePos === -1) return;
+    if (curPagePos === currentPagePos) return;
+    setCurrentPagePos(curPagePos)
+    stateHandlers?.pageChanged?.(curPagePos, pages?.[curPagePos])
+    return 
   }
   const handleResize: RSOCompProps['onResized'] = ({ boundingClientRect }) => {
     if (partialBoundingRect === undefined

@@ -135,6 +135,9 @@ export type Props = WithClassName<{
 const demoProps: ScrllgngnProps = {
   forceStickBlocks: 'none',
   thresholdOffsetPercent: 80,
+  stateHandlers: {
+    pageChanged: (pos, data) => console.log(pos, data)
+  },
   pages: [{
     id: 'premiere-page',
     blocks: [{
