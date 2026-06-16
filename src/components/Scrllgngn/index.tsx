@@ -246,11 +246,10 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   const handleBtmBoundDetect: IOCompProps['onIntersected'] = e => setBtmVis(e.ioEntry?.isIntersecting ?? false)
   const handlePageChange: NonNullable<PaginatorProps['stateHandlers']>['pageChanged'] = statePages => {
     const curPagePos = statePages.findIndex(page => page.position === 'curr')
-    if (curPagePos === -1) return;
-    if (curPagePos === currentPagePos) return;
+    if (curPagePos === -1) return
+    if (curPagePos === currentPagePos) return
     setCurrentPagePos(curPagePos)
     stateHandlers?.pageChanged?.(curPagePos, pages?.[curPagePos])
-    return 
   }
   const handleResize: RSOCompProps['onResized'] = ({ boundingClientRect }) => {
     if (partialBoundingRect === undefined
