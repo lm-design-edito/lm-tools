@@ -156,7 +156,7 @@ const demoProps: ScrllgngnProps = {
     }, {
       id: 'ft-blk-1',
       depth: 'front',
-      children: <div style={{ width: 100, height: 200, marginLeft: 50, backgroundColor: 'darkorange' }}>front 1</div>
+      children: <div style={{ width: 100, height: 200, backgroundColor: 'darkorange' }}>front 1</div>
     }, {
       depth: 'back',
       children: <div style={{ width: 100, height: 200, marginLeft: 50, marginTop: 200, backgroundColor: 'violet' }}>back 2</div>
