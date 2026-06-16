@@ -6,14 +6,17 @@
 
 .back-blocks {
   z-index: 1;
+  pointer-events: none;
 }
 
 .scrolling-content {
+  position: relative;
   z-index: 2;
 }
 
 .front-blocks {
   z-index: 3;
+  pointer-events: none;
 }
 
 /* Scrllgngn entering the viewport, blocks not fixed yet */
@@ -71,4 +74,10 @@ Force stick blocks option
   bottom: 0;
   left: 0;
   right: 0;
+  pointer-events: none;
+}
+
+.back-block > :where(*),
+.front-block > :where(*) {
+  pointer-events: unset;
 }

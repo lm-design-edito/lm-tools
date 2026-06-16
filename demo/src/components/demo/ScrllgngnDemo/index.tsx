@@ -146,7 +146,7 @@ const demoProps: ScrllgngnProps = {
       children: <div style={{
         width: 300,
         height: 2000,
-        backgroundColor: 'linen'
+        border: '10px solid linen',
       }}>scrl-blk-1</div>
     }, {
       id: 'bk-blk-1',
@@ -169,7 +169,7 @@ const demoProps: ScrllgngnProps = {
       children: <div style={{
         width: 300,
         height: 2000,
-        backgroundColor: 'gold'
+        border: '10px solid gold',
       }}>scrl-blk-2</div>
     }, {
       id: 'bk-blk-1'
@@ -182,7 +182,7 @@ const demoProps: ScrllgngnProps = {
       children: <div style={{
         width: 300,
         height: 2000,
-        backgroundColor: 'honeydew'
+        border: '10px solid honeydew',
       }}>scrl-blk-3</div>
     }, {
       id: 'ft-blk-1'
@@ -195,7 +195,7 @@ const demoProps: ScrllgngnProps = {
       children: <div style={{
         width: 300,
         height: 2000,
-        backgroundColor: 'fuchsia'
+        border: '10px solid fuschia',
       }}>scrl-blk-4</div>
     }]
   }, {
@@ -206,7 +206,7 @@ const demoProps: ScrllgngnProps = {
       children: <div style={{
         width: 300,
         height: 2000,
-        backgroundColor: 'orangered'
+        border: '10px solid orangered',
       }}>scrl-blk-5</div>
     }]
   }, {
@@ -217,7 +217,7 @@ const demoProps: ScrllgngnProps = {
       children: <div style={{
         width: 300,
         height: 2000,
-        backgroundColor: 'papayawhip'
+        border: '10px solid papayawhip',
       }}>scrl-blk-6</div>
     }, {
       id: 'ft-blk-1'
