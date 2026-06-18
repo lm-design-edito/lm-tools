@@ -15,7 +15,7 @@
     "watch:src:preact": "PREACT=true npm run watch:src",
     "make:dist": "mkdir -p dist",
     "serve:dist": "npm run make:dist && npx http-server dist --port ${PORT} --cors -c-1",
-    "start": "npx concurrently -n 'watch:src   ,watch:public,serve:dist  ' 'npm run watch:src' 'npm run watch:public' 'PORT=${PORT_DIST:-3000} npm run serve:dist'",
+    "start": "npx concurrently -n 'watch:src   ,watch:public,serve:dist  ' 'npm run watch:src' 'npm run watch:public' 'PORT=${PORT_DIST:-3001} npm run serve:dist'",
     "start:preact": "PREACT=true npm start",
     "start:react": "PREACT=false npm start"
   },

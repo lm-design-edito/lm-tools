@@ -22,11 +22,9 @@ import cssModule from './styles.module.css'
 /**
  * Describes a single responsive image source for use in a `<picture>` element.
  *
- * @property srcSet - One or more image URLs with optional width/density descriptors
- * (e.g. `'img@2x.png 2x'`).
+ * @property srcSet - One or more image URLs with optional width/density descriptors (e.g. `'img@2x.png 2x'`).
  * @property type - MIME type hint for the source (e.g. `'image/webp'`).
- * @property media - Media condition under which this source is selected
- * (e.g. `'(max-width: 768px)'`).
+ * @property media - Media condition under which this source is selected (e.g. `'(max-width: 768px)'`).
  * @property sizes - Sizes attribute forwarded to the `<source>` element.
  */
 type SourceData = {
