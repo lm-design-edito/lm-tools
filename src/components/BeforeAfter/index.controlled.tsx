@@ -3,7 +3,8 @@ import {
   type ReactNode,
   type TouchEventHandler,
   useRef,
-  type FunctionComponent
+  type FunctionComponent,
+  type PropsWithChildren
 } from 'react'
 import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import { round } from '../../agnostic/numbers/round/index.js'
@@ -29,8 +30,9 @@ import cssModule from './styles.module.css'
  *   - `clicked` — called on pointer release when no drag occurred, with the
  *     x and y ratios of the release position.
  * @property className - Additional class name(s) applied to the root element.
+ * @property children - Arbitrary content to inject inside the component
  */
-export type Props = WithClassName<{
+export type Props = PropsWithChildren<WithClassName<{
   mode?: 'vertical' | 'horizontal'
   ratio?: number
   before?: ReactNode
@@ -39,7 +41,7 @@ export type Props = WithClassName<{
     dragged?: (xRatio: number, yRatio: number) => void
     clicked?: (xRatio: number, yRatio: number) => void
   }
-}>
+}>>
 
 /**
  * Controlled before/after comparison component.
@@ -72,6 +74,7 @@ export const BeforeAfterControlled: FunctionComponent<Props> = ({
   before,
   after,
   className,
+  children,
   actionHandlers
 }) => {
   ratio = clamp(ratio, 0, 1)
@@ -166,5 +169,6 @@ export const BeforeAfterControlled: FunctionComponent<Props> = ({
     <div className={beforeClass}>{before}</div>
     <div className={afterClass}>{after}</div>
     <div className={separatorClass} />
+    {children}
   </div>
 }

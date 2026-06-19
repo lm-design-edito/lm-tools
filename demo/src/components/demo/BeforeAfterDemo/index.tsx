@@ -151,6 +151,7 @@ const tsxDetails = `
  *   - \`clicked\` — called on pointer release when no drag occurred, with the
  *     x and y ratios of the release position.
  * @property className - Additional class name(s) applied to the root element.
+ * @property children - Arbitrary content to inject inside the component
  */
 `
 
