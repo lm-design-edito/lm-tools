@@ -28,18 +28,18 @@
   margin: 16px 16px 32px 16px;
 }
 
-.demo-css :global(.dsed-drawer.dsed-drawer--closed .dsed-drawer__closer),
-.demo-props :global(.dsed-drawer.dsed-drawer--closed .dsed-drawer__closer) {
+.demo-css :global(.lm-drawer.lm-drawer--closed .lm-drawer__closer),
+.demo-props :global(.lm-drawer.lm-drawer--closed .lm-drawer__closer) {
   display: none;
 }
 
-.demo-css :global(.dsed-drawer.dsed-drawer--opened .dsed-drawer__opener),
-.demo-props :global(.dsed-drawer.dsed-drawer--opened .dsed-drawer__opener) {
+.demo-css :global(.lm-drawer.lm-drawer--opened .lm-drawer__opener),
+.demo-props :global(.lm-drawer.lm-drawer--opened .lm-drawer__opener) {
   display: none;
 }
 
-.demo-css :global(.dsed-drawer.dsed-drawer--closed .dsed-drawer__content),
-.demo-props :global(.dsed-drawer.dsed-drawer--closed .dsed-drawer__content) {
+.demo-css :global(.lm-drawer.lm-drawer--closed .lm-drawer__content),
+.demo-props :global(.lm-drawer.lm-drawer--closed .lm-drawer__content) {
   pointer-events: none;
   height: 0;
   opacity: 0;
@@ -48,9 +48,9 @@
     height 400ms 100ms;
 }
 
-.demo-css :global(.dsed-drawer.dsed-drawer--opened .dsed-drawer__content),
-.demo-props :global(.dsed-drawer.dsed-drawer--opened .dsed-drawer__content) {
-  height: var(--dsed-drawer-content-height-px);
+.demo-css :global(.lm-drawer.lm-drawer--opened .lm-drawer__content),
+.demo-props :global(.lm-drawer.lm-drawer--opened .lm-drawer__content) {
+  height: var(--lm-drawer-content-height-px);
   opacity: 1;
   transition: 
     opacity 400ms 100ms,

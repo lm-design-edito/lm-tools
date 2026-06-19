@@ -64,7 +64,7 @@ const demoProps: ScrollListenerProps = {
       height: 700
     }}>
     <div style={{
-      transform: `translateY(calc(var(--dsed-scroll-listener-self-outer-scrolled-y-ratio) * 700px))`
+      transform: `translateY(calc(var(--lm-scroll-listener-self-outer-scrolled-y-ratio) * 700px))`
     }}>SCROLL ME BABYYYY</div>
   </div>
 }

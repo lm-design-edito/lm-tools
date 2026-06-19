@@ -126,19 +126,19 @@ lm-tools/src/components/Subtitles/index.tsx
 ```
 
 ```html
-<div class="dsed-subtitles">
+<div class="lm-subtitles">
   <!-- Groupe passé (donc que sub prev dedans) -->
   <div
-    class="dsed-subtitles__group dsed-subtitles__group--prev"
+    class="lm-subtitles__group lm-subtitles__group--prev"
     data-start-sub-pos="0"
     data-end-sub-pos="1">
-    <span class="dsed-subtitles__sub dsed-subtitles__sub--prev" data-sub-pos="0">
+    <span class="lm-subtitles__sub lm-subtitles__sub--prev" data-sub-pos="0">
       Some sub
     </span>
   </div>
   <!-- Groupe courant (mix de sub prev, curr et next) -->
   <div
-    class="dsed-subtitles__group dsed-subtitles__group--curr"
+    class="lm-subtitles__group lm-subtitles__group--curr"
     data-start-timecode="00:02:16,612"
     data-end-timecode="00:02:16,612"
     data-start-time-ms="34754382"
@@ -146,7 +146,7 @@ lm-tools/src/components/Subtitles/index.tsx
     data-start-sub-pos="0"
     data-end-sub-pos="1">
     <span
-      class="dsed-subtitles__sub dsed-subtitles__sub--curr"
+      class="lm-subtitles__sub lm-subtitles__sub--curr"
       data-start-timecode="00:02:16,612"
       data-end-timecode="00:02:16,612"
       data-start-time-ms="34754382"
@@ -156,7 +156,7 @@ lm-tools/src/components/Subtitles/index.tsx
   </div>
   <!-- Groupe à venir -->
   <div
-    class="dsed-subtitles__group dsed-subtitles__group--prev"
+    class="lm-subtitles__group lm-subtitles__group--prev"
     data-start-timecode="00:02:16,612"
     data-end-timecode="00:02:16,612"
     data-start-time-ms="34754382"
@@ -164,7 +164,7 @@ lm-tools/src/components/Subtitles/index.tsx
     data-start-sub-pos="0"
     data-end-sub-pos="1">
     <span
-      class="dsed-subtitles__sub dsed-subtitles__sub--prev"
+      class="lm-subtitles__sub lm-subtitles__sub--prev"
       data-start-timecode="00:02:16,612"
       data-end-timecode="00:02:16,612"
       data-start-time-ms="34754382"
