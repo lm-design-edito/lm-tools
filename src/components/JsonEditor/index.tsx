@@ -24,6 +24,17 @@ import cssModule from './styles.module.css'
 type JsonPrimitive = string | number | boolean | null
 type JsonValue = JsonPrimitive | JsonValue[] | { [k: string]: JsonValue }
 
+/**
+ * Props for the {@link JsonEditor} component.
+ *
+ * @property defaultValue - Initial JSON value rendered by the editor. Defaults to `null`.
+ * @property onChange - Called after any value change with the updated JSON value.
+ * @property onValidationError - Called when the updated value fails schema validation,
+ * with the list of Zod issues. Not called when no `schema` is provided.
+ * @property schema - Optional Zod schema used to validate the value after each change.
+ * When provided, validation runs after `onChange` is dispatched.
+ * @property className - Additional class name(s) applied to the root element.
+ */
 export type Props = WithClassName<{
   defaultValue?: JsonValue
   onChange?: (val: JsonValue) => void
@@ -31,8 +42,37 @@ export type Props = WithClassName<{
   schema?: ZodType<JsonValue>
 }>
 
+/* Shared across all sub components */
 const c = clss(publicClassName, { cssModule })
 
+/**
+ * Interactive JSON editor component.
+ *
+ * Renders a recursive value editor tree alongside a live JSON preview.
+ * Supports all JSON value types: strings, numbers, booleans, null, arrays,
+ * and records. Each node exposes a type selector and a type-appropriate input.
+ *
+ * When a `schema` is provided, the current value is validated against it after
+ * every change. Validation errors are reported through `onValidationError` and
+ * do not block editing.
+ *
+ * ### CSS elements
+ * - `value` — wraps each node in the editor tree; receives a type modifier
+ *   matching the current value type (`string`, `number`, `boolean`, `null`, `array`, `record`).
+ * - `type` — the type selector control.
+ * - `string`, `number`, `boolean`, `null` — primitive value inputs.
+ * - `record` — record entry list.
+ * - `array` — array entry list items.
+ * - `prop-name` — key input for record entries.
+ * - `create-prop` — button to append a new entry to a record or array.
+ * - `delete-prop` — button to remove an existing entry.
+ * - `lift-prop` — button to move an array entry up.
+ * - `drop-prop` — button to move an array entry down.
+ *
+ * @param props - Component properties.
+ * @see {@link Props}
+ * @returns A recursive JSON value editor with a live serialized preview.
+ */
 export const JsonEditor: FunctionComponent<Props> = ({
   defaultValue = null,
   onChange,
@@ -63,6 +103,12 @@ export const JsonEditor: FunctionComponent<Props> = ({
     <pre>{JSON.stringify(value, null, 2)}</pre>
   </div>
 }
+
+/* * * * * * * * * * * * * * * * * 
+ *
+ * Value
+ * 
+ * * * * * * * * * * * * * * * * */
 
 export const ValueEditor: FunctionComponent<{
   defaultValue?: JsonValue
