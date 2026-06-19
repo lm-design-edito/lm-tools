@@ -1,7 +1,7 @@
 import { type FunctionComponent, useState } from 'react'
 import {
   BeforeAfterControlled,
-  type Props as ControlledProps,
+  type Props as ControlledProps
 } from './index.controlled.js'
 
 /**
@@ -54,18 +54,18 @@ export const BeforeAfter: FunctionComponent<Props> = ({
   const [internalRatio, setInternalRatio] = useState(defaultRatio)
   const isControlled = ratio !== undefined
   const effectiveRatio = isControlled ? ratio : internalRatio
-  const handleDrag = (x: number, y: number) => {
-    x = 1.02 * x - .01
-    y = 1.02 * y - .01
+  const handleDrag = (x: number, y: number): void => {
+    x = 1.02 * x - 0.01
+    y = 1.02 * y - 0.01
     actionHandlers?.dragged?.(x, y)
     if (!isControlled) {
       setInternalRatio(mode === 'horizontal' ? x : y)
       stateHandlers?.ratioChanged?.(mode === 'horizontal' ? x : y)
     }
   }
-  const handleClick = (x: number, y: number) => {
-    x = 1.02 * x - .01
-    y = 1.02 * y - .01
+  const handleClick = (x: number, y: number): void => {
+    x = 1.02 * x - 0.01
+    y = 1.02 * y - 0.01
     actionHandlers?.clicked?.(x, y)
     if (!isControlled) {
       setInternalRatio(mode === 'horizontal' ? x : y)

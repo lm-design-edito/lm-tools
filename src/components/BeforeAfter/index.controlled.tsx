@@ -82,7 +82,7 @@ export const BeforeAfterControlled: FunctionComponent<Props> = ({
   const hasDragged = useRef(false)
 
   // Utils
-  const getRatios = (clientX: number, clientY: number) => {
+  const getRatios = (clientX: number, clientY: number): { xRatio: number, yRatio: number } | null => {
     const rect = rootRef.current?.getBoundingClientRect()
     if (rect === undefined) return null
     return {
