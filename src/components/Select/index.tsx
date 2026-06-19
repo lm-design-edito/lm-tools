@@ -3,7 +3,7 @@ import {
   type SelectHTMLAttributes,
   type ReactNode,
   useState,
-  PropsWithChildren
+  type PropsWithChildren
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'

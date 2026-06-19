@@ -2,13 +2,13 @@ import {
   type JSX,
   type FunctionComponent,
   useState,
-  EventHandler,
-  ChangeEvent
+  type EventHandler,
+  type ChangeEvent
 } from 'react'
 import {
   ZodError,
   type ZodType,
-  core
+  type core
 } from 'zod'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { isNonNullObject } from '../../agnostic/objects/is-object/index.js'
@@ -22,7 +22,7 @@ import { jsonEditor as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
 type JsonPrimitive = string | number | boolean | null
-type JsonValue = JsonPrimitive | Array<JsonValue> | { [k: string]: JsonValue }
+type JsonValue = JsonPrimitive | JsonValue[] | { [k: string]: JsonValue }
 
 export type Props = WithClassName<{
   defaultValue?: JsonValue
@@ -41,7 +41,7 @@ export const JsonEditor: FunctionComponent<Props> = ({
   className
 }) => {
   const [value, setValue] = useState(defaultValue)
-  const setValueAndDispatch = (val: JsonValue) => {
+  const setValueAndDispatch = (val: JsonValue): void => {
     setValue(val)
     onChange?.(val)
     try {
@@ -66,7 +66,7 @@ export const JsonEditor: FunctionComponent<Props> = ({
 
 export const ValueEditor: FunctionComponent<{
   defaultValue?: JsonValue
-  onChange?: (newValue: JsonValue) => void,
+  onChange?: (newValue: JsonValue) => void
   path?: Array<string | number>
 }> = ({
   defaultValue = {},
@@ -75,7 +75,7 @@ export const ValueEditor: FunctionComponent<{
 }): JSX.Element => {
   // State
   const [value, setValue] = useState(defaultValue)
-  const setValueAndDispatch = (newValue: JsonValue) => {
+  const setValueAndDispatch = (newValue: JsonValue): void => {
     setValue(newValue)
     onChange?.(newValue)
   }
@@ -94,9 +94,9 @@ export const ValueEditor: FunctionComponent<{
   const handleStringValueChange: EventHandler<ChangeEvent<HTMLTextAreaElement | HTMLInputElement>> = e => setValueAndDispatch(e.target.value)
   const handleNumberValueChange: EventHandler<ChangeEvent<HTMLInputElement>> = e => setValueAndDispatch(parseFloat(e.target.value))
   const handleBooleanValueChange: EventHandler<ChangeEvent<HTMLInputElement>> = e => setValueAndDispatch(e.target.checked)
-  const handleRecordValueChange: (val: { [k: string]: JsonValue }) => void = e => setValueAndDispatch(e)
+  const handleRecordValueChange: (val: Record<string, JsonValue>) => void = e => setValueAndDispatch(e)
   const handleArrayValueChange: (val: JsonValue[]) => void = e => setValueAndDispatch(e)
-  
+
   // Rendering
   const valueEditorClss = c('value', {
     string: typeof value === 'string',
@@ -178,8 +178,8 @@ const BooleanEditor: FunctionComponent<{
 const NullEditor: FunctionComponent<{ defaultValue: null }> = () => <span className={c('null')}>null</span>
 
 const RecordEditor: FunctionComponent<{
-  defaultValue?: { [k: string]: JsonValue }
-  onChange?: (newValue: { [k: string]: JsonValue }) => void
+  defaultValue?: Record<string, JsonValue>
+  onChange?: (newValue: Record<string, JsonValue>) => void
   path?: Array<string | number>
 }> = ({
   defaultValue = {},
@@ -193,7 +193,7 @@ const RecordEditor: FunctionComponent<{
       val
     }])
   ))
-  const setValueAndDispatch = (newValue: typeof value) => {
+  const setValueAndDispatch = (newValue: typeof value): void => {
     setValue(newValue)
     onChange?.(Array.from(newValue).reduce((acc, [key, { val }]) => ({
       ...acc,
@@ -201,13 +201,13 @@ const RecordEditor: FunctionComponent<{
     }), {}))
   }
 
-  const handleDeleteProp = (key: string) => {
+  const handleDeleteProp = (key: string): void => {
     const newValue = new Map(value)
     newValue.delete(key)
     setValueAndDispatch(newValue)
   }
 
-  const handleCreateProp = () => {
+  const handleCreateProp = (): void => {
     let propName = ''
     while (value.get(propName) !== undefined) { propName = randomHash(4) }
     const newValue = new Map(value)
@@ -223,7 +223,8 @@ const RecordEditor: FunctionComponent<{
         key === oldName ? newName : key,
         { id, val }
       ]
-    ))
+      )
+    )
     setValueAndDispatch(newValue)
   }
 
@@ -274,17 +275,17 @@ const ArrayEditor: FunctionComponent<{
   path
 }) => {
   const [value, setValue] = useState(new Map(defaultValue.map(val => [randomHash(8), val])))
-  const setValueAndDispatch = (newValue: typeof value) => {
+  const setValueAndDispatch = (newValue: typeof value): void => {
     setValue(newValue)
     onChange?.(Array.from(newValue).map(([, val]) => val))
   }
 
-  const handleDeleteProp = (pos: number) => setValueAndDispatch(new Map([
+  const handleDeleteProp = (pos: number): void => setValueAndDispatch(new Map([
     ...Array.from(value).slice(0, pos),
     ...Array.from(value).slice(pos + 1)
   ]))
 
-  const handleCreateProp = () => {
+  const handleCreateProp = (): void => {
     const newValue = new Map([...Array.from(value), [randomHash(8), null]])
     setValueAndDispatch(newValue)
   }
@@ -295,20 +296,20 @@ const ArrayEditor: FunctionComponent<{
     ...Array.from(value).slice(pos + 1)
   ]))
 
-  const handleLiftProp = (pos: number) => setValueAndDispatch(new Map([
+  const handleLiftProp = (pos: number): void => setValueAndDispatch(new Map([
     ...Array.from(value).slice(0, pos - 1),
     Array.from(value)[pos],
     Array.from(value)[pos - 1],
     ...Array.from(value).slice(pos + 1)
   ].filter(e => e !== undefined)))
-  
-  const handleDropProp = (pos: number) => setValueAndDispatch(new Map([
+
+  const handleDropProp = (pos: number): void => setValueAndDispatch(new Map([
     ...Array.from(value).slice(0, pos),
     Array.from(value)[pos + 1],
     Array.from(value)[pos],
     ...Array.from(value).slice(pos + 2)
   ].filter(e => e !== undefined)))
-  
+
   return <ol>
     {Array.from(value).map(([id, val], pos) => <li
       className={c('array')}
