@@ -3,7 +3,7 @@ import {
   type ButtonHTMLAttributes,
   type ReactNode
 } from 'react'
-import { clss } from '@design-edito/tools/agnostic/css/clss'
+import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import { button as publicClassName } from '../public-classnames.js'

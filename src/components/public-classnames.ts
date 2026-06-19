@@ -1,4 +1,5 @@
 export const beforeAfter = 'lm-before-after'
+export const button = 'lm-button'
 export const clippable = 'lm-clippable'
 export const disclaimer = 'lm-disclaimer'
 export const drawer = 'lm-drawer'
