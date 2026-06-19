@@ -104,10 +104,10 @@ export const JsonEditor: FunctionComponent<Props> = ({
   </div>
 }
 
-/* * * * * * * * * * * * * * * * * 
+/* * * * * * * * * * * * * * * * *
  *
  * Value
- * 
+ *
  * * * * * * * * * * * * * * * * */
 
 export const ValueEditor: FunctionComponent<{
@@ -188,6 +188,12 @@ export const ValueEditor: FunctionComponent<{
   </span>
 }
 
+/* * * * * * * * * * * * * * * * *
+ *
+ * String
+ *
+ * * * * * * * * * * * * * * * * */
+
 const StringEditor: FunctionComponent<{
   type?: 'input' | 'textarea'
   defaultValue?: string
@@ -203,6 +209,12 @@ const StringEditor: FunctionComponent<{
     defaultValue={props.defaultValue ?? ''}
     onChange={props.onChange} />
 
+/* * * * * * * * * * * * * * * * *
+ *
+ * Number
+ *
+ * * * * * * * * * * * * * * * * */
+
 const NumberEditor: FunctionComponent<{
   defaultValue?: number
   onChange?: EventHandler<ChangeEvent<HTMLInputElement>>
@@ -211,6 +223,12 @@ const NumberEditor: FunctionComponent<{
   type='number'
   defaultValue={props.defaultValue ?? 0}
   onChange={props.onChange} />
+
+/* * * * * * * * * * * * * * * * *
+ *
+ * Boolean
+ *
+ * * * * * * * * * * * * * * * * */
 
 const BooleanEditor: FunctionComponent<{
   defaultValue?: boolean
@@ -221,7 +239,19 @@ const BooleanEditor: FunctionComponent<{
   defaultChecked={props.defaultValue ?? false}
   onChange={props.onChange} />
 
+/* * * * * * * * * * * * * * * * *
+ *
+ * Null
+ *
+ * * * * * * * * * * * * * * * * */
+
 const NullEditor: FunctionComponent<{ defaultValue: null }> = () => <span className={c('null')}>null</span>
+
+/* * * * * * * * * * * * * * * * *
+ *
+ * Record
+ *
+ * * * * * * * * * * * * * * * * */
 
 const RecordEditor: FunctionComponent<{
   defaultValue?: Record<string, JsonValue>
@@ -310,6 +340,12 @@ const RecordEditor: FunctionComponent<{
     </button>
   </ul>
 }
+
+/* * * * * * * * * * * * * * * * *
+ *
+ * Array
+ *
+ * * * * * * * * * * * * * * * * */
 
 const ArrayEditor: FunctionComponent<{
   defaultValue?: JsonValue[]
