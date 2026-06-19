@@ -54,7 +54,7 @@ const components: Array<{
 ]
 
 const App = () => {
-  const initActiveTab = components.findIndex(e => e.name === 'Iframe')
+  const initActiveTab = components.findIndex(e => e.name === 'BeforeAfter')
   const [activeTab, setActiveTab] = useState(initActiveTab)
   return <div className={cssModule['app']}>
     <Gallery

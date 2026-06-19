@@ -6,13 +6,32 @@ import {
   type FunctionComponent
 } from 'react'
 import { clamp } from '../../agnostic/numbers/clamp/index.js'
+import { round } from '../../agnostic/numbers/round/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../utils/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { beforeAfter as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
+/**
+ * Props for the {@link BeforeAfterControlled} component.
+ *
+ * Extends {@link WithClassName} with layout, content, and interaction configuration.
+ *
+ * @property mode - Layout orientation of the split. Defaults to `'horizontal'`.
+ * @property ratio - Position of the divider as a value between `0` and `1`.
+ * Values outside this range are clamped automatically. Defaults to `0`.
+ * @property before - Content rendered in the first (before) panel.
+ * @property after - Content rendered in the second (after) panel.
+ * @property actionHandlers - Optional user action callbacks:
+ *   - `dragged` — called on each pointer move while dragging, with the current
+ *     x and y ratios relative to the component bounds.
+ *   - `clicked` — called on pointer release when no drag occurred, with the
+ *     x and y ratios of the release position.
+ * @property className - Additional class name(s) applied to the root element.
+ */
 export type Props = WithClassName<{
+  mode?: 'vertical' | 'horizontal'
   ratio?: number
   before?: ReactNode
   after?: ReactNode
@@ -22,7 +41,33 @@ export type Props = WithClassName<{
   }
 }>
 
+/**
+ * Controlled before/after comparison component.
+ *
+ * Renders two content panels separated by a draggable divider whose position
+ * is expressed as a ratio between `0` and `1`. Supports both mouse and touch
+ * interactions, distinguishing clicks from drags.
+ *
+ * The active ratio is exposed as:
+ * - CSS custom properties:
+ *   - `--{prefix}-ratio`
+ *   - `--{prefix}-ratio-percent`
+ * - A `data-ratio` attribute on the root element.
+ *
+ * ### CSS modifiers
+ * - `horizontal` — applied when `mode` is `'horizontal'`.
+ * - `vertical` — applied when `mode` is `'vertical'`.
+ *
+ * ### CSS elements
+ * - `before`
+ * - `after`
+ *
+ * @param props - Component properties.
+ * @see {@link Props}
+ * @returns A split-panel container with pointer interaction handlers and ratio state applied.
+ */
 export const BeforeAfterControlled: FunctionComponent<Props> = ({
+  mode = 'horizontal',
   ratio = 0,
   before,
   after,
@@ -91,15 +136,19 @@ export const BeforeAfterControlled: FunctionComponent<Props> = ({
 
   // Classes & attributes
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(), className)
+  const rootClss = mergeClassNames(c(null, {
+    horizontal: mode === 'horizontal',
+    vertical: mode === 'vertical'
+  }), className)
   const beforeClass = c('before')
   const afterClass = c('after')
+  const separatorClass = c('separator')
   const customProps: Record<string, string> = {
-    [`--${publicClassName}-ratio`]: `${ratio}`,
-    [`--${publicClassName}-ratio-percent`]: `${ratio * 100}%`
+    [`--${publicClassName}-ratio`]: `${round(ratio, 4)}`,
+    [`--${publicClassName}-ratio-percent`]: `${round(ratio * 100, 2)}%`
   }
   const dataAttributes: Record<string, string> = {
-    'data-ratio': `${ratio}`
+    'data-ratio': `${round(ratio, 4)}`
   }
 
   // Rendering
@@ -114,8 +163,8 @@ export const BeforeAfterControlled: FunctionComponent<Props> = ({
     onTouchEnd={handleTouchEnd}
     style={{ ...customProps }}
     {...dataAttributes}>
-    <div style={{ width: 200, height: 200, background: 'red' }}></div>
     <div className={beforeClass}>{before}</div>
     <div className={afterClass}>{after}</div>
+    <div className={separatorClass} />
   </div>
 }
