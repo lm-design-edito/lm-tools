@@ -55,11 +55,9 @@ export const Select: FunctionComponent<Props> = ({
   const [id] = useState(`_${randomHash(12)}`)
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null), className)
-  return <span className={rootClss}>
+  return <>
     {isNotFalsy(label) && <label className={c('label')} htmlFor={id}>{label}</label>}
-    <select {...rest} className={c('select')} id={id}>
-      {children}
-    </select>
+    <select {...rest} className={rootClss} id={id}>{children}</select>
     {isNotFalsy(error) && <span className={c('error')}>{error}</span>}
-  </span>
+  </>
 }

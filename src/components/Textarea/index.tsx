@@ -52,9 +52,9 @@ export const Textarea: FunctionComponent<Props> = ({
   const [id] = useState(`_${randomHash(12)}`)
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null), className)
-  return <span className={rootClss}>
+  return <>
     {isNotFalsy(label) && <label className={c('label')} htmlFor={id}>{label}</label>}
-    <textarea {...rest} className={c('textarea')} id={id} />
+    <textarea {...rest} className={rootClss} id={id} />
     {isNotFalsy(error) && <span className={c('error')}>{error}</span>}
-  </span>
+  </>
 }
