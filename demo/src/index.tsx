@@ -4,6 +4,7 @@ import { Gallery } from '~/components/Gallery/index.js'
 
 // Demo components
 import { BeforeAfterDemo } from './components/demo/BeforeAfterDemo/index.js'
+import { ButtonDemo } from './components/demo/ButtonDemo/index.js'
 import { ClippableDemo } from './components/demo/ClippableDemo/index.js'
 import { DisclaimerDemo } from './components/demo/DisclaimerDemo/index.js'
 import { DrawerDemo } from './components/demo/DrawerDemo/index.js'
@@ -11,15 +12,18 @@ import { EventListenerDemo } from './components/demo/EventListenerDemo/index.js'
 import { GalleryDemo } from './components/demo/GalleryDemo/index.js'
 import { IframeDemo } from './components/demo/IframeDemo/index.js'
 import { ImageDemo } from './components/demo/ImageDemo/index.js'
+import { InputDemo } from './components/demo/InputDemo/index.js'
 import { IntersectionObserverDemo } from './components/demo/IntersectionObserverDemo/index.js'
 import { OverlayerDemo } from './components/demo/OverlayerDemo/index.js'
 import { PaginatorDemo } from './components/demo/PaginatorDemo/index.js'
 import { ResizeObserverDemo } from './components/demo/ResizeObserverDemo/index.js'
 import { ScrllgngnDemo } from './components/demo/ScrllgngnDemo/index.js'
 import { ScrollListenerDemo } from './components/demo/ScrollListenerDemo/index.js'
+import { SelectDemo } from './components/demo/SelectDemo/index.js'
 import { SequencerDemo } from './components/demo/SequencerDemo/index.js'
 import { ShadowRootDemo } from './components/demo/ShadowRootDemo/index.js'
 import { SubtitlesDemo } from './components/demo/SubtitlesDemo/index.js'
+import { TextareaDemo } from './components/demo/TextareaDemo/index.js'
 import { TheatreDemo } from './components/demo/TheatreDemo/index.js'
 import { UIModuleDemo } from './components/demo/UIModuleDemo/index.js'
 import { VideoDemo } from './components/demo/VideoDemo/index.js'
@@ -32,6 +36,7 @@ const components: Array<{
   comp: ReactNode
 }> = [
   { name: 'BeforeAfter', comp: <BeforeAfterDemo /> },
+  { name: 'Button', comp: <ButtonDemo /> },
   { name: 'Clippable', comp: <ClippableDemo /> },
   { name: 'Disclaimer', comp: <DisclaimerDemo /> },
   { name: 'Drawer', comp: <DrawerDemo /> },
@@ -39,22 +44,25 @@ const components: Array<{
   { name: 'Gallery', comp: <GalleryDemo /> },
   { name: 'Iframe', comp: <IframeDemo /> },
   { name: 'Image', comp: <ImageDemo /> },
+  { name: 'Input', comp: <InputDemo /> },
   { name: 'IntersectionObserver', comp: <IntersectionObserverDemo /> },
   { name: 'Overlayer', comp: <OverlayerDemo /> },
   { name: 'Paginator', comp: <PaginatorDemo /> },
   { name: 'ResizeObserver', comp: <ResizeObserverDemo /> },
   { name: 'Scrllgngn', comp: <ScrllgngnDemo /> },
   { name: 'ScrollListener', comp: <ScrollListenerDemo /> },
+  { name: 'Select', comp: <SelectDemo /> },
   { name: 'Sequencer', comp: <SequencerDemo /> },
   { name: 'ShadowRoot', comp: <ShadowRootDemo /> },
   { name: 'Subtitles', comp: <SubtitlesDemo /> },
+  { name: 'Textarea', comp: <TextareaDemo /> },
   { name: 'Theatre', comp: <TheatreDemo /> },
   { name: 'UIModule', comp: <UIModuleDemo /> },
   { name: 'Video', comp: <VideoDemo /> }
 ]
 
 const App = () => {
-  const initActiveTab = components.findIndex(e => e.name === 'BeforeAfter')
+  const initActiveTab = components.findIndex(e => e.name === 'Input')
   const [activeTab, setActiveTab] = useState(initActiveTab)
   return <div className={cssModule['app']}>
     <Gallery

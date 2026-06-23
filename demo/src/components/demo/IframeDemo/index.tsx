@@ -61,7 +61,23 @@ const tsxDetails = `
  */`
 
 const demoProps1: IframeProps = {
-  children: <div>Iframe content</div>
+  autoHeight: true,
+  srcDoc: `<html>
+  <body>
+    <script>
+      let count = 0
+      window.setInterval(() => {
+        if (count > 4) return;
+        count ++;
+        const newDiv = document.createElement('div')
+        newDiv.style.height = '200px'
+        newDiv.style.border = '1px solid black'
+        document.body.append(newDiv)
+      }, 1000)
+    </script>
+  </div>
+</html>
+`
 }
 
 export const IframeDemo: FunctionComponent = () => {

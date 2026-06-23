@@ -2,80 +2,120 @@ import {
   type JSX,
   type FunctionComponent,
   type IframeHTMLAttributes,
-  type PropsWithChildren,
-  useMemo
+  useEffect,
+  useMemo,
+  useRef,
+  useState
 } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
 import { clss } from '../../agnostic/css/clss/index.js'
+import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../utils/index.js'
+import type { WithClassName } from '../utils/types.js'
 import { iframe as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
-import type { WithClassName } from '../utils/types.js'
-import { isNotNullish } from '../../agnostic/misc/is-nullish/index.js'
+
+const innerAutoHeightNitifier = (messageType: string): string => `<script>
+  (() => {
+    const notify = () => {
+      const height = Math.max(
+        document.body?.scrollHeight ?? 0,
+        document.documentElement?.scrollHeight ?? 0
+      )
+      window.parent.postMessage({
+        type: '${messageType}',
+        height
+      }, '*')
+    }
+    window.addEventListener('load', notify)
+    const observer = new ResizeObserver(notify)
+    observer.observe(document.body)
+    observer.observe(document.documentElement)
+    notify()
+  })()
+</script>`
 
 /**
  * Props for the {@link Iframe} component.
  *
- * Extends native {@link IframeHTMLAttributes} with optional class name support.
+ * Extends native {@link IframeHTMLAttributes} with class name support and
+ * automatic height adjustment.
  *
- * @property className - Additional class name(s) applied to the root element.
- * @property children - React content rendered as the iframe document body.
- * @property srcDoc - Raw HTML string used as iframe content when `children` is not provided.
- *
- * @remarks
- * This component behaves as a hybrid between a native `<iframe>` and a React renderer.
- *
- * Rendering priority:
- * - `children` takes precedence over `srcDoc` when provided.
- * - If `children` is `null` or `undefined`, `srcDoc` is used directly.
- *
- * When `children` is provided, it is converted to static HTML using
- * `renderToStaticMarkup` and injected into a complete HTML document:
- * `<!doctype html><html><body>...</body></html>`.
+ * @property autoHeight - Enables automatic iframe height adjustment based on
+ * document content size. Only supported with `srcDoc`.
+ * @property className - Optional additional class names applied to the iframe.
+ * @property style - Optional inline style applied to the iframe.
+ * @property srcDoc - Raw HTML string rendered inside the iframe.
  */
-export type Props = PropsWithChildren<WithClassName<Record<never, never>>> & Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'children'>
+export type Props = WithClassName<{
+  autoHeight?: boolean
+}> & Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'children'>
 
 /**
- * Iframe component with React-to-HTML rendering support.
+ * Iframe component with optional automatic height adjustment.
  *
- * Renders either:
- * - A raw HTML string via the `srcDoc` attribute, or
- * - A ReactNode rendered into static HTML via `renderToStaticMarkup`.
+ * When `autoHeight` is enabled, the iframe injects a script that measures
+ * document height and sends updates to the parent via `postMessage`.
  *
- * ### Rendering strategy
- * 1. If `children` is defined (non-nullish), it is rendered to static HTML
- *    and used as iframe content.
- * 2. Otherwise, `srcDoc` is used as-is.
- *
- * The resulting content is wrapped in a minimal HTML document:
- * `<!doctype html><html><body>...</body></html>`.
- *
- * ### Notes
- * - The iframe content is static (no hydration, no client-side React inside iframe).
- * - `children` overrides `srcDoc`.
- * - Useful for embedding server-rendered UI fragments or documentation blocks.
+ * The parent component updates the iframe height via React state and `style`
+ * prop (no direct DOM mutation).
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A styled iframe element with computed HTML document content.
  */
 export const Iframe: FunctionComponent<Props> = ({
+  autoHeight = false,
   className,
-  children,
   srcDoc,
+  style,
   ...iframeProps
 }): JSX.Element => {
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const [height, setHeight] = useState<number | null>(null)
+  const [innerMessageType] = useState(`_${randomHash(10)}`)
+
+  // Fx. dep. `autoHeight` - Handles messages from iframe content when autoHeight is enabled.
+  useEffect(() => {
+    if (!autoHeight) return
+    const handleMessage = (event: MessageEvent): void => {
+      const iframe = iframeRef.current
+      if (iframe === null
+        || event.source !== iframe.contentWindow
+        || typeof event.data !== 'object'
+        || event.data === null
+        || event.data.type !== innerMessageType
+        || typeof event.data.height !== 'number'
+      ) return
+      setHeight(event.data.height as number)
+    }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [autoHeight])
+
+  const iframeStyle = useMemo(() => {
+    const base = style ?? {}
+    if (!autoHeight || height === null) return base
+    return { ...base, height: `${height}px` }
+  }, [style, autoHeight, height])
+
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(), className)
   const html = useMemo(() => {
-    const body = isNotNullish(children)
-      ? renderToStaticMarkup(children)
-      : srcDoc
-    return `<!doctype html><html><body>${body}</body></html>`
-  }, [children, srcDoc])
+    const autoHeightScript = autoHeight
+      ? innerAutoHeightNitifier(innerMessageType)
+      : ''
+    return `<!doctype html>
+      <html>
+        <body>
+          ${srcDoc ?? ''}
+          ${autoHeightScript}
+        </body>
+      </html>
+    `
+  }, [srcDoc, autoHeight])
   return <iframe
     {...iframeProps}
+    ref={iframeRef}
     className={rootClss}
-    srcDoc={html}
-  />
+    style={iframeStyle}
+    srcDoc={html} />
 }

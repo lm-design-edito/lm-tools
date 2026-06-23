@@ -1,7 +1,6 @@
 import {
   type FunctionComponent,
-  type ButtonHTMLAttributes,
-  type ReactNode
+  type ButtonHTMLAttributes
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
@@ -15,14 +14,9 @@ import cssModule from './styles.module.css'
  * Extends all native {@link ButtonHTMLAttributes} and {@link WithClassName}
  * with optional label and error content.
  *
- * @property label - Content rendered as the button label.
- * @property error - Content rendered to convey an error state associated with the button.
  * @property className - Additional class name(s) applied to the root element.
  */
-export type Props = ButtonHTMLAttributes<HTMLButtonElement> & WithClassName<{
-  label?: ReactNode
-  error?: ReactNode
-}>
+export type Props = ButtonHTMLAttributes<HTMLButtonElement> & WithClassName<Record<string, unknown>>
 
 /**
  * Base button component.
@@ -35,12 +29,10 @@ export type Props = ButtonHTMLAttributes<HTMLButtonElement> & WithClassName<{
  * @returns A styled native button element.
  */
 export const Button: FunctionComponent<Props> = ({
-  label,
-  error,
   className,
   ...rest
 }) => {
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null), className)
-  return <button {...rest} className={c(rootClss)} />
+  return <button {...rest} className={rootClss} />
 }

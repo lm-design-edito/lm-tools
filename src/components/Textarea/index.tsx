@@ -1,60 +1,63 @@
 import {
   type FunctionComponent,
-  type TextareaHTMLAttributes,
-  type ReactNode,
   useState
 } from 'react'
-import { clss } from '../../agnostic/css/clss/index.js'
-import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
-import { randomHash } from '../../agnostic/random/uuid/index.js'
-import type { WithClassName } from '../utils/types.js'
-import { textarea as publicClassName } from '../public-classnames.js'
-import { mergeClassNames } from '../utils/index.js'
-import cssModule from './styles.module.css'
+import {
+  ControlledTextarea,
+  type Props as ControlledProps
+} from './index.controlled.js'
 
 /**
  * Props for the {@link Textarea} component.
  *
- * Extends all native {@link TextareaHTMLAttributes} and {@link WithClassName}
- * with optional label and error content.
+ * Alias of {@link ControlledProps}.
  *
- * @property label - Content rendered as an associated `<label>`. When omitted, no label is rendered.
- * @property error - Content rendered as an error message below the textarea. When omitted, no error is rendered.
- * @property className - Additional class name(s) applied to the root element.
+ * All native textarea attributes remain available, including `value`,
+ * `defaultValue`, and `onChange`, allowing the component to operate
+ * in either controlled or hybrid mode.
  */
-export type Props = TextareaHTMLAttributes<HTMLTextAreaElement> & WithClassName<{
-  label?: ReactNode
-  error?: ReactNode
-}>
+export type Props = ControlledProps
 
 /**
- * Textarea field component with optional label and error message.
+ * Textarea field component supporting controlled and hybrid usage.
  *
- * Renders a native `<textarea>` element inside a wrapper, with a stable
- * auto-generated `id` used to associate the label via `htmlFor`.
- * All standard textarea attributes are forwarded to the underlying element.
+ * Wraps {@link ControlledTextarea} and automatically manages the textarea
+ * value when no `value` prop is provided.
  *
  * ### CSS elements
  * - `label`
- * - `textarea`
  * - `error`
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A labelled textarea wrapper with optional error feedback.
+ *
+ * @returns A labelled textarea with optional internal value management.
+ *
+ * @remarks
+ * - In controlled mode (`value` defined), the textarea value is fully driven
+ *   by the parent component and internal state is never updated.
+ * - In hybrid mode, internal state is initialized from `defaultValue` and
+ *   subsequently manages value updates itself.
+ * - In hybrid mode, the internal value is updated before forwarding the
+ *   `onChange` callback.
+ * - `defaultValue` is only used to initialize internal state and is not
+ *   forwarded to the underlying controlled component.
  */
 export const Textarea: FunctionComponent<Props> = ({
-  label,
-  error,
-  className,
+  defaultValue,
+  value,
+  onChange,
   ...rest
 }) => {
-  const [id] = useState(`_${randomHash(12)}`)
-  const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null), className)
-  return <>
-    {isNotFalsy(label) && <label className={c('label')} htmlFor={id}>{label}</label>}
-    <textarea {...rest} className={rootClss} id={id} />
-    {isNotFalsy(error) && <span className={c('error')}>{error}</span>}
-  </>
+  const isControlled = value !== undefined
+  const [internal, setInternal] = useState(defaultValue ?? '')
+  const currentValue = isControlled ? value : internal
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
+    if (!isControlled) setInternal(e.target.value)
+    onChange?.(e)
+  }
+  return <ControlledTextarea
+    {...rest}
+    value={currentValue}
+    onChange={handleChange} />
 }

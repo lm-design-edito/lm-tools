@@ -1,63 +1,63 @@
 import {
   type FunctionComponent,
-  type SelectHTMLAttributes,
-  type ReactNode,
-  useState,
-  type PropsWithChildren
+  useState
 } from 'react'
-import { clss } from '../../agnostic/css/clss/index.js'
-import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
-import { randomHash } from '../../agnostic/random/uuid/index.js'
-import type { WithClassName } from '../utils/types.js'
-import { select as publicClassName } from '../public-classnames.js'
-import { mergeClassNames } from '../utils/index.js'
-import cssModule from './styles.module.css'
+import {
+  ControlledSelect,
+  type Props as ControlledProps
+} from './index.controlled.js'
 
 /**
  * Props for the {@link Select} component.
  *
- * Extends all native {@link SelectHTMLAttributes} and {@link WithClassName}
- * with optional label, error content, and option children.
+ * Alias of {@link ControlledProps}.
  *
- * @property label - Content rendered as an associated `<label>`. When omitted, no label is rendered.
- * @property error - Content rendered as an error message below the select. When omitted, no error is rendered.
- * @property className - Additional class name(s) applied to the root element.
- * @property children - `<option>` or `<optgroup>` elements rendered inside the select.
+ * All native select attributes remain available, including `value`,
+ * `defaultValue`, and `onChange`, allowing the component to operate
+ * in either controlled or hybrid mode.
  */
-export type Props = SelectHTMLAttributes<HTMLSelectElement> & PropsWithChildren<WithClassName<{
-  label?: ReactNode
-  error?: ReactNode
-}>>
+export type Props = ControlledProps
 
 /**
- * Select field component with optional label and error message.
+ * Select field component supporting controlled and hybrid usage.
  *
- * Renders a native `<select>` element inside a wrapper, with a stable
- * auto-generated `id` used to associate the label via `htmlFor`.
- * All standard select attributes are forwarded to the underlying element.
+ * Wraps {@link ControlledSelect} and automatically manages the selected
+ * value when no `value` prop is provided.
  *
  * ### CSS elements
  * - `label`
- * - `select`
  * - `error`
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A labelled select wrapper with optional error feedback.
+ *
+ * @returns A labelled select with optional internal selection management.
+ *
+ * @remarks
+ * - In controlled mode (`value` defined), the selected value is fully driven
+ *   by the parent component and internal state is never updated.
+ * - In hybrid mode, internal state is initialized from `defaultValue` and
+ *   subsequently manages selection updates itself.
+ * - In hybrid mode, the internal value is updated before forwarding the
+ *   `onChange` callback.
+ * - `defaultValue` is only used to initialize internal state and is not
+ *   forwarded to the underlying controlled component.
  */
 export const Select: FunctionComponent<Props> = ({
-  label,
-  error,
-  className,
-  children,
+  defaultValue,
+  value,
+  onChange,
   ...rest
 }) => {
-  const [id] = useState(`_${randomHash(12)}`)
-  const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null), className)
-  return <>
-    {isNotFalsy(label) && <label className={c('label')} htmlFor={id}>{label}</label>}
-    <select {...rest} className={rootClss} id={id}>{children}</select>
-    {isNotFalsy(error) && <span className={c('error')}>{error}</span>}
-  </>
+  const isControlled = value !== undefined
+  const [internal, setInternal] = useState(defaultValue ?? '')
+  const currentValue = isControlled ? value : internal
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    if (!isControlled) setInternal(e.target.value)
+    onChange?.(e)
+  }
+  return <ControlledSelect
+    {...rest}
+    value={currentValue}
+    onChange={handleChange} />
 }

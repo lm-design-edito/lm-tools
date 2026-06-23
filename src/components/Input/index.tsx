@@ -1,60 +1,63 @@
 import {
   type FunctionComponent,
-  type InputHTMLAttributes,
-  type ReactNode,
   useState
 } from 'react'
-import { clss } from '../../agnostic/css/clss/index.js'
-import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
-import { randomHash } from '../../agnostic/random/uuid/index.js'
-import type { WithClassName } from '../utils/types.js'
-import { input as publicClassName } from '../public-classnames.js'
-import { mergeClassNames } from '../utils/index.js'
-import cssModule from './styles.module.css'
+import {
+  type Props as ControlledProps,
+  ControlledInput
+} from './index.controlled.js'
 
 /**
  * Props for the {@link Input} component.
  *
- * Extends all native {@link InputHTMLAttributes} and {@link WithClassName}
- * with optional label and error content.
+ * Alias of {@link ControlledProps}.
  *
- * @property label - Content rendered as an associated `<label>`. When omitted, no label is rendered.
- * @property error - Content rendered as an error message below the input. When omitted, no error is rendered.
- * @property className - Additional class name(s) applied to the root element.
+ * All native input attributes remain available, including `value`
+ * and `onChange`, allowing the component to operate in either
+ * controlled or hybrid mode.
  */
-export type Props = InputHTMLAttributes<HTMLInputElement> & WithClassName<{
-  label?: ReactNode
-  error?: ReactNode
-}>
+export type Props = ControlledProps
 
 /**
- * Input field component with optional label and error message.
+ * Input field component supporting controlled and hybrid usage.
  *
- * Renders a native `<input>` element inside a wrapper, with a stable
- * auto-generated `id` used to associate the label via `htmlFor`.
- * All standard input attributes are forwarded to the underlying element.
+ * Wraps {@link ControlledInput} and automatically manages the input value
+ * when no `value` prop is provided.
  *
  * ### CSS elements
  * - `label`
- * - `input`
  * - `error`
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A labelled input wrapper with optional error feedback.
+ *
+ * @returns A labelled input with optional internal value management.
+ *
+ * @remarks
+ * - When `value` is defined, the component behaves as a controlled component:
+ *   displayed value updates are entirely driven by the parent component.
+ * - When `value` is omitted, the component behaves in hybrid mode:
+ *   it initializes an internal state from the initial `value` prop and
+ *   subsequently manages value updates itself.
+ * - In hybrid mode, the internal value is updated before forwarding
+ *   the `onChange` callback.
  */
-export const Input: FunctionComponent<Props> = ({
-  label,
-  error,
-  className,
-  ...rest
-}) => {
-  const [id] = useState(`_${randomHash(12)}`)
-  const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null), className)
-  return <>
-    {isNotFalsy(label) && <label className={c('label')} htmlFor={id}>{label}</label>}
-    <input {...rest} className={rootClss} id={id} />
-    {isNotFalsy(error) && <span className={c('error')}>{error}</span>}
-  </>
+export const Input: FunctionComponent<Props> = (props) => {
+  const {
+    value,
+    defaultValue,
+    onChange,
+    ...rest
+  } = props
+  const isControlled = value !== undefined
+  const [internal, setInternal] = useState(defaultValue ?? '')
+  const currentValue = isControlled ? value : internal
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    if (!isControlled) setInternal(e.target.value)
+    onChange?.(e)
+  }
+  return <ControlledInput
+    {...rest}
+    value={currentValue}
+    onChange={handleChange} />
 }
