@@ -12,6 +12,7 @@ export type ImageLike = Sharp | Buffer | CreateOptions | string
  * CREATE
  * * * * * * * * * * * * * * */
 
+/** Options for creating a new blank image. */
 export type CreateOptions = {
   /** Image width in pixels. */
   width?: number
@@ -37,6 +38,7 @@ export type CreateOptions = {
  * FORMAT
  * * * * * * * * * * * * * * */
 
+/** Common resizing options shared across all output format types. */
 export type FormatCommonOptions = {
   /** Target width in pixels. */
   width?: number
@@ -58,6 +60,7 @@ export type FormatCommonOptions = {
   fastShrinkOnLoad?: boolean
 }
 
+/** Encoding options for JPEG output. */
 export type FormatJpgOptions = FormatCommonOptions & {
   /** Format type identifier. */
   type: 'jpg' | 'jpeg'
@@ -83,6 +86,7 @@ export type FormatJpgOptions = FormatCommonOptions & {
   mozjpeg?: boolean
 }
 
+/** Encoding options for PNG output. */
 export type FormatPngOptions = FormatCommonOptions & {
   /** Format type identifier. */
   type: 'png'
@@ -106,6 +110,7 @@ export type FormatPngOptions = FormatCommonOptions & {
   dither?: number
 }
 
+/** Encoding options for WebP output. */
 export type FormatWebpOptions = FormatCommonOptions & {
   /** Format type identifier. */
   type: 'webp'
@@ -137,6 +142,7 @@ export type FormatWebpOptions = FormatCommonOptions & {
   delay?: number | number[]
 }
 
+/** Encoding options for AVIF output. */
 export type FormatAvifOptions = FormatCommonOptions & {
   /** Format type identifier. */
   type: 'avif'
@@ -154,6 +160,7 @@ export type FormatAvifOptions = FormatCommonOptions & {
   bitdepth?: 8 | 10 | 12
 }
 
+/** Encoding options for TIFF output. */
 export type FormatTiffOptions = FormatCommonOptions & {
   /** Format type identifier. */
   type: 'tiff'
@@ -185,6 +192,7 @@ export type FormatTiffOptions = FormatCommonOptions & {
   resolutionUnit?: 'inch' | 'cm'
 }
 
+/** Encoding options for HEIF/HEIC output. */
 export type FormatHeifOptions = FormatCommonOptions & {
   /** Format type identifier. */
   type: 'heif'
@@ -233,16 +241,19 @@ export enum OpName {
   // No need for scale, since resize can do the same thing
 }
 
+/** Parameters for the blur operation. */
 export type BlurOperationParams = {
   /** Blur sigma value (standard deviation). */
   sigma: number
 }
 
+/** Parameters for the brighten operation. */
 export type BrightenOperationParams = {
   /** Brightness factor. */
   factor: number
 }
 
+/** Parameters for the extend operation (add pixels around the image). */
 export type ExtendOperationParams = {
   /** Pixels to extend on the left side. */
   left?: number
@@ -258,6 +269,7 @@ export type ExtendOperationParams = {
   background?: Color
 }
 
+/** Parameters for the extract operation (crop a region). */
 export type ExtractOperationParams = {
   /** Left coordinate of the extraction region. */
   left: number
@@ -269,16 +281,19 @@ export type ExtractOperationParams = {
   height: number
 }
 
+/** Parameters for the flatten operation (merge alpha channel onto a background). */
 export type FlattenOperationParams = {
   /** Background color for flattening. */
   background?: Color
 }
 
+/** Parameters for the hue rotation operation. */
 export type HueOperationParams = {
   /** Hue rotation in degrees. */
   rotateDeg?: number
 }
 
+/** Parameters for the level adjustment operation. */
 export type LevelOperationParams = {
   /** Multiplier for level adjustment. */
   multiplier?: number
@@ -286,11 +301,13 @@ export type LevelOperationParams = {
   offset?: number
 }
 
+/** Parameters for the lighten operation. */
 export type LightenOperationParams = {
   /** Lightening amount. */
   amount?: number
 }
 
+/** Parameters for the normalize operation (stretch contrast to fill the output range). */
 export type NormalizeOperationParams = {
   /** Lower bound for normalization. */
   lower?: number
@@ -298,6 +315,7 @@ export type NormalizeOperationParams = {
   upper?: number
 }
 
+/** Parameters for the overlay (composite) operation. */
 export type OverlayOperationParams = {
   /** Image to overlay. */
   input: ImageLike
@@ -327,6 +345,7 @@ export type OverlayOperationParams = {
   gravity?: 'north' | 'northeast' | 'southeast' | 'south' | 'southwest' | 'west' | 'northwest' | 'east' | 'center' | 'centre'
 }
 
+/** Parameters for the resize operation. */
 export type ResizeOperationParams = {
   /** Target width in pixels. */
   width?: number
@@ -348,6 +367,7 @@ export type ResizeOperationParams = {
   fastShrinkOnLoad?: boolean
 }
 
+/** Parameters for the rotate operation. */
 export type RotateOperationParams = {
   /** Rotation angle in degrees. */
   angleDeg?: number
@@ -355,27 +375,44 @@ export type RotateOperationParams = {
   background?: Color
 }
 
+/** Parameters for the saturation adjustment operation. */
 export type SaturateOperationParams = {
   /** Saturation level. */
   saturation?: number
 }
 
+/** Discriminated union descriptor for the blur operation. */
 export type BlurOperationDescriptor = { name: OpName.BLUR } & BlurOperationParams
+/** Discriminated union descriptor for the brighten operation. */
 export type BrightenOperationDescriptor = { name: OpName.BRIGHTEN } & BrightenOperationParams
+/** Discriminated union descriptor for the extend operation. */
 export type ExtendOperationDescriptor = { name: OpName.EXTEND } & ExtendOperationParams
+/** Discriminated union descriptor for the extract operation. */
 export type ExtractOperationDescriptor = { name: OpName.EXTRACT } & ExtractOperationParams
+/** Discriminated union descriptor for the flatten operation. */
 export type FlattenOperationDescriptor = { name: OpName.FLATTEN } & FlattenOperationParams
+/** Discriminated union descriptor for the flip operation (vertical axis). */
 export type FlipOperationDescriptor = { name: OpName.FLIP }
+/** Discriminated union descriptor for the flop operation (horizontal axis). */
 export type FlopOperationDescriptor = { name: OpName.FLOP }
+/** Discriminated union descriptor for the hue rotation operation. */
 export type HueOperationDescriptor = { name: OpName.HUE } & HueOperationParams
+/** Discriminated union descriptor for the level adjustment operation. */
 export type LevelOperationDescriptor = { name: OpName.LEVEL } & LevelOperationParams
+/** Discriminated union descriptor for the lighten operation. */
 export type LightenOperationDescriptor = { name: OpName.LIGHTEN } & LightenOperationParams
+/** Discriminated union descriptor for the normalize operation. */
 export type NormalizeOperationDescriptor = { name: OpName.NORMALIZE } & NormalizeOperationParams
+/** Discriminated union descriptor for the overlay operation. */
 export type OverlayOperationDescriptor = { name: OpName.OVERLAY } & OverlayOperationParams
+/** Discriminated union descriptor for the resize operation. */
 export type ResizeOperationDescriptor = { name: OpName.RESIZE } & ResizeOperationParams
+/** Discriminated union descriptor for the rotate operation. */
 export type RotateOperationDescriptor = { name: OpName.ROTATE } & RotateOperationParams
+/** Discriminated union descriptor for the saturation adjustment operation. */
 export type SaturateOperationDescriptor = { name: OpName.SATURATE } & SaturateOperationParams
 
+/** Union of all supported image transformation operation descriptors. */
 export type OperationDescriptor = BlurOperationDescriptor
 | BrightenOperationDescriptor
 | ExtendOperationDescriptor
@@ -392,6 +429,7 @@ export type OperationDescriptor = BlurOperationDescriptor
 | RotateOperationDescriptor
 | SaturateOperationDescriptor
 
+/** Safety limits applied during image transformation. */
 export type TransformLimits = {
   /** Maximum time allowed for the entire transformation process in milliseconds. */
   timeoutMs?: number
@@ -412,6 +450,7 @@ export enum TransformErrCodes {
   UNKNOWN_ERROR = 'unknown-error'
 }
 
+/** Error descriptor returned when an image transformation fails. */
 export type TransformErr = {
   /** Error code indicating the type of error. */
   code: TransformErrCodes

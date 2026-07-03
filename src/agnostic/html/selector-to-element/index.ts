@@ -12,8 +12,8 @@ import * as Window from '../../misc/crossenv/window/index.js'
  * - Classes (e.g., `".class1.class2"`)
  * - Attributes (e.g., `"[attr=value]"`)
  *
- * @param {string} selector - The selector string used to construct the element.
- * @returns {Element} A newly created DOM element corresponding to the selector.
+ * @param selector - The selector string used to construct the element.
+ * @returns A newly created DOM element corresponding to the selector.
  *
  * @throws Will throw an error if no document object is available for element creation.
  */

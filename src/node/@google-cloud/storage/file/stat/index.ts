@@ -26,10 +26,10 @@ export type StatOptions = {
 /**
  * Retrieves metadata for a single GCS object.
  *
- * @param {Bucket} bucket – GCS bucket.
- * @param {string} path  – Object path.
- * @param {StatOptions} [options] – Extra getMetadata options.
- * @returns {Promise<Outcome.Either<Stat, string>>}
+ * @param bucket – GCS bucket.
+ * @param path  – Object path.
+ * @param [options] – Extra getMetadata options.
+ * @returns
  */
 export async function stat (
   bucket: Bucket,

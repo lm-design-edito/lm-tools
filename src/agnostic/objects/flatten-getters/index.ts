@@ -1,8 +1,8 @@
 /**
  * Returns a shallow copy of an object including values from its getter properties.
  *
- * @param {object} obj - The object to flatten.
- * @returns {Record<string, unknown>} A new object containing all own properties and evaluated getter values.
+ * @param obj - The object to flatten.
+ * @returns A new object containing all own properties and evaluated getter values.
  */
 export function flattenGetters (obj: object): Record<string, unknown> {
   const getters = Object.entries(

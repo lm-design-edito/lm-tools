@@ -14,9 +14,9 @@ import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
  * For the purpose of this util we treat a regular file (`'-'`) **or** a
  * symlink (`'l'`) as a “file”. A directory (`'d'`) returns `false`.
  *
- * @param {Client} sftp        - The ssh2‑sftp‑client instance.
- * @param {string} sourcePath  - The path to check.
- * @returns {Promise<Outcome.Either<boolean, string>>}
+ * @param sftp        - The ssh2‑sftp‑client instance.
+ * @param sourcePath  - The path to check.
+ * @returns
  * - Success: `Outcome.makeSuccess(true | false)` indicating file existence.
  * - Failure: `Outcome.makeFailure(errStr)` if an error occurs.
  */

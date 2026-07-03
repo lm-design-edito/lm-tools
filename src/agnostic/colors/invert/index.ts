@@ -32,9 +32,9 @@ function invertLch <C extends Color> (color: C): TransformedColor<C> {
  * Inverts a color using the specified method.
  *
  * @template C - The input color type.
- * @param {C} color - The color to invert.
- * @param {InvertMethod} [method='lch'] - The inversion method to use.
- * @returns {TransformedColor<C>} The inverted color in the original format.
+ * @param color - The color to invert.
+ * @param [method='lch'] - The inversion method to use.
+ * @returns The inverted color in the original format.
  */
 export function invert <C extends Color> (color: C, method: InvertMethod = 'lch'): TransformedColor<C> {
   switch (method) {

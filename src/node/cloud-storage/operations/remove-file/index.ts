@@ -21,10 +21,10 @@ type Returned = Outcome.Either<true, string>
 /**
  * Removes a file from a Google Cloud Storage bucket.
  *
- * @param {GCSBucket} client               - The Google Cloud Storage bucket instance.
- * @param {string}   path                 - The file path to remove.
- * @param {GcsRemoveOptions} [options]     - Optional remove configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client               - The Google Cloud Storage bucket instance.
+ * @param   path                 - The file path to remove.
+ * @param [options]     - Optional remove configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -32,10 +32,10 @@ export async function removeFile (client: GCSBucket, path: string, options?: Gcs
 /**
  * Removes a file from an S3 bucket.
  *
- * @param {S3ClientWithBucket} client      - The S3 client with bucket configuration.
- * @param {string}   path                 - The file path to remove.
- * @param {S3RemoveOptions} [options]      - Optional remove configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client      - The S3 client with bucket configuration.
+ * @param   path                 - The file path to remove.
+ * @param [options]      - Optional remove configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -43,10 +43,10 @@ export async function removeFile (client: S3ClientWithBucket, path: string, opti
 /**
  * Removes a file from an FTP server.
  *
- * @param {FtpClient} client               - The FTP client instance.
- * @param {string}   path                 - The file path to remove.
- * @param {FtpRemoveOptions} [options]     - Optional remove configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client               - The FTP client instance.
+ * @param   path                 - The file path to remove.
+ * @param [options]     - Optional remove configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -54,10 +54,10 @@ export async function removeFile (client: FtpClient, path: string, options?: Ftp
 /**
  * Removes a file from an SFTP server.
  *
- * @param {SftpClient} client              - The SFTP client instance.
- * @param {string}   path                 - The file path to remove.
- * @param {SftpRemoveOptions} [options]    - Optional remove configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client              - The SFTP client instance.
+ * @param   path                 - The file path to remove.
+ * @param [options]    - Optional remove configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -68,10 +68,10 @@ export async function removeFile (client: SftpClient, path: string, options?: Sf
  * The function automatically dispatches to the appropriate implementation based on
  * the client type (Google Cloud Storage, S3, FTP, or SFTP).
  *
- * @param {AnyClient} client               - The cloud storage client instance.
- * @param {string}   path                 - The file path to remove.
- * @param {GcsRemoveOptions | S3RemoveOptions | FtpRemoveOptions | SftpRemoveOptions} [options] - Optional remove configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client               - The cloud storage client instance.
+ * @param   path                 - The file path to remove.
+ * @param [options] - Optional remove configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */

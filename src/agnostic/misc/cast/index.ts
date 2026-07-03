@@ -7,8 +7,8 @@ import { isFalsy } from '../../booleans/is-falsy/index.js'
  * - Strings equal to `"true"` (case-insensitive, trimmed) are `true`, others `false`.
  * - Other values are coerced using `!isFalsy`.
  *
- * @param {unknown} value - The value to convert.
- * @returns {boolean} The boolean representation of the input.
+ * @param value - The value to convert.
+ * @returns The boolean representation of the input.
  */
 export function toBoolean (value: unknown): boolean {
   if (typeof value === 'boolean') return value
@@ -26,8 +26,8 @@ export function toBoolean (value: unknown): boolean {
  * - Strings are parsed as floats.
  * - Other values return 0.
  *
- * @param {unknown} value - The value to convert.
- * @returns {number} The numeric representation of the input.
+ * @param value - The value to convert.
+ * @returns The numeric representation of the input.
  */
 export function toNumber (value: unknown): number {
   if (typeof value === 'number') return value
@@ -41,8 +41,8 @@ export function toNumber (value: unknown): number {
  * - Strings are returned as-is.
  * - Other values are converted using `String()`.
  *
- * @param {unknown} value - The value to convert.
- * @returns {string} The string representation of the input.
+ * @param value - The value to convert.
+ * @returns The string representation of the input.
  */
 export function toString (value: unknown): string {
   if (typeof value === 'string') return value
@@ -52,8 +52,8 @@ export function toString (value: unknown): string {
 /**
  * Converts any value to `null`.
  *
- * @param {unknown} _value - The input value (ignored).
- * @returns {null} Always returns `null`.
+ * @param _value - The input value (ignored).
+ * @returns Always returns `null`.
  */
 export function toNull (_value: unknown): null {
   return null
@@ -66,8 +66,8 @@ export function toNull (_value: unknown): null {
  * - Objects are converted to an array of `[key, value]` pairs.
  * - Other values are wrapped in a single-element array.
  *
- * @param {unknown} value - The value to convert.
- * @returns {Array<unknown>} The array representation of the input.
+ * @param value - The value to convert.
+ * @returns The array representation of the input.
  */
 export function toArray (value: unknown): unknown[] {
   if (Array.isArray(value)) return value
@@ -82,8 +82,8 @@ export function toArray (value: unknown): unknown[] {
  * - Uses `toArray` to ensure an array.
  * - Each element is converted to a number using `toNumber`.
  *
- * @param {unknown} value - The value to convert.
- * @returns {number[]} Array of numeric values.
+ * @param value - The value to convert.
+ * @returns Array of numeric values.
  */
 export function toNumberArr (value: unknown): number[] {
   const arrValue = toArray(value)
@@ -96,8 +96,8 @@ export function toNumberArr (value: unknown): number[] {
  * - Keys and values of objects are copied.
  * - Non-object values return an empty object.
  *
- * @param {unknown} value - The value to convert.
- * @returns {Record<string, unknown>} The object representation of the input.
+ * @param value - The value to convert.
+ * @returns The object representation of the input.
  */
 export function toRecord (value: unknown): Record<string, unknown> {
   const record: Record<string, unknown> = {}
@@ -120,8 +120,8 @@ export function toRecord (value: unknown): Record<string, unknown> {
  * - Strings are used as the error message.
  * - Other values are converted to string and used as the error message.
  *
- * @param {unknown} value - The value to convert.
- * @returns {Error} An `Error` instance representing the input.
+ * @param value - The value to convert.
+ * @returns An `Error` instance representing the input.
  */
 export function toError (value: unknown): Error {
   if (value instanceof Error) return value

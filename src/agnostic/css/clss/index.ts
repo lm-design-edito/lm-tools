@@ -54,7 +54,7 @@ export type ClssMaker = (
  * @param options - Optional configuration:
  *   - `cssModule`: Object mapping class names to their hashed equivalents (required if using CSS modules).
  *   - `cssModuleRoot`: Optional key for the root block in the CSS module (defaults to `'root'` if not provided).
- * @returns {ClssMaker}
+ * @returns
  *   A function to generate class names for elements and modifiers.
  *
  *   The returned function (`ClssMaker`) parameters:

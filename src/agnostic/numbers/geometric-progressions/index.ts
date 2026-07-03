@@ -5,11 +5,11 @@
  * This function divides the range [min, max] multiplicatively (logarithmically)
  * across `steps` and returns the value corresponding to `level` (1-based).
  *
- * @param {number} min - The minimum value (must be non-zero).
- * @param {number} max - The maximum value.
- * @param {number} level - The current level (1-based, typically 1 ≤ level ≤ steps).
- * @param {number} steps - Total number of steps (must be ≥ 1).
- * @returns {number} The computed value at the specified level, or `NaN` if input is invalid.
+ * @param min - The minimum value (must be non-zero).
+ * @param max - The maximum value.
+ * @param level - The current level (1-based, typically 1 ≤ level ≤ steps).
+ * @param steps - Total number of steps (must be ≥ 1).
+ * @returns The computed value at the specified level, or `NaN` if input is invalid.
  */
 export function getGeometricStep (
   min: number,

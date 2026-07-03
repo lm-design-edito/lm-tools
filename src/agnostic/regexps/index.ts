@@ -1,8 +1,8 @@
 /**
  * Merges multiple flag strings into a single string containing each flag only once.
  *
- * @param {...string[]} flagStrs - Flag strings to merge.
- * @returns {string} Merged flags string.
+ * @param flagStrs - Flag strings to merge.
+ * @returns Merged flags string.
  */
 export function mergeFlags (...flagStrs: string[]): string {
   const flagsSet = new Set<string>()
@@ -16,9 +16,9 @@ export function mergeFlags (...flagStrs: string[]): string {
 /**
  * Returns a new RegExp with combined flags.
  *
- * @param {RegExp} regexp - The original regular expression.
- * @param {string} flags - Flags to add.
- * @returns {RegExp} New regular expression with combined flags.
+ * @param regexp - The original regular expression.
+ * @param flags - Flags to add.
+ * @returns New regular expression with combined flags.
  */
 export function setFlags (regexp: RegExp, flags: string): RegExp {
   const mergedFlags = mergeFlags(regexp.flags, flags)
@@ -28,9 +28,9 @@ export function setFlags (regexp: RegExp, flags: string): RegExp {
 /**
  * Anchors a RegExp to the start of a string.
  *
- * @param {RegExp} regexp - The original regular expression.
- * @param {string} [flags='g'] - Optional flags to apply.
- * @returns {RegExp} Anchored RegExp.
+ * @param regexp - The original regular expression.
+ * @param [flags='g'] - Optional flags to apply.
+ * @returns Anchored RegExp.
  */
 export function fromStart (regexp: RegExp, flags: string = 'g'): RegExp {
   const mergedFlags = mergeFlags(regexp.flags, flags)
@@ -40,9 +40,9 @@ export function fromStart (regexp: RegExp, flags: string = 'g'): RegExp {
 /**
  * Anchors a RegExp to the end of a string.
  *
- * @param {RegExp} regexp - The original regular expression.
- * @param {string} [flags='g'] - Optional flags to apply.
- * @returns {RegExp} Anchored RegExp.
+ * @param regexp - The original regular expression.
+ * @param [flags='g'] - Optional flags to apply.
+ * @returns Anchored RegExp.
  */
 export function toEnd (regexp: RegExp, flags: string = 'g'): RegExp {
   const mergedFlags = mergeFlags(regexp.flags, flags)
@@ -52,66 +52,54 @@ export function toEnd (regexp: RegExp, flags: string = 'g'): RegExp {
 /**
  * Anchors a RegExp to match the entire string.
  *
- * @param {RegExp} regexp - The original regular expression.
- * @param {string} [flags='g'] - Optional flags to apply.
- * @returns {RegExp} Anchored RegExp.
+ * @param regexp - The original regular expression.
+ * @param [flags='g'] - Optional flags to apply.
+ * @returns Anchored RegExp.
  */
 export function fromStartToEnd (regexp: RegExp, flags: string = 'g'): RegExp {
   const mergedFlags = mergeFlags(regexp.flags, flags)
   return fromStart(toEnd(regexp, mergedFlags), mergedFlags)
 }
 
-/**
- * Checks if a string starts with a pattern.
- *
- * @param string - The string to test.
- * @param regexp - The regular expression pattern.
- * @param [returnMatches=false] - If true, returns matches; otherwise, returns boolean.
- * @param [flags='g'] - Optional flags.
- * @returns {boolean | RegExpMatchArray | null} Boolean or match array based on `returnMatches`.
- */
+/** Returns `true` if `string` starts with `regexp`. */
 export function stringStartsWith (string: string, regexp: RegExp): boolean
+/** Returns the match array if `string` starts with `regexp`, or `null` if not. */
 export function stringStartsWith (string: string, regexp: RegExp, returnMatches: true): RegExpMatchArray | null
+/** Returns `true` if `string` starts with `regexp`. */
 export function stringStartsWith (string: string, regexp: RegExp, returnMatches: false): boolean
+/** Returns `true` if `string` starts with `regexp`, applying `flags`. */
 export function stringStartsWith (string: string, regexp: RegExp, returnMatches: false, flags: string): boolean
+/** Returns the match array if `string` starts with `regexp` using `flags`, or `null` if not. */
 export function stringStartsWith (string: string, regexp: RegExp, returnMatches: true, flags: string): RegExpMatchArray | null
 export function stringStartsWith (string: string, regexp: RegExp, returnMatches = false, flags: string = 'g'): RegExpMatchArray | null | boolean {
   const actualRegexp = fromStart(regexp, flags)
   return returnMatches ? string.match(actualRegexp) : actualRegexp.test(string)
 }
 
-/**
- * Checks if a string ends with a pattern.
- *
- * @param string - The string to test.
- * @param regexp - The regular expression pattern.
- * @param [returnMatches=false] - If true, returns matches; otherwise, returns boolean.
- * @param [flags='g'] - Optional flags.
- * @returns {boolean | RegExpMatchArray | null} Boolean or match array based on `returnMatches`.
- */
+/** Returns `true` if `string` ends with `regexp`. */
 export function stringEndsWith (string: string, regexp: RegExp): boolean
+/** Returns the match array if `string` ends with `regexp`, or `null` if not. */
 export function stringEndsWith (string: string, regexp: RegExp, returnMatches: true): RegExpMatchArray | null
+/** Returns `true` if `string` ends with `regexp`. */
 export function stringEndsWith (string: string, regexp: RegExp, returnMatches: false): boolean
+/** Returns `true` if `string` ends with `regexp`, applying `flags`. */
 export function stringEndsWith (string: string, regexp: RegExp, returnMatches: false, flags: string): boolean
+/** Returns the match array if `string` ends with `regexp` using `flags`, or `null` if not. */
 export function stringEndsWith (string: string, regexp: RegExp, returnMatches: true, flags: string): RegExpMatchArray | null
 export function stringEndsWith (string: string, regexp: RegExp, returnMatches = false, flags: string = 'g'): RegExpMatchArray | null | boolean {
   const actualRegexp = toEnd(regexp, flags)
   return returnMatches ? string.match(actualRegexp) : actualRegexp.test(string)
 }
 
-/**
- * Checks if a string fully matches a pattern.
- *
- * @param string - The string to test.
- * @param regexp - The regular expression pattern.
- * @param [returnMatches=false] - If true, returns matches; otherwise, returns boolean.
- * @param [flags='g'] - Optional flags.
- * @returns {boolean | RegExpMatchArray | null} Boolean or match array based on `returnMatches`.
- */
+/** Returns `true` if `string` fully matches `regexp`. */
 export function stringIs (string: string, regexp: RegExp): boolean
+/** Returns the match array if `string` fully matches `regexp`, or `null` if not. */
 export function stringIs (string: string, regexp: RegExp, returnMatches: true): RegExpMatchArray | null
+/** Returns `true` if `string` fully matches `regexp`. */
 export function stringIs (string: string, regexp: RegExp, returnMatches: false): boolean
+/** Returns `true` if `string` fully matches `regexp`, applying `flags`. */
 export function stringIs (string: string, regexp: RegExp, returnMatches: false, flags: string): boolean
+/** Returns the match array if `string` fully matches `regexp` using `flags`, or `null` if not. */
 export function stringIs (string: string, regexp: RegExp, returnMatches: true, flags: string): RegExpMatchArray | null
 export function stringIs (string: string, regexp: RegExp, returnMatches = false, flags: string = 'g'): RegExpMatchArray | null | boolean {
   const actualRegexp = fromStartToEnd(regexp, flags)
@@ -121,8 +109,8 @@ export function stringIs (string: string, regexp: RegExp, returnMatches = false,
 /**
  * Creates a RegExp that matches any of the provided strings.
  *
- * @param {string[]} strings - Strings to match.
- * @returns {RegExp} Regular expression matching all strings.
+ * @param strings - Strings to match.
+ * @returns Regular expression matching all strings.
  */
 export function fromStrings (strings: string[]): RegExp {
   const rootsMap = stringsToRootsMap(strings)
@@ -137,8 +125,8 @@ export function fromStrings (strings: string[]): RegExp {
  * - Other whitespace characters are normalized to `\\s`
  * - RegExp special characters (including backslash) are escaped
  *
- * @param {string} string - String to escape.
- * @returns {string} Escaped string.
+ * @param string - String to escape.
+ * @returns Escaped string.
  */
 export function escape (string: string): string {
   let result = ''

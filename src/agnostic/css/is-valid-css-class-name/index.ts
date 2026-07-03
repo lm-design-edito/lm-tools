@@ -8,8 +8,8 @@ export const classNameRegex = /^-?[_a-zA-Z]+[_a-zA-Z0-9-]*$/
 /**
  * Checks if a string is a valid CSS class name.
  *
- * @param {string} string - The string to validate.
- * @returns {boolean} True if the string is a valid CSS class name, false otherwise.
+ * @param string - The string to validate.
+ * @returns True if the string is a valid CSS class name, false otherwise.
  */
 export function isValidClassName (string: string): boolean {
   return classNameRegex.test(string)

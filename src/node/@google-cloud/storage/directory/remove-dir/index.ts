@@ -18,12 +18,12 @@ export type RemoveDirOptions = {
  * Recursively deletes all objects under a directory prefix in a GCS bucket
  * (including the directory placeholder itself, if present).
  *
- * @param {Bucket} bucket - The GCS bucket instance.
- * @param {string} directoryPath - The “directory” prefix to delete.
- * @param {RemoveDirOptions} [options] - Optional configuration.
- * @param {GCSDeleteFileOptions & {force?: boolean}} [options.deleteOptions] - Extra delete parameters.
- * @param {boolean} [options.ignoreMissing=true] - Whether to ignore an empty/missing prefix.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param bucket - The GCS bucket instance.
+ * @param directoryPath - The “directory” prefix to delete.
+ * @param [options] - Optional configuration.
+ * @param [options.deleteOptions] - Extra delete parameters.
+ * @param [options.ignoreMissing=true] - Whether to ignore an empty/missing prefix.
+ * @returns
  * - On success: `Outcome.makeSuccess(true)` if deletion succeeds
  *   (or prefix absent and `ignoreMissing` is true).
  * - On failure: `Outcome.makeFailure(errStr)` if deletion fails

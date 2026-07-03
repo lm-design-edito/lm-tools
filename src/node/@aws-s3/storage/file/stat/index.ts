@@ -24,11 +24,11 @@ export type StatOptions = {
 /**
  * Retrieves metadata for a single S3 object.
  *
- * @param {S3Client} client – v3 S3 client.
- * @param {string}   bucket – Bucket name.
- * @param {string}   key    – Object key.
- * @param {StatOptions} [options] – Extra HeadObject params.
- * @returns {Promise<Outcome.Either<Stat, string>>}
+ * @param client – v3 S3 client.
+ * @param   bucket – Bucket name.
+ * @param   key    – Object key.
+ * @param [options] – Extra HeadObject params.
+ * @returns
  */
 export async function stat (
   client: S3Client,

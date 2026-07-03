@@ -7,8 +7,8 @@ import { sanitizeFileName } from '../file-name/index.js'
  * - Sanitizes each segment using `sanitizeFileName`.
  * - Ensures the returned path starts with a `/`.
  *
- * @param {string} targetPath - The path to sanitize.
- * @returns {string | null} Sanitized absolute path, or null if invalid/empty.
+ * @param targetPath - The path to sanitize.
+ * @returns Sanitized absolute path, or null if invalid/empty.
  */
 export function sanitizePath (targetPath: string): string | null {
   const sanitized = targetPath

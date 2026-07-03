@@ -9,9 +9,9 @@ import * as Window from '../../misc/crossenv/window/index.js'
  * Only element and text nodes are included in the returned array; comment
  * and other node types are ignored.
  *
- * @param {string} inputStr - The input string to convert into nodes.
- * @param {SanitizeHtmlOptions} [options.sanitize] - Sanitization options for the input string.
- * @returns {Node[]} An array of DOM nodes created from the string.
+ * @param inputStr - The input string to convert into nodes.
+ * @param [options.sanitize] - Sanitization options for the input string.
+ * @returns An array of DOM nodes created from the string.
  */
 export function stringToNodes (inputStr: string): Node[] {
   const window = Window.get()

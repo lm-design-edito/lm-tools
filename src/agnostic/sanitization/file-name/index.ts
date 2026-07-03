@@ -6,9 +6,9 @@
  * - Replaces multiple dots with a single dot and removes leading/trailing dots.
  * - Normalizes Unicode to NFKC form to prevent homoglyph attacks.
  *
- * @param {string} input - The file name to sanitize.
- * @param {number} [maxLength=255] - Maximum allowed length of the sanitized file name.
- * @returns {string | null} Sanitized file name, or null if empty or exceeds maxLength.
+ * @param input - The file name to sanitize.
+ * @param [maxLength=255] - Maximum allowed length of the sanitized file name.
+ * @returns Sanitized file name, or null if empty or exceeds maxLength.
  */
 export function sanitizeFileName (
   input: string,

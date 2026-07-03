@@ -24,15 +24,15 @@ export type CopyDirOptions = {
  * Recursively copies every object under `sourceDir` to the same relative path
  * beneath `targetDir` in a single S3 bucket (AWS SDK v3).
  *
- * @param {S3Client} client - The v3 S3 client instance.
- * @param {string} bucketName - The name of the S3 bucket.
- * @param {string} sourceDir - The source directory prefix to copy from.
- * @param {string} targetDir - The target directory prefix to copy to.
- * @param {CopyDirOptions} [options] - Optional copy‑behaviour configuration.
- * @param {Omit<ListObjectsV2CommandInput,'Bucket'|'Prefix'>} [options.listObjectsOptions] - Extra list parameters.
- * @param {Omit<CopyObjectCommandInput,'Bucket'|'Key'|'CopySource'>} [options.copyOptions] - Extra copy parameters.
- * @param {boolean} [options.overwrite=false] - Whether to overwrite existing files at target.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client - The v3 S3 client instance.
+ * @param bucketName - The name of the S3 bucket.
+ * @param sourceDir - The source directory prefix to copy from.
+ * @param targetDir - The target directory prefix to copy to.
+ * @param [options] - Optional copy‑behaviour configuration.
+ * @param [options.listObjectsOptions] - Extra list parameters.
+ * @param [options.copyOptions] - Extra copy parameters.
+ * @param [options.overwrite=false] - Whether to overwrite existing files at target.
+ * @returns
  * - Success: `Outcome.makeSuccess(true)` if every object is copied.
  * - Failure: `Outcome.makeFailure(errStr)` on error.
  */

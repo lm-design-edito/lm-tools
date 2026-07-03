@@ -1,8 +1,8 @@
 /**
  * Returns the index position of a node within its parent’s `childNodes` list.
  *
- * @param {Node} node - The DOM node whose position is to be determined.
- * @returns {number | null}
+ * @param node - The DOM node whose position is to be determined.
+ * @returns
  * - The zero-based index of the node within its parent’s `childNodes`.
  * - `null` if the node has no parent.
  */

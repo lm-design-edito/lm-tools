@@ -11,11 +11,11 @@ export type ListOptions = {
  *
  * This function returns only the immediate files (not recursive) under the specified directory prefix.
  *
- * @param {Bucket} bucket - The GCS bucket to list files from.
- * @param {string} directoryPath - The directory prefix to list files under.
- * @param {ListOptions} [options] - Optional configuration for the listing.
- * @param {FileOptions} [options.fileOptions] - Additional options for file retrieval.
- * @returns {Promise<Outcome.Either<string[], string>>} Returns either a success with an array of file paths, or a failure with an error message.
+ * @param bucket - The GCS bucket to list files from.
+ * @param directoryPath - The directory prefix to list files under.
+ * @param [options] - Optional configuration for the listing.
+ * @param [options.fileOptions] - Additional options for file retrieval.
+ * @returns Returns either a success with an array of file paths, or a failure with an error message.
  */
 export async function list (
   bucket: Bucket,

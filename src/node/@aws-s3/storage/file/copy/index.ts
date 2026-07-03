@@ -24,14 +24,14 @@ export type CopyOptions = {
 /**
  * Copies an object from one key to another within the same S3 bucket.
  *
- * @param {S3Client} client            - The v3 S3 client instance.
- * @param {string}   bucketName        - The name of the S3 bucket.
- * @param {string}   sourcePath        - The key of the source object.
- * @param {string}   targetPath        - The key where the object will be copied.
- * @param {CopyOptions} [options]      - Optional copy configuration.
- * @param {Omit<CopyObjectCommandInput,'Bucket'|'Key'|'CopySource'>} [options.copyOptions] - Extra copy params.
- * @param {boolean} [options.overwrite=false] - Whether to overwrite an existing object.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client            - The v3 S3 client instance.
+ * @param   bucketName        - The name of the S3 bucket.
+ * @param   sourcePath        - The key of the source object.
+ * @param   targetPath        - The key where the object will be copied.
+ * @param [options]      - Optional copy configuration.
+ * @param [options.copyOptions] - Extra copy params.
+ * @param [options.overwrite=false] - Whether to overwrite an existing object.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */

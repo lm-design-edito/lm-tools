@@ -9,7 +9,7 @@ declare let AWS: any
  * Checks for Node.js, Browser, Deno, React Native, Electron,
  * Cloudflare Workers, and AWS Lambda.
  *
- * @returns {RuntimeName | null}
+ * @returns
  * - The detected runtime as a `RuntimeName` enum value.
  * - `null` if the runtime cannot be determined.
  */

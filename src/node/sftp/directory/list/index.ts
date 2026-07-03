@@ -7,9 +7,9 @@ import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/i
  *
  * This function returns only the immediate files (not recursive) under the specified directory.
  *
- * @param {Client} sftp - The ssh2-sftp-client instance used to interact with the SFTP server.
- * @param {string} directoryPath - The directory path to list files under.
- * @returns {Promise<Outcome.Either<string[], string>>} Returns either a success with an array of file paths, or a failure with an error message.
+ * @param sftp - The ssh2-sftp-client instance used to interact with the SFTP server.
+ * @param directoryPath - The directory path to list files under.
+ * @returns Returns either a success with an array of file paths, or a failure with an error message.
  */
 export async function list (
   sftp: Client,

@@ -127,9 +127,9 @@ function grayscaleLch (lch: Lcha): Lcha { return { ...lch, c: 0 } }
  * Converts a color to grayscale using the specified method.
  *
  * @template C - The input color type.
- * @param {C} color - The color to convert to grayscale.
- * @param {GrayscaleMethod} [method='lab'] - The grayscale conversion method to use.
- * @returns {TransformedColor<C>} The grayscale color in the original format.
+ * @param color - The color to convert to grayscale.
+ * @param [method='lab'] - The grayscale conversion method to use.
+ * @returns The grayscale color in the original format.
  */
 export function grayscale <C extends Color> (
   color: C,

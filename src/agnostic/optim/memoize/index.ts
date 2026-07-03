@@ -6,8 +6,8 @@ type BasicFunc = (...args: any[]) => any
  * Only performs shallow equality checks on arguments (strict equality `===`).
  *
  * @template T - The type of the function to memoize.
- * @param {T} toMemoizeFunc - The function to memoize.
- * @returns {T} A memoized version of the input function.
+ * @param toMemoizeFunc - The function to memoize.
+ * @returns A memoized version of the input function.
  */
 export function memoize<T extends BasicFunc> (toMemoizeFunc: T): T {
   let cachedArgs: Parameters<T> | undefined

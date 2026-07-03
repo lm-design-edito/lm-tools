@@ -27,11 +27,11 @@ export type RemoveDirOptions = {
  * using the AWS SDK v3 client. Handles pagination and the 1 000‑key limit of
  * `DeleteObjects`.
  *
- * @param {S3Client}  client           - The v3 S3 client instance.
- * @param {string}    bucketName       - The name of the S3 bucket.
- * @param {string}    directoryPath    - The “directory” prefix to delete.
- * @param {RemoveDirOptions} [options] - Optional listing/deletion configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param  client           - The v3 S3 client instance.
+ * @param    bucketName       - The name of the S3 bucket.
+ * @param    directoryPath    - The “directory” prefix to delete.
+ * @param [options] - Optional listing/deletion configuration.
+ * @returns
  * - On success: `Outcome.makeSuccess(true)` – deletion succeeded, or prefix
  *   absent and `ignoreMissing` is true.
  * - On failure: `Outcome.makeFailure(errStr)` if deletion fails, or prefix

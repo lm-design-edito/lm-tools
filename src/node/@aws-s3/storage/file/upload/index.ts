@@ -19,12 +19,12 @@ export type UploadOptions = {
  *
  * If `overwrite` is false and the target file exists, upload is aborted.
  *
- * @param {S3Client} s3 - The AWS S3 v3 client instance.
- * @param {string} bucketName - The S3 bucket name.
- * @param {string} targetPath - The key to upload the file to.
- * @param {Readable} fileStream - The file content as a stream.
- * @param {UploadOptions} [options] - Optional configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param s3 - The AWS S3 v3 client instance.
+ * @param bucketName - The S3 bucket name.
+ * @param targetPath - The key to upload the file to.
+ * @param fileStream - The file content as a stream.
+ * @param [options] - Optional configuration.
+ * @returns
  */
 export async function upload (
   s3: S3Client,

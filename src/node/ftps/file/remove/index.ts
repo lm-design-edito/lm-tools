@@ -13,10 +13,10 @@ export type RemoveOptions = {
  * The deletion process can be customized using optional delete options.
  * If the `ignoreMissing` option is true, it does not treat a missing file as an error.
  *
- * @param {Client} ftpClient - The basic-ftp client instance used to interact with the FTP server.
- * @param {string} targetPath - The path of the file to delete on the FTP server.
- * @param {RemoveOptions} [options] - Optional settings for configuring the deletion process.
- * @returns {Promise<Outcome.Either<true, string>>} A promise that resolves to an Outcome.Either.
+ * @param ftpClient - The basic-ftp client instance used to interact with the FTP server.
+ * @param targetPath - The path of the file to delete on the FTP server.
+ * @param [options] - Optional settings for configuring the deletion process.
+ * @returns A promise that resolves to an Outcome.Either.
  * - On success: Outcome.makeSuccess(true) indicating the deletion was successful.
  * - On failure: Outcome.makeFailure(errStr) with an error message if the deletion fails.
  */

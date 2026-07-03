@@ -18,11 +18,11 @@ export type UpdateFileMetadataOptions = {
  * The metadata is updated according to the provided `metadata` object, which contains the new metadata key-value pairs.
  * It can be customized using optional `fileOptions` and `metadataOptions` to control the update behavior.
  *
- * @param {Bucket} bucket - The Google Cloud Storage bucket object containing the file whose metadata is being updated.
- * @param {string} targetPath - The path of the file whose metadata is to be updated.
- * @param {Record<string, any>} metadata - The metadata object containing key-value pairs to be set on the file.
- * @param {UpdateFileMetadataOptions} [options] - Optional configuration options for the metadata update operation.
- * @returns {Promise<Outcome.Either<true, string>>} A promise that resolves to an `Outcome.Either`.
+ * @param bucket - The Google Cloud Storage bucket object containing the file whose metadata is being updated.
+ * @param targetPath - The path of the file whose metadata is to be updated.
+ * @param metadata - The metadata object containing key-value pairs to be set on the file.
+ * @param [options] - Optional configuration options for the metadata update operation.
+ * @returns A promise that resolves to an `Outcome.Either`.
  * - On success: `Outcome.makeSuccess(true)` indicating the metadata was successfully updated.
  * - On failure: `Outcome.makeFailure(errStr)` with an error message if the metadata update operation fails.
  *

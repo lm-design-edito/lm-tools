@@ -18,11 +18,11 @@ export type DownloadOptions = Omit<GetObjectCommandInput, 'Bucket' | 'Key'>
  *
  * The function streams the object’s content back as a Node `Readable`.
  *
- * @param {S3Client} client       - The v3 S3 client instance.
- * @param {string}   bucketName   - The name of the S3 bucket.
- * @param {string}   sourcePath   - The key of the object to download.
- * @param {DownloadOptions} [options] - Extra parameters for the download.
- * @returns {Promise<Outcome.Either<Readable, string>>}
+ * @param client       - The v3 S3 client instance.
+ * @param   bucketName   - The name of the S3 bucket.
+ * @param   sourcePath   - The key of the object to download.
+ * @param [options] - Extra parameters for the download.
+ * @returns
  * - On success:  `Outcome.makeSuccess(stream)` containing the file content.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */

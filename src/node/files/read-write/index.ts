@@ -28,14 +28,14 @@ export type Replacements = Record<string, string>
  * - **Replacements mode**: Pass an object with string replacements.
  * - **Function mode**: Pass a function that transforms the file content.
  *
- * @param {Path} path                    - The path to the file to read and edit.
- * @param {Replacements} editor          - Object mapping strings to replace with their replacements.
- * @param {Options} [opts]               - Optional configuration.
- * @param {Parameters<typeof fs.readFile>[1]} [opts.readOptions]  - Extra `readFile` params.
- * @param {Parameters<typeof fs.writeFile>[2]} [opts.writeOptions] - Extra `writeFile` params.
- * @param {Path} [opts.output]           - Output path (defaults to `path`).
- * @param {boolean} [opts.dryRun=false]  - If `true`, skip writing to disk.
- * @returns {Promise<string>} The edited file content as a string.
+ * @param path                    - The path to the file to read and edit.
+ * @param editor          - Object mapping strings to replace with their replacements.
+ * @param [opts]               - Optional configuration.
+ * @param [opts.readOptions]  - Extra `readFile` params.
+ * @param [opts.writeOptions] - Extra `writeFile` params.
+ * @param [opts.output]           - Output path (defaults to `path`).
+ * @param [opts.dryRun=false]  - If `true`, skip writing to disk.
+ * @returns The edited file content as a string.
  */
 export async function readWrite (path: Path, editor: Replacements, opts?: Options): Promise<string>
 /**
@@ -45,14 +45,14 @@ export async function readWrite (path: Path, editor: Replacements, opts?: Option
  * - **Replacements mode**: Pass an object with string replacements.
  * - **Function mode**: Pass a function that transforms the file content.
  *
- * @param {Path} path                    - The path to the file to read and edit.
- * @param {EditorFunc<T>} editor         - Function that transforms the file content.
- * @param {Options} [opts]               - Optional configuration.
- * @param {Parameters<typeof fs.readFile>[1]} [opts.readOptions]  - Extra `readFile` params.
- * @param {Parameters<typeof fs.writeFile>[2]} [opts.writeOptions] - Extra `writeFile` params.
- * @param {Path} [opts.output]           - Output path (defaults to `path`).
- * @param {boolean} [opts.dryRun=false]  - If `true`, skip writing to disk.
- * @returns {Promise<T>} The edited file content of type `T`.
+ * @param path                    - The path to the file to read and edit.
+ * @param editor         - Function that transforms the file content.
+ * @param [opts]               - Optional configuration.
+ * @param [opts.readOptions]  - Extra `readFile` params.
+ * @param [opts.writeOptions] - Extra `writeFile` params.
+ * @param [opts.output]           - Output path (defaults to `path`).
+ * @param [opts.dryRun=false]  - If `true`, skip writing to disk.
+ * @returns The edited file content of type `T`.
  */
 export async function readWrite<T extends WriteFileData> (
   path: Path,

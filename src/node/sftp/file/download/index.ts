@@ -13,10 +13,10 @@ export type DownloadOptions = ReadStreamOptions
  * returning the file content as a Readable stream. The download process can be customized
  * using optional download options.
  *
- * @param {Client} sftp - The ssh2-sftp-client instance used to interact with the SFTP server.
- * @param {string} sourcePath - The path of the file to be downloaded from the SFTP server.
- * @param {DownloadOptions} [options] - Optional settings for configuring the download process.
- * @returns {Promise<Outcome.Either<Readable, string>>} A promise that resolves to an Outcome.Either.
+ * @param sftp - The ssh2-sftp-client instance used to interact with the SFTP server.
+ * @param sourcePath - The path of the file to be downloaded from the SFTP server.
+ * @param [options] - Optional settings for configuring the download process.
+ * @returns A promise that resolves to an Outcome.Either.
  * - On success: Outcome.makeSuccess(stream) containing the downloaded file's content as a Readable stream.
  * - On failure: Outcome.makeFailure(errStr) with an error message if the download fails.
  */

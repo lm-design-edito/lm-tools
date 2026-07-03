@@ -21,10 +21,10 @@ type Returned = Outcome.Either<string[], string>
 /**
  * Lists the contents of a directory in a Google Cloud Storage bucket.
  *
- * @param {GCSBucket} client              - The Google Cloud Storage bucket instance.
- * @param {string}   path                 - The directory path to list.
- * @param {GcsListOptions} [options]      - Optional list configuration.
- * @returns {Promise<Outcome.Either<string[], string>>}
+ * @param client              - The Google Cloud Storage bucket instance.
+ * @param   path                 - The directory path to list.
+ * @param [options]      - Optional list configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(paths)` containing an array of file/directory paths.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -32,10 +32,10 @@ export async function listDir (client: GCSBucket, path: string, options?: GcsLis
 /**
  * Lists the contents of a directory in an S3 bucket.
  *
- * @param {S3ClientWithBucket} client     - The S3 client with bucket configuration.
- * @param {string}   path                 - The directory path to list.
- * @param {S3ListOptions} [options]        - Optional list configuration.
- * @returns {Promise<Outcome.Either<string[], string>>}
+ * @param client     - The S3 client with bucket configuration.
+ * @param   path                 - The directory path to list.
+ * @param [options]        - Optional list configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(paths)` containing an array of file/directory paths.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -43,9 +43,9 @@ export async function listDir (client: S3ClientWithBucket, path: string, options
 /**
  * Lists the contents of a directory on an FTP server.
  *
- * @param {FtpClient} client               - The FTP client instance.
- * @param {string}   path                 - The directory path to list.
- * @returns {Promise<Outcome.Either<string[], string>>}
+ * @param client               - The FTP client instance.
+ * @param   path                 - The directory path to list.
+ * @returns
  * - On success:  `Outcome.makeSuccess(paths)` containing an array of file/directory paths.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -53,9 +53,9 @@ export async function listDir (client: FtpClient, path: string): Promise<Returne
 /**
  * Lists the contents of a directory on an SFTP server.
  *
- * @param {SftpClient} client              - The SFTP client instance.
- * @param {string}   path                 - The directory path to list.
- * @returns {Promise<Outcome.Either<string[], string>>}
+ * @param client              - The SFTP client instance.
+ * @param   path                 - The directory path to list.
+ * @returns
  * - On success:  `Outcome.makeSuccess(paths)` containing an array of file/directory paths.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -66,10 +66,10 @@ export async function listDir (client: SftpClient, path: string): Promise<Return
  * The function automatically dispatches to the appropriate implementation based on
  * the client type (Google Cloud Storage, S3, FTP, or SFTP).
  *
- * @param {AnyClient} client               - The cloud storage client instance.
- * @param {string}   path                 - The directory path to list.
- * @param {GcsListOptions | S3ListOptions} [options] - Optional list configuration.
- * @returns {Promise<Outcome.Either<string[], string>>}
+ * @param client               - The cloud storage client instance.
+ * @param   path                 - The directory path to list.
+ * @param [options] - Optional list configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(paths)` containing an array of file/directory paths.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */

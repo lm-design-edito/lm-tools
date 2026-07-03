@@ -28,11 +28,11 @@ export type MoveDirOptions = {
  * If `overwrite` is false (default), the operation aborts if any destination file
  * already exists.
  *
- * @param {Bucket} bucket - The GCS bucket instance.
- * @param {string} sourceDir - The source directory prefix to move from.
- * @param {string} targetDir - The target directory prefix to move to.
- * @param {MoveDirOptions} [options] - Optional parameters for the operation.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param bucket - The GCS bucket instance.
+ * @param sourceDir - The source directory prefix to move from.
+ * @param targetDir - The target directory prefix to move to.
+ * @param [options] - Optional parameters for the operation.
+ * @returns
  * - On success: `Outcome.makeSuccess(true)`.
  * - On failure: `Outcome.makeFailure(errStr)`.
  */

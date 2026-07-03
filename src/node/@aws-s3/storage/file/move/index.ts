@@ -28,15 +28,15 @@ export type MoveOptions = {
  * The function copies the object from `sourcePath` to `targetPath` and, upon
  * successful copy, deletes the original object.
  *
- * @param {S3Client} client - The S3 client instance.
- * @param {string}   bucketName - The name of the bucket.
- * @param {string}   sourcePath - The source object's key.
- * @param {string}   targetPath - The destination object's key.
- * @param {MoveOptions} [options] - Optional copy/delete behaviour.
- * @param {Omit<CopyObjectCommandInput,'Bucket'|'Key'|'CopySource'>} [options.copyOptions]   - Extra copy params.
- * @param {Omit<DeleteObjectCommandInput,'Bucket'|'Key'>}            [options.deleteOptions] - Extra delete params.
- * @param {boolean} [options.overwrite=false] - Whether to overwrite an existing `targetPath`.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client - The S3 client instance.
+ * @param   bucketName - The name of the bucket.
+ * @param   sourcePath - The source object's key.
+ * @param   targetPath - The destination object's key.
+ * @param [options] - Optional copy/delete behaviour.
+ * @param [options.copyOptions]   - Extra copy params.
+ * @param            [options.deleteOptions] - Extra delete params.
+ * @param [options.overwrite=false] - Whether to overwrite an existing `targetPath`.
+ * @returns
  * - Success: `Outcome.makeSuccess(true)`
  * - Failure: `Outcome.makeFailure(errStr)`
  */

@@ -1,9 +1,10 @@
 import type { ParsedSub, SubGroupBoundaries } from './types.js'
 
 /**
- * Convertit un timecode au format SRT (hh:mm:ss,ms) en millisecondes.
- * @param timecode - Timecode sous forme de chaîne (ex: '00:01:23,456')
- * @returns Le temps en millisecondes
+ * Converts an SRT timecode (hh:mm:ss,ms) to milliseconds.
+ *
+ * @param timecode - Timecode string (e.g. '00:01:23,456').
+ * @returns The time in milliseconds.
  */
 export const getTimecodeToMs = (timecode: string): number => {
   const [hours = '0', minutes = '0', secondsAndMs = '0,0'] = timecode.split(':')
@@ -16,9 +17,10 @@ export const getTimecodeToMs = (timecode: string): number => {
 }
 
 /**
- * Parse un texte brut de sous-titres SRT en une liste d'objets ParsedSub.
- * @param rawSubs - Sous-titres bruts au format SRT
- * @returns Tableau d'objets ParsedSub
+ * Parses a raw SRT subtitle text into a list of {@link ParsedSub} objects.
+ *
+ * @param rawSubs - Raw subtitle content in SRT format.
+ * @returns Array of parsed subtitle entries.
  */
 export const parseSubs = (rawSubs: string): ParsedSub[] => {
   const numberRegex = /^\d+$/
@@ -68,10 +70,11 @@ export const parseSubs = (rawSubs: string): ParsedSub[] => {
 }
 
 /**
- * Calcule les groupes de sous-titres avec leurs bornes (startId, endId).
- * @param subsGroups - Tableau d'IDs de fin de groupe
- * @param highestSubId - ID le plus élevé des sous-titres
- * @returns Tableau de SubGroupBoundaries
+ * Computes subtitle groups with their boundaries (startId, endId).
+ *
+ * @param subsGroups - Array of group-end subtitle IDs.
+ * @param highestSubId - Highest subtitle ID in the track.
+ * @returns Array of {@link SubGroupBoundaries}.
  */
 export const computeSubGroupsWithBoundaries = (
   subsGroups: number[] | undefined,
@@ -99,11 +102,12 @@ export const computeSubGroupsWithBoundaries = (
 }
 
 /**
- * Retourne le groupe de sous-titres courant selon l'ID du dernier sous-titre précédent et l'état.
- * @param subsGroupsWithBoundaries - Tableau des groupes avec bornes
- * @param lastPrevSubId - ID du dernier sous-titre précédent
- * @param isEnded - Indique si la lecture est terminée
- * @returns Le groupe courant ou undefined
+ * Returns the current subtitle group based on the last preceding subtitle ID and playback state.
+ *
+ * @param subsGroupsWithBoundaries - Array of groups with their boundaries.
+ * @param lastPrevSubId - ID of the last subtitle that has already passed.
+ * @param isEnded - Whether playback has ended.
+ * @returns The current group, or `undefined` if none matches.
  */
 export const getCurrentGroup = (
   subsGroupsWithBoundaries: SubGroupBoundaries[],

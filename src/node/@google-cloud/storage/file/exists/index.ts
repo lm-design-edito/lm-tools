@@ -12,12 +12,12 @@ export type ExistsOptions = {
  *
  * This function verifies whether a file at the given `sourcePath` exists in the bucket. It can be configured with options to customize the behavior of the check.
  *
- * @param {Bucket} bucket - The GCS bucket to check for the file existence.
- * @param {string} sourcePath - The path of the file to check within the bucket.
- * @param {ExistsOptions} [options] - Optional configuration for the file existence check.
- * @param {FileOptions} [options.fileOptions] - Additional options for the file, such as custom metadata or ACL settings.
- * @param {ExistsOptions} [options.existsOptions] - Options for controlling the `exists` method (if any).
- * @returns {Promise<Outcome.Either<boolean, string>>} - Returns either a success with `true` or `false` indicating whether the file exists, or a failure with an error message.
+ * @param bucket - The GCS bucket to check for the file existence.
+ * @param sourcePath - The path of the file to check within the bucket.
+ * @param [options] - Optional configuration for the file existence check.
+ * @param [options.fileOptions] - Additional options for the file, such as custom metadata or ACL settings.
+ * @param [options.existsOptions] - Options for controlling the `exists` method (if any).
+ * @returns - Returns either a success with `true` or `false` indicating whether the file exists, or a failure with an error message.
  */
 export async function exists (
   bucket: Bucket,

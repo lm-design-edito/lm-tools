@@ -18,11 +18,11 @@ export type MoveDirOptions = {
  * If `ensureDir` is true (default), the parent directory of `targetDir` is
  * created if it does not exist.
  *
- * @param {Client} ftpClient - The FTP client instance.
- * @param {string} sourceDir - The source directory path to move from.
- * @param {string} targetDir - The target directory path to move to.
- * @param {MoveDirOptions} [options] - Optional parameters for the operation.
- * @returns {Promise<Outcome.Either<true, string>>} A promise that resolves to an `Outcome.Either`:
+ * @param ftpClient - The FTP client instance.
+ * @param sourceDir - The source directory path to move from.
+ * @param targetDir - The target directory path to move to.
+ * @param [options] - Optional parameters for the operation.
+ * @returns A promise that resolves to an `Outcome.Either`:
  * - On success: `Outcome.makeSuccess(true)` indicating the move was successful.
  * - On failure: `Outcome.makeFailure(errStr)` with an error message if the move fails.
  */

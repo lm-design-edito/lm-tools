@@ -6,11 +6,11 @@ import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 /**
  * Encrypts a `Uint8Array` using AES-256-GCM encryption and the specified encryption key.
  *
- * @param {Uint8Array} fileArray - The input data to encrypt.
- * @param {string} encryptionKey - The encryption key to use.
- * @param {number} [options.ivLength=16] - The length of the initialization vector (IV). Defaults to 16 bytes.
+ * @param fileArray - The input data to encrypt.
+ * @param encryptionKey - The encryption key to use.
+ * @param [options.ivLength=16] - The length of the initialization vector (IV). Defaults to 16 bytes.
  *
- * @returns {Outcome.Either<Uint8Array, string>} The result of the encryption. Success returns the encrypted data as a `Uint8Array` (with IV prepended), or failure returns an error message.
+ * @returns The result of the encryption. Success returns the encrypted data as a `Uint8Array` (with IV prepended), or failure returns an error message.
  */
 export function encryptUint8Array (
   fileArray: Uint8Array,
@@ -34,11 +34,11 @@ export function encryptUint8Array (
 /**
  * Decrypts an encrypted `Uint8Array` using AES-256-GCM encryption and the specified encryption key.
  *
- * @param {Uint8Array} encryptedFile - The encrypted data to decrypt.
- * @param {string} encryptionKey - The encryption key to use.
- * @param {number} [options.ivLength=16] - The length of the initialization vector (IV). Defaults to 16 bytes.
+ * @param encryptedFile - The encrypted data to decrypt.
+ * @param encryptionKey - The encryption key to use.
+ * @param [options.ivLength=16] - The length of the initialization vector (IV). Defaults to 16 bytes.
  *
- * @returns {Outcome.Either<Uint8Array, string>} The result of the decryption. Success returns the decrypted data as a `Uint8Array`, or failure returns an error message.
+ * @returns The result of the decryption. Success returns the decrypted data as a `Uint8Array`, or failure returns an error message.
  */
 export function decryptUint8Array (
   encryptedFile: Uint8Array,

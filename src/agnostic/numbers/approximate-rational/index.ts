@@ -4,9 +4,9 @@
  * Uses a naive algorithm that increments the numerator or denominator each round
  * to find the closest approximation. Stops early if an exact match is found.
  *
- * @param {number} target - The decimal number to approximate.
- * @param {number} maxRounds - The maximum number of iterations to perform.
- * @returns {[number, number]} A tuple `[numerator, denominator]` representing the rational approximation.
+ * @param target - The decimal number to approximate.
+ * @param maxRounds - The maximum number of iterations to perform.
+ * @returns A tuple `[numerator, denominator]` representing the rational approximation.
  */
 export function approximateRationalDumb (
   target: number,
@@ -56,9 +56,9 @@ export function approximateRationalDumb (
  * Uses the continued fractions algorithm to find the best rational approximation
  * of a decimal number within the specified maximum denominator limit.
  *
- * @param {number} target - The decimal number to approximate.
- * @param {number} [maxDenominator=1000] - The maximum allowed denominator value.
- * @returns {[number, number]} A tuple `[numerator, denominator]` representing the rational approximation.
+ * @param target - The decimal number to approximate.
+ * @param [maxDenominator=1000] - The maximum allowed denominator value.
+ * @returns A tuple `[numerator, denominator]` representing the rational approximation.
  */
 export function approximateRational (
   target: number,

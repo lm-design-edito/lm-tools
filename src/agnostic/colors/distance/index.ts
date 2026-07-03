@@ -67,10 +67,10 @@ function distanceCiede2000 (c1: Laba, c2: Laba): number {
 /**
  * Calculates the perceptual distance between two colors using the specified method.
  *
- * @param {Color} c1 - The first color.
- * @param {Color} c2 - The second color.
- * @param {DistanceMethod} [method='ciede2000'] - The calculation method to use.
- * @returns {number} The perceptual distance between the colors. Lower values indicate more similar colors.
+ * @param c1 - The first color.
+ * @param c2 - The second color.
+ * @param [method='ciede2000'] - The calculation method to use.
+ * @returns The perceptual distance between the colors. Lower values indicate more similar colors.
  */
 export function distance (c1: Color, c2: Color, method: DistanceMethod = 'ciede2000'): number {
   switch (method) {

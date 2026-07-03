@@ -2,9 +2,9 @@
  * Returns a new object with the keys sorted according to the provided sorter.
  *
  * @template T - The type of the input object.
- * @param {T} obj - The object whose keys should be sorted.
- * @param {(a: keyof T, b: keyof T) => number} [sorter] - Optional function used to compare keys for sorting. Defaults to alphabetical order.
- * @returns {{ [K in keyof T]: T[K] }} A new object with the same keys and values as the input, but sorted by key.
+ * @param obj - The object whose keys should be sorted.
+ * @param [sorter] - Optional function used to compare keys for sorting. Defaults to alphabetical order.
+ * @returns A new object with the same keys and values as the input, but sorted by key.
  */
 export function sortKeys<T extends Record<string, unknown>> (
   obj: T,

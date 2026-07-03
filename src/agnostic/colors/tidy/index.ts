@@ -9,8 +9,8 @@ import { unknownToString } from '../../errors/unknown-to-string/index.js'
  * Clamps and normalizes a color's channel values to their valid ranges.
  *
  * @template C - The input color type.
- * @param {C} color - The color to tidy.
- * @returns {TransformedColor<C>} The color with all channels clamped to valid ranges, in the original format.
+ * @param color - The color to tidy.
+ * @returns The color with all channels clamped to valid ranges, in the original format.
  * @throws {Error} If the color format is invalid or unsupported.
  */
 export function tidy <C extends Color> (color: C): TransformedColor<C> {

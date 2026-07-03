@@ -8,8 +8,8 @@ export type ConstructorFunction<T = any> = new (...args: any[]) => T
 /**
  * Checks whether a given value is a constructor function (i.e., a class or function with a prototype).
  *
- * @param {unknown} input - The value to check.
- * @returns {input is ConstructorFunction} `true` if the input is a constructor function, otherwise `false`.
+ * @param input - The value to check.
+ * @returns `true` if the input is a constructor function, otherwise `false`.
  */
 export function isConstructorFunction (input: unknown): input is ConstructorFunction {
   return typeof input === 'function'

@@ -3,9 +3,9 @@ import * as Window from '../crossenv/window/index.js'
 /**
  * Represents a minimal network connection object.
  *
- * @property {number} downlink - Estimated downlink speed in Mbps.
- * @property {'bluetooth' | 'cellular' | 'ethernet' | 'none' | 'wifi' | 'wimax' | 'other' | 'unknown'} type - Connection type.
- * @property {'slow-2g' | '2g' | '3g' | '4g'} effectiveType - Effective connection type.
+ * @property downlink - Estimated downlink speed in Mbps.
+ * @property type - Connection type.
+ * @property effectiveType - Effective connection type.
  */
 export type MinimalConnection = {
   downlink: number
@@ -48,7 +48,7 @@ function isConnection (unk: unknown): unk is MinimalConnection {
  *
  * Uses the `navigator.connection` API or vendor-prefixed alternatives.
  *
- * @returns {MinimalConnection | undefined} A minimal connection object if available, otherwise `undefined`.
+ * @returns A minimal connection object if available, otherwise `undefined`.
  */
 export function getConnection (): MinimalConnection | undefined {
   const window = Window.get()
@@ -64,7 +64,7 @@ export function getConnection (): MinimalConnection | undefined {
 /**
  * Retrieves the estimated downlink speed of the current network connection.
  *
- * @returns {number | undefined} Downlink speed in Mbps, or `undefined` if not available.
+ * @returns Downlink speed in Mbps, or `undefined` if not available.
  */
 export function getCurrentDownlink (): number | undefined {
   return getConnection()?.downlink

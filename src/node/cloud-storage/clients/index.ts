@@ -16,16 +16,16 @@ export type AnyClient = GCSBucket | S3ClientWithBucket | FtpClient | SftpClient
 /**
  * Type guard to check if a client is a Google Cloud Storage bucket.
  *
- * @param {AnyClient} client - The client to check.
- * @returns {boolean} `true` if the client is a `GCSBucket`, `false` otherwise.
+ * @param client - The client to check.
+ * @returns `true` if the client is a `GCSBucket`, `false` otherwise.
  */
 export const isGcsBucket = (client: AnyClient): client is GCSBucket => client instanceof GCSBucket
 
 /**
  * Type guard to check if a client is an S3 client with bucket configuration.
  *
- * @param {AnyClient} client - The client to check.
- * @returns {boolean} `true` if the client is an `S3ClientWithBucket`, `false` otherwise.
+ * @param client - The client to check.
+ * @returns `true` if the client is an `S3ClientWithBucket`, `false` otherwise.
  */
 export const isS3ClientWithBucket = (client: AnyClient): client is S3ClientWithBucket =>
   ('bucketName' in client)
@@ -36,15 +36,15 @@ export const isS3ClientWithBucket = (client: AnyClient): client is S3ClientWithB
 /**
  * Type guard to check if a client is an FTP client.
  *
- * @param {AnyClient} client - The client to check.
- * @returns {boolean} `true` if the client is an `FtpClient`, `false` otherwise.
+ * @param client - The client to check.
+ * @returns `true` if the client is an `FtpClient`, `false` otherwise.
  */
 export const isFtpClient = (client: AnyClient): client is FtpClient => client instanceof FtpClient
 
 /**
  * Type guard to check if a client is an SFTP client.
  *
- * @param {AnyClient} client - The client to check.
- * @returns {boolean} `true` if the client is an `SftpClient`, `false` otherwise.
+ * @param client - The client to check.
+ * @returns `true` if the client is an `SftpClient`, `false` otherwise.
  */
 export const isSftpClient = (client: AnyClient): client is SftpClient => client instanceof SftpClient

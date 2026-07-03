@@ -5,8 +5,8 @@ import type { UnwrapPromise } from '../../typescript/types.js'
  *
  * @template InputType - The type of the input value the formatter receives.
  * @template OutputType - The type of the value the formatter returns (or resolves to if Promise).
- * @param {InputType} val - The input value to transform.
- * @returns {OutputType | Promise<OutputType>} The transformed value or a Promise resolving to it.
+ * @param val - The input value to transform.
+ * @returns The transformed value or a Promise resolving to it.
  */
 export type FormatterFunc<InputType, OutputType> = (val: InputType) => OutputType | Promise<OutputType>
 
@@ -36,9 +36,9 @@ export type Formatted<FormatObject> = {
  *
  * @template InputObject - The type of the input object.
  * @template FormatObject - The type of the format object mapping keys to formatter functions.
- * @param {InputObject} input - The object whose properties are to be formatted.
- * @param {FormatObject} format - An object containing formatter functions for each key.
- * @returns {Promise<Formatted<FormatObject>>} A Promise resolving to the formatted object with all promises unwrapped.
+ * @param input - The object whose properties are to be formatted.
+ * @param format - An object containing formatter functions for each key.
+ * @returns A Promise resolving to the formatted object with all promises unwrapped.
  */
 export async function recordFormat<
   InputObject extends Record<PropertyKey, any>,

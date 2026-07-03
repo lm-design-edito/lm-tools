@@ -21,10 +21,10 @@ type Returned<K extends FtpStat | SftpStat | S3Stat | GcsStat> = Outcome.Either<
 /**
  * Retrieves metadata for a file in a Google Cloud Storage bucket.
  *
- * @param {GCSBucket} client              - The Google Cloud Storage bucket instance.
- * @param {string}   path                 - The file path to stat.
- * @param {GcsStatOptions} [options]       - Optional stat configuration.
- * @returns {Promise<Outcome.Either<GcsStat, string>>}
+ * @param client              - The Google Cloud Storage bucket instance.
+ * @param   path                 - The file path to stat.
+ * @param [options]       - Optional stat configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(stat)` containing file metadata.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -32,10 +32,10 @@ export async function statFile (client: GCSBucket, path: string, options?: GcsSt
 /**
  * Retrieves metadata for a file in an S3 bucket.
  *
- * @param {S3ClientWithBucket} client      - The S3 client with bucket configuration.
- * @param {string}   path                 - The file path to stat.
- * @param {S3StatOptions} [options]        - Optional stat configuration.
- * @returns {Promise<Outcome.Either<S3Stat, string>>}
+ * @param client      - The S3 client with bucket configuration.
+ * @param   path                 - The file path to stat.
+ * @param [options]        - Optional stat configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(stat)` containing file metadata.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -43,9 +43,9 @@ export async function statFile (client: S3ClientWithBucket, path: string, option
 /**
  * Retrieves metadata for a file on an FTP server.
  *
- * @param {FtpClient} client              - The FTP client instance.
- * @param {string}   path                 - The file path to stat.
- * @returns {Promise<Outcome.Either<FtpStat, string>>}
+ * @param client              - The FTP client instance.
+ * @param   path                 - The file path to stat.
+ * @returns
  * - On success:  `Outcome.makeSuccess(stat)` containing file metadata.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -53,9 +53,9 @@ export async function statFile (client: FtpClient, path: string): Promise<Return
 /**
  * Retrieves metadata for a file on an SFTP server.
  *
- * @param {SftpClient} client             - The SFTP client instance.
- * @param {string}   path                 - The file path to stat.
- * @returns {Promise<Outcome.Either<SftpStat, string>>}
+ * @param client             - The SFTP client instance.
+ * @param   path                 - The file path to stat.
+ * @returns
  * - On success:  `Outcome.makeSuccess(stat)` containing file metadata.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -66,10 +66,10 @@ export async function statFile (client: SftpClient, path: string): Promise<Retur
  * The function automatically dispatches to the appropriate implementation based on
  * the client type (Google Cloud Storage, S3, FTP, or SFTP).
  *
- * @param {AnyClient} client              - The cloud storage client instance.
- * @param {string}   path                 - The file path to stat.
- * @param {GcsStatOptions | S3StatOptions} [options] - Optional stat configuration.
- * @returns {Promise<Outcome.Either<GcsStat | S3Stat | FtpStat | SftpStat, string>>}
+ * @param client              - The cloud storage client instance.
+ * @param   path                 - The file path to stat.
+ * @param [options] - Optional stat configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(stat)` containing file metadata.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */

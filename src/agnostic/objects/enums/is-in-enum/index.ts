@@ -4,9 +4,9 @@
  * Works with both string and numeric enums, ignoring reverse mappings in numeric enums.
  *
  * @template E - The enum type.
- * @param {E} enumObj - The enum object to check against.
- * @param {string | number} value - The value to test.
- * @returns {value is E[keyof E]} `true` if the value is a valid enum member, otherwise `false`.
+ * @param enumObj - The enum object to check against.
+ * @param value - The value to test.
+ * @returns `true` if the value is a valid enum member, otherwise `false`.
  */
 export function isInEnum<E extends Record<string, string | number>> (
   enumObj: E,

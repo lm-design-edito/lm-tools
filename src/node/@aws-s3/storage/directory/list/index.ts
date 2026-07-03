@@ -13,11 +13,11 @@ export type ListOptions = Omit<ListObjectsV2CommandInput, 'Bucket' | 'Prefix' | 
  * Lists all direct‑child object keys under a given directory prefix in an S3
  * bucket (AWS SDK v3). The listing is **non‑recursive**.
  *
- * @param {S3Client} client         - The v3 S3 client used to list objects.
- * @param {string}   bucketName     - The name of the S3 bucket.
- * @param {string}   directoryPath  - The directory prefix to list.
- * @param {ListOptions} [options]   - Additional parameters for `ListObjectsV2`.
- * @returns {Promise<Outcome.Either<string[], string>>}
+ * @param client         - The v3 S3 client used to list objects.
+ * @param   bucketName     - The name of the S3 bucket.
+ * @param   directoryPath  - The directory prefix to list.
+ * @param [options]   - Additional parameters for `ListObjectsV2`.
+ * @returns
  * - Success: `Outcome.makeSuccess(keys)` where `keys` is an array of object keys.
  * - Failure: `Outcome.makeFailure(errStr)` if the list operation fails.
  */

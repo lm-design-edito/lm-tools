@@ -22,11 +22,11 @@ export type CopyDirOptions = TransferOptions & {
  * Recursively copies every file under `sourceDir` to the same relative path
  * beneath `targetDir` on an SFTP server, streaming data to minimize memory usage.
  *
- * @param {Client} sftp - The SFTP client instance.
- * @param {string} sourceDir - The source directory path to copy from.
- * @param {string} targetDir - The target directory path to copy to.
- * @param {CopyDirOptions} [options] - Optional parameters for the operation.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param sftp - The SFTP client instance.
+ * @param sourceDir - The source directory path to copy from.
+ * @param targetDir - The target directory path to copy to.
+ * @param [options] - Optional parameters for the operation.
+ * @returns
  * - On success: `Outcome.makeSuccess(true)` indicating the copy was successful.
  * - On failure: `Outcome.makeFailure(errStr)` with an error message if the copy fails.
  */

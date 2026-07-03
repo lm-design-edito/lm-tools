@@ -30,9 +30,9 @@ export const defaultOptions: SanitizeHtmlOptions = { depth: 20 }
  * This API must not be used as a security boundary for untrusted HTML.
  * For security-critical sanitization, use a dedicated, security-audited library.
  *
- * @param {string} inputStr - The HTML string to sanitize.
- * @param {SanitizeHtmlOptions} [options=defaultOptions] - Sanitization configuration.
- * @returns {string} The sanitized HTML string.
+ * @param inputStr - The HTML string to sanitize.
+ * @param [options=defaultOptions] - Sanitization configuration.
+ * @returns The sanitized HTML string.
  *
  * @throws Will throw an error if no document object is available for creating elements.
  */
@@ -65,9 +65,9 @@ export function sanitizeHtml (inputStr: string, options: SanitizeHtmlOptions = d
  * This API must not be used as a security boundary for untrusted HTML.
  * For security-critical sanitization, use a dedicated, security-audited library.
  *
- * @param {Element} element - The DOM element to sanitize.
- * @param {SanitizeHtmlOptions} [options=defaultOptions] - Sanitization configuration.
- * @returns {Element | null}
+ * @param element - The DOM element to sanitize.
+ * @param [options=defaultOptions] - Sanitization configuration.
+ * @returns
  * - A sanitized clone of the original element with allowed attributes and children.
  * - `null` if the element is forbidden or maximum recursion depth is reached.
  *

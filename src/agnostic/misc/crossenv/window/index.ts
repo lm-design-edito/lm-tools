@@ -3,7 +3,7 @@ import { type MinimalWindow } from '../types.js'
 /**
  * Checks whether a `window` object exists in the current environment.
  *
- * @returns {boolean} `true` if `window` is present, `false` otherwise.
+ * @returns `true` if `window` is present, `false` otherwise.
  */
 export function exists (): boolean {
   return typeof globalThis !== 'undefined'
@@ -17,8 +17,8 @@ let _window: MinimalWindow | null = exists()
 /**
  * Sets a custom `window` object to be used internally.
  *
- * @param {MinimalWindow | null} customWindow - The window object to set, or `null` to unset.
- * @returns {MinimalWindow | null} The window object that was set.
+ * @param customWindow - The window object to set, or `null` to unset.
+ * @returns The window object that was set.
  */
 export function set (customWindow: MinimalWindow | null): MinimalWindow | null {
   _window = customWindow
@@ -29,7 +29,7 @@ export function set (customWindow: MinimalWindow | null): MinimalWindow | null {
  * Resets the internal window reference to the global `window` if it exists,
  * or `null` if no global `window` is available.
  *
- * @returns {MinimalWindow | null} The current internal window object after reset.
+ * @returns The current internal window object after reset.
  */
 export function unset (): MinimalWindow | null {
   if (exists()) { _window = globalThis.window } else { _window = null }
@@ -39,7 +39,7 @@ export function unset (): MinimalWindow | null {
 /**
  * Retrieves the currently set `window` object.
  *
- * @returns {MinimalWindow} The internal window object.
+ * @returns The internal window object.
  * @throws Will throw an error if no window has been set and none exists globally.
  */
 export function get (): MinimalWindow {

@@ -4,8 +4,8 @@ import { wait } from '../../time/wait/index.js'
  * Function that fetches content from a URL asynchronously.
  *
  * @template T - The type of content returned by the fetcher.
- * @param {string} url - The URL to fetch.
- * @returns {Promise<T>} A promise resolving to the fetched content.
+ * @param url - The URL to fetch.
+ * @returns A promise resolving to the fetched content.
  */
 export type Fetcher<T> = (url: string) => Promise<T>
 
@@ -13,14 +13,14 @@ export type Fetcher<T> = (url: string) => Promise<T>
  * Function that processes fetched content for a given URL.
  *
  * @template T - The type of content provided by the fetcher.
- * @param {string} url - The URL of the content being processed.
- * @param {T} content - The content fetched from the URL.
- * @param {object} hooks - Hooks for accessing crawler state and controlling the crawl.
- * @param {(...urls: string[]) => void} hooks.push - Enqueue one or more URLs to be crawled.
- * @param {() => void} hooks.flush - Clear the waitlist of pending URLs.
- * @param {Set<string>} hooks.processed - Read-only snapshot of URLs already processed.
- * @param {string[]} hooks.waitlist - Read-only snapshot of the current waitlist of URLs.
- * @returns {any} The result of processing (ignored by the crawler).
+ * @param url - The URL of the content being processed.
+ * @param content - The content fetched from the URL.
+ * @param hooks - Hooks for accessing crawler state and controlling the crawl.
+ * @param hooks.push - Enqueue one or more URLs to be crawled.
+ * @param hooks.flush - Clear the waitlist of pending URLs.
+ * @param hooks.processed - Read-only snapshot of URLs already processed.
+ * @param hooks.waitlist - Read-only snapshot of the current waitlist of URLs.
+ * @returns The result of processing (ignored by the crawler).
  */
 export type Processor<T> = (
   url: string,
@@ -71,13 +71,13 @@ export type Crawler = {
  * Creates a sequential crawler with optional delay.
  *
  * @template T - The type of content returned by the fetcher.
- * @param {Options<T>} options - Crawler configuration options.
- * @param {number} options.limit - Maximum number of URLs to process.
- * @param {number | (() => number)} [options.delayMs] - Optional delay between processing URLs, in milliseconds, or a function returning the delay.
- * @param {boolean} [options.allowDuplicates] - Optional, allows fetching and processing a URL that has already been seen.
- * @param {Fetcher<T>} options.fetcher - Function that fetches content for each URL.
- * @param {Processor<T>} options.processor - Function that processes fetched content.
- * @returns {Crawler} An object with methods to start crawling, enqueue URLs, flush the waitlist, and access crawler state.
+ * @param options - Crawler configuration options.
+ * @param options.limit - Maximum number of URLs to process.
+ * @param [options.delayMs] - Optional delay between processing URLs, in milliseconds, or a function returning the delay.
+ * @param [options.allowDuplicates] - Optional, allows fetching and processing a URL that has already been seen.
+ * @param options.fetcher - Function that fetches content for each URL.
+ * @param options.processor - Function that processes fetched content.
+ * @returns An object with methods to start crawling, enqueue URLs, flush the waitlist, and access crawler state.
  *
  * @example
  * ```typescript

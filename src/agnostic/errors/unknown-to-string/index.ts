@@ -1,8 +1,8 @@
 /**
  * Converts an unknown object into a string
  *
- * @param {unknown} unk - the unknown object to stringify
- * @returns {string} The stringified object
+ * @param unk - the unknown object to stringify
+ * @returns The stringified object
  */
 export function unknownToString (unk: unknown, encoding?: BufferEncoding): string {
   if (unk instanceof Error) return unk.message

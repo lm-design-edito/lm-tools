@@ -22,11 +22,11 @@ type Returned = Outcome.Either<true, string>
 /**
  * Uploads a file stream to a Google Cloud Storage bucket.
  *
- * @param {Readable} fileStream           - The file content as a stream.
- * @param {string}   path                 - The path to upload the file to.
- * @param {GCSBucket} client              - The Google Cloud Storage bucket instance.
- * @param {GcsUploadOptions} [options]     - Optional upload configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param fileStream           - The file content as a stream.
+ * @param   path                 - The path to upload the file to.
+ * @param client              - The Google Cloud Storage bucket instance.
+ * @param [options]     - Optional upload configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -34,11 +34,11 @@ export async function uploadFile (fileStream: Readable, path: string, client: GC
 /**
  * Uploads a file stream to an S3 bucket.
  *
- * @param {Readable} fileStream           - The file content as a stream.
- * @param {string}   path                 - The path to upload the file to.
- * @param {S3ClientWithBucket} client     - The S3 client with bucket configuration.
- * @param {S3UploadOptions} [options]      - Optional upload configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param fileStream           - The file content as a stream.
+ * @param   path                 - The path to upload the file to.
+ * @param client     - The S3 client with bucket configuration.
+ * @param [options]      - Optional upload configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -46,11 +46,11 @@ export async function uploadFile (fileStream: Readable, path: string, client: S3
 /**
  * Uploads a file stream to an FTP server.
  *
- * @param {Readable} fileStream           - The file content as a stream.
- * @param {string}   path                 - The path to upload the file to.
- * @param {FtpClient} client              - The FTP client instance.
- * @param {FtpUploadOptions} [options]     - Optional upload configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param fileStream           - The file content as a stream.
+ * @param   path                 - The path to upload the file to.
+ * @param client              - The FTP client instance.
+ * @param [options]     - Optional upload configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -58,11 +58,11 @@ export async function uploadFile (fileStream: Readable, path: string, client: Ft
 /**
  * Uploads a file stream to an SFTP server.
  *
- * @param {Readable} fileStream           - The file content as a stream.
- * @param {string}   path                 - The path to upload the file to.
- * @param {SftpClient} client             - The SFTP client instance.
- * @param {SftpUploadOptions} [options]   - Optional upload configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param fileStream           - The file content as a stream.
+ * @param   path                 - The path to upload the file to.
+ * @param client             - The SFTP client instance.
+ * @param [options]   - Optional upload configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -73,11 +73,11 @@ export async function uploadFile (fileStream: Readable, path: string, client: Sf
  * The function automatically dispatches to the appropriate implementation based on
  * the client type (Google Cloud Storage, S3, FTP, or SFTP).
  *
- * @param {Readable} fileStream           - The file content as a stream.
- * @param {string}   path                 - The path to upload the file to.
- * @param {AnyClient} client              - The cloud storage client instance.
- * @param {GcsUploadOptions | S3UploadOptions | FtpUploadOptions | SftpUploadOptions} [options] - Optional upload configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param fileStream           - The file content as a stream.
+ * @param   path                 - The path to upload the file to.
+ * @param client              - The cloud storage client instance.
+ * @param [options] - Optional upload configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */

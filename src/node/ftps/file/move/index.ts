@@ -28,13 +28,13 @@ export type MoveOptions = {
  * 2. **overwrite** – If disabled (default) the function first checks whether
  *    an object already exists at `targetPath`; if so, it aborts.
  *
- * @param {Client} ftpClient  - The basic‑ftp client instance.
- * @param {string} sourcePath - The full path of the source file.
- * @param {string} targetPath - The full destination path.
- * @param {MoveOptions} [options] - Optional move configuration.
- * @param {boolean} [options.ensureDir=true]  - Whether to create missing parent directories.
- * @param {boolean} [options.overwrite=false] - Whether to overwrite an existing destination.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param ftpClient  - The basic‑ftp client instance.
+ * @param sourcePath - The full path of the source file.
+ * @param targetPath - The full destination path.
+ * @param [options] - Optional move configuration.
+ * @param [options.ensureDir=true]  - Whether to create missing parent directories.
+ * @param [options.overwrite=false] - Whether to overwrite an existing destination.
+ * @returns
  * - On success: `Outcome.makeSuccess(true)`.
  * - On failure: `Outcome.makeFailure(errStr)`.
  */

@@ -18,10 +18,10 @@ export type RevokeSignedUrlsOptions = {
  * and finally re-uploads the file to the same path. The re-upload effectively revokes any signed URLs that
  * were generated for the file, as they are tied to the file's existence and content.
  *
- * @param {Bucket} bucket - The Google Cloud Storage bucket containing the file.
- * @param {string} targetPath - The path of the file for which the signed URLs are to be revoked.
- * @param {RevokeSignedUrlsOptions} [options] - Optional configuration options for the file operations.
- * @returns {Promise<Outcome.Either<true, string>>} A promise that resolves to an `Outcome.Either`.
+ * @param bucket - The Google Cloud Storage bucket containing the file.
+ * @param targetPath - The path of the file for which the signed URLs are to be revoked.
+ * @param [options] - Optional configuration options for the file operations.
+ * @returns A promise that resolves to an `Outcome.Either`.
  * - On success: `Outcome.makeSuccess(true)` if the file has been successfully re-uploaded after deletion.
  * - On failure: `Outcome.makeFailure(errStr)` with an error message if any of the steps (download, remove, or upload) fail.
  */

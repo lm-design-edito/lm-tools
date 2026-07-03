@@ -9,9 +9,9 @@ function luminanceRgb (rgb: Rgba): number {
 /**
  * Calculates the relative luminance of a color using the specified method.
  *
- * @param {Color} color - The color to analyze.
- * @param {LuminanceMethod} [method='lab'] - The calculation method to use.
- * @returns {number} The relative luminance value (0-1).
+ * @param color - The color to analyze.
+ * @param [method='lab'] - The calculation method to use.
+ * @returns The relative luminance value (0-1).
  */
 export function luminance (color: Color, method: LuminanceMethod = 'lab'): number {
   switch (method) {

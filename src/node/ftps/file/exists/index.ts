@@ -14,9 +14,9 @@ import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
  * `FileType.SymbolicLink`, mirroring the SFTP behaviour where `'-'` and `'l'`
  * are considered files.
  *
- * @param {Client} ftpClient  - The basic‑ftp client instance.
- * @param {string} sourcePath - The full path to check on the FTP server.
- * @returns {Promise<Outcome.Either<boolean, string>>}
+ * @param ftpClient  - The basic‑ftp client instance.
+ * @param sourcePath - The full path to check on the FTP server.
+ * @returns
  * - Success: `Outcome.makeSuccess(true | false)` – true only if a file exists.
  * - Failure: `Outcome.makeFailure(errStr)` if an error occurs.
  */

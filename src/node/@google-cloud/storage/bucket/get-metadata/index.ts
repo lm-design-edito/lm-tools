@@ -14,9 +14,9 @@ export type GetBucketMetadataOptions = GCSGetBucketMetadataOptions
  * This function calls the Google Cloud Storage API to get information about the bucket,
  * such as its location, storage class, and other configuration details.
  *
- * @param {Bucket} bucket - The Google Cloud Storage bucket object.
- * @param {GetBucketMetadataOptions} [options] - Optional configuration options to pass to the `getMetadata` method.
- * @returns {Promise<Outcome.Either<BucketMetadata, string>>} A promise that resolves to an `Outcome.Either`.
+ * @param bucket - The Google Cloud Storage bucket object.
+ * @param [options] - Optional configuration options to pass to the `getMetadata` method.
+ * @returns A promise that resolves to an `Outcome.Either`.
  * - On success: `Outcome.makeSuccess(metadata)` with the bucket metadata.
  * - On failure: `Outcome.makeFailure(errStr)` with an error message.
  *

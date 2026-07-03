@@ -21,11 +21,11 @@ export type CopyDirOptions = {
  * Recursively copies every file under `sourceDir` to the same relative path
  * beneath `targetDir` on an FTP server, streaming data to avoid buffering.
  *
- * @param {Client}  ftpClient  - The FTP client instance.
- * @param {string}  sourceDir  - The source directory path to copy from.
- * @param {string}  targetDir  - The target directory path to copy to.
- * @param {CopyDirOptions} [options] - Optional parameters for the operation.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param  ftpClient  - The FTP client instance.
+ * @param  sourceDir  - The source directory path to copy from.
+ * @param  targetDir  - The target directory path to copy to.
+ * @param [options] - Optional parameters for the operation.
+ * @returns
  * - Success: `Outcome.makeSuccess(true)` if the copy succeeds.
  * - Failure: `Outcome.makeFailure(errStr)` if an error occurs.
  */

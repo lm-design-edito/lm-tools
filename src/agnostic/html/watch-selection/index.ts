@@ -19,13 +19,12 @@ type Options = {
  *
  * Requires a browser environment with `window` and `document`.
  *
- * @param {string} selector - CSS selector passed to `deepSelect`.
- * @param {Options} options - Callbacks and polling configuration:
+ * @param selector - CSS selector passed to `deepSelect`.
+ * @param options - Callbacks and polling configuration:
  *   - `watch`: Handler for elements that enter the selection.
  *   - `unwatch`: Handler for elements that leave the selection.
  *   - `selectIntervalMs`: Delay between polls in milliseconds.
- * @returns {Promise<{ kill: () => void }>}
- * Resolves after the initial selection is processed. `kill` stops polling and calls `unwatch`
+ * @returns Resolves after the initial selection is processed. `kill` stops polling and calls `unwatch`
  * on every element still watched.
  *
  * @example

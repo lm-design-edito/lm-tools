@@ -29,15 +29,15 @@ export type MoveOptions = {
  * successful copy, deletes the original. If `overwrite` is **false** and the
  * destination already exists, the operation aborts.
  *
- * @param {Bucket}   bucket      - The Google Cloud Storage bucket.
- * @param {string}   sourcePath  - The path of the source object.
- * @param {string}   targetPath  - The destination path.
- * @param {MoveOptions} [options] - Optional configuration.
- * @param {FileOptions}   [options.fileOptions]   - Options for file handles.
- * @param {CopyOptions}   [options.copyOptions]   - Extra options for `copy`.
- * @param {GCSDeleteFileOptions} [options.deleteOptions] - Extra options for `delete`.
- * @param {boolean}      [options.overwrite=false] - Whether to overwrite an existing destination.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param   bucket      - The Google Cloud Storage bucket.
+ * @param   sourcePath  - The path of the source object.
+ * @param   targetPath  - The destination path.
+ * @param [options] - Optional configuration.
+ * @param   [options.fileOptions]   - Options for file handles.
+ * @param   [options.copyOptions]   - Extra options for `copy`.
+ * @param [options.deleteOptions] - Extra options for `delete`.
+ * @param      [options.overwrite=false] - Whether to overwrite an existing destination.
+ * @returns
  * - Success: `Outcome.makeSuccess(true)` if the move succeeds.
  * - Failure: `Outcome.makeFailure(errStr)` if the move fails.
  */

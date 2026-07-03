@@ -33,12 +33,12 @@ export type MoveDirOptions = {
  * Behaviour when `overwrite` is **false** (default): abort if *any* destination
  * key already exists.
  *
- * @param {S3Client} client      - The v3 S3 client instance.
- * @param {string}   bucketName  - The name of the S3 bucket.
- * @param {string}   sourceDir   - The source directory prefix to move from.
- * @param {string}   targetDir   - The target directory prefix to move to.
- * @param {MoveDirOptions} [options] - Optional configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client      - The v3 S3 client instance.
+ * @param   bucketName  - The name of the S3 bucket.
+ * @param   sourceDir   - The source directory prefix to move from.
+ * @param   targetDir   - The target directory prefix to move to.
+ * @param [options] - Optional configuration.
+ * @returns
  * - On success: `Outcome.makeSuccess(true)`.
  * - On failure: `Outcome.makeFailure(errStr)`.
  */

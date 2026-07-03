@@ -21,10 +21,10 @@ type Returned = Outcome.Either<true, string>
 /**
  * Removes a directory from a Google Cloud Storage bucket.
  *
- * @param {GCSBucket} client               - The Google Cloud Storage bucket instance.
- * @param {string}   sourcePath           - The directory path to remove.
- * @param {GcsRemoveDirOptions} [options] - Optional remove configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client               - The Google Cloud Storage bucket instance.
+ * @param   sourcePath           - The directory path to remove.
+ * @param [options] - Optional remove configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -32,10 +32,10 @@ export async function removeDir (client: GCSBucket, sourcePath: string, options?
 /**
  * Removes a directory from an S3 bucket.
  *
- * @param {S3ClientWithBucket} client      - The S3 client with bucket configuration.
- * @param {string}   sourcePath           - The directory path to remove.
- * @param {S3RemoveDirOptions} [options]   - Optional remove configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client      - The S3 client with bucket configuration.
+ * @param   sourcePath           - The directory path to remove.
+ * @param [options]   - Optional remove configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -43,10 +43,10 @@ export async function removeDir (client: S3ClientWithBucket, sourcePath: string,
 /**
  * Removes a directory from an FTP server.
  *
- * @param {FtpClient} client               - The FTP client instance.
- * @param {string}   sourcePath           - The directory path to remove.
- * @param {FtpsRemoveDirOptions} [options] - Optional remove configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client               - The FTP client instance.
+ * @param   sourcePath           - The directory path to remove.
+ * @param [options] - Optional remove configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -54,10 +54,10 @@ export async function removeDir (client: FtpClient, sourcePath: string, options?
 /**
  * Removes a directory from an SFTP server.
  *
- * @param {SftpClient} client              - The SFTP client instance.
- * @param {string}   sourcePath           - The directory path to remove.
- * @param {SftpRemoveDirOptions} [options] - Optional remove configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client              - The SFTP client instance.
+ * @param   sourcePath           - The directory path to remove.
+ * @param [options] - Optional remove configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -68,10 +68,10 @@ export async function removeDir (client: SftpClient, sourcePath: string, options
  * The function automatically dispatches to the appropriate implementation based on
  * the client type (Google Cloud Storage, S3, FTP, or SFTP).
  *
- * @param {AnyClient} client               - The cloud storage client instance.
- * @param {string}   sourcePath           - The directory path to remove.
- * @param {GcsRemoveDirOptions | S3RemoveDirOptions | FtpsRemoveDirOptions | SftpRemoveDirOptions} [options] - Optional remove configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client               - The cloud storage client instance.
+ * @param   sourcePath           - The directory path to remove.
+ * @param [options] - Optional remove configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */

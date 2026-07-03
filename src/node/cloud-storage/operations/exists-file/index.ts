@@ -21,10 +21,10 @@ type Returned = Outcome.Either<boolean, string>
 /**
  * Checks whether a file exists in a Google Cloud Storage bucket.
  *
- * @param {GCSBucket} client              - The Google Cloud Storage bucket instance.
- * @param {string}   path                 - The path of the file to check.
- * @param {GcsExistsOptions} [options]    - Optional configuration.
- * @returns {Promise<Outcome.Either<boolean, string>>}
+ * @param client              - The Google Cloud Storage bucket instance.
+ * @param   path                 - The path of the file to check.
+ * @param [options]    - Optional configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)` if the file exists,
  *                `Outcome.makeSuccess(false)` if it does not.
  * - On failure:  `Outcome.makeFailure(errStr)` for unexpected errors.
@@ -33,10 +33,10 @@ export async function existsFile (client: GCSBucket, path: string, options?: Gcs
 /**
  * Checks whether a file exists in an S3 bucket.
  *
- * @param {S3ClientWithBucket} client     - The S3 client with bucket configuration.
- * @param {string}   path                 - The path of the file to check.
- * @param {S3ExistsOptions} [options]    - Optional configuration.
- * @returns {Promise<Outcome.Either<boolean, string>>}
+ * @param client     - The S3 client with bucket configuration.
+ * @param   path                 - The path of the file to check.
+ * @param [options]    - Optional configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)` if the file exists,
  *                `Outcome.makeSuccess(false)` if it does not.
  * - On failure:  `Outcome.makeFailure(errStr)` for unexpected errors.
@@ -45,9 +45,9 @@ export async function existsFile (client: S3ClientWithBucket, path: string, opti
 /**
  * Checks whether a file exists on an FTP server.
  *
- * @param {FtpClient} client              - The FTP client instance.
- * @param {string}   path                 - The path of the file to check.
- * @returns {Promise<Outcome.Either<boolean, string>>}
+ * @param client              - The FTP client instance.
+ * @param   path                 - The path of the file to check.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)` if the file exists,
  *                `Outcome.makeSuccess(false)` if it does not.
  * - On failure:  `Outcome.makeFailure(errStr)` for unexpected errors.
@@ -56,9 +56,9 @@ export async function existsFile (client: FtpClient, path: string): Promise<Retu
 /**
  * Checks whether a file exists on an SFTP server.
  *
- * @param {SftpClient} client             - The SFTP client instance.
- * @param {string}   path                 - The path of the file to check.
- * @returns {Promise<Outcome.Either<boolean, string>>}
+ * @param client             - The SFTP client instance.
+ * @param   path                 - The path of the file to check.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)` if the file exists,
  *                `Outcome.makeSuccess(false)` if it does not.
  * - On failure:  `Outcome.makeFailure(errStr)` for unexpected errors.
@@ -70,10 +70,10 @@ export async function existsFile (client: SftpClient, path: string): Promise<Ret
  * The function automatically dispatches to the appropriate implementation based on
  * the client type (Google Cloud Storage, S3, FTP, or SFTP).
  *
- * @param {AnyClient} client              - The cloud storage client instance.
- * @param {string}   path                 - The path of the file to check.
- * @param {GcsExistsOptions | S3ExistsOptions} [options] - Optional configuration.
- * @returns {Promise<Outcome.Either<boolean, string>>}
+ * @param client              - The cloud storage client instance.
+ * @param   path                 - The path of the file to check.
+ * @param [options] - Optional configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)` if the file exists,
  *                `Outcome.makeSuccess(false)` if it does not.
  * - On failure:  `Outcome.makeFailure(errStr)` for unexpected errors.

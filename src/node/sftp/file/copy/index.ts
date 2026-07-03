@@ -22,11 +22,11 @@ export type CopyOptions = TransferOptions & {
  * Copies a file from one path to another on the same SFTP server using streams
  * (avoids loading the entire file into memory).
  *
- * @param {Client}  sftp       - The ssh2‑sftp‑client instance.
- * @param {string}  sourcePath - The path of the source file.
- * @param {string}  targetPath - The destination path.
- * @param {CopyOptions} [options] - Optional copy configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param  sftp       - The ssh2‑sftp‑client instance.
+ * @param  sourcePath - The path of the source file.
+ * @param  targetPath - The destination path.
+ * @param [options] - Optional copy configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */

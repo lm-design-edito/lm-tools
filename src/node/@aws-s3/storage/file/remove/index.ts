@@ -15,11 +15,11 @@ export type RemoveOptions = {
  *
  * If `ignoreMissing` is true (default), a missing object is considered success.
  *
- * @param {S3Client} s3 - The AWS S3 client instance.
- * @param {string} bucketName - The name of the bucket.
- * @param {string} targetPath - The key of the object to delete.
- * @param {RemoveOptions} [options] - Optional settings.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param s3 - The AWS S3 client instance.
+ * @param bucketName - The name of the bucket.
+ * @param targetPath - The key of the object to delete.
+ * @param [options] - Optional settings.
+ * @returns
  */
 export async function remove (
   s3: S3Client,

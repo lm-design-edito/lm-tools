@@ -102,9 +102,9 @@ const defaultAliases: Record<string, string> = {
  * Converts the extension to lowercase, removes a leading dot if present,
  * and applies alias mapping if defined.
  *
- * @param {string} extWithoutDot - File extension to normalize (may include or omit leading dot).
- * @param {Record<string, string>} [aliasesWithoutDot=defaultAliases] - Optional mapping of aliases to canonical extensions.
- * @returns {string} The normalized file extension, without leading dot.
+ * @param extWithoutDot - File extension to normalize (may include or omit leading dot).
+ * @param [aliasesWithoutDot=defaultAliases] - Optional mapping of aliases to canonical extensions.
+ * @returns The normalized file extension, without leading dot.
  */
 export function normalizeExtension (
   extWithoutDot: string,

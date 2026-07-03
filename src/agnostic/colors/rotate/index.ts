@@ -32,10 +32,10 @@ function rotateLch <C extends Color> (color: C, degrees: number): TransformedCol
  * Rotates the hue of a color by a specified number of degrees.
  *
  * @template C - The input color type.
- * @param {C} color - The color to rotate.
- * @param {number} degrees - The number of degrees to rotate the hue (positive or negative).
- * @param {RotateMethod} [method='hsl'] - The color space to use for rotation.
- * @returns {TransformedColor<C>} The rotated color in the original format.
+ * @param color - The color to rotate.
+ * @param degrees - The number of degrees to rotate the hue (positive or negative).
+ * @param [method='hsl'] - The color space to use for rotation.
+ * @returns The rotated color in the original format.
  */
 export function rotate <C extends Color> (
   color: C,

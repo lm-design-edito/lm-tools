@@ -3,9 +3,9 @@ import * as inquirer from '@inquirer/prompts'
 /**
  * Prompts the user with a yes/no confirmation in the terminal.
  *
- * @param {string} [message] - The message to display in the prompt. Defaults to "Continue?" if not provided.
- * @param {boolean} [throws=false] - If true, the function will throw an error when the user declines.
- * @returns {Promise<boolean>} - Resolves to `true` if the user confirms, `false` if the user declines and `throws` is false.
+ * @param [message] - The message to display in the prompt. Defaults to "Continue?" if not provided.
+ * @param [throws=false] - If true, the function will throw an error when the user declines.
+ * @returns - Resolves to `true` if the user confirms, `false` if the user declines and `throws` is false.
  *
  * @throws {Error} - Throws an error with message 'Aborted' if the user declines and `throws` is true.
  *

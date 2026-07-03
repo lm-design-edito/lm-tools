@@ -21,14 +21,14 @@ export type CopyOptions = {
  * If `overwrite` is **false** (default) and the destination object already
  * exists, the operation aborts.
  *
- * @param {Bucket} bucket - The Google Cloud Storage bucket containing the file.
- * @param {string} sourcePath - The path of the source object to copy.
- * @param {string} targetPath - The destination path for the copied object.
- * @param {CopyOptions} [options] - Optional copy configuration.
- * @param {FileOptions} [options.fileOptions] - Extra options for `bucket.file`.
- * @param {GCSFileCopyOptions} [options.copyOptions] - Extra options for `file.copy`.
- * @param {boolean} [options.overwrite=false] - Whether to overwrite an existing destination object.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param bucket - The Google Cloud Storage bucket containing the file.
+ * @param sourcePath - The path of the source object to copy.
+ * @param targetPath - The destination path for the copied object.
+ * @param [options] - Optional copy configuration.
+ * @param [options.fileOptions] - Extra options for `bucket.file`.
+ * @param [options.copyOptions] - Extra options for `file.copy`.
+ * @param [options.overwrite=false] - Whether to overwrite an existing destination object.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */

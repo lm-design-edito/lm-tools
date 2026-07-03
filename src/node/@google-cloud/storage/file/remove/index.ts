@@ -17,10 +17,10 @@ export type RemoveOptions = {
  * If the `ignoreMissing` option is **true**, the function treats a missing object as a
  * successful outcome instead of returning an error.
  *
- * @param {Bucket} bucket - The Google Cloud Storage bucket instance.
- * @param {string} targetPath - The path of the file to remove in the bucket.
- * @param {RemoveOptions} [options] - Optional settings for configuring the removal process.
- * @returns {Promise<Outcome.Either<true, string>>} A promise that resolves to an Outcome.Either.
+ * @param bucket - The Google Cloud Storage bucket instance.
+ * @param targetPath - The path of the file to remove in the bucket.
+ * @param [options] - Optional settings for configuring the removal process.
+ * @returns A promise that resolves to an Outcome.Either.
  * - On success: `Outcome.makeSuccess(true)` indicating the removal was successful.
  * - On failure:  `Outcome.makeFailure(errStr)` with an error message if the removal fails.
  */

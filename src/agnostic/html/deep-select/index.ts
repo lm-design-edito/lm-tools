@@ -23,11 +23,11 @@ const yieldToMain = async (windowLike: any): Promise<void> => {
  * Yields to the main thread every `chunkSize` visited nodes, using `scheduler.yield()` when
  * available or `setTimeout(0)` as a fallback. Requires a browser environment with `document`.
  *
- * @param {string} selector - CSS selector tested with `Element.prototype.matches`.
- * @param {Options} [options] - Optional configuration:
+ * @param selector - CSS selector tested with `Element.prototype.matches`.
+ * @param [options] - Optional configuration:
  *   - `fromElement`: Element (or `document`) to start the walk from.
  *   - `chunkSize`: How many element nodes to process between yields.
- * @returns {Promise<Element[]>} All matching elements in tree-walker order (depth-first).
+ * @returns All matching elements in tree-walker order (depth-first).
  *
  * @example
  * const items = await deepSelect('[data-item]', { fromElement: app })

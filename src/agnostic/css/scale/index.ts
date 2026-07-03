@@ -5,10 +5,10 @@ import { make as makeArr } from '../../arrays/make/index.js'
 /**
  * Generates an array of interpolated values between a minimum and maximum using a geometric progression.
  *
- * @param {number} min - The starting value of the scale.
- * @param {number} max - The ending value of the scale.
- * @param {number} intermediateLevels - The number of intermediate levels between min and max.
- * @returns {number[]} An array of rounded values including the minimum and interpolated steps up to the maximum.
+ * @param min - The starting value of the scale.
+ * @param max - The ending value of the scale.
+ * @param intermediateLevels - The number of intermediate levels between min and max.
+ * @returns An array of rounded values including the minimum and interpolated steps up to the maximum.
  */
 export const interpolateLevels = (
   min: number,
@@ -41,11 +41,11 @@ export type ScaleDataOptions = {
 /**
  * Computes scale data for each breakpoint, including interpolated levels.
  *
- * @param {ScaleDataOptions} options - Configuration for generating scale data.
- * @param {number[]} options.breakpoints - Ordered list of breakpoint widths in pixels.
- * @param {[number, number]} options.loScaleBounds - Minimum and maximum values for the low end of the scale.
- * @param {[number, number]} options.hiScaleBounds - Minimum and maximum values for the high end of the scale.
- * @param {number} options.intermediateLevels - Number of intermediate levels between bounds.
+ * @param options - Configuration for generating scale data.
+ * @param options.breakpoints - Ordered list of breakpoint widths in pixels.
+ * @param options.loScaleBounds - Minimum and maximum values for the low end of the scale.
+ * @param options.hiScaleBounds - Minimum and maximum values for the high end of the scale.
+ * @param options.intermediateLevels - Number of intermediate levels between bounds.
  * @throws Will throw if `breakpoints` contains fewer than two values.
  */
 export const getScaleData = ({
@@ -91,15 +91,15 @@ export type GenerateScaleCssOptions = ScaleDataOptions & {
 /**
  * Generates responsive CSS custom properties for a scale across breakpoints.
  *
- * @param {GenerateScaleCssOptions} options - Configuration for generating the CSS output.
- * @param {string} options.scaleName - Base name for CSS custom properties.
- * @param {string} options.targetSelector - CSS selector to which the properties will be applied.
- * @param {string} options.unit - Unit appended to each value.
- * @param {number[]} options.breakpoints - Ordered list of breakpoint widths in pixels.
- * @param {[number, number]} options.loScaleBounds - Minimum and maximum values for the low end of the scale.
- * @param {[number, number]} options.hiScaleBounds - Minimum and maximum values for the high end of the scale.
- * @param {number} options.intermediateLevels - Number of intermediate levels between bounds.
- * @returns {string} A CSS string containing custom properties for each breakpoint, wrapped in media queries where applicable.
+ * @param options - Configuration for generating the CSS output.
+ * @param options.scaleName - Base name for CSS custom properties.
+ * @param options.targetSelector - CSS selector to which the properties will be applied.
+ * @param options.unit - Unit appended to each value.
+ * @param options.breakpoints - Ordered list of breakpoint widths in pixels.
+ * @param options.loScaleBounds - Minimum and maximum values for the low end of the scale.
+ * @param options.hiScaleBounds - Minimum and maximum values for the high end of the scale.
+ * @param options.intermediateLevels - Number of intermediate levels between bounds.
+ * @returns A CSS string containing custom properties for each breakpoint, wrapped in media queries where applicable.
  */
 export const generateScaleCss = ({
   scaleName,

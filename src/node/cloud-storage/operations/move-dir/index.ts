@@ -21,11 +21,11 @@ type Returned = Outcome.Either<true, string>
 /**
  * Moves a directory from one path to another using a Google Cloud Storage bucket.
  *
- * @param {GCSBucket} client               - The Google Cloud Storage bucket instance.
- * @param {string}   sourcePath           - The source directory path to move from.
- * @param {string}   targetPath           - The target directory path to move to.
- * @param {GcsMoveDirOptions} [options]    - Optional move configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client               - The Google Cloud Storage bucket instance.
+ * @param   sourcePath           - The source directory path to move from.
+ * @param   targetPath           - The target directory path to move to.
+ * @param [options]    - Optional move configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -33,11 +33,11 @@ export async function moveDir (client: GCSBucket, sourcePath: string, targetPath
 /**
  * Moves a directory from one path to another using an S3 client.
  *
- * @param {S3ClientWithBucket} client      - The S3 client with bucket configuration.
- * @param {string}   sourcePath           - The source directory path to move from.
- * @param {string}   targetPath           - The target directory path to move to.
- * @param {S3MoveDirOptions} [options]     - Optional move configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client      - The S3 client with bucket configuration.
+ * @param   sourcePath           - The source directory path to move from.
+ * @param   targetPath           - The target directory path to move to.
+ * @param [options]     - Optional move configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -45,11 +45,11 @@ export async function moveDir (client: S3ClientWithBucket, sourcePath: string, t
 /**
  * Moves a directory from one path to another using an FTP client.
  *
- * @param {FtpClient} client               - The FTP client instance.
- * @param {string}   sourcePath           - The source directory path to move from.
- * @param {string}   targetPath           - The target directory path to move to.
- * @param {FtpsMoveDirOptions} [options]   - Optional move configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client               - The FTP client instance.
+ * @param   sourcePath           - The source directory path to move from.
+ * @param   targetPath           - The target directory path to move to.
+ * @param [options]   - Optional move configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -57,11 +57,11 @@ export async function moveDir (client: FtpClient, sourcePath: string, targetPath
 /**
  * Moves a directory from one path to another using an SFTP client.
  *
- * @param {SftpClient} client              - The SFTP client instance.
- * @param {string}   sourcePath           - The source directory path to move from.
- * @param {string}   targetPath           - The target directory path to move to.
- * @param {SftpMoveDirOptions} [options]   - Optional move configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client              - The SFTP client instance.
+ * @param   sourcePath           - The source directory path to move from.
+ * @param   targetPath           - The target directory path to move to.
+ * @param [options]   - Optional move configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -72,11 +72,11 @@ export async function moveDir (client: SftpClient, sourcePath: string, targetPat
  * The function automatically dispatches to the appropriate implementation based on
  * the client type (Google Cloud Storage, S3, FTP, or SFTP).
  *
- * @param {AnyClient} client               - The cloud storage client instance.
- * @param {string}   sourcePath           - The source directory path to move from.
- * @param {string}   targetPath           - The target directory path to move to.
- * @param {GcsMoveDirOptions | S3MoveDirOptions | FtpsMoveDirOptions | SftpMoveDirOptions} [options] - Optional move configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client               - The cloud storage client instance.
+ * @param   sourcePath           - The source directory path to move from.
+ * @param   targetPath           - The target directory path to move to.
+ * @param [options] - Optional move configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */

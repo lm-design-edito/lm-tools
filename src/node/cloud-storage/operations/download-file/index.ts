@@ -24,10 +24,10 @@ type Returned = Outcome.Either<Readable, string>
  *
  * The function streams the file's content back as a Node `Readable`.
  *
- * @param {GCSBucket} client              - The Google Cloud Storage bucket instance.
- * @param {string}   path                 - The path of the file to download.
- * @param {GcsDownloadOptions} [options] - Optional download configuration.
- * @returns {Promise<Outcome.Either<Readable, string>>}
+ * @param client              - The Google Cloud Storage bucket instance.
+ * @param   path                 - The path of the file to download.
+ * @param [options] - Optional download configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(stream)` containing the file content.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -37,10 +37,10 @@ export async function downloadFile (client: GCSBucket, path: string, options?: G
  *
  * The function streams the file's content back as a Node `Readable`.
  *
- * @param {S3ClientWithBucket} client     - The S3 client with bucket configuration.
- * @param {string}   path                 - The path of the file to download.
- * @param {S3DownloadOptions} [options]   - Optional download configuration.
- * @returns {Promise<Outcome.Either<Readable, string>>}
+ * @param client     - The S3 client with bucket configuration.
+ * @param   path                 - The path of the file to download.
+ * @param [options]   - Optional download configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(stream)` containing the file content.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -50,10 +50,10 @@ export async function downloadFile (client: S3ClientWithBucket, path: string, op
  *
  * The function streams the file's content back as a Node `Readable`.
  *
- * @param {FtpClient} client              - The FTP client instance.
- * @param {string}   path                 - The path of the file to download.
- * @param {FtpDownloadOptions} [options]  - Optional download configuration.
- * @returns {Promise<Outcome.Either<Readable, string>>}
+ * @param client              - The FTP client instance.
+ * @param   path                 - The path of the file to download.
+ * @param [options]  - Optional download configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(stream)` containing the file content.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -63,10 +63,10 @@ export async function downloadFile (client: FtpClient, path: string, options?: F
  *
  * The function streams the file's content back as a Node `Readable`.
  *
- * @param {SftpClient} client              - The SFTP client instance.
- * @param {string}   path                  - The path of the file to download.
- * @param {SftpDownloadOptions} [options] - Optional download configuration.
- * @returns {Promise<Outcome.Either<Readable, string>>}
+ * @param client              - The SFTP client instance.
+ * @param   path                  - The path of the file to download.
+ * @param [options] - Optional download configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(stream)` containing the file content.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -78,10 +78,10 @@ export async function downloadFile (client: SftpClient, path: string, options?: 
  * the client type (Google Cloud Storage, S3, FTP, or SFTP) and streams the file's
  * content back as a Node `Readable`.
  *
- * @param {AnyClient} client               - The cloud storage client instance.
- * @param {string}   path                  - The path of the file to download.
- * @param {GcsDownloadOptions | S3DownloadOptions | FtpDownloadOptions | SftpDownloadOptions} [options] - Optional download configuration.
- * @returns {Promise<Outcome.Either<Readable, string>>}
+ * @param client               - The cloud storage client instance.
+ * @param   path                  - The path of the file to download.
+ * @param [options] - Optional download configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(stream)` containing the file content.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */

@@ -17,12 +17,12 @@ export type ExistsOptions = {
 /**
  * Checks whether an object exists in a specified S3 bucket (AWS SDK v3).
  *
- * @param {S3Client} client          - The v3 S3 client instance.
- * @param {string}   bucketName      - The name of the S3 bucket.
- * @param {string}   sourcePath      - The key of the object to test.
- * @param {ExistsOptions} [options]  - Optional configuration.
- * @param {Omit<HeadObjectCommandInput,'Bucket'|'Key'>} [options.headObjectOptions] - Extra `HeadObject` params.
- * @returns {Promise<Outcome.Either<boolean, string>>}
+ * @param client          - The v3 S3 client instance.
+ * @param   bucketName      - The name of the S3 bucket.
+ * @param   sourcePath      - The key of the object to test.
+ * @param [options]  - Optional configuration.
+ * @param [options.headObjectOptions] - Extra `HeadObject` params.
+ * @returns
  * - Success: `Outcome.makeSuccess(true)` if the object exists,
  *            `Outcome.makeSuccess(false)` if it does not.
  * - Failure: `Outcome.makeFailure(errStr)` for unexpected errors.

@@ -30,8 +30,8 @@ export const defaultListContext: Required<ListContext> = {
 /**
  * Fills missing properties in a list context with default values.
  *
- * @param {ListContext} input - The partial list context to fill.
- * @returns {Required<ListContext>} A complete list context with all properties set.
+ * @param input - The partial list context to fill.
+ * @returns A complete list context with all properties set.
  */
 export const fillListContext = (input: ListContext): Required<ListContext> => {
   return {
@@ -73,8 +73,8 @@ export const defaultListOptions: Required<ListOptions> = {
 /**
  * Fills missing properties in list options with default values.
  *
- * @param {ListOptions} input - The partial list options to fill.
- * @returns {Required<ListOptions>} A complete list options object with all properties set.
+ * @param input - The partial list options to fill.
+ * @returns A complete list options object with all properties set.
  */
 export const fillOptions = (input: ListOptions): Required<ListOptions> => {
   return {
@@ -105,10 +105,10 @@ export async function list (...args: Parameters<typeof listAbsoluteSubpaths>): P
 /**
  * Internal function that lists absolute subpaths recursively.
  *
- * @param {string} inputPath              - The directory path to list.
- * @param {ListOptions} [_options]        - Optional configuration.
- * @param {ListContext} [__private_context] - Internal recursion context.
- * @returns {Promise<string[]>} Array of absolute subpaths.
+ * @param inputPath              - The directory path to list.
+ * @param [_options]        - Optional configuration.
+ * @param [__private_context] - Internal recursion context.
+ * @returns Array of absolute subpaths.
  */
 async function listAbsoluteSubpaths (
   inputPath: string,

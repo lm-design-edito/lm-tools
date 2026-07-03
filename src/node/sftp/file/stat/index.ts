@@ -15,9 +15,9 @@ export interface Stat {
 /**
  * Retrieves metadata for a file on an SFTP server.
  *
- * @param {SftpClient} sftp – ssh2-sftp-client.
- * @param {string} path     – Remote file path.
- * @returns {Promise<Outcome.Either<Stat, string>>}
+ * @param sftp – ssh2-sftp-client.
+ * @param path     – Remote file path.
+ * @returns
  */
 export async function stat (
   sftp: SftpClient,

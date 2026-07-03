@@ -16,11 +16,11 @@ export type UploadOptions = {
  * The upload can be customized using optional `fileOptions` and `saveOptions`.
  * If the `overwrite` option is false and a file already exists at the target path, the upload is aborted.
  *
- * @param {Bucket} bucket - The Google Cloud Storage bucket object.
- * @param {string} targetPath - The target path where the file will be saved in the bucket.
- * @param {Readable} fileStream - The file content to be uploaded.
- * @param {UploadOptions} [options] - Optional options to configure the upload process.
- * @returns {Promise<Outcome.Either<true, string>>} A promise that resolves to an Outcome.Either.
+ * @param bucket - The Google Cloud Storage bucket object.
+ * @param targetPath - The target path where the file will be saved in the bucket.
+ * @param fileStream - The file content to be uploaded.
+ * @param [options] - Optional options to configure the upload process.
+ * @returns A promise that resolves to an Outcome.Either.
  * - On success: Outcome.makeSuccess(true) indicating the upload was successful.
  * - On failure: Outcome.makeFailure(errStr) with an error message if the upload fails.
  */

@@ -117,24 +117,24 @@ const defaultColumnModeOptions: ParseTableColumnModeOptions<any> = {
  * 2. **Fixed-width columns** (`mode: 'column'` or when `columns` is provided): Slices text at fixed character positions
  *
  * @template T - The type of objects in the resulting array, extending `Record<string, string>`.
- * @param {string} table - The string representation of the table to parse.
- * @param {Partial<ParseTableOptions<T>> & { schema: (obj: unknown) => T | undefined }} options - Configuration options.
- * @param {function(unknown): T | undefined} options.schema - **Required.** Validates and transforms each row. Return `undefined` to skip invalid rows.
- * @param {'line' | 'column'} [options.mode] - Parsing mode. If omitted, inferred from presence of `columns` property.
- * @param {function(string): string[]} [options.splitLines] - How to split input into lines.
- * @param {number} [options.headerPos=0] - Index of the header line.
- * @param {[number, number]} [options.bodyBounds=[1, Infinity]] - Range of lines to parse as body rows `[start, end)`.
+ * @param table - The string representation of the table to parse.
+ * @param options - Configuration options.
+ * @param options.schema - **Required.** Validates and transforms each row. Return `undefined` to skip invalid rows.
+ * @param [options.mode] - Parsing mode. If omitted, inferred from presence of `columns` property.
+ * @param [options.splitLines] - How to split input into lines.
+ * @param [options.headerPos=0] - Index of the header line.
+ * @param [options.bodyBounds=[1, Infinity]] - Range of lines to parse as body rows `[start, end)`.
  *
  * **Delimiter-based mode options:**
- * @param {function(string): string[]} [options.splitHeaderCells] - How to split header line into column names.
- * @param {function(string): string[]} [options.splitBodyCells] - How to split body lines into cell values.
+ * @param [options.splitHeaderCells] - How to split header line into column names.
+ * @param [options.splitBodyCells] - How to split body lines into cell values.
  *
  * **Fixed-width column mode options:**
- * @param {number[]} [options.columns] - Starting positions for each column.
- * @param {function(string): string} [options.headerCellRefine] - Clean/normalize header names.
- * @param {function(string): string} [options.bodyCellRefine] - Clean/normalize cell values.
+ * @param [options.columns] - Starting positions for each column.
+ * @param [options.headerCellRefine] - Clean/normalize header names.
+ * @param [options.bodyCellRefine] - Clean/normalize cell values.
  *
- * @returns {Outcome.Either<T[], string>}
+ * @returns
  * - On success: `{ success: true, payload: T[] }` containing parsed rows.
  * - On failure: `{ success: false, payload: string }` containing error message.
  *

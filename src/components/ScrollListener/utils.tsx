@@ -4,6 +4,14 @@ import type {
   SetStateAction
 } from 'react'
 
+/**
+ * Scroll-related measurements for the document and viewport.
+ *
+ * @property win - Window inner dimensions.
+ * @property html - Document root element dimensions.
+ * @property scroll - Current scroll position.
+ * @property viewport - Current viewport bounds in document coordinates.
+ */
 export type GlobalScrollData = {
   win: {
     height: number
@@ -25,6 +33,14 @@ export type GlobalScrollData = {
   }
 }
 
+/**
+ * Position and size of a tracked element relative to the document.
+ *
+ * @property offsetX - Horizontal offset in pixels.
+ * @property offsetY - Vertical offset in pixels.
+ * @property width - Element width in pixels.
+ * @property height - Element height in pixels.
+ */
 export type LocalScrollData = {
   offsetX: number
   offsetY: number
@@ -32,6 +48,12 @@ export type LocalScrollData = {
   height: number
 }
 
+/**
+ * Combined scroll state passed to each registered {@link ScrollListener}.
+ *
+ * @property global - Document-level scroll data.
+ * @property local - Element-level position data.
+ */
 export type ScrollState = {
   global: GlobalScrollData
   local: LocalScrollData
@@ -82,6 +104,13 @@ window.addEventListener('scroll', () => {
   })
 })
 
+/**
+ * An entry registered with the global scroll listener.
+ *
+ * @property id - Unique identifier for this registration.
+ * @property rootRef - Ref to the tracked DOM element.
+ * @property setData - State setter to update the component's scroll state.
+ */
 export type RegisterEntry = {
   id: string
   rootRef: RefObject<HTMLDivElement | null>

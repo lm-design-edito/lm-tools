@@ -18,12 +18,12 @@ export type CopyDirOptions = {
 
 /** Recursively copies every object under `sourceDir` to the same relative path
  *  beneath `targetDir` within a single GCS bucket.
- * @param {Bucket} bucket - The GCS bucket instance.
- * @param {string} sourceDir - The source directory path (prefix) to copy from.
- * @param {string} targetDir - The target directory path (prefix) to copy to.
- * @param {CopyDirOptions} [options] - Optional parameters for the operation.
- * @param {boolean} [options.overwrite=false] - Whether to overwrite existing files at target.
- * @returns {Promise<Outcome.Either<true, string>>} A promise that resolves to an `Outcome.Either`:
+ * @param bucket - The GCS bucket instance.
+ * @param sourceDir - The source directory path (prefix) to copy from.
+ * @param targetDir - The target directory path (prefix) to copy to.
+ * @param [options] - Optional parameters for the operation.
+ * @param [options.overwrite=false] - Whether to overwrite existing files at target.
+ * @returns A promise that resolves to an `Outcome.Either`:
  * - On success: `Outcome.makeSuccess(true)` indicating the copy was successful.
  * - On failure: `Outcome.makeFailure(errStr)` with an error message if the copy fails.
  * */

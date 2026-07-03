@@ -18,10 +18,10 @@ export type GetMetadataOptions = {
  * This function fetches the metadata for a file located at `sourcePath` in the given bucket.
  * It can be customized using optional `fileOptions` and `getFileMetadataOptions` to control the retrieval behavior.
  *
- * @param {Bucket} bucket - The Google Cloud Storage bucket object containing the file whose metadata is being retrieved.
- * @param {string} sourcePath - The path of the file whose metadata is to be fetched.
- * @param {GetMetadataOptions} [options] - Optional configuration options for the file metadata retrieval.
- * @returns {Promise<Outcome.Either<FileMetadata, string>>} A promise that resolves to an `Outcome.Either`.
+ * @param bucket - The Google Cloud Storage bucket object containing the file whose metadata is being retrieved.
+ * @param sourcePath - The path of the file whose metadata is to be fetched.
+ * @param [options] - Optional configuration options for the file metadata retrieval.
+ * @returns A promise that resolves to an `Outcome.Either`.
  * - On success: `Outcome.makeSuccess(metadata)` containing the file's metadata.
  * - On failure: `Outcome.makeFailure(errStr)` with an error message if the metadata retrieval fails.
  *

@@ -21,11 +21,11 @@ type Returned = Outcome.Either<true, string>
 /**
  * Copies a file from one path to another using a Google Cloud Storage bucket.
  *
- * @param {GCSBucket} client              - The Google Cloud Storage bucket instance.
- * @param {string}   sourcePath           - The source file path to copy from.
- * @param {string}   targetPath           - The target file path to copy to.
- * @param {GcsCopyOptions} [options]      - Optional copy configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client              - The Google Cloud Storage bucket instance.
+ * @param   sourcePath           - The source file path to copy from.
+ * @param   targetPath           - The target file path to copy to.
+ * @param [options]      - Optional copy configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -33,11 +33,11 @@ export async function copyFile (client: GCSBucket, sourcePath: string, targetPat
 /**
  * Copies a file from one path to another using an S3 client.
  *
- * @param {S3ClientWithBucket} client     - The S3 client with bucket configuration.
- * @param {string}   sourcePath           - The source file path to copy from.
- * @param {string}   targetPath           - The target file path to copy to.
- * @param {S3CopyOptions} [options]       - Optional copy configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client     - The S3 client with bucket configuration.
+ * @param   sourcePath           - The source file path to copy from.
+ * @param   targetPath           - The target file path to copy to.
+ * @param [options]       - Optional copy configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -45,11 +45,11 @@ export async function copyFile (client: S3ClientWithBucket, sourcePath: string, 
 /**
  * Copies a file from one path to another using an FTP client.
  *
- * @param {FtpClient} client              - The FTP client instance.
- * @param {string}   sourcePath           - The source file path to copy from.
- * @param {string}   targetPath           - The target file path to copy to.
- * @param {FtpsCopyOptions} [options]      - Optional copy configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client              - The FTP client instance.
+ * @param   sourcePath           - The source file path to copy from.
+ * @param   targetPath           - The target file path to copy to.
+ * @param [options]      - Optional copy configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -57,11 +57,11 @@ export async function copyFile (client: FtpClient, sourcePath: string, targetPat
 /**
  * Copies a file from one path to another using an SFTP client.
  *
- * @param {SftpClient} client             - The SFTP client instance.
- * @param {string}   sourcePath           - The source file path to copy from.
- * @param {string}   targetPath           - The target file path to copy to.
- * @param {SftpCopyOptions} [options]     - Optional copy configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client             - The SFTP client instance.
+ * @param   sourcePath           - The source file path to copy from.
+ * @param   targetPath           - The target file path to copy to.
+ * @param [options]     - Optional copy configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
@@ -72,11 +72,11 @@ export async function copyFile (client: SftpClient, sourcePath: string, targetPa
  * The function automatically dispatches to the appropriate implementation based on
  * the client type (Google Cloud Storage, S3, FTP, or SFTP).
  *
- * @param {AnyClient} client              - The cloud storage client instance.
- * @param {string}   sourcePath           - The source file path to copy from.
- * @param {string}   targetPath           - The target file path to copy to.
- * @param {GcsCopyOptions | S3CopyOptions | FtpsCopyOptions | SftpCopyOptions} [options] - Optional copy configuration.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param client              - The cloud storage client instance.
+ * @param   sourcePath           - The source file path to copy from.
+ * @param   targetPath           - The target file path to copy to.
+ * @param [options] - Optional copy configuration.
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */

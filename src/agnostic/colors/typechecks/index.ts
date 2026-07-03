@@ -16,8 +16,8 @@ import { cssColors } from '../cssColorsMap.js'
 /**
  * Type guard to check if a value is a valid hexadecimal color string.
  *
- * @param {unknown} color - The value to check.
- * @returns {color is Hex} True if the value is a valid hex color, false otherwise.
+ * @param color - The value to check.
+ * @returns True if the value is a valid hex color, false otherwise.
  */
 export const isHex = (color: unknown): color is Hex => {
   if (typeof color !== 'string') return false
@@ -32,8 +32,8 @@ export const isHex = (color: unknown): color is Hex => {
 /**
  * Type guard to check if a value is a valid RGBA color object.
  *
- * @param {unknown} color - The value to check.
- * @returns {color is Rgba} True if the value is a valid RGBA color, false otherwise.
+ * @param color - The value to check.
+ * @returns True if the value is a valid RGBA color, false otherwise.
  */
 export const isRgb = (color: unknown): color is Rgba => {
   if (!isNonNullObject(color)) return false
@@ -48,8 +48,8 @@ export const isRgb = (color: unknown): color is Rgba => {
 /**
  * Type guard to check if a value is a valid HSLA color object.
  *
- * @param {unknown} color - The value to check.
- * @returns {color is Hsla} True if the value is a valid HSLA color, false otherwise.
+ * @param color - The value to check.
+ * @returns True if the value is a valid HSLA color, false otherwise.
  */
 export const isHsl = (color: unknown): color is Hsla => {
   if (!isNonNullObject(color)) return false
@@ -64,8 +64,8 @@ export const isHsl = (color: unknown): color is Hsla => {
 /**
  * Type guard to check if a value is a valid HSBA color object.
  *
- * @param {unknown} color - The value to check.
- * @returns {color is Hsba} True if the value is a valid HSBA color, false otherwise.
+ * @param color - The value to check.
+ * @returns True if the value is a valid HSBA color, false otherwise.
  */
 export const isHsb = (color: unknown): color is Hsba => {
   if (!isNonNullObject(color)) return false
@@ -80,8 +80,8 @@ export const isHsb = (color: unknown): color is Hsba => {
 /**
  * Type guard to check if a value is a valid CIELAB color object.
  *
- * @param {unknown} color - The value to check.
- * @returns {color is Laba} True if the value is a valid CIELAB color, false otherwise.
+ * @param color - The value to check.
+ * @returns True if the value is a valid CIELAB color, false otherwise.
  */
 export const isLab = (color: unknown): color is Laba => {
   if (!isNonNullObject(color)) return false
@@ -96,8 +96,8 @@ export const isLab = (color: unknown): color is Laba => {
 /**
  * Type guard to check if a value is a valid CIELCh color object.
  *
- * @param {unknown} color - The value to check.
- * @returns {color is Lcha} True if the value is a valid CIELCh color, false otherwise.
+ * @param color - The value to check.
+ * @returns True if the value is a valid CIELCh color, false otherwise.
  */
 export const isLch = (color: unknown): color is Lcha => {
   if (!isNonNullObject(color)) return false
@@ -112,8 +112,8 @@ export const isLch = (color: unknown): color is Lcha => {
 /**
  * Type guard to check if a value is a valid CMYK color object.
  *
- * @param {unknown} color - The value to check.
- * @returns {color is Cmyka} True if the value is a valid CMYK color, false otherwise.
+ * @param color - The value to check.
+ * @returns True if the value is a valid CMYK color, false otherwise.
  */
 export const isCmyk = (color: unknown): color is Cmyka => {
   if (!isNonNullObject(color)) return false
@@ -129,8 +129,8 @@ export const isCmyk = (color: unknown): color is Cmyka => {
 /**
  * Type guard to check if a value is a valid CIE XYZ color object.
  *
- * @param {unknown} color - The value to check.
- * @returns {color is Xyza} True if the value is a valid CIE XYZ color, false otherwise.
+ * @param color - The value to check.
+ * @returns True if the value is a valid CIE XYZ color, false otherwise.
  */
 export const isXyz = (color: unknown): color is Xyza => {
   if (!isNonNullObject(color)) return false
@@ -145,8 +145,8 @@ export const isXyz = (color: unknown): color is Xyza => {
 /**
  * Type guard to check if a value is a valid CSS named color.
  *
- * @param {unknown} color - The value to check.
- * @returns {color is CssColor} True if the value is a valid CSS named color, false otherwise.
+ * @param color - The value to check.
+ * @returns True if the value is a valid CSS named color, false otherwise.
  */
 export const isCssColor = (color: unknown): color is CssColor => typeof color === 'string'
   && (cssColors as any)[color] !== undefined
@@ -154,8 +154,8 @@ export const isCssColor = (color: unknown): color is CssColor => typeof color ==
 /**
  * Type guard to check if a value is any valid color format.
  *
- * @param {unknown} color - The value to check.
- * @returns {color is Color} True if the value is a valid color in any supported format, false otherwise.
+ * @param color - The value to check.
+ * @returns True if the value is a valid color in any supported format, false otherwise.
  */
 export const isColor = (color: unknown): color is Color => {
   if (isHex(color)) return true

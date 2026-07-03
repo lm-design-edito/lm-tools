@@ -14,9 +14,9 @@ export interface Stat {
  * Retrieves metadata for a single file on an FTP server by listing its parent
  * directory and matching the entry.
  *
- * @param {FtpClient} ftp – basic‑ftp client.
- * @param {string} path  – Remote file path.
- * @returns {Promise<Outcome.Either<Stat, string>>}
+ * @param ftp – basic‑ftp client.
+ * @param path  – Remote file path.
+ * @returns
  */
 export async function stat (
   ftp: FtpClient,

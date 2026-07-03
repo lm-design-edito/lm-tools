@@ -1,9 +1,9 @@
 /**
  * Rounds a number to/down a specified number of decimal places.
  *
- * @param {number} number - The number to round.
- * @param {number} nbDecimals - Number of decimal places. Defaults to 0
- * @returns {number} The rounded number.
+ * @param number - The number to round.
+ * @param nbDecimals - Number of decimal places. Defaults to 0
+ * @returns The rounded number.
  */
 export function round (
   number: number,
@@ -16,9 +16,9 @@ export function round (
 /**
  * Ceils a number up to a specified number of decimal places.
  *
- * @param {number} number - The number to round up.
- * @param {number} nbDecimals - Number of decimal places. Defaults to 0
- * @returns {number} The ceiled-up number.
+ * @param number - The number to round up.
+ * @param nbDecimals - Number of decimal places. Defaults to 0
+ * @returns The ceiled-up number.
  */
 export function ceil (
   number: number,
@@ -31,9 +31,9 @@ export function ceil (
 /**
  * Floors a number down to a specified number of decimal places.
  *
- * @param {number} number - The number to round down.
- * @param {number} nbDecimals - Number of decimal places. Defaults to 0
- * @returns {number} The floored-down number.
+ * @param number - The number to round down.
+ * @param nbDecimals - Number of decimal places. Defaults to 0
+ * @returns The floored-down number.
  */
 export function floor (
   number: number,

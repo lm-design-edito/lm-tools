@@ -13,9 +13,9 @@
  * Performs a shallow equality check for each property in `partial`.
  *
  * @template T - The type of the full object.
- * @param {T} obj - The object to validate.
- * @param {Partial<T>} partial - The partial object with key-value pairs to check.
- * @returns {boolean} `true` if all entries in `partial` match those in `obj`, otherwise `false`.
+ * @param obj - The object to validate.
+ * @param partial - The partial object with key-value pairs to check.
+ * @returns `true` if all entries in `partial` match those in `obj`, otherwise `false`.
  */
 export function fromPartial<T extends object> (obj: T, partial: Partial<T>): boolean {
   return Object.entries(partial).every(([key, val]) => {

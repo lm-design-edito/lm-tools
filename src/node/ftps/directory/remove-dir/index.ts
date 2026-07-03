@@ -15,11 +15,11 @@ export type RemoveDirOptions = {
 /**
  * Recursively deletes a directory (and all contents) on an FTP server.
  *
- * @param {Client} ftpClient            - The FTP client instance.
- * @param {string} directoryPath        - The path of the directory to delete.
- * @param {RemoveDirOptions} [options]  - Optional configuration.
- * @param {boolean} [options.ignoreMissing=true] - Whether to ignore a missing directory.
- * @returns {Promise<Outcome.Either<true, string>>}
+ * @param ftpClient            - The FTP client instance.
+ * @param directoryPath        - The path of the directory to delete.
+ * @param [options]  - Optional configuration.
+ * @param [options.ignoreMissing=true] - Whether to ignore a missing directory.
+ * @returns
  * - On success: `Outcome.makeSuccess(true)` – deletion succeeded, or directory
  *   was absent and `ignoreMissing` is true.
  * - On failure: `Outcome.makeFailure(errStr)` if deletion fails, or directory

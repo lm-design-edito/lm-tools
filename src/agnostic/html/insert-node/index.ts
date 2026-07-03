@@ -12,10 +12,10 @@ export type InsertNodePosition = 'after' | 'before' | 'startof' | 'endof'
 /**
  * Inserts a DOM node at a specific position relative to a reference node.
  *
- * @param {Node} node - The node to insert.
- * @param {InsertNodePosition} position - The insertion position relative to the reference node.
- * @param {Node} reference - The reference node used to determine the insertion point.
- * @returns {void}
+ * @param node - The node to insert.
+ * @param position - The insertion position relative to the reference node.
+ * @param reference - The reference node used to determine the insertion point.
+ * @returns
  */
 export function insertNode (
   node: Node,

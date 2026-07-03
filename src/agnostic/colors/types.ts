@@ -5,10 +5,10 @@ export type Hex = `#${string}`
 
 /**
  * Represents a color in the RGBA color space.
- * @property {number} r - Red channel (0-255).
- * @property {number} g - Green channel (0-255).
- * @property {number} b - Blue channel (0-255).
- * @property {number} [a] - Alpha channel (0-1), optional.
+ * @property r - Red channel (0-255).
+ * @property g - Green channel (0-255).
+ * @property b - Blue channel (0-255).
+ * @property [a] - Alpha channel (0-1), optional.
  */
 export type Rgba = {
   r: number // 0-255
@@ -19,10 +19,10 @@ export type Rgba = {
 
 /**
  * Represents a color in the HSLA color space.
- * @property {number} h - Hue (0-360).
- * @property {number} s - Saturation (0-100).
- * @property {number} l - Lightness (0-100).
- * @property {number} [a] - Alpha channel (0-1), optional.
+ * @property h - Hue (0-360).
+ * @property s - Saturation (0-100).
+ * @property l - Lightness (0-100).
+ * @property [a] - Alpha channel (0-1), optional.
  */
 export type Hsla = {
   h: number // 0-360
@@ -33,10 +33,10 @@ export type Hsla = {
 
 /**
  * Represents a color in the HSBA (HSB/HSV) color space.
- * @property {number} h - Hue (0-360).
- * @property {number} s - Saturation (0-100).
- * @property {number} b - Brightness (0-100).
- * @property {number} [a] - Alpha channel (0-1), optional.
+ * @property h - Hue (0-360).
+ * @property s - Saturation (0-100).
+ * @property b - Brightness (0-100).
+ * @property [a] - Alpha channel (0-1), optional.
  */
 export type Hsba = {
   h: number // 0-360
@@ -47,10 +47,10 @@ export type Hsba = {
 
 /**
  * Represents a color in the CIELAB color space.
- * @property {number} l - Lightness (0-100).
- * @property {number} a - Green-red axis (approximately -128 to 127).
- * @property {number} b - Blue-yellow axis (approximately -128 to 127).
- * @property {number} [al] - Alpha channel (0-1), optional.
+ * @property l - Lightness (0-100).
+ * @property a - Green-red axis (approximately -128 to 127).
+ * @property b - Blue-yellow axis (approximately -128 to 127).
+ * @property [al] - Alpha channel (0-1), optional.
  */
 export type Laba = {
   l: number // 0–100
@@ -61,10 +61,10 @@ export type Laba = {
 
 /**
  * Represents a color in the CIELCh color space.
- * @property {number} l - Lightness (0-100).
- * @property {number} c - Chroma (0 to approximately 150).
- * @property {number} h - Hue (0-360).
- * @property {number} [a] - Alpha channel (0-1), optional.
+ * @property l - Lightness (0-100).
+ * @property c - Chroma (0 to approximately 150).
+ * @property h - Hue (0-360).
+ * @property [a] - Alpha channel (0-1), optional.
  */
 export type Lcha = {
   l: number // 0–100
@@ -75,11 +75,11 @@ export type Lcha = {
 
 /**
  * Represents a color in the CMYK color space.
- * @property {number} c - Cyan (0-100).
- * @property {number} m - Magenta (0-100).
- * @property {number} y - Yellow (0-100).
- * @property {number} k - Black (0-100).
- * @property {number} [a] - Alpha channel (0-1), optional.
+ * @property c - Cyan (0-100).
+ * @property m - Magenta (0-100).
+ * @property y - Yellow (0-100).
+ * @property k - Black (0-100).
+ * @property [a] - Alpha channel (0-1), optional.
  */
 export type Cmyka = {
   c: number // 0–100
@@ -91,10 +91,10 @@ export type Cmyka = {
 
 /**
  * Represents a color in the CIE XYZ color space.
- * @property {number} x - X tristimulus value (approximately 0-95.047).
- * @property {number} y - Y tristimulus value (approximately 0-100).
- * @property {number} z - Z tristimulus value (approximately 0-108.883).
- * @property {number} [a] - Alpha channel (0-1), optional.
+ * @property x - X tristimulus value (approximately 0-95.047).
+ * @property y - Y tristimulus value (approximately 0-100).
+ * @property z - Z tristimulus value (approximately 0-108.883).
+ * @property [a] - Alpha channel (0-1), optional.
  */
 export type Xyza = {
   x: number // env. 0–95.047
@@ -175,10 +175,10 @@ export type Palette<C extends Color, T extends PaletteType> = PaletteMap<C>[T]
 export type GrayscaleMethod = 'rgb-avg' | 'rgb-weighted-avg' | 'rgb-min-channel' | 'rgb-max-channel' | 'rgb-via-red' | 'rgb-via-green' | 'rgb-via-blue' | 'cmyk-avg' | 'cmyk-no-black-avg' | 'cmyk-min-channel' | 'cmyk-min-no-black-channel' | 'cmyk-max-channel' | 'cmyk-max-no-black-channel' | 'cmyk-via-cyan' | 'cmyk-via-magenta' | 'cmyk-via-yellow' | 'cmyk-via-black' | 'cmyk-perceptual' | 'hsl' | 'hsb' | 'xyz' | 'lab' | 'lch'
 /**
  * Represents a color in the linear sRGB color space.
- * @property {number} linearR - Linear red channel (0-1).
- * @property {number} linearG - Linear green channel (0-1).
- * @property {number} linearB - Linear blue channel (0-1).
- * @property {number} [a] - Alpha channel (0-1), optional.
+ * @property linearR - Linear red channel (0-1).
+ * @property linearG - Linear green channel (0-1).
+ * @property linearB - Linear blue channel (0-1).
+ * @property [a] - Alpha channel (0-1), optional.
  */
 export type Srgba = {
   linearR: number // 0-1

@@ -44,17 +44,17 @@ export type WithMulterError = {
  * applies the appropriate middleware based on the upload mode. Errors are
  * captured and returned as a structured `WithMulterError` object.
  *
- * @param {Request} req                    - The Express request object.
- * @param {Response} res                   - The Express response object.
- * @param {WithMulterOptions} options      - Multer configuration and upload mode.
- * @param {multer.StorageEngine} [options.storage] - Storage engine (defaults to memory).
- * @param {multer.Options['limits']} [options.limits] - File size and count limits.
- * @param {multer.Options['fileFilter']} [options.fileFilter] - File filter function.
- * @param {'none'|'any'|'single'|'array'|'fields'} options.mode - Upload mode.
- * @param {string} [options.fieldName]     - Field name (required for 'single' and 'array' modes).
- * @param {number} [options.maxCount]      - Max file count (for 'array' mode).
- * @param {multer.Field[]} [options.fields] - Field configurations (for 'fields' mode).
- * @returns {Promise<Outcome.Either<true, WithMulterError>>}
+ * @param req                    - The Express request object.
+ * @param res                   - The Express response object.
+ * @param options      - Multer configuration and upload mode.
+ * @param [options.storage] - Storage engine (defaults to memory).
+ * @param [options.limits] - File size and count limits.
+ * @param [options.fileFilter] - File filter function.
+ * @param options.mode - Upload mode.
+ * @param [options.fieldName]     - Field name (required for 'single' and 'array' modes).
+ * @param [options.maxCount]      - Max file count (for 'array' mode).
+ * @param [options.fields] - Field configurations (for 'fields' mode).
+ * @returns
  * - On success:  `Outcome.makeSuccess(true)`.
  * - On failure:  `Outcome.makeFailure(error)` with structured error details.
  */
