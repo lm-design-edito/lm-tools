@@ -22,6 +22,7 @@ export const set = SmartTags.makeSmartTag<Main, Args, Output>({
     if (a.length > 2) return makeFailure(makeArgsValueError('undefined', getType(a[2]) ?? 'undefined', 2))
     const firstChecked = typeCheck(first, 'string', 'text')
     if (!firstChecked.success) return firstChecked
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- narrowed by the typeCheck call just above; TS can't verify a generic Args from a runtime check
     else return makeSuccess(a as Args)
   },
   func: (main, args, { sourceTree }) => {

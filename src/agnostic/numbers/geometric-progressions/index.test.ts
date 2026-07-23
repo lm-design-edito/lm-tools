@@ -27,14 +27,14 @@ describe('getGeometricStep', () => {
   })
 
   it('returns NaN if min is zero', () => {
-    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     expect(getGeometricStep(0, 10, 1, 5)).toBeNaN()
     expect(spy).toHaveBeenCalledWith('Cannot generate values if min value is zero')
     spy.mockRestore()
   })
 
   it('returns NaN if steps is less than 1', () => {
-    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     expect(getGeometricStep(1, 10, 1, 0)).toBeNaN()
     expect(spy).toHaveBeenCalledWith('Cannot generate values if steps is lower than one')
     spy.mockRestore()

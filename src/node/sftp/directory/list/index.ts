@@ -19,7 +19,7 @@ export async function list (
     const list = await sftp.list(directoryPath)
     const files = list
       .filter(entry => entry.type === '-')
-      .map(entry => (directoryPath.endsWith('/') ? directoryPath + entry.name : directoryPath + '/' + entry.name))
+      .map(entry => (directoryPath.endsWith('/') ? `${directoryPath}${entry.name}` : `${directoryPath}/${entry.name}`))
     return Outcome.makeSuccess(files)
   } catch (err) {
     return Outcome.makeFailure(unknownToString(err))

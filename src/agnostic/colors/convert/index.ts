@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- TransformedColor<C> can't be narrowed from a generic type param at compile time; every assertion here is guarded by an isX(...) runtime check immediately prior */
 import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
 import { tidy } from '../tidy/index.js'
 import type {
@@ -36,7 +37,6 @@ import { unknownToString } from '../../errors/unknown-to-string/index.js'
 // [WIP] maybe use absoluteModulo where needed?
 // needs rewrite, hex char checks, etc
 function _hex2rgb (hex: Hex): Rgba {
-  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
   if (!isHex(hex)) throw new Error(`invalid hex color ${unknownToString(hex)}`)
   let hexString: string = hex
   const inputHex = hexString
@@ -44,11 +44,11 @@ function _hex2rgb (hex: Hex): Rgba {
   if (!startsWithHash) throw new Error(`invalid hex color ${inputHex}`)
   hexString = hexString.slice(1)
   if (hexString.length === 3) {
-    hexString = hexString.split('').map(c => c + c).join('') + 'ff'
+    hexString = `${hexString.split('').map(c => c + c).join('')}ff`
   } else if (hexString.length === 4) {
     hexString = hexString.split('').map(c => c + c).join('')
   } else if (hexString.length === 6) {
-    hexString = hexString + 'ff'
+    hexString = `${hexString}ff`
   } else if (hexString.length !== 8) throw new Error(`invalid hex color ${inputHex}`)
   const r = parseInt(hexString.slice(0, 2), 16)
   const g = parseInt(hexString.slice(2, 4), 16)

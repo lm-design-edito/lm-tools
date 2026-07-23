@@ -64,6 +64,8 @@ export function make<Payload, Error> (
   payloadOrError: Payload | Error
 ): Success<Payload> | Failure<Error> {
   return success
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- guaranteed by the overload signatures above; the implementation signature can't express that link
     ? makeSuccess(payloadOrError as Payload)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- guaranteed by the overload signatures above; the implementation signature can't express that link
     : makeFailure(payloadOrError as Error)
 }

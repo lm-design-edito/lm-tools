@@ -85,6 +85,7 @@ export const Iframe: FunctionComponent<Props> = ({
         || event.data.type !== innerMessageType
         || typeof event.data.height !== 'number'
       ) return
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- event.data.height was already checked to be a number above; event.data is typed any by MessageEvent
       setHeight(event.data.height as number)
     }
     window.addEventListener('message', handleMessage)

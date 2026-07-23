@@ -59,7 +59,7 @@ export const parseSubs = (rawSubs: string): ParsedSub[] => {
       && lastParsedSub?.start !== undefined
       && lastParsedSub?.end !== undefined) {
       if (lastParsedSub?.content !== undefined) {
-        lastParsedSub.content += '\n' + line
+        lastParsedSub.content += `\n${line}`
         return
       }
       lastParsedSub.content = line

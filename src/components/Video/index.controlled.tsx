@@ -320,7 +320,9 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     if (typeof sources === 'string') return [{ src: sources }]
     if (Array.isArray(sources)) {
       if (sources.length === 0) return []
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element sampled just above; array is expected to be homogeneous
       if (typeof sources[0] === 'string') return (sources as string[]).map(src => ({ src }))
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element was checked not to be a string just above; array is expected to be homogeneous
       return sources as SourceData[]
     }
     return []
@@ -331,7 +333,9 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     if (typeof tracks === 'string') return [{ src: tracks }]
     if (Array.isArray(tracks)) {
       if (tracks.length === 0) return []
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element sampled just above; array is expected to be homogeneous
       if (typeof tracks[0] === 'string') return (tracks as string[]).map(src => ({ src }))
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element was checked not to be a string just above; array is expected to be homogeneous
       return tracks as TrackData[]
     }
     return []

@@ -18,6 +18,7 @@ export const spread = SmartTags.makeSmartTag<Main, Args, Output>({
     const { getType, typeCheck } = Utils.Tree.TypeChecks
     if (a.length === 0) return makeFailure(makeArgsValueError('record', 'undefined', 0))
     if (a.length > 1) return makeFailure(makeArgsValueError('undefined', getType(a.at(1)) ?? 'undefined', 1))
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- length checked (=== 1) just above
     const [first] = a as [Types.Tree.RestingValue]
     const firstChecked = typeCheck(first, 'record')
     if (!firstChecked.success) return makeFailure(makeArgsValueError(firstChecked.error.expected, firstChecked.error.found, 0))

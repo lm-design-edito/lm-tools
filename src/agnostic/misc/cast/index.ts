@@ -103,10 +103,10 @@ export function toRecord (value: unknown): Record<string, unknown> {
   const record: Record<string, unknown> = {}
   try {
     Object
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      .keys(value as any)
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      .forEach(key => { record[key] = (value as any)[key] })
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- no runtime guard here; safety comes from the surrounding try/catch below
+      .keys(value as object)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- no runtime guard here; safety comes from the surrounding try/catch below
+      .forEach(key => { record[key] = (value as Record<string, unknown>)[key] })
   } catch (err) {
     return record
   }

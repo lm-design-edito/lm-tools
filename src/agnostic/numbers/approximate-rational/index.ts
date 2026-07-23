@@ -23,7 +23,7 @@ export function approximateRationalDumb (
   }
   const positiveTarget = Math.abs(target)
   while (currentRound < maxRounds && !foundExact) {
-    currentRound++
+    currentRound = currentRound + 1
     const roundResult = numerator / denominator
     if (roundResult === positiveTarget) {
       closestFound.numerator = numerator
@@ -38,7 +38,11 @@ export function approximateRationalDumb (
         closestFound.denominator = denominator
         closestFound.found = roundResult
       }
-      if (roundResult < positiveTarget) { numerator++ } else { denominator++ }
+      if (roundResult < positiveTarget) {
+        numerator = numerator + 1
+      } else {
+        denominator = denominator + 1
+      }
     }
   }
   if (target < 0) {

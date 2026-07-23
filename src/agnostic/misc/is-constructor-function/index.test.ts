@@ -15,12 +15,12 @@ describe('isConstructorFunction', () => {
   })
 
   it('returns true for regular functions', () => {
-    function regularFunction (): void {}
+    const regularFunction = function () { return undefined }
     expect(isConstructorFunction(regularFunction)).toBe(true)
   })
 
   it('returns false for arrow functions', () => {
-    const arrowFunction = (): void => {}
+    const arrowFunction = (): void => undefined
     expect(isConstructorFunction(arrowFunction)).toBe(false)
   })
 

@@ -175,6 +175,7 @@ export function sanitizeElement (
   // Element's children sanitization
   const sanitizedChildNodes = Array.from(childNodes)
     .map((node: Node) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- nodeType === ELEMENT_NODE just checked above
       if (node.nodeType === Node.ELEMENT_NODE) return sanitizeElement(node as Element, { ...options, depth: depth - 1 })
       else if (node.nodeType === Node.TEXT_NODE) return node
       else if (options.keepComments === true && node.nodeType === Node.COMMENT_NODE) return node

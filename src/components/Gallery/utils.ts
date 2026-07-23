@@ -4,6 +4,7 @@ export const forceActivateSlot = (
   smooth: boolean = true
 ): void => {
   if (div === null) return
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- div.children (HTMLCollection) always contains Element/HTMLElement nodes
   const children = Array.from(div.children) as HTMLElement[]
   if (children[targetPos] === undefined) return
   const target = children[targetPos]

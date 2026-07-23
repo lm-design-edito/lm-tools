@@ -36,6 +36,7 @@ export const setproperty = SmartTags.makeSmartTag<Main, Args, Output>({
     if (a.length === 0) return makeFailure(makeArgsValueError('string | Text', 'undefined', 0))
     if (a.length === 1) return makeFailure(makeArgsValueError('value', 'undefined', 1))
     if (a.length !== 2) return makeFailure(makeArgsValueError('undefined', getType(a.at(2)) ?? 'undefined', 2))
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- length checked (===2) just above
     const [first, second] = a as [Types.Tree.RestingValue, Types.Tree.RestingValue]
     const firstChecked = typeCheck(first, 'string', 'text')
     if (!firstChecked.success) return makeFailure(makeArgsValueError(firstChecked.error.expected, firstChecked.error.found, 0))
@@ -154,6 +155,7 @@ export function deepSetProperty (
         newChildren.push(...currChildren.slice(numChunk + 1))
         const newNodelistFragment = document.createDocumentFragment()
         newNodelistFragment.append(...newChildren)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- newNodelistFragment only received Text/Element children appended above
         const newNodelist = newNodelistFragment.childNodes as NodeListOf<Text | Element>
         if (currentItemParent === undefined) { clone = newNodelist }
         if (Array.isArray(currentItemParent)) {

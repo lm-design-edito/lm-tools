@@ -41,8 +41,8 @@ export const watchSelection = async (
   selector: string,
   options: Options
 ): Promise<{ kill: () => void }> => {
-  const watch = options?.watch ?? (() => {})
-  const unwatch = options?.unwatch ?? (() => {})
+  const watch = options?.watch ?? (() => undefined)
+  const unwatch = options?.unwatch ?? (() => undefined)
   let watched = await deepSelect(selector)
   watched.forEach(watch)
   const selectIntervalMs = options?.selectIntervalMs ?? 100

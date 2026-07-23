@@ -24,10 +24,12 @@ export const removeattribute = SmartTags.makeSmartTag<Main, Args, Output>({
     if (a.length === 0) return makeFailure(makeArgsValueError('string | Text', 'undefined', 0))
     if (a.length > 1) return makeFailure(makeArgsValueError('undefined', getType(a[2]) ?? 'undefined', 1))
     const checked = typeCheckMany(a, 'string', 'text')
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- narrowed by the typeCheckMany call just above; TS can't verify a generic Args from a runtime check
     if (checked.success) return makeSuccess(checked.payload as Args)
     return checked
   },
   func: (main, args) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- args was already validated as Args ([string | Text]) by argsValueCheck
     const argsStr = args.map(e => Cast.toString(e)) as [string, string?]
     const [name] = argsStr
     const { Element, NodeList, document } = Window.get()
@@ -39,6 +41,7 @@ export const removeattribute = SmartTags.makeSmartTag<Main, Args, Output>({
       })
       const frag = document.createDocumentFragment()
       frag.append(...children)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- frag only ever received cloned Element/Text children appended above
       const nodelist = frag.childNodes as NodeListOf<Element | Text>
       return Outcome.makeSuccess(nodelist)
     } else {

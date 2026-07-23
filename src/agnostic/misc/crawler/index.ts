@@ -105,7 +105,8 @@ export function create<T> (options: Options<T>): Crawler {
   const crawl = async (startUrl: string): Promise<void> => {
     push(startUrl)
     while (waitlist.length > 0 && ops < options.limit) {
-      ops++
+      ops = ops + 1
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- waitlist.length > 0 is guaranteed by the while condition above
       const currentUrl = (waitlist as [string, ...string[]])[0]
       if (!processed.has(currentUrl) || options.allowDuplicates === true) {
         const content = await options.fetcher(currentUrl)

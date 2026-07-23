@@ -1,15 +1,16 @@
+/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- isNonNullObject only narrows to `object`, which TS can't statically prove matches Record<string, unknown>, even though every color object here is a plain record */
 import { isNonNullObject } from '../../objects/is-object/index.js'
-import {
-  type Hex,
-  type Rgba,
-  type Hsla,
-  type Hsba,
-  type Laba,
-  type Lcha,
-  type Cmyka,
-  type Xyza,
-  type CssColor,
-  type Color
+import type {
+  Hex,
+  Rgba,
+  Hsla,
+  Hsba,
+  Laba,
+  Lcha,
+  Cmyka,
+  Xyza,
+  CssColor,
+  Color
 } from '../types.js'
 import { cssColors } from '../cssColorsMap.js'
 
@@ -37,7 +38,7 @@ export const isHex = (color: unknown): color is Hex => {
  */
 export const isRgb = (color: unknown): color is Rgba => {
   if (!isNonNullObject(color)) return false
-  const { r, g, b, a } = color as any
+  const { r, g, b, a } = color as Record<string, unknown>
   if (typeof r !== 'number') return false
   if (typeof g !== 'number') return false
   if (typeof b !== 'number') return false
@@ -53,7 +54,7 @@ export const isRgb = (color: unknown): color is Rgba => {
  */
 export const isHsl = (color: unknown): color is Hsla => {
   if (!isNonNullObject(color)) return false
-  const { h, s, l, a } = color as any
+  const { h, s, l, a } = color as Record<string, unknown>
   if (typeof h !== 'number') return false
   if (typeof s !== 'number') return false
   if (typeof l !== 'number') return false
@@ -69,7 +70,7 @@ export const isHsl = (color: unknown): color is Hsla => {
  */
 export const isHsb = (color: unknown): color is Hsba => {
   if (!isNonNullObject(color)) return false
-  const { h, s, b, a } = color as any
+  const { h, s, b, a } = color as Record<string, unknown>
   if (typeof h !== 'number') return false
   if (typeof s !== 'number') return false
   if (typeof b !== 'number') return false
@@ -85,7 +86,7 @@ export const isHsb = (color: unknown): color is Hsba => {
  */
 export const isLab = (color: unknown): color is Laba => {
   if (!isNonNullObject(color)) return false
-  const { l, a, b, al } = color as any
+  const { l, a, b, al } = color as Record<string, unknown>
   if (typeof l !== 'number') return false
   if (typeof a !== 'number') return false
   if (typeof b !== 'number') return false
@@ -101,7 +102,7 @@ export const isLab = (color: unknown): color is Laba => {
  */
 export const isLch = (color: unknown): color is Lcha => {
   if (!isNonNullObject(color)) return false
-  const { l, c, h, a } = color as any
+  const { l, c, h, a } = color as Record<string, unknown>
   if (typeof l !== 'number') return false
   if (typeof c !== 'number') return false
   if (typeof h !== 'number') return false
@@ -117,7 +118,7 @@ export const isLch = (color: unknown): color is Lcha => {
  */
 export const isCmyk = (color: unknown): color is Cmyka => {
   if (!isNonNullObject(color)) return false
-  const { c, m, y, k, a } = color as any
+  const { c, m, y, k, a } = color as Record<string, unknown>
   if (typeof c !== 'number') return false
   if (typeof m !== 'number') return false
   if (typeof y !== 'number') return false
@@ -134,7 +135,7 @@ export const isCmyk = (color: unknown): color is Cmyka => {
  */
 export const isXyz = (color: unknown): color is Xyza => {
   if (!isNonNullObject(color)) return false
-  const { x, y, z, a } = color as any
+  const { x, y, z, a } = color as Record<string, unknown>
   if (typeof x !== 'number') return false
   if (typeof y !== 'number') return false
   if (typeof z !== 'number') return false
@@ -149,7 +150,7 @@ export const isXyz = (color: unknown): color is Xyza => {
  * @returns True if the value is a valid CSS named color, false otherwise.
  */
 export const isCssColor = (color: unknown): color is CssColor => typeof color === 'string'
-  && (cssColors as any)[color] !== undefined
+  && (cssColors as Record<string, unknown>)[color] !== undefined
 
 /**
  * Type guard to check if a value is any valid color format.

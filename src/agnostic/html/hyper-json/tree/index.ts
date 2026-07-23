@@ -207,6 +207,7 @@ export namespace Tree {
         return attr.name === Tree.modeAttribute
           && Utils.Tree.TypeChecks.isTreeMode(attr.value)
       })
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- value already validated by isTreeMode(...) in the find() predicate above
       this.mode = (hasModeAttribute?.value as Types.Tree.Mode | undefined)
         ?? this.smartTagData?.defaultMode
         ?? 'isolation'
@@ -229,6 +230,7 @@ export namespace Tree {
       if (this.mode === 'coalescion') {
         this.isolationInitType = 'array'
       } else {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- value already validated (and 'transformer'/'method' excluded) by the find() predicate above
         const initAttributeValue = hasInitAttribute?.value as Exclude<Types.Tree.ValueTypeName, 'transformer' | 'method'> | undefined
         if (initAttributeValue !== undefined) {
           this.isolationInitType = initAttributeValue
@@ -368,6 +370,7 @@ export namespace Tree {
 
       // If node is text, returns the node itself
       const { Text } = Window.get()
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- cloneNode() preserves the node's concrete type; Text here comes from Window.get() so TS can't carry the instanceof narrowing through
       if (node instanceof Text) return node.cloneNode(true) as Text
 
       // Inner value calculation
@@ -383,6 +386,7 @@ export namespace Tree {
       // If no smartTagData, then treat it as an HTMLElement
       if (smartTagData === null) {
         const nodelist = Cast.toNodeList(innerValue)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- node is Element here (the Text case returned above); cloneNode() preserves the concrete type
         const clone = node.cloneNode() as Element
         clone.append(...Array.from(nodelist))
         return clone

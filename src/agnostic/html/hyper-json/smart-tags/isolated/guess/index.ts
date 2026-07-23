@@ -38,6 +38,7 @@ export const guess = SmartTags.makeSmartTag<Main, Args, Output>({
     div.innerHTML = strCoalesced
     const divChildren = div.childNodes
     if (divChildren.length === 0) return makeSuccess(coalesced)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- filtered to only Element/Text just above
     const validDivChildren = Cast.toNodeList(Array.from(divChildren).filter(e => {
       if (e instanceof Element) return true
       if (e instanceof Text) return true

@@ -32,6 +32,7 @@ export const select = SmartTags.makeSmartTag<Main, Args, Output>({
         selectedFragment.append(...Array.from(found))
       }
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- selectedFragment only received querySelectorAll results, which are always Element
     const selected = selectedFragment.childNodes as NodeListOf<Element | Text>
     return Outcome.makeSuccess(selected)
   }

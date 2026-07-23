@@ -68,7 +68,7 @@ export async function spawner (
   options?: Options
 ): Promise<Outcome.Either<Output, Output>> {
   return await new Promise<Outcome.Either<Output, Output>>((resolve, reject) => {
-    if (label !== null) console.log('\n' + styles.info(label) + '\n')
+    if (label !== null) console.log(`\n${styles.info(label)}\n`)
     const printableArgs = options?.argsPrintFormat !== undefined
       ? options.argsPrintFormat(args)
       : args
@@ -92,7 +92,7 @@ export async function spawner (
       console.log(styles.error(unknownToString(err).replace(ansiRegex(), '').trim()))
     })
     prcss.on('close', code => {
-      if (code !== 0 && options?.throwOnError === true) reject(new Error(stderr + '\n' + stdout))
+      if (code !== 0 && options?.throwOnError === true) reject(new Error(`${stderr}\n${stdout}`))
       else if (code !== 0) return resolve(Outcome.makeFailure({ stdout, stderr, err }))
       else return resolve(Outcome.makeSuccess({ stdout, stderr, err }))
     })
@@ -122,7 +122,7 @@ export function spawnerSync (
   args: string[],
   options?: SyncOptions
 ): Outcome.Either<Output, Output> {
-  if (label !== null) console.log('\n' + styles.info(label) + '\n')
+  if (label !== null) console.log(`\n${styles.info(label)}\n}`)
   const printableArgs = options?.argsPrintFormat !== undefined
     ? options.argsPrintFormat(args)
     : args
@@ -146,7 +146,7 @@ export function spawnerSync (
     console.log(styles.light(stdout.replace(ansiRegex(), '')))
     console.log('')
   }
-  if (result.status !== 0 && options?.throwOnError === true) throw new Error(stderr + '\n' + stdout)
+  if (result.status !== 0 && options?.throwOnError === true) throw new Error(`${stderr}\n${stdout}`)
   else if (result.status !== 0) return Outcome.makeFailure({ stdout, stderr, err })
   return Outcome.makeSuccess({ stdout, stderr, err })
 }

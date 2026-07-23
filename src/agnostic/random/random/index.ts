@@ -5,7 +5,6 @@
  * @param [bound2] - Optional upper bound. If omitted, the range is `[0, bound1)`.
  * @returns A random floating-point number in `[min, max)`, or `undefined` if bounds are invalid.
  */
-export function random (bound1?: number): number | undefined
 export function random (bound1?: number, bound2?: number | undefined): number | undefined
 export function random (bound1: number = 1, bound2?: number | undefined): number | undefined {
   const min = bound2 === undefined ? 0 : bound1

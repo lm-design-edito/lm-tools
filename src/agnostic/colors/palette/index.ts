@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- Palette<C, T> can't be narrowed from a generic type param at compile time; each cast reflects the shape guaranteed by the specific PaletteType branch */
 import type { Color, TransformedColor, PaletteType, Palette } from '../types.js'
 import { rotate } from '../rotate/index.js'
 

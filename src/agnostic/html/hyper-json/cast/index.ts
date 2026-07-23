@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- DOM Element/Text/NodeListOf casts here can't be narrowed at compile time; guarded by runtime instanceof/typeCheck(s) immediately prior */
 import { isRecord } from '../../../objects/is-record/index.js'
 import * as Window from '../../../misc/crossenv/window/index.js'
-import { type Types } from '../types/index.js'
+import type { Types } from '../types/index.js'
 import { Utils } from '../utils/index.js'
 import { Method } from '../method/index.js'
 

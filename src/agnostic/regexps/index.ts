@@ -62,45 +62,27 @@ export function fromStartToEnd (regexp: RegExp, flags: string = 'g'): RegExp {
 }
 
 /** Returns `true` if `string` starts with `regexp`. */
-export function stringStartsWith (string: string, regexp: RegExp): boolean
-/** Returns the match array if `string` starts with `regexp`, or `null` if not. */
-export function stringStartsWith (string: string, regexp: RegExp, returnMatches: true): RegExpMatchArray | null
-/** Returns `true` if `string` starts with `regexp`. */
-export function stringStartsWith (string: string, regexp: RegExp, returnMatches: false): boolean
-/** Returns `true` if `string` starts with `regexp`, applying `flags`. */
-export function stringStartsWith (string: string, regexp: RegExp, returnMatches: false, flags: string): boolean
+export function stringStartsWith (string: string, regexp: RegExp, returnMatches?: false, flags?: string): boolean
 /** Returns the match array if `string` starts with `regexp` using `flags`, or `null` if not. */
-export function stringStartsWith (string: string, regexp: RegExp, returnMatches: true, flags: string): RegExpMatchArray | null
+export function stringStartsWith (string: string, regexp: RegExp, returnMatches: true, flags?: string): RegExpMatchArray | null
 export function stringStartsWith (string: string, regexp: RegExp, returnMatches = false, flags: string = 'g'): RegExpMatchArray | null | boolean {
   const actualRegexp = fromStart(regexp, flags)
   return returnMatches ? string.match(actualRegexp) : actualRegexp.test(string)
 }
 
-/** Returns `true` if `string` ends with `regexp`. */
-export function stringEndsWith (string: string, regexp: RegExp): boolean
-/** Returns the match array if `string` ends with `regexp`, or `null` if not. */
-export function stringEndsWith (string: string, regexp: RegExp, returnMatches: true): RegExpMatchArray | null
-/** Returns `true` if `string` ends with `regexp`. */
-export function stringEndsWith (string: string, regexp: RegExp, returnMatches: false): boolean
 /** Returns `true` if `string` ends with `regexp`, applying `flags`. */
-export function stringEndsWith (string: string, regexp: RegExp, returnMatches: false, flags: string): boolean
+export function stringEndsWith (string: string, regexp: RegExp, returnMatches?: false, flags?: string): boolean
 /** Returns the match array if `string` ends with `regexp` using `flags`, or `null` if not. */
-export function stringEndsWith (string: string, regexp: RegExp, returnMatches: true, flags: string): RegExpMatchArray | null
+export function stringEndsWith (string: string, regexp: RegExp, returnMatches: true, flags?: string): RegExpMatchArray | null
 export function stringEndsWith (string: string, regexp: RegExp, returnMatches = false, flags: string = 'g'): RegExpMatchArray | null | boolean {
   const actualRegexp = toEnd(regexp, flags)
   return returnMatches ? string.match(actualRegexp) : actualRegexp.test(string)
 }
 
-/** Returns `true` if `string` fully matches `regexp`. */
-export function stringIs (string: string, regexp: RegExp): boolean
-/** Returns the match array if `string` fully matches `regexp`, or `null` if not. */
-export function stringIs (string: string, regexp: RegExp, returnMatches: true): RegExpMatchArray | null
-/** Returns `true` if `string` fully matches `regexp`. */
-export function stringIs (string: string, regexp: RegExp, returnMatches: false): boolean
 /** Returns `true` if `string` fully matches `regexp`, applying `flags`. */
-export function stringIs (string: string, regexp: RegExp, returnMatches: false, flags: string): boolean
+export function stringIs (string: string, regexp: RegExp, returnMatches?: false, flags?: string): boolean
 /** Returns the match array if `string` fully matches `regexp` using `flags`, or `null` if not. */
-export function stringIs (string: string, regexp: RegExp, returnMatches: true, flags: string): RegExpMatchArray | null
+export function stringIs (string: string, regexp: RegExp, returnMatches: true, flags?: string): RegExpMatchArray | null
 export function stringIs (string: string, regexp: RegExp, returnMatches = false, flags: string = 'g'): RegExpMatchArray | null | boolean {
   const actualRegexp = fromStartToEnd(regexp, flags)
   return returnMatches ? string.match(actualRegexp) : actualRegexp.test(string)
@@ -136,7 +118,7 @@ export function escape (string: string): string {
     } else if (/\s/.test(ch)) {
       result += '\\s' // any other whitespace (space, tab, etc.)
     } else if (/[.*+?^${}()|[\]\\]/.test(ch)) {
-      result += '\\' + ch // regex special chars (including backslash)
+      result += `\\${ch}` // regex special chars (including backslash)
     } else {
       result += ch
     }

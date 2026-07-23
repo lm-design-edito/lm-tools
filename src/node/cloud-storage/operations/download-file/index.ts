@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- options is narrowed based on a runtime check of the separate `client` param; TS can't connect the two at compile time */
 import { type Readable } from 'node:stream'
 import { type Bucket as GCSBucket } from '@google-cloud/storage'
 import { type Client as FtpClient } from 'basic-ftp'

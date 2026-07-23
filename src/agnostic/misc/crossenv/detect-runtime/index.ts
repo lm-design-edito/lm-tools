@@ -33,7 +33,7 @@ export function detectRuntime (): RuntimeName | null {
 
   /* Electron */
   if (typeof process?.versions !== 'undefined'
-    && typeof (process.version as any).electron !== 'undefined'
+    && typeof process.versions.electron !== 'undefined'
   ) return RuntimeName.ELECTRON
 
   /* Cloudflare Workers */

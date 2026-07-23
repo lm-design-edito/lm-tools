@@ -29,6 +29,7 @@ export const append = SmartTags.makeSmartTag<Main, Args, Output>({
         ...Array.from(main),
         ...Array.from(Cast.toNodeList(args))
       )
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- frag only ever received Element/Text children appended above
       return makeSuccess(frag.childNodes as NodeListOf<Element | Text>)
     }
     if (main instanceof Text) {

@@ -37,6 +37,7 @@ export const renameproperty = SmartTags.makeSmartTag<Main, Args, Output>({
     return makeSuccess([firstChecked.payload, secondChecked.payload])
   },
   func: (main, args) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- args was already validated as [string | Text, string | Text] by argsValueCheck
     const [oldKey, newKey] = args.map(Cast.toString) as [string, string]
     const returned: Output = {}
     Object.entries(main).forEach(([key, value]) => {

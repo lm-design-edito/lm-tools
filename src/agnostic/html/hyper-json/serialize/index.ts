@@ -10,6 +10,7 @@ export namespace Serialize {
     if (value === null) return { type: 'null', value: null }
     if (typeof value === 'boolean'
       || typeof value === 'number'
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- narrowed to boolean/number/string by the typeof checks above
       || typeof value === 'string') return { type: typeof value as any, value }
     if (value instanceof Text) return { type: 'text', value: value.textContent ?? '' }
     if (value instanceof Element) return { type: 'element', value: value.outerHTML }
@@ -46,10 +47,12 @@ export namespace Serialize {
     }
     if (serialized.type === 'nodelist') {
       const frag = document.createDocumentFragment()
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- filtered to only 'text'/'element' entries just below
       const deserialized = serialized.value
         .filter(e => e.type === 'text' || e.type === 'element')
         .map(deserialize) as Array<Element | Text>
       deserialized.forEach(elt => frag.append(elt.cloneNode(true)))
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- frag only received Element/Text clones appended above
       return frag.childNodes as NodeListOf<Element | Text>
     }
     if (serialized.type === 'array') {

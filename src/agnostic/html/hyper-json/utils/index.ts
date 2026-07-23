@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- generic type params (T/K/Value) and DOM NodeList casts here can't be narrowed from a generic/runtime check at compile time; guarded by runtime typeCheck(s)/instanceof checks immediately prior */
 import * as Window from '../../../misc/crossenv/window/index.js'
 import { isRecord } from '../../../objects/is-record/index.js'
 import { recordMap } from '../../../objects/record-map/index.js'

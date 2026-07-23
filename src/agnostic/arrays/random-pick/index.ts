@@ -11,6 +11,7 @@ export function randomPick<T> (arr: T[], exclude: T[] = []): T {
   const length = filteredArr.length
   if (length === 0) throw new Error('Array length must be at least 1 after exclusion')
   const pos = Math.floor(Math.random() * length)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
   const found = filteredArr[pos] as T
   return found
 }
@@ -34,7 +35,7 @@ export function randomPickMany<T> (
 ): T[] {
   const grindedArr = [...arr]
   const pickedSelection: T[] = []
-  for (let i = 0; i < howMuch; i++) {
+  for (let i = 0; i < howMuch; i = i + 1) {
     const picked = randomPick(grindedArr, exclude)
     const indexOfPicked = grindedArr.indexOf(picked)
     grindedArr.splice(indexOfPicked, 1)

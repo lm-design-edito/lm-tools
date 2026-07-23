@@ -41,6 +41,7 @@ export async function download (
       })
     )
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- GetObjectCommand's response.Body is always a Readable stream in Node.js
     const stream = response.Body as Readable
     return Outcome.makeSuccess(stream)
   } catch (err) {

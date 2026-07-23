@@ -17,6 +17,7 @@ export const print = SmartTags.makeSmartTag<Main, Args, Output>({
     const { makeMainValueError } = Utils.SmartTags
     return getType(m) === 'transformer'
       ? makeFailure(makeMainValueError('Exclude<value, transformer>', 'transformer'))
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- narrowed by excluding 'transformer' above; TS can't verify a generic Main from a runtime check
       : makeSuccess(m as Main)
   },
   argsValueCheck: a => Outcome.makeSuccess(a),

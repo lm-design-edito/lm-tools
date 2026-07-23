@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- options is narrowed based on a runtime check of the separate `client` param; TS can't connect the two at compile time */
 import { type Bucket as GCSBucket } from '@google-cloud/storage'
 import { type Client as FtpClient } from 'basic-ftp'
 import type SftpClient from 'ssh2-sftp-client'
@@ -41,25 +42,15 @@ export async function listDir (client: GCSBucket, path: string, options?: GcsLis
  */
 export async function listDir (client: S3ClientWithBucket, path: string, options?: S3ListOptions): Promise<Returned>
 /**
- * Lists the contents of a directory on an FTP server.
+ * Lists the contents of a directory on an FTP or SFTP server.
  *
- * @param client               - The FTP client instance.
+ * @param client              - The FTP or SFTP client instance.
  * @param   path                 - The directory path to list.
  * @returns
  * - On success:  `Outcome.makeSuccess(paths)` containing an array of file/directory paths.
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
-export async function listDir (client: FtpClient, path: string): Promise<Returned>
-/**
- * Lists the contents of a directory on an SFTP server.
- *
- * @param client              - The SFTP client instance.
- * @param   path                 - The directory path to list.
- * @returns
- * - On success:  `Outcome.makeSuccess(paths)` containing an array of file/directory paths.
- * - On failure:  `Outcome.makeFailure(errStr)`.
- */
-export async function listDir (client: SftpClient, path: string): Promise<Returned>
+export async function listDir (client: FtpClient | SftpClient, path: string): Promise<Returned>
 /**
  * Lists the contents of a directory in cloud storage.
  *

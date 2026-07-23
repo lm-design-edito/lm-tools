@@ -23,6 +23,7 @@ export const sorton = SmartTags.makeSmartTag<Main, Args, Output>({
       if (isRecord(itemVal)) continue
       return makeFailure(makeMainValueError('record', getType(itemVal), `At position ${parseInt(itemPos)} in main value`))
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- each item was confirmed a record by isRecord in the loop above
     return makeSuccess(m as Main)
   },
   argsValueCheck: a => {
@@ -31,7 +32,9 @@ export const sorton = SmartTags.makeSmartTag<Main, Args, Output>({
     const { getType, typeCheckMany } = Utils.Tree.TypeChecks
     if (a.length === 0) return makeFailure(makeArgsValueError('[string | text]', '[]', 0))
     if (a.length > 1) return makeFailure(makeArgsValueError('undefined', getType(a[1]) ?? 'undefined', 2))
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- length checked just above; typeCheckMany itself validates the element types right after
     const checked = typeCheckMany(a as Args, 'string', 'text')
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- narrowed by the typeCheckMany call just above; TS can't verify a generic Args from a runtime check
     if (checked.success) return makeSuccess(checked.payload as Args)
     return checked
   },
@@ -63,7 +66,9 @@ export const sorton = SmartTags.makeSmartTag<Main, Args, Output>({
     }
     const sorted = main.sort((a, b) => {
       const { Text, NodeList } = Window.get()
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- record property values are always Types.Tree.RestingValue by the Main type contract
       const aProp = a[strPropName] as Types.Tree.RestingValue
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- sorton already validated all items share the same property type
       const bProp = b[strPropName] as typeof aProp
       if (aProp === null) return 0
       if (typeof aProp === 'boolean') {

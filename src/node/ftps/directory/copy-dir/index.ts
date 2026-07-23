@@ -44,7 +44,7 @@ export async function copyDir (
     const list = await ftpClient.list(dir)
 
     for (const entry of list) {
-      const src = dir.endsWith('/') ? dir + entry.name : dir + '/' + entry.name
+      const src = dir.endsWith('/') ? `${dir}${entry.name}` : `${dir}/${entry.name}`
       const rel = src.substring(sourceDir.length + (sourceDir.endsWith('/') ? 0 : 1))
       const dst = targetDir.endsWith('/') ? targetDir + rel : `${targetDir}/${rel}`
 

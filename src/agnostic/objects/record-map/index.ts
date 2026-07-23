@@ -19,6 +19,7 @@ export function recordMap<Input extends Record<string, any>, MappedValue> (
       result[key] = mapper(record[key], key)
     }
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- result was populated with a mapped value for every key of Input in the loop above
   return result as {
     [K in keyof Input]: MappedValue
   }

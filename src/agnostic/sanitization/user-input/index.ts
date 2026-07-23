@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- sanitizeUserInput always returns a value of the same shape as its generic input T, which TS can't verify through the recursive sanitization logic */
 import xss from 'xss'
 
 /**

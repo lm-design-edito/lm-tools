@@ -28,7 +28,7 @@ export const words = [
 export const generateSentence = (wordCount: number): string => {
   const resultArr: string[] = []
   let currentWordCound = wordCount
-  for (let i = 0; i < currentWordCound; i++) {
+  for (let i = 0; i < currentWordCound; i = i + 1) {
     const picked = randomPick(words)
     if (typeof picked === 'string') resultArr.push(picked)
     else { currentWordCound += 1 }
@@ -49,7 +49,7 @@ export const generateSentences = (
   maxSentenceLength: number = 12,
   minSentenceLength: number = 4): string [] => {
   const sentences: string[] = []
-  for (let i = 0; i < sentencesCount; i++) {
+  for (let i = 0; i < sentencesCount; i = i + 1) {
     const length = randomInt(maxSentenceLength, minSentenceLength) ?? 8
     sentences.push(generateSentence(length))
   }

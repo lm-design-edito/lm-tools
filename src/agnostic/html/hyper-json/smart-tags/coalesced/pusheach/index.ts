@@ -25,6 +25,7 @@ export const pusheach = SmartTags.makeSmartTag<Main, Args, Output>({
         numPos
       ))
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- each entry was typeCheck'd in the loop above; TS can't verify a generic Args from a runtime check
     return makeSuccess(a as Args)
   },
   func: (main, args) => {

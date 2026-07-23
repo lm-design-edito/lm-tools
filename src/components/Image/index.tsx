@@ -94,7 +94,9 @@ export const Image: FunctionComponent<Props> = ({
     if (typeof sources === 'string') return [{ srcSet: sources }]
     if (Array.isArray(sources)) {
       if (sources.length === 0) return []
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element sampled just above; array is expected to be homogeneous
       if (typeof sources[0] === 'string') return (sources as string[]).map(srcSet => ({ srcSet }))
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element was checked not to be a string just above; array is expected to be homogeneous
       return sources as SourceData[]
     }
     return []

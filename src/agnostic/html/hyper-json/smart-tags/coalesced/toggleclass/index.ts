@@ -29,6 +29,7 @@ export const toggleclass = SmartTags.makeSmartTag<Main, Args, Output>({
     })
     const frag = document.createDocumentFragment()
     frag.append(...children)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- frag only ever received Element/Text children appended above
     const nodelist = frag.childNodes as NodeListOf<Element | Text>
     return Outcome.makeSuccess(nodelist)
   }

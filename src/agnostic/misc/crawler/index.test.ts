@@ -10,7 +10,7 @@ describe('create', () => {
     const crawler = create({
       limit: 10,
       fetcher: async () => 'content',
-      processor: async () => {}
+      processor: async () => undefined
     })
     expect(crawler).toHaveProperty('crawl')
     expect(crawler).toHaveProperty('push')
@@ -43,7 +43,7 @@ describe('create', () => {
 
   it('respects delay when provided', async () => {
     const fetcher = vi.fn(async (url: string) => `content-${url}`)
-    const processor = vi.fn(async () => {})
+    const processor = vi.fn(async () => undefined)
     const startTime = Date.now()
     const crawler = create({ limit: 2, delayMs: 20, fetcher, processor })
     await crawler.crawl('url1')

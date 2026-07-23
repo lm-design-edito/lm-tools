@@ -53,5 +53,6 @@ export async function recordFormat<
     if (formatter === undefined) continue
     result[key] = await formatter(input[key])
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- result was populated with a formatted value for every key of format in the loop above
   return result as Formatted<FormatObject>
 }

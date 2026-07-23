@@ -19,6 +19,7 @@ export const getattribute = SmartTags.makeSmartTag<Main, Args, Output>({
     if (a.length === 0) return makeFailure(makeArgsValueError('string | Text', 'undefined', 0))
     if (a.length > 1) return makeFailure(makeArgsValueError('undefined', getType(a[2]) ?? 'undefined', 1))
     const checked = typeCheckMany(a, 'string', 'text')
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- narrowed by the typeCheckMany call just above; TS can't verify a generic Args from a runtime check
     if (checked.success) return makeSuccess(checked.payload as Args)
     return checked
   },

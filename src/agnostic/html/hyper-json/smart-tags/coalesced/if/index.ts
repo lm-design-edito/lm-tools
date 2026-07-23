@@ -20,6 +20,7 @@ export const ifFunc = SmartTags.makeSmartTag<Main, Args, Output>({
     const { makeArgsValueError } = Utils.SmartTags
     if (a.length > 2) return makeFailure(makeArgsValueError('value', 'undefined', a.length))
     if (a.length < 2) return makeFailure(makeArgsValueError('undefined', 'value', 2))
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- length checked just above; TS can't verify a generic Args tuple from a runtime length check
     return makeSuccess(a as Args)
   },
   func: (main, args) => {

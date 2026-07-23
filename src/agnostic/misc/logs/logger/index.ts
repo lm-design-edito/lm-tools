@@ -52,7 +52,7 @@ class Log<T extends ConsoleMethod = ConsoleMethod> {
   }
 
   get displayTime (): string {
-    return this.time.toLocaleDateString('en-US', {
+    return `${this.time.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -60,7 +60,7 @@ class Log<T extends ConsoleMethod = ConsoleMethod> {
       hour: 'numeric',
       minute: 'numeric',
       second: 'numeric'
-    }) + `:${this.time.getMilliseconds()}`
+    })}:${this.time.getMilliseconds()}`
   }
 
   get elapsedTimeMs (): number {
@@ -142,7 +142,7 @@ export class Logger {
     allLogs.forEach(({ threadName, log }) => {
       console.log(`%c${threadName}`, 'font-weight: 800; color: white; background: black; padding: 4px;', `+${log.elapsedTimeMs}s –`, log.displayTime)
       if (withStack === true) console.log(`%c${log.displayStack}`, 'color: grey; font-size: inherit;')
-      ;(console[log.type] as any)(...log.data)
+      ;(console[log.type] as (...args: any[]) => void)(...log.data)
       console.log('')
     })
   }
@@ -154,7 +154,7 @@ export class Logger {
         logs.forEach(log => {
           console.log(`+${log.elapsedTimeMs}s –`, log.displayTime)
           if (withStack === true) console.log(`%c${log.displayStack}`, 'color: grey; font-size: inherit;')
-          ;(console[log.type] as any)(...log.data)
+          ;(console[log.type] as (...args: any[]) => void)(...log.data)
           console.log('')
         })
         console.groupEnd()

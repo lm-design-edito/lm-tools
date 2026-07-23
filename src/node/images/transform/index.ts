@@ -55,6 +55,7 @@ const validators = {
 export function isOperationDescriptor (obj: unknown): Outcome.Either<OperationDescriptor, string> {
   if (!isNonNullObject(obj)) return Outcome.makeFailure('Invalid operation descriptor')
   if (!('name' in obj) || typeof obj.name !== 'string') return Outcome.makeFailure('Field named \'name\' in operation descriptor is required and must be a string')
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- not yet proven; verified below via Set.has(...)/object-key lookup, which are safe regardless of this type
   const name = obj.name as OpName
   const validateOperation = (validatorFn: typeof validators[keyof typeof validators]): Outcome.Either<any, any> => {
     const result = validatorFn(obj)
@@ -65,9 +66,12 @@ export function isOperationDescriptor (obj: unknown): Outcome.Either<OperationDe
     return Outcome.makeFailure(result.error)
   }
   const simpleOperations = new Set([OpName.FLIP, OpName.FLOP] as const)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Set.has(...) performs the real runtime membership check regardless of this cast
   if (simpleOperations.has(name as OpName.FLIP | OpName.FLOP)) return Outcome.makeSuccess({
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- membership was just confirmed by simpleOperations.has(...) above
     name: name as OpName.FLIP | OpName.FLOP
   })
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- the object-key lookup that follows returns undefined for any non-matching name, which is handled below
   const validator = validators[name as keyof typeof validators]
   if (validator !== undefined) return validateOperation(validator)
   return Outcome.makeFailure('Invalid operation descriptor')

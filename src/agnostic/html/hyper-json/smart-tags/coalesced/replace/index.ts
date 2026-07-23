@@ -26,6 +26,7 @@ export const replace = SmartTags.makeSmartTag<Main, Args, Output>({
     if (a.length > 2) return makeFailure(makeArgsValueError('undefined', getType(a.at(2)) ?? 'undefined', 3))
     const checked = typeCheckMany(a, 'string', 'text', 'nodelist', 'element')
     if (!checked.success) return checked
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- narrowed by the typeCheckMany call just above; TS can't verify a generic Args from a runtime check
     return makeSuccess(checked.payload as Args)
   },
   func: (main, args) => {

@@ -19,6 +19,7 @@ export const nodelist = SmartTags.makeSmartTag<Main, Args, Output>({
     const returnedParent = document.createDocumentFragment()
     if (main !== undefined) returnedParent.append(...Array.from(Cast.toNodeList(main)))
     returnedParent.append(...Array.from(Cast.toNodeList(args)))
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- returnedParent only received Element/Text children appended above
     const returned = returnedParent.childNodes as NodeListOf<Element | Text>
     return Outcome.makeSuccess(returned)
   }

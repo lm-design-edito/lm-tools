@@ -13,5 +13,6 @@ export function sortKeys<T extends Record<string, unknown>> (
   const out: Partial<{ [K in keyof T]: T[K] }> = {}
   const keys = Object.keys(obj) as Array<keyof T>
   for (const key of keys.sort(sorter)) { out[key] = obj[key] }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- out was populated with every key of T in the loop above
   return out as { [K in keyof T]: T[K] }
 }

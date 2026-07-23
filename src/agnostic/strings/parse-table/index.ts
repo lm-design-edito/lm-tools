@@ -196,7 +196,7 @@ export function parseTable<T extends Record<string, string>> (
     bodyLinesSplit.forEach(lineCells => {
       const row: Record<string, string> = {}
       const cellCount = Math.min(lineCells.length, headers.length)
-      for (let cellPos = 0; cellPos < cellCount; cellPos++) {
+      for (let cellPos = 0; cellPos < cellCount; cellPos = cellPos + 1) {
         const cellName = headers[cellPos]
         const cellValue = lineCells[cellPos]
         if (cellName !== undefined

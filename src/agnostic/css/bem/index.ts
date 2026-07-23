@@ -1,4 +1,4 @@
-import { isNonNullObject } from 'agnostic/objects/is-object/index.js'
+import { isNonNullObject } from '../../objects/is-object/index.js'
 import { isFalsy } from '../../booleans/is-falsy/index.js'
 import { isValidClassName } from '../is-valid-css-class-name/index.js'
 
@@ -109,7 +109,7 @@ export class BEM {
   private addSingleElement (elementName: string): this {
     const currentBlock = this.getCurrentBlock()
     if (currentBlock === undefined) this.addBlock(elementName)
-    else { currentBlock.name = currentBlock.name + '__' + elementName }
+    else { currentBlock.name = `${currentBlock.name}__${elementName}` }
     return this
   }
 

@@ -19,6 +19,7 @@
  */
 export function fromPartial<T extends object> (obj: T, partial: Partial<T>): boolean {
   return Object.entries(partial).every(([key, val]) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- key comes from Object.entries(partial), so it's always a key of T
     return obj[key as keyof Partial<T>] === val
   })
 }

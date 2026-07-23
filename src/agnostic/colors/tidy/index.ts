@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- TransformedColor<C> can't be narrowed from a generic type param at compile time; every assertion here is guarded by an isX(...) runtime check immediately prior */
 import type { Color, TransformedColor } from '../types.js'
 import { isRgb, isHsl, isHsb, isCmyk, isXyz, isLab, isLch, isCssColor, isHex } from '../typechecks/index.js'
 import { clamp } from '../../numbers/clamp/index.js'

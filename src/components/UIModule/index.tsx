@@ -151,6 +151,7 @@ export const UIModule: FunctionComponent<Props> = ({
             if (data.css.some(i => typeof i !== 'string')) return setLoadedModule(errs.cssStrArr)
           }
           if ('update' in data && typeof data.update !== 'function') return setLoadedModule(errs.updFunc)
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- shape fully validated by the checks above
           const module = data as ModuleData
           setLoadedModule(module)
           try {

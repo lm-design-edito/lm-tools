@@ -11,6 +11,7 @@ export function flattenGetters (obj: object): Record<string, unknown> {
     .map(([key]) => key)
   const returned: Record<string, unknown> = { ...obj }
   getters.forEach(getter => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- getter came from Object.getOwnPropertyDescriptors(obj)'s own keys, so it's always a key of obj
     const key = getter as keyof typeof obj
     returned[getter] = obj[key]
   })

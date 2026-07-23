@@ -60,10 +60,12 @@ export function parse (val: string): Types.Tree.RestingValue {
   if (jsonParsed.startsWith(elementItemSymbol)) {
     const wrapperDiv = document.createElement('div')
     wrapperDiv.innerHTML = jsonParsed.slice(elementItemSymbol.length)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- wrapperDiv.innerHTML was just set from a parsed elementItemSymbol payload
     return wrapperDiv.firstChild as Element | Text | null
   }
   if (jsonParsed.startsWith(nodelistItemSymbol)) {
     const stringifiedItems = jsonParsed.slice(nodelistItemSymbol.length)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- stringifiedItems was produced by our own JSON.stringify(...) call in `stringify` above
     const jsonParsedItems = JSON.parse(stringifiedItems) as JsonValue[]
     const hjParsedItems = jsonParsedItems.map(e => typeof e === 'string' ? parse(e) : e)
     const wrapperDiv = document.createElement('div')
@@ -78,6 +80,7 @@ export function parse (val: string): Types.Tree.RestingValue {
       if (item instanceof NodeList) return wrapperDiv.append(...Array.from(item))
       // Method, Arrays and Records are ignored here
     })
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- wrapperDiv only received Element/Text/string children appended above
     return wrapperDiv.childNodes as NodeListOf<Element | Text>
   }
   return jsonParsed

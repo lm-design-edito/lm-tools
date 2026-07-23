@@ -24,5 +24,6 @@ export function memoize<T extends BasicFunc> (toMemoizeFunc: T): T {
     return result
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- memoizedFunc has the same call signature as T by construction
   return memoizedFunc as T
 }

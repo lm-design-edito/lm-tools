@@ -130,6 +130,7 @@ export const Gallery: FunctionComponent<Props> = ({
       animationFrame = null
       const { scrollLeft, clientWidth, scrollWidth } = scrollerElt
       const center = scrollLeft + clientWidth / 2
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- scrollerElt.children (HTMLCollection) always contains Element/HTMLElement nodes
       const children = Array.from(scrollerElt.children) as HTMLElement[]
       let closestIndex = 0
       let closestDistance = Infinity

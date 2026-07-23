@@ -51,7 +51,7 @@ export const deepSelect = async (
     while (node !== null) {
       if (node !== root && node instanceof Element && node.matches(selector)) results.push(node)
       if (node instanceof Element && node.shadowRoot !== null) await traverse(node.shadowRoot)
-      nodeCount++
+      nodeCount = nodeCount + 1
       if (nodeCount % chunkSize === 0) await yieldToMain(window)
       node = walker.nextNode()
     }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- options is narrowed based on a runtime check of the separate `client` param; TS can't connect the two at compile time */
 import { type Bucket as GCSBucket } from '@google-cloud/storage'
 import { type Client as FtpClient } from 'basic-ftp'
 import type SftpClient from 'ssh2-sftp-client'
@@ -43,27 +44,16 @@ export async function existsFile (client: GCSBucket, path: string, options?: Gcs
  */
 export async function existsFile (client: S3ClientWithBucket, path: string, options?: S3ExistsOptions): Promise<Returned>
 /**
- * Checks whether a file exists on an FTP server.
+ * Checks whether a file exists on an SFTP or FTP server.
  *
- * @param client              - The FTP client instance.
+ * @param client             - The FTP or SFTP client instance.
  * @param   path                 - The path of the file to check.
  * @returns
  * - On success:  `Outcome.makeSuccess(true)` if the file exists,
  *                `Outcome.makeSuccess(false)` if it does not.
  * - On failure:  `Outcome.makeFailure(errStr)` for unexpected errors.
  */
-export async function existsFile (client: FtpClient, path: string): Promise<Returned>
-/**
- * Checks whether a file exists on an SFTP server.
- *
- * @param client             - The SFTP client instance.
- * @param   path                 - The path of the file to check.
- * @returns
- * - On success:  `Outcome.makeSuccess(true)` if the file exists,
- *                `Outcome.makeSuccess(false)` if it does not.
- * - On failure:  `Outcome.makeFailure(errStr)` for unexpected errors.
- */
-export async function existsFile (client: SftpClient, path: string): Promise<Returned>
+export async function existsFile (client: FtpClient | SftpClient, path: string): Promise<Returned>
 /**
  * Checks whether a file exists in cloud storage.
  *
