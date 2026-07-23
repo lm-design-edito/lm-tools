@@ -1,5 +1,11 @@
 # lm-tools
 
+## Git workflow
+
+- Commit message shape: `<path/scope> - <lowercase description>`. Scope is the directory relevant to the change, without the `src/` prefix (e.g. `components/BeforeAfter`, `agnostic/html/deep-select`, `node/images`). Multiple scopes can be joined with `&` or comma-separated. The description after the dash is lowercase and terse — a few words, not a full punctuated sentence. This isn't always strictly enforced, but it's the preferred shape for new commits.
+- Do not add a `Co-Authored-By: Claude` trailer to commits in this repo — use a plain commit message.
+- Only run `git commit` when asked. Never run `git add`, `git push`, or `git pull` — the user handles staging, pushing, and pulling themselves.
+
 ## JSDoc
 
 ### General principles
