@@ -184,8 +184,8 @@ export type FormatTiffOptions = FormatCommonOptions & {
   xres?: number
   /** Vertical resolution. */
   yres?: number
-  /** Bit depth (1, 2, 4, or 8 bits). */
-  bitdepth?: 1 | 2 | 4 | 8
+  /** Bit depth (1, 2, or 4 bits). */
+  bitdepth?: 1 | 2 | 4
   /** If `true`, minimum value is white. */
   miniswhite?: boolean
   /** Resolution unit. */

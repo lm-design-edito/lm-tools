@@ -1,4 +1,4 @@
-import type sharp from 'sharp'
+import type { Sharp } from 'sharp'
 import * as Outcome from '../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../agnostic/errors/unknown-to-string/index.js'
 import { isNonNullObject } from '../../../agnostic/objects/is-object/index.js'
@@ -91,7 +91,7 @@ export async function transform (
   input: ImageLike,
   operationsSequence: OperationDescriptor[],
   limits?: TransformLimits
-): Promise<Outcome.Either<sharp.Sharp, TransformErr>> {
+): Promise<Outcome.Either<Sharp, TransformErr>> {
   let sharpInstance = await toSharpInstance(input)
   const start = Date.now()
   const deadline = limits?.timeoutMs !== undefined
@@ -119,7 +119,7 @@ export async function transform (
     })
 
     // Apply transformation
-    let result: sharp.Sharp | TransformErrCodes.OP_TIMEOUT
+    let result: Sharp | TransformErrCodes.OP_TIMEOUT
     try {
       result = await runWithOpTimeout(async () => {
         switch (operation.name) {

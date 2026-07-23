@@ -1,4 +1,4 @@
-import type sharp from 'sharp'
+import type { Sharp } from 'sharp'
 import z from 'zod'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import type { ExtractOperationParams } from '../../../types.js'
@@ -16,8 +16,8 @@ export function isExtractOperationParams (obj: unknown): Outcome.Either<ExtractO
 }
 
 export async function extract (
-  sharpInstance: sharp.Sharp,
+  sharpInstance: Sharp,
   params: ExtractOperationParams
-): Promise<sharp.Sharp> {
+): Promise<Sharp> {
   return sharpInstance.extract(params)
 }

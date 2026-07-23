@@ -1,4 +1,4 @@
-import type sharp from 'sharp'
+import type { ResizeOptions, JpegOptions, PngOptions, WebpOptions, AvifOptions, TiffOptions, HeifOptions } from 'sharp'
 import zod from 'zod'
 import { clamp } from '../../../agnostic/numbers/clamp/index.js'
 import * as Outcome from '../../../agnostic/misc/outcome/index.js'
@@ -152,7 +152,7 @@ export const isFormatOptions = (options: unknown): options is FormatOptions => f
  * CONVERTERS
  * * * * * * * * * * * * * * */
 /** Converts FormatCommonOptions to Sharp resize options. */
-export const toSharpResizeOptions = (options: FormatCommonOptions): sharp.ResizeOptions => {
+export const toSharpResizeOptions = (options: FormatCommonOptions): ResizeOptions => {
   return {
     width: options.width,
     height: options.height,
@@ -169,7 +169,7 @@ export const toSharpResizeOptions = (options: FormatCommonOptions): sharp.Resize
 }
 
 /** Converts FormatJpgOptions to Sharp JPEG options. */
-export const toSharpJpegOptions = (options: FormatJpgOptions): sharp.JpegOptions => {
+export const toSharpJpegOptions = (options: FormatJpgOptions): JpegOptions => {
   return {
     quality: options.quality,
     force: options.force,
@@ -185,7 +185,7 @@ export const toSharpJpegOptions = (options: FormatJpgOptions): sharp.JpegOptions
 }
 
 /** Converts FormatPngOptions to Sharp PNG options. */
-export const toSharpPngOptions = (options: FormatPngOptions): sharp.PngOptions => {
+export const toSharpPngOptions = (options: FormatPngOptions): PngOptions => {
   return {
     quality: options.quality,
     force: options.force,
@@ -200,7 +200,7 @@ export const toSharpPngOptions = (options: FormatPngOptions): sharp.PngOptions =
 }
 
 /** Converts FormatWebpOptions to Sharp WebP options. */
-export const toSharpWebpOptions = (options: FormatWebpOptions): sharp.WebpOptions => {
+export const toSharpWebpOptions = (options: FormatWebpOptions): WebpOptions => {
   return {
     quality: options.quality,
     loop: options.loop,
@@ -219,7 +219,7 @@ export const toSharpWebpOptions = (options: FormatWebpOptions): sharp.WebpOption
 }
 
 /** Converts FormatAvifOptions to Sharp AVIF options. */
-export const toSharpAvifOptions = (options: FormatAvifOptions): sharp.AvifOptions => {
+export const toSharpAvifOptions = (options: FormatAvifOptions): AvifOptions => {
   return {
     force: options.force,
     quality: options.quality,
@@ -231,7 +231,7 @@ export const toSharpAvifOptions = (options: FormatAvifOptions): sharp.AvifOption
 }
 
 /** Converts FormatTiffOptions to Sharp TIFF options. */
-export const toSharpTiffOptions = (options: FormatTiffOptions): sharp.TiffOptions => {
+export const toSharpTiffOptions = (options: FormatTiffOptions): TiffOptions => {
   return {
     force: options.force,
     quality: options.quality,
@@ -250,7 +250,7 @@ export const toSharpTiffOptions = (options: FormatTiffOptions): sharp.TiffOption
 }
 
 /** Converts FormatHeifOptions to Sharp HEIF options. */
-export const toSharpHeifOptions = (options: FormatHeifOptions): sharp.HeifOptions => {
+export const toSharpHeifOptions = (options: FormatHeifOptions): HeifOptions => {
   return {
     force: options.force,
     quality: options.quality,

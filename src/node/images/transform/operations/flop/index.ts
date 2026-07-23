@@ -1,5 +1,5 @@
-import type sharp from 'sharp'
+import type { Sharp } from 'sharp'
 
-export async function flop (sharpInstance: sharp.Sharp): Promise<sharp.Sharp> {
+export async function flop (sharpInstance: Sharp): Promise<Sharp> {
   return sharpInstance.flop()
 }

@@ -1,4 +1,4 @@
-import type sharp from 'sharp'
+import type { Sharp } from 'sharp'
 import z from 'zod'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import type { BrightenOperationParams } from '../../../types.js'
@@ -11,8 +11,8 @@ export function isBrightenOperationParams (obj: unknown): Outcome.Either<Brighte
 }
 
 export async function brighten (
-  sharpInstance: sharp.Sharp,
+  sharpInstance: Sharp,
   params: BrightenOperationParams
-): Promise<sharp.Sharp> {
+): Promise<Sharp> {
   return sharpInstance.modulate({ brightness: params.factor })
 }

@@ -1,4 +1,4 @@
-import type sharp from 'sharp'
+import type { Sharp } from 'sharp'
 import z from 'zod'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import type { Color } from '../../../../../agnostic/colors/types.js'
@@ -17,9 +17,9 @@ export function isRotateOperationParams (obj: unknown): Outcome.Either<RotateOpe
 }
 
 export async function rotate (
-  sharpInstance: sharp.Sharp,
+  sharpInstance: Sharp,
   params: RotateOperationParams
-): Promise<sharp.Sharp> {
+): Promise<Sharp> {
   return sharpInstance.rotate(params.angleDeg, {
     background: params.background !== undefined
       ? toSharpColor(params.background)

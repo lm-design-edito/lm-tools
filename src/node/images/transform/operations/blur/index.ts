@@ -1,4 +1,4 @@
-import type sharp from 'sharp'
+import type { Sharp } from 'sharp'
 import z from 'zod'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import type { BlurOperationParams } from '../../../types.js'
@@ -11,8 +11,8 @@ export function isBlurOperationParams (obj: unknown): Outcome.Either<BlurOperati
 }
 
 export async function blur (
-  sharpInstance: sharp.Sharp,
+  sharpInstance: Sharp,
   params: BlurOperationParams
-): Promise<sharp.Sharp> {
+): Promise<Sharp> {
   return sharpInstance.blur(params.sigma)
 }

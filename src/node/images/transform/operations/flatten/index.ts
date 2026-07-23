@@ -1,4 +1,4 @@
-import type sharp from 'sharp'
+import type { Sharp } from 'sharp'
 import z from 'zod'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { type Color } from '../../../../../agnostic/colors/types.js'
@@ -16,9 +16,9 @@ export function isFlattenOperationParams (obj: unknown): Outcome.Either<FlattenO
 }
 
 export async function flatten (
-  sharpInstance: sharp.Sharp,
+  sharpInstance: Sharp,
   params: FlattenOperationParams
-): Promise<sharp.Sharp> {
+): Promise<Sharp> {
   const inputBg = params.background
   const rgbBackground = inputBg !== undefined
     ? toSharpColor(inputBg)

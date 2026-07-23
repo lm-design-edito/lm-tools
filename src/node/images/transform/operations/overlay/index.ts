@@ -1,4 +1,5 @@
 import sharp from 'sharp'
+import type { Sharp } from 'sharp'
 import z from 'zod'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import type { Color } from '../../../../../agnostic/colors/types.js'
@@ -9,7 +10,7 @@ import type { OverlayOperationParams } from '../../../types.js'
 export function isOverlayOperationParams (obj: unknown): Outcome.Either<OverlayOperationParams, string> {
   const schema = z.object({
     input: z.union([
-      z.custom<sharp.Sharp>(isDuckTypedSharpInstance),
+      z.custom<Sharp>(isDuckTypedSharpInstance),
       z.custom<Buffer>(data => Buffer.isBuffer(data)),
       z.string(),
       z.object({
@@ -82,9 +83,9 @@ export function isOverlayOperationParams (obj: unknown): Outcome.Either<OverlayO
 }
 
 export async function overlay (
-  sharpInstance: sharp.Sharp,
+  sharpInstance: Sharp,
   params: OverlayOperationParams
-): Promise<sharp.Sharp> {
+): Promise<Sharp> {
   const inputBuffer = params.input instanceof Buffer
     ? params.input
     : await (await toSharpInstance(params.input)).toBuffer()

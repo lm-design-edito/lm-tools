@@ -1,4 +1,4 @@
-import type sharp from 'sharp'
+import type { Sharp } from 'sharp'
 import z from 'zod'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import type { Color } from '../../../../../agnostic/colors/types.js'
@@ -42,9 +42,9 @@ export function isResizeOperationParams (obj: unknown): Outcome.Either<ResizeOpe
 }
 
 export async function resize (
-  sharpInstance: sharp.Sharp,
+  sharpInstance: Sharp,
   params: ResizeOperationParams
-): Promise<sharp.Sharp> {
+): Promise<Sharp> {
   return sharpInstance.resize({
     ...params,
     background: params.background !== undefined

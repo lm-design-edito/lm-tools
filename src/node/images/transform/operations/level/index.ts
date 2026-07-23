@@ -1,4 +1,4 @@
-import type sharp from 'sharp'
+import type { Sharp } from 'sharp'
 import z from 'zod'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import type { LevelOperationParams } from '../../../types.js'
@@ -14,9 +14,9 @@ export function isLevelOperationParams (obj: unknown): Outcome.Either<LevelOpera
 }
 
 export async function level (
-  sharpInstance: sharp.Sharp,
+  sharpInstance: Sharp,
   params: LevelOperationParams
-): Promise<sharp.Sharp> {
+): Promise<Sharp> {
   return sharpInstance.linear(
     params.multiplier,
     params.offset

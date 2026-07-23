@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import sharp from 'sharp'
+import type { Sharp, SharpOptions } from 'sharp'
 import type { Color } from '../../../agnostic/colors/types.js'
 import { toRgb } from '../../../agnostic/colors/convert/index.js'
 import { tidy } from '../../../agnostic/colors/tidy/index.js'
@@ -7,7 +8,7 @@ import { isNonNullObject } from '../../../agnostic/objects/is-object/index.js'
 import type { CreateOptions, ImageLike } from '../types.js'
 
 /** Converts a Color to Sharp RGBA format. */
-export function toSharpColor (color: Color): sharp.RGBA {
+export function toSharpColor (color: Color): { r: number, g: number, b: number, alpha?: number } {
   const rgb = tidy(toRgb(color))
   return {
     r: rgb.r,
@@ -25,7 +26,7 @@ export function toSharpColor (color: Color): sharp.RGBA {
  * @param obj - The object to check.
  * @returns `true` if the object appears to be a Sharp instance, `false` otherwise.
  */
-export function isDuckTypedSharpInstance (obj: unknown): obj is sharp.Sharp {
+export function isDuckTypedSharpInstance (obj: unknown): obj is Sharp {
   if (!isNonNullObject(obj)) return false
   return 'avif' in obj
   && 'clone' in obj
@@ -52,7 +53,7 @@ export function isDuckTypedSharpInstance (obj: unknown): obj is sharp.Sharp {
 }
 
 /** Converts CreateOptions to Sharp create options with defaults applied. */
-export function toCreateOptions (options: CreateOptions): sharp.SharpOptions['create'] {
+export function toCreateOptions (options: CreateOptions): SharpOptions['create'] {
   return {
     width: options.width ?? 100,
     height: options.height ?? 100,
@@ -77,7 +78,7 @@ export function toCreateOptions (options: CreateOptions): sharp.SharpOptions['cr
  * @param [clone=false] - If `true` and input is a Sharp instance, returns a cloned instance.
  * @returns A Sharp instance ready for image operations.
  */
-export async function toSharpInstance (imageLike: ImageLike, clone: boolean = false): Promise<sharp.Sharp> {
+export async function toSharpInstance (imageLike: ImageLike, clone: boolean = false): Promise<Sharp> {
   if (typeof imageLike === 'string') return sharp(await readFile(imageLike))
   if (Buffer.isBuffer(imageLike)) return sharp(imageLike)
   if (isDuckTypedSharpInstance(imageLike)) return clone

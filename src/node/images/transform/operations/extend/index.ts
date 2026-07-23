@@ -1,4 +1,4 @@
-import type sharp from 'sharp'
+import type { Sharp } from 'sharp'
 import z from 'zod'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { isColor } from '../../../../../agnostic/colors/typechecks/index.js'
@@ -21,9 +21,9 @@ export function isExtendOperationParams (obj: unknown): Outcome.Either<ExtendOpe
 }
 
 export async function extend (
-  sharpInstance: sharp.Sharp,
+  sharpInstance: Sharp,
   params: ExtendOperationParams
-): Promise<sharp.Sharp> {
+): Promise<Sharp> {
   return sharpInstance.extend({
     ...params,
     background: params.background !== undefined
