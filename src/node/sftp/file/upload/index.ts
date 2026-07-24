@@ -1,6 +1,6 @@
 import type { Readable } from 'node:stream'
 import type Client from 'ssh2-sftp-client'
-import { type TransferOptions } from 'ssh2-sftp-client'
+import type { TransferOptions } from 'ssh2-sftp-client'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 

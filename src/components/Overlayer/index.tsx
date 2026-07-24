@@ -1,7 +1,7 @@
-import {
-  type FunctionComponent,
-  type PropsWithChildren,
-  type ReactNode
+import type {
+  FunctionComponent,
+  PropsWithChildren,
+  ReactNode
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { isFalsy } from '../../agnostic/booleans/is-falsy/index.js'

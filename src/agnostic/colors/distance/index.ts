@@ -1,4 +1,4 @@
-import { type Color, type Laba, type DistanceMethod } from '../types.js'
+import type { Color, Laba, DistanceMethod } from '../types.js'
 import { toLab } from '../convert/index.js'
 
 function distanceCiede2000 (c1: Laba, c2: Laba): number {

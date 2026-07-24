@@ -1,5 +1,5 @@
 // ftp/stat.ts
-import { type Client as FtpClient, type FileInfo } from 'basic-ftp'
+import type { Client as FtpClient, FileInfo } from 'basic-ftp'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 

@@ -2,7 +2,7 @@ import * as Window from '../../../../../misc/crossenv/window/index.js'
 import { isNonNullObject } from '../../../../../objects/is-object/index.js'
 import * as Outcome from '../../../../../misc/outcome/index.js'
 import { Method } from '../../../method/index.js'
-import { type Types } from '../../../types/index.js'
+import type { Types } from '../../../types/index.js'
 import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
 

@@ -1,4 +1,4 @@
-import { type Bucket } from '@google-cloud/storage'
+import type { Bucket } from '@google-cloud/storage'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { download, type DownloadOptions } from '../download/index.js'
 import { remove, type RemoveOptions } from '../remove/index.js'

@@ -5,7 +5,7 @@ import { trimStart, trimEnd } from '../../../strings/trim/index.js'
 
 import { Serialize } from '../serialize/index.js'
 import { Transformer } from '../transformer/index.js'
-import { type Types } from '../types/index.js'
+import type { Types } from '../types/index.js'
 import { Utils } from '../utils/index.js'
 import { Cast } from '../cast/index.js'
 

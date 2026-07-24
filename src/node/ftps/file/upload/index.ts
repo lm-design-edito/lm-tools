@@ -1,5 +1,5 @@
-import { type Readable } from 'node:stream'
-import { type Client, type UploadOptions as BasicFtpUploadOptions } from 'basic-ftp'
+import type { Readable } from 'node:stream'
+import type { Client, UploadOptions as BasicFtpUploadOptions } from 'basic-ftp'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 

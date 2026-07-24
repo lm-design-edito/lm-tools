@@ -1,7 +1,7 @@
 import * as Outcome from '../../../misc/outcome/index.js'
 import { Method } from '../method/index.js'
 import { Transformer } from '../transformer/index.js'
-import { type Types } from '../types/index.js'
+import type { Types } from '../types/index.js'
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace SmartTags {

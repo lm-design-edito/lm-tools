@@ -3,7 +3,7 @@ import { insertNode } from '../../../../../html/insert-node/index.js'
 import * as Outcome from '../../../../../misc/outcome/index.js'
 import { Cast } from '../../../cast/index.js'
 import { Utils } from '../../../utils/index.js'
-import { type Types } from '../../../types/index.js'
+import type { Types } from '../../../types/index.js'
 import { SmartTags } from '../../index.js'
 
 type Main = Element | NodeListOf<Element | Text>

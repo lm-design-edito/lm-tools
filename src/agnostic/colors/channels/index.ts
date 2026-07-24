@@ -1,9 +1,9 @@
 import { clamp } from '../../numbers/clamp/index.js'
 import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
-import {
-  type Color,
-  type TransformedColor,
-  type Channel
+import type {
+  Color,
+  TransformedColor,
+  Channel
 } from '../types.js'
 import {
   toRgb,

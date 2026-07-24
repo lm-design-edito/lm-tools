@@ -1,7 +1,7 @@
 import type * as Outcome from '../../../misc/outcome/index.js'
-import { type Tree as TreeNamespace } from '../tree/index.js'
-import { type Transformer } from '../transformer/index.js'
-import { type Method } from '../method/index.js'
+import type { Tree as TreeNamespace } from '../tree/index.js'
+import type { Transformer } from '../transformer/index.js'
+import type { Method } from '../method/index.js'
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Types {

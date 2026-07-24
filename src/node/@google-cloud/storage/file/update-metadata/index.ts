@@ -1,7 +1,7 @@
-import {
-  type Bucket,
-  type FileOptions,
-  type SetFileMetadataOptions
+import type {
+  Bucket,
+  FileOptions,
+  SetFileMetadataOptions
 } from '@google-cloud/storage'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'

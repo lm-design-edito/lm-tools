@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- options is narrowed based on a runtime check of the separate `client` param; TS can't connect the two at compile time */
-import { type Bucket as GCSBucket } from '@google-cloud/storage'
-import { type Client as FtpClient } from 'basic-ftp'
+import type { Bucket as GCSBucket } from '@google-cloud/storage'
+import type { Client as FtpClient } from 'basic-ftp'
 import type SftpClient from 'ssh2-sftp-client'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import {

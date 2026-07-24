@@ -1,5 +1,5 @@
 import { type Readable, PassThrough } from 'node:stream'
-import { type Client } from 'basic-ftp'
+import type { Client } from 'basic-ftp'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 

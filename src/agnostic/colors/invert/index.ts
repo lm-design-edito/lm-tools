@@ -1,4 +1,4 @@
-import { type Color, type TransformedColor, type InvertMethod } from '../types.js'
+import type { Color, TransformedColor, InvertMethod } from '../types.js'
 import { viaRgb, viaLab, viaLch } from '../convert/index.js'
 import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
 

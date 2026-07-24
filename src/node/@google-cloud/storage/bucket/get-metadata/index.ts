@@ -1,7 +1,7 @@
-import {
-  type Bucket,
-  type BucketMetadata,
-  type GetBucketMetadataOptions as GCSGetBucketMetadataOptions
+import type {
+  Bucket,
+  BucketMetadata,
+  GetBucketMetadataOptions as GCSGetBucketMetadataOptions
 } from '@google-cloud/storage'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'

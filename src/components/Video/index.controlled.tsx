@@ -1,6 +1,6 @@
 import { type FunctionComponent, type PropsWithChildren, type VideoHTMLAttributes, type ReactEventHandler, useMemo, useRef, useState, useCallback, useEffect } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
-import { type WithClassName } from '../utils/types.js'
+import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import cssModule from './styles.module.css'
 import { video as publicClassName } from '../public-classnames.js'

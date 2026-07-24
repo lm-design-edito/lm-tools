@@ -1,6 +1,6 @@
 import { unknownToString } from '../../../../../errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../../misc/outcome/index.js'
-import { type Types } from '../../../types/index.js'
+import type { Types } from '../../../types/index.js'
 import { Utils } from '../../../utils/index.js'
 import { SmartTags } from '../../index.js'
 import { parse } from '../hjstringify/index.js'

@@ -1,7 +1,7 @@
-import {
-  type Bucket,
-  type GetFileOptions,
-  type CopyOptions as GCSCopyOptions
+import type {
+  Bucket,
+  GetFileOptions,
+  CopyOptions as GCSCopyOptions
 } from '@google-cloud/storage'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'

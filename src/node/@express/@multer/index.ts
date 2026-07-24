@@ -1,4 +1,4 @@
-import { type Request, type Response, type RequestHandler } from 'express'
+import type { Request, Response, RequestHandler } from 'express'
 import multer from 'multer'
 import * as Outcome from '../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../agnostic/errors/unknown-to-string/index.js'

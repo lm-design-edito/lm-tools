@@ -1,6 +1,6 @@
 import * as Outcome from '../../../../../misc/outcome/index.js'
 import { Utils } from '../../../utils/index.js'
-import { type Types } from '../../../types/index.js'
+import type { Types } from '../../../types/index.js'
 import { SmartTags } from '../../index.js'
 
 type Main = Types.Tree.RestingArrayValue // [WIP] string, text, array, element, nodelist ?

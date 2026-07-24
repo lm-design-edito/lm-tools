@@ -1,6 +1,6 @@
-import {
-  type FunctionComponent,
-  type ButtonHTMLAttributes
+import type {
+  FunctionComponent,
+  ButtonHTMLAttributes
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'

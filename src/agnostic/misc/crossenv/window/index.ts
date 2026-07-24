@@ -1,4 +1,4 @@
-import { type MinimalWindow } from '../types.js'
+import type { MinimalWindow } from '../types.js'
 
 /**
  * Checks whether a `window` object exists in the current environment.

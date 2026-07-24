@@ -1,4 +1,4 @@
-import { type TransferOptions } from 'ssh2-sftp-client'
+import type { TransferOptions } from 'ssh2-sftp-client'
 import type Client from 'ssh2-sftp-client'
 import { PassThrough } from 'node:stream'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
