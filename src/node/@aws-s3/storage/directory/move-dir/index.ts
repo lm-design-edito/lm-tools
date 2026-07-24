@@ -82,8 +82,9 @@ export async function moveDir (
               new HeadObjectCommand({ Bucket: bucketName, Key: dest })
             )
             throw new Error(`Object already exists at ${dest}.`)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } catch (err: any) {
-            if (err.$metadata?.httpStatusCode !== 404 && err.name !== 'NotFound')
+            if (err?.$metadata?.httpStatusCode !== 404 && err?.name !== 'NotFound')
               throw err
           }
         }

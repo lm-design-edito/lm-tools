@@ -48,11 +48,10 @@ export async function removeDir (
   try {
     await recurse(directoryPath)
     return Outcome.makeSuccess(true)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     // 550 (“No such file or directory”) when the path is missing
-    if (ignoreMissing && err.code === 550) {
-      return Outcome.makeSuccess(true)
-    }
+    if (ignoreMissing && err?.code === 550) return Outcome.makeSuccess(true)
     return Outcome.makeFailure(unknownToString(err))
   }
 }

@@ -52,8 +52,9 @@ export async function copy (
       try {
         await client.send(new HeadObjectCommand({ Bucket: bucketName, Key: targetPath }))
         return Outcome.makeFailure(`Object already exists at ${targetPath}.`)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
-        const notFound = err.$metadata?.httpStatusCode === 404 || err.name === 'NotFound'
+        const notFound = err?.$metadata?.httpStatusCode === 404 || err?.name === 'NotFound'
         if (!notFound) throw err // propagate unexpected errors
       }
     }

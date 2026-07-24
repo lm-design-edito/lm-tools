@@ -1,3 +1,4 @@
+import { isNotFalsy } from '../../booleans/is-falsy/index.js'
 import {
   type ConstructorFunction,
   isConstructorFunction
@@ -22,25 +23,23 @@ type TypeOfChecker<C> = C extends ConstructorFunction<infer U>
  * and custom type guard functions.
  */
 export function isArrayOf<
-  C extends TypeChecker<any> | Array<TypeChecker<any>>
+  C extends TypeChecker<unknown> | Array<TypeChecker<unknown>>
 > (
   input: unknown,
   _types?: C
-): input is Array<TypeOfChecker<C extends any[] ? C[number] : C>> {
+): input is Array<TypeOfChecker<C extends unknown[] ? C[number] : C>> {
   if (!Array.isArray(input)) return false
   if (_types === undefined) return true
-
   const types = Array.isArray(_types) ? _types : [_types]
-
-  const primitiveTypeMap = new Map<ConstructorFunction<any>, string>([
+  const primitiveTypeMap = new Map<ConstructorFunction, string>([
     [Number, 'number'],
     [String, 'string'],
     [Boolean, 'boolean']
   ])
-
   return input.every(entry =>
     types.some(typeChecker => {
-      if (!isConstructorFunction(typeChecker)) return typeChecker(entry)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      if (!isConstructorFunction(typeChecker)) return isNotFalsy(typeChecker(entry))
       const primitiveType = primitiveTypeMap.get(typeChecker)
       // eslint-disable-next-line valid-typeof
       if (primitiveType !== undefined) return typeof entry === primitiveType

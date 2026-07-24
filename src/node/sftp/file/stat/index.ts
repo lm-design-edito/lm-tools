@@ -33,10 +33,9 @@ export async function stat (
       gid: info.gid,
       raw: info
     })
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
-    if (err.code === 2 || err.code === 'ENOENT') {
-      return Outcome.makeFailure(`File not found: ${path}`)
-    }
+    if (err?.code === 2 || err?.code === 'ENOENT') return Outcome.makeFailure(`File not found: ${path}`)
     return Outcome.makeFailure(unknownToString(err))
   }
 }

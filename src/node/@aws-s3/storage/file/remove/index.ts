@@ -33,6 +33,7 @@ export async function remove (
     // Check if object exists, respecting ignoreMissing
     try {
       await s3.send(new HeadObjectCommand({ Bucket: bucketName, Key: targetPath }))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const code = err?.name ?? err?.Code ?? err?.code
       if (code === 'NotFound' || code === 'NoSuchKey' || code === 'NotFoundException') {

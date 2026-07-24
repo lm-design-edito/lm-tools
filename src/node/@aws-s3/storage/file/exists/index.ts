@@ -44,11 +44,12 @@ export async function exists (
       })
     )
     return Outcome.makeSuccess(true)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
-    const notFound = err.$metadata?.httpStatusCode === 404
-      || err.name === 'NotFound'
-      || err.Code === 'NotFound' // some SDKs emit Code
-      || err.Code === 'NoSuchKey'
+    const notFound = err?.$metadata?.httpStatusCode === 404
+      || err?.name === 'NotFound'
+      || err?.Code === 'NotFound' // some SDKs emit Code
+      || err?.Code === 'NoSuchKey'
 
     if (notFound) {
       return Outcome.makeSuccess(false)

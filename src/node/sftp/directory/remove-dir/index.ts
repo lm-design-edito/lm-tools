@@ -48,11 +48,11 @@ export async function removeDir (
   try {
     await recurse(directoryPath)
     return Outcome.makeSuccess(true)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     // ssh2-sftp-client uses code 2 / ENOENT for “No such file or directory”
-    if (ignoreMissing && (err.code === 2 || err.code === 'ENOENT')) {
-      return Outcome.makeSuccess(true)
-    }
+    if (ignoreMissing
+      && (err?.code === 2 || err?.code === 'ENOENT')) return Outcome.makeSuccess(true)
     return Outcome.makeFailure(unknownToString(err))
   }
 }

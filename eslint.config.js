@@ -29,6 +29,7 @@ export default [
     },
     rules: {
       ...love.rules,
+      '@eslint-community/eslint-comments/require-description': 'off',
       '@typescript-eslint/brace-style': 'off',
       '@typescript-eslint/consistent-type-definitions': 'off',
       '@typescript-eslint/no-magic-numbers': 'off',

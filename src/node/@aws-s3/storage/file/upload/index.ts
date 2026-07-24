@@ -48,6 +48,7 @@ export async function upload (
       await s3.send(headCommand)
       // If no error, object exists
       return Outcome.makeFailure(`File already exists at ${targetPath}.`)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const code = err?.name ?? err?.$metadata?.httpStatusCode
       if (code !== 'NotFound' && code !== 404) {

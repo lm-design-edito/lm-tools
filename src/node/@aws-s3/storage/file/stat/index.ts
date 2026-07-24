@@ -53,8 +53,9 @@ export async function stat (
       raw: res
     }
     return Outcome.makeSuccess(stat)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
-    const notFound = err.$metadata?.httpStatusCode === 404 || err.name === 'NotFound'
+    const notFound = err?.$metadata?.httpStatusCode === 404 || err?.name === 'NotFound'
     if (notFound) return Outcome.makeFailure(`Object not found: ${key}`)
     return Outcome.makeFailure(unknownToString(err))
   }
