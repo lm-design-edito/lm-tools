@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-throw-literal */
-
+/* eslint-disable @typescript-eslint/no-misused-spread */
 import * as Outcome from '../../../../../misc/outcome/index.js'
 import { isRecord } from '../../../../../objects/is-record/index.js'
 import { Cast } from '../../../cast/index.js'
@@ -107,7 +106,7 @@ export function deepSetProperty (
         else { currentItem[numChunk] = Utils.clone(value) }
       // Set on Text
       } else if (currentItem instanceof Text) {
-        const currContent = currentItem.textContent ?? ''
+        const currContent = currentItem.textContent
         if (Number.isNaN(numChunk)
           || numChunk < 0
           || numChunk > currContent.length

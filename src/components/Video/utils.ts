@@ -53,6 +53,7 @@ export const forcePlay = async (
     await video.play()
     return video.paused
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error(e)
   }
   return false
@@ -68,6 +69,7 @@ export const forcePause = async (
     video.pause()
     return video.paused
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error(e)
   }
   return false
@@ -89,6 +91,7 @@ export const forceFullscreen = async (
     await video.requestFullscreen()
     return document.fullscreenElement === video
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error(e)
   }
   return false
@@ -104,6 +107,7 @@ export const forceExitFullscreen = async (
     await document.exitFullscreen()
     return document.fullscreenElement !== video
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error(e)
   }
   return false

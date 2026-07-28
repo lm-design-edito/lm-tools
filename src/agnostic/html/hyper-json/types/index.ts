@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type * as Outcome from '../../../misc/outcome/index.js'
 import type { Tree as TreeNamespace } from '../tree/index.js'
 import type { Transformer } from '../transformer/index.js'
@@ -136,31 +137,31 @@ export namespace Types {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   export namespace SmartTags {
     export type SmartTag<
-      Main extends Types.Tree.RestingValue | undefined = Types.Tree.RestingValue | undefined,
-      Args extends Types.Tree.RestingArrayValue = Types.Tree.RestingArrayValue,
-      Output extends Types.Tree.RestingValue = Types.Tree.RestingValue
+      Main extends Tree.RestingValue | undefined = Tree.RestingValue | undefined,
+      Args extends Tree.RestingArrayValue = Tree.RestingArrayValue,
+      Output extends Tree.RestingValue = Tree.RestingValue
     > = {
-      defaultMode: Types.Tree.Mode
-      isolationInitType: Exclude<Types.Tree.ValueTypeName, 'transformer' | 'method'>
-      generator: (innerValue: Types.Tree.RestingValue, mode: Types.Tree.Mode, sourceTree: TreeNamespace.Tree) => {
+      defaultMode: Tree.Mode
+      isolationInitType: Exclude<Tree.ValueTypeName, 'transformer' | 'method'>
+      generator: (innerValue: Tree.RestingValue, mode: Tree.Mode, sourceTree: TreeNamespace.Tree) => {
         transformer: Transformer<Main, Args, Output>
         method: Method<Main, Args, Output>
       }
     }
 
     export type Descriptor<
-      Main extends Types.Tree.RestingValue | undefined = Types.Tree.RestingValue | undefined,
-      Args extends Types.Tree.RestingArrayValue = Types.Tree.RestingArrayValue,
-      Output extends Types.Tree.RestingValue = Types.Tree.RestingValue
+      Main extends Tree.RestingValue | undefined = Tree.RestingValue | undefined,
+      Args extends Tree.RestingArrayValue = Tree.RestingArrayValue,
+      Output extends Tree.RestingValue = Tree.RestingValue
     > = {
       name: string
-      defaultMode: Types.Tree.Mode
-      isolationInitType: Exclude<Types.Tree.ValueTypeName, 'transformer' | 'method'>
+      defaultMode: Tree.Mode
+      isolationInitType: Exclude<Tree.ValueTypeName, 'transformer' | 'method'>
       mainValueCheck: Transformer<Main, Args, Output>['typeChecks']['mainValue']
       argsValueCheck: Transformer<Main, Args, Output>['typeChecks']['argsValue']
       func: Transformer<Main, Args, Output>['func']
     }
 
-    export type Register = Map<string, Types.SmartTags.SmartTag<any, any, any>>
+    export type Register = Map<string, SmartTag<any, any, any>>
   }
 }

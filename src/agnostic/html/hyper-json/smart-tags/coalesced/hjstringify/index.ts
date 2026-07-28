@@ -43,7 +43,8 @@ type JsonValue = JsonPrimitive | JsonValue[] | { [k: string]: JsonValue }
 
 export function parse (val: string): Types.Tree.RestingValue {
   const { document } = Window.get()
-  const jsonParsed: JsonValue = JSON.parse(val)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+  const jsonParsed: JsonValue = JSON.parse(val) as JsonValue
   if (typeof jsonParsed === 'number'
     || typeof jsonParsed === 'boolean'
     || jsonParsed === null) return jsonParsed

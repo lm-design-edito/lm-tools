@@ -18,10 +18,12 @@ export function getGeometricStep (
   steps: number
 ): number {
   if (min === 0) {
+    // eslint-disable-next-line no-console
     console.warn('Cannot generate values if min value is zero')
     return NaN
   }
   if (steps < 1) {
+    // eslint-disable-next-line no-console
     console.warn('Cannot generate values if steps is lower than one')
     return NaN
   }

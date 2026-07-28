@@ -25,7 +25,7 @@ export const call = SmartTags.makeSmartTag<Main, Args, Output>({
     })
     const isMethodsArrayCheck = typeCheckMany(m, 'method')
     if (isMethodsArrayCheck.success) return isMethodsArrayCheck
-    return makeFailure(makeMainValueError('method | method[]', getType(m) ?? 'undefined'))
+    return makeFailure(makeMainValueError('method | method[]', getType(m)))
   },
   argsValueCheck: a => Utils.Tree.TypeChecks.typeCheckMany(a, 'array'),
   func: (main, args) => {

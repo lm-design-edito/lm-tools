@@ -1,6 +1,6 @@
 export type RegisterEntry = {
   message: string
-  detailsMaker: (...p: any[]) => any
+  detailsMaker: (...p: unknown[]) => unknown
 }
 
 export type Source<C extends string> = { [K in C]: RegisterEntry }
@@ -49,15 +49,18 @@ export function from<S extends Source<string>> (source: S) {
   function getDetailsMaker<Code extends RegisterKeys<S>> (code: Code): DetailsMaker<S, Code> {
     const maker = source[code]?.detailsMaker
     if (maker === undefined) throw new Error('Unknown code')
-    return maker as DetailsMaker<S, Code>
+    return maker
   }
 
   function getDetails<Code extends RegisterKeys<S>> (
     code: Code,
     ...params: DetailsMakerParams<S, Code>
   ): Details<S, Code> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const maker = getDetailsMaker(code) as undefined | ((...p: any[]) => any)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const details = maker?.(...params)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return details
   }
 

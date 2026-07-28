@@ -1,3 +1,4 @@
+/* eslint-disable no-console, @typescript-eslint/no-explicit-any */
 type ConsoleMethod = 'assert'
 | 'count'
 | 'countReset'
@@ -101,23 +102,23 @@ export class Logger {
     this.printThreads = this.printThreads.bind(this)
   }
 
-  assert (thread: string = '', ...args: ConsoleMethodsParams['assert']): void { this.setLog(thread, 'assert', args) }
-  count (thread: string = '', ...args: ConsoleMethodsParams['count']): void { this.setLog(thread, 'count', args) }
-  countReset (thread: string = '', ...args: ConsoleMethodsParams['countReset']): void { this.setLog(thread, 'countReset', args) }
-  debug (thread: string = '', ...args: ConsoleMethodsParams['debug']): void { this.setLog(thread, 'debug', args) }
-  dir (thread: string = '', ...args: ConsoleMethodsParams['dir']): void { this.setLog(thread, 'dir', args) }
-  dirxml (thread: string = '', ...args: ConsoleMethodsParams['dirxml']): void { this.setLog(thread, 'dirxml', args) }
-  error (thread: string = '', ...args: ConsoleMethodsParams['error']): void { this.setLog(thread, 'error', args) }
-  group (thread: string = '', ...args: ConsoleMethodsParams['group']): void { this.setLog(thread, 'group', args) }
-  groupCollapsed (thread: string = '', ...args: ConsoleMethodsParams['groupCollapsed']): void { this.setLog(thread, 'groupCollapsed', args) }
-  groupEnd (thread: string = '', ...args: ConsoleMethodsParams['groupEnd']): void { this.setLog(thread, 'groupEnd', args) }
-  info (thread: string = '', ...args: ConsoleMethodsParams['info']): void { this.setLog(thread, 'info', args) }
-  log (thread: string = '', ...args: ConsoleMethodsParams['log']): void { this.setLog(thread, 'log', args) }
-  table (thread: string = '', ...args: ConsoleMethodsParams['table']): void { this.setLog(thread, 'table', args) }
-  time (thread: string = '', ...args: ConsoleMethodsParams['time']): void { this.setLog(thread, 'time', args) }
-  timeEnd (thread: string = '', ...args: ConsoleMethodsParams['timeEnd']): void { this.setLog(thread, 'timeEnd', args) }
-  trace (thread: string = '', ...args: ConsoleMethodsParams['trace']): void { this.setLog(thread, 'trace', args) }
-  warn (thread: string = '', ...args: ConsoleMethodsParams['warn']): void { this.setLog(thread, 'warn', args) }
+  assert (thread = '', ...args: ConsoleMethodsParams['assert']): void { this.setLog(thread, 'assert', args) }
+  count (thread = '', ...args: ConsoleMethodsParams['count']): void { this.setLog(thread, 'count', args) }
+  countReset (thread = '', ...args: ConsoleMethodsParams['countReset']): void { this.setLog(thread, 'countReset', args) }
+  debug (thread = '', ...args: ConsoleMethodsParams['debug']): void { this.setLog(thread, 'debug', args) }
+  dir (thread = '', ...args: ConsoleMethodsParams['dir']): void { this.setLog(thread, 'dir', args) }
+  dirxml (thread = '', ...args: ConsoleMethodsParams['dirxml']): void { this.setLog(thread, 'dirxml', args) }
+  error (thread = '', ...args: ConsoleMethodsParams['error']): void { this.setLog(thread, 'error', args) }
+  group (thread = '', ...args: ConsoleMethodsParams['group']): void { this.setLog(thread, 'group', args) }
+  groupCollapsed (thread = '', ...args: ConsoleMethodsParams['groupCollapsed']): void { this.setLog(thread, 'groupCollapsed', args) }
+  groupEnd (thread = '', ...args: ConsoleMethodsParams['groupEnd']): void { this.setLog(thread, 'groupEnd', args) }
+  info (thread = '', ...args: ConsoleMethodsParams['info']): void { this.setLog(thread, 'info', args) }
+  log (thread = '', ...args: ConsoleMethodsParams['log']): void { this.setLog(thread, 'log', args) }
+  table (thread = '', ...args: ConsoleMethodsParams['table']): void { this.setLog(thread, 'table', args) }
+  time (thread = '', ...args: ConsoleMethodsParams['time']): void { this.setLog(thread, 'time', args) }
+  timeEnd (thread = '', ...args: ConsoleMethodsParams['timeEnd']): void { this.setLog(thread, 'timeEnd', args) }
+  trace (thread = '', ...args: ConsoleMethodsParams['trace']): void { this.setLog(thread, 'trace', args) }
+  warn (thread = '', ...args: ConsoleMethodsParams['warn']): void { this.setLog(thread, 'warn', args) }
 
   setLog<T extends ConsoleMethod> (
     threadName: string,

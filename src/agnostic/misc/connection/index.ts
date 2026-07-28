@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 import * as Window from '../crossenv/window/index.js'
 
 /**
@@ -52,7 +53,7 @@ function isConnection (unk: unknown): unk is MinimalConnection {
  */
 export function getConnection (): MinimalConnection | undefined {
   const window = Window.get()
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- MinimalWindow deliberately doesn't declare `navigator`; this is browser-only feature detection, guarded by the typeof/null check below
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-type-assertion -- MinimalWindow deliberately doesn't declare `navigator`; this is browser-only feature detection, guarded by the typeof/null check below
   const navigator = (window as any).navigator
   if (typeof navigator !== 'object' || navigator === null) return undefined
   const connection = navigator.connection

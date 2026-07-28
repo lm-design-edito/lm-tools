@@ -8,7 +8,7 @@ export const generateSentence = (): string | undefined => {
   return EightKiloByteOfLoremIpsumSentences[pos]
 }
 
-export const generateSentences = (amount: number = 1): Array<string | undefined> => {
+export const generateSentences = (amount = 1): Array<string | undefined> => {
   return new Array(amount)
     .fill(null)
     .map(generateSentence)

@@ -17,7 +17,7 @@ export type Nullish = null | undefined
  * @param val - The value to check.
  * @returns `true` if the value is nullish, otherwise `false`.
  */
-export function isNullish<T> (val: T | Nullish): val is Nullish {
+export function isNullish (val: unknown): val is Nullish {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Array.includes() does a strict equality check regardless of this cast; safe for any T
   return nullishValues.includes(val as Nullish)
 }

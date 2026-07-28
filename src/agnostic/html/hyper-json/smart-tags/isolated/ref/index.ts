@@ -16,7 +16,7 @@ export const func: Types.Transformations.Function<Main, Args, Output> = (main, _
   const splitted = strMain.split('/')
     .filter(e => e.trim() !== '')
     .map(e => {
-      const looksLikeNumber = e.match(/^\d+$/igm)
+      const looksLikeNumber = e.match(/^\d+$/igmv)
       if (looksLikeNumber === null) return e
       const parsed = parseInt(e)
       if (Number.isNaN(parsed)) return e

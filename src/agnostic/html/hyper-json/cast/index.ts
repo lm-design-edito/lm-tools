@@ -27,8 +27,8 @@ export namespace Cast {
     const { Text } = Window.get()
     if (typeof input === 'boolean') return input ? 1 : 0
     if (typeof input === 'number') return input
-    if (typeof input === 'string') return parseFloat(`${input}`)
-    if (input instanceof Text) return parseFloat(`${input.textContent}`)
+    if (typeof input === 'string') return parseFloat(input)
+    if (input instanceof Text) return parseFloat(input.textContent)
     return 0
   }
 
@@ -39,7 +39,7 @@ export namespace Cast {
       || input === null) return `${input}`
     const { Element, Text, NodeList } = Window.get()
     if (input instanceof Element) return input.outerHTML
-    if (input instanceof Text) return input.textContent ?? ''
+    if (input instanceof Text) return input.textContent
     if (input instanceof NodeList) return Array.from(input).map(e => {
       if (e instanceof Element) return e.outerHTML
       return e.textContent
@@ -69,7 +69,7 @@ export namespace Cast {
     }
     if (Array.isArray(input)) return returned
     if (isRecord(input)) return returned
-    returned.innerHTML = `${input}`
+    returned.innerHTML = toString(input)
     return returned
   }
 
@@ -82,7 +82,7 @@ export namespace Cast {
     }
     if (input instanceof Element
       || input instanceof Text) {
-      parentDiv.append(input.cloneNode(true) as Element | Text)
+      parentDiv.append(input.cloneNode(true))
       return parentDiv.childNodes as NodeListOf<Element | Text>
     }
     if (Array.isArray(input)) {
@@ -99,7 +99,7 @@ export namespace Cast {
       parentDiv.append(toString(input))
       return parentDiv.childNodes as NodeListOf<Element | Text>
     }
-    parentDiv.innerHTML = `${input}`
+    parentDiv.innerHTML = toString(input)
     return parentDiv.childNodes as NodeListOf<Element | Text>
   }
 

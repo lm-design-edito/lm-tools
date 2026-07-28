@@ -5,7 +5,7 @@
  * @property success - Always `true`.
  * @property payload - The success value.
  */
-export type Success<Payload = any> = { success: true, payload: Payload }
+export type Success<Payload = unknown> = { success: true, payload: Payload }
 
 /**
  * Represents a failed outcome.
@@ -14,7 +14,7 @@ export type Success<Payload = any> = { success: true, payload: Payload }
  * @property success - Always `false`.
  * @property error - The error value.
  */
-export type Failure<Error = any> = { success: false, error: Error }
+export type Failure<Error = unknown> = { success: false, error: Error }
 
 /**
  * Represents either a success or a failure outcome.
@@ -22,7 +22,7 @@ export type Failure<Error = any> = { success: false, error: Error }
  * @template Payload - Type of success payload.
  * @template Error - Type of error.
  */
-export type Either<Payload = any, Error = any> = Success<Payload> | Failure<Error>
+export type Either<Payload = unknown, Error = unknown> = Success<Payload> | Failure<Error>
 
 /**
  * Creates a success outcome with the given payload.

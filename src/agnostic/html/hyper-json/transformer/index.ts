@@ -84,7 +84,7 @@ export class Transformer<
     argsValue: Types.Tree.RestingArrayValue,
     expected: string,
     found: string,
-    details?: any
+    details?: unknown
   ): Types.Transformations.MainValueFailurePayload {
     const { name, sourceTree } = this
     return {
@@ -105,7 +105,7 @@ export class Transformer<
     expected: string,
     found: string,
     position?: number,
-    details?: any
+    details?: unknown
   ): Types.Transformations.ArgsValueFailurePayload {
     const { name, sourceTree } = this
     return {
@@ -124,7 +124,7 @@ export class Transformer<
   makeTransformationError (
     mainValue: Types.Tree.RestingValue | undefined,
     argsValue: Types.Tree.RestingArrayValue,
-    details?: any
+    details?: unknown
   ): Types.Transformations.TransformationFailurePayload {
     const { name, sourceTree } = this
     return {

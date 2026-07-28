@@ -1,13 +1,16 @@
-import { nullishValues, type Nullish } from '../../misc/is-nullish/index.js'
+import {
+  nullishValues,
+  type Nullish
+} from '../../misc/is-nullish/index.js'
 
 /** Union type representing all falsy values in JavaScript. */
-export type Falsy = Nullish | false | '' | 0 | -0 | typeof NaN | 0n
+export type Falsy = Nullish | false | '' | 0 | 0n
+
 /** Type that excludes falsy values from T (except numbers, which may be 0). */
 export type NotFalsy<T> = Exclude<T, Exclude<Falsy, number>>
 
 /** Array containing all falsy values for comparison. */
-const falsyValues: Falsy[] = [...nullishValues, false, '', 0, -0, NaN]
-if (typeof BigInt === 'function') falsyValues.push(BigInt(0) as 0n)
+const falsyValues = [...nullishValues, false, '', 0, -0, NaN, 0n] as const
 export { falsyValues }
 
 /**
@@ -18,7 +21,8 @@ export { falsyValues }
  * @param val - The value to check.
  * @returns `true` if the value is falsy, `false` otherwise.
  */
-export function isFalsy<T> (val: T | Falsy): val is Falsy {
+export function isFalsy (val: unknown): val is Falsy {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
   return falsyValues.includes(val as Falsy)
 }
 

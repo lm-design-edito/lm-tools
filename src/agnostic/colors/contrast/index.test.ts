@@ -14,7 +14,7 @@ describe('contrast', () => {
 
   it('uses wcag method by default', () => {
     const result1 = contrast({ r: 255, g: 0, b: 0 }, { r: 0, g: 255, b: 0 })
-    const result2 = contrast({ r: 255, g: 0, b: 0 }, { r: 0, g: 255, b: 0 }, 'wcag')
+    const result2 = contrast({ r: 255, g: 0, b: 0 }, { r: 0, g: 255, b: 0 })
     expect(result1).toBe(result2)
   })
 

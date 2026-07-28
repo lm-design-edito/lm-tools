@@ -1,4 +1,4 @@
-import type { Color, Rgba, ContrastMethod } from '../types.js'
+import type { Color, Rgba } from '../types.js'
 import { luminance } from '../luminance/index.js'
 import { toRgb } from '../convert/index.js'
 
@@ -25,10 +25,7 @@ function contrastWcag (c1: Rgba, c2: Rgba): number {
  */
 export function contrast (
   c1: Color,
-  c2: Color,
-  method: ContrastMethod = 'wcag'
+  c2: Color
 ): number {
-  switch (method) {
-    case 'wcag': return contrastWcag(toRgb(c1), toRgb(c2))
-  }
+  return contrastWcag(toRgb(c1), toRgb(c2))
 }

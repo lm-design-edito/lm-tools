@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-throw-literal */
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as Window from '../../../misc/crossenv/window/index.js'
 import { trimStart, trimEnd } from '../../../strings/trim/index.js'
 
@@ -181,7 +180,7 @@ export namespace Tree {
         this.isMethod = isMethod
         this.tagName = rawTagName
         this.smartTagName = hasTrailingUnderscore
-          ? rawTagName.replace(/_+$/g, '')
+          ? rawTagName.replace(/_+$/gv, '')
           : rawTagName
       } else {
         this.isMethod = false
@@ -235,6 +234,7 @@ export namespace Tree {
         if (initAttributeValue !== undefined) {
           this.isolationInitType = initAttributeValue
         } else if (this.smartTagData !== null) {
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           this.isolationInitType = this.smartTagData?.isolationInitType ?? 'array'
         } else {
           this.isolationInitType = 'nodelist'
@@ -260,7 +260,7 @@ export namespace Tree {
         const lastReducedItem = reduced[reduced.length - 1]
         if (lastReducedItem instanceof Element) return [...reduced, child]
         const lastReducedTrimmed = trimEnd(lastReducedItem?.textContent ?? '')
-        const childTrimmed = trimStart(child.textContent ?? '')
+        const childTrimmed = trimStart(child.textContent)
         const merged = document.createTextNode(`${lastReducedTrimmed}${childTrimmed}`)
         const returned = [...reduced]
         returned.pop()
@@ -270,17 +270,17 @@ export namespace Tree {
         .filter(child => {
           // Filter out empty Text nodes after merging neighbours
           if (child instanceof Element) return true
-          const textContent = child.textContent ?? ''
+          const textContent = child.textContent
           return textContent.trim() !== ''
         })
         .forEach(childNode => {
           if (childNode instanceof Text) {
-            const rawTextContent = childNode.textContent ?? ''
+            const rawTextContent = childNode.textContent
             // Strips padding whitespaces (before and after)
             // if they contain at least one line return character
             const textContent = rawTextContent
-              .replace(/^\s*\n+\s*/, '')
-              .replace(/\s*\n+\s*$/, '')
+              .replace(/^\s*\n+\s*/v, '')
+              .replace(/\s*\n+\s*$/v, '')
             const returnedChildNode = document.createTextNode(textContent)
             mutableSubtrees.set(
               positionnedChildrenCount,
@@ -307,7 +307,7 @@ export namespace Tree {
     }
 
     resolve: Types.Tree.Resolver = function (this: Tree, path): Tree | undefined {
-      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      // eslint-disable-next-line consistent-this, @typescript-eslint/no-this-alias
       let currentTree: Tree = this
       for (const chunk of path) {
         if (chunk === '.') continue
@@ -444,6 +444,7 @@ export namespace Tree {
       setCachedValue(evaluated)
       const end = Date.now()
       const time = end - start
+      // eslint-disable-next-line no-console
       if (time > 20) console.warn(`${this.pathString} took ${time}ms to evaluate, maybe there's something wrong here`)
       return evaluated
     }

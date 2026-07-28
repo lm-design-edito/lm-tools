@@ -8,6 +8,7 @@ type Args = [
   then: Types.Tree.RestingValue,
   otherwise: Types.Tree.RestingValue
 ]
+// eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents
 type Output = Args[0] | Args[1]
 
 export const ifFunc = SmartTags.makeSmartTag<Main, Args, Output>({

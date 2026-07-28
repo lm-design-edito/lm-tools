@@ -101,7 +101,11 @@ export const IntersectionObserverComponent: FunctionComponent<Props> = ({
 
   useEffect(() => {
     const rootEl = rootRef.current
-    if (rootEl === null) return console.warn('rootRef.current should not be null')
+    if (rootEl === null) {
+      // eslint-disable-next-line no-console
+      console.warn('rootRef.current should not be null')
+      return
+    }
     const observer = new IntersectionObserver(observation, { root, rootMargin, threshold })
     observerRef.current = observer
     observer.observe(rootEl)

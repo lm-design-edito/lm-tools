@@ -11,6 +11,7 @@ export function exists (): boolean {
 }
 
 let _window: MinimalWindow | null = exists()
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   ? (globalThis.window ?? null)
   : null
 

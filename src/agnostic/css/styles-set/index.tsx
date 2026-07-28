@@ -101,7 +101,7 @@ export class StylesSet {
     return this
   }
 
-  addItem (item: StylesSetItem, abortIfIdExists: boolean = true): this {
+  addItem (item: StylesSetItem, abortIfIdExists = true): this {
     const existing = Array
       .from(this._items.entries())
       .map(([privateId, entry]) => ({ privateId, entry }))
@@ -139,7 +139,6 @@ export class StylesSet {
 
   async getDomString (documentObj?: Document): Promise<string> {
     const actualDocumentObj = documentObj ?? window.document
-    if (actualDocumentObj === null) throw new Error('Window.document is not available')
     return await new Promise(resolve => {
       const tempElt = actualDocumentObj.createElement('div')
       const tempRoot = reactCreateRoot(tempElt)
@@ -162,7 +161,7 @@ export type StylesSetCompProps = {
   items?: StylesSet['items']
   privateIDAttribute?: StylesSet['tagsPrivateIDAttribute']
   publicIDAttribute?: StylesSet['tagsPublicIDAttribute']
-  onRendered?: (...any: any[]) => any
+  onRendered?: (...any: unknown[]) => unknown
 }
 
 export class StylesSetComp extends Component<StylesSetCompProps> {
@@ -180,7 +179,7 @@ export class StylesSetComp extends Component<StylesSetCompProps> {
 
   render (): JSX.Element {
     const { props } = this
-    const items: StylesSet['items'] = props.items ?? new Map()
+    const items: StylesSet['items'] = props.items ?? new Map<string, StylesSetItem>()
     const pidAttr = props.privateIDAttribute ?? StylesSet.defaultPrivateIDAttribute
     const idAttr = props.publicIDAttribute ?? StylesSet.defaultPublicIDAttribute
     return <>{Array.from(items).map(([privateId, itemData]) => {

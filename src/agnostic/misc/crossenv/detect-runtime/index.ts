@@ -1,6 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { RuntimeName } from '../types.js'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let Deno: any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let AWS: any
 
 /**
@@ -15,37 +18,31 @@ declare let AWS: any
  */
 export function detectRuntime (): RuntimeName | null {
   /* Node.js */
-  if (typeof process?.versions?.node !== 'undefined'
-  ) return RuntimeName.NODE
+  if (process?.versions?.node !== undefined) return RuntimeName.NODE
 
   /* Browser */
-  if (typeof window?.document !== 'undefined'
-  ) return RuntimeName.BROWSER
+  if (window?.document !== undefined) return RuntimeName.BROWSER
 
   /* Deno */
-  if (typeof Deno !== 'undefined') return RuntimeName.DENO
+  if (Deno !== undefined) return RuntimeName.DENO
 
   /* React Native */
-  if (typeof process !== 'undefined'
+  if (process !== undefined
     && typeof navigator.userAgent === 'string'
     && navigator.userAgent.includes('ReactNative')
   ) return RuntimeName.REACT_NATIVE
 
   /* Electron */
-  if (typeof process?.versions !== 'undefined'
-    && typeof process.versions.electron !== 'undefined'
-  ) return RuntimeName.ELECTRON
+  if (process?.versions?.electron !== undefined) return RuntimeName.ELECTRON
 
   /* Cloudflare Workers */
-  if (typeof self !== 'undefined'
+  if (self !== undefined
     && typeof self.addEventListener === 'function'
-    && typeof Headers !== 'undefined'
+    && Headers !== undefined
   ) return RuntimeName.CLOUDFLARE
 
   /* AWS Lambda */
-  if (typeof AWS !== 'undefined'
-    && typeof AWS.Lambda !== 'undefined'
-  ) return RuntimeName.AWS_LAMBDA
+  if (AWS !== undefined) return RuntimeName.AWS_LAMBDA
 
   /* Other */
   return null

@@ -34,7 +34,7 @@ export const getproperty = SmartTags.makeSmartTag<Main, Args, Output>({
     try {
       const found = deepGetProperty(main, strPropName)
       const foundType = getType(found)
-      if (foundType !== 'transformer') return makeSuccess(found as Output)
+      if (foundType !== 'transformer') return makeSuccess(found)
       return makeFailure(makeTransformationError(`Forbidden access to key: '${strPropName}'`))
     } catch (err) {
       return makeFailure(makeTransformationError(`Impossible to access ${strPropName}`))
@@ -59,7 +59,6 @@ export function deepGetProperty (
     const isLast = pos === pathChunks.length - 1
     if (isLast) {
       const val = currentRecord[chunk]
-      // eslint-disable-next-line @typescript-eslint/no-throw-literal
       if (val === undefined) throw 'PROP_UNDEFINED'
       returned = val
     } else {
@@ -67,7 +66,6 @@ export function deepGetProperty (
       if (isRecord(found)) {
         currentRecord = found
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-throw-literal
         throw 'NOT_A_RECORD'
       }
     }

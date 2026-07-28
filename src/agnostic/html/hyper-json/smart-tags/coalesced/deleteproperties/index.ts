@@ -44,7 +44,6 @@ function deepDeleteProperty (record: Types.Tree.RestingRecordValue, pathString: 
       if (isRecord(found)) {
         currentRecord = found
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-throw-literal
         throw 'Not a record'
       }
     }

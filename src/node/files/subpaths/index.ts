@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-throw-literal */
-
 import { type Stats, promises as fs } from 'node:fs'
 import path from 'node:path'
 import { matchesSome as stringMatchesSome } from '../../../agnostic/strings/matches/index.js'

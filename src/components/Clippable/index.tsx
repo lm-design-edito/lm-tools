@@ -92,6 +92,7 @@ export const Clippable: FunctionComponent<Props> = ({
         })
       ])
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error(err)
     }
     stateHandlers?.clipped?.(html)

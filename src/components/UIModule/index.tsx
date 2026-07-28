@@ -185,6 +185,7 @@ export const UIModule: FunctionComponent<Props> = ({
 
   // Fx dep. `loadedModule` - log load errors
   useEffect(() => {
+    // eslint-disable-next-line no-console
     if (loadedModule instanceof Error) console.error(loadedModule)
   }, [loadedModule])
 

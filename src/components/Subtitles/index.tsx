@@ -117,6 +117,7 @@ export const Subtitles: FunctionComponent<Props> = ({
       setLoadError(error instanceof Error
         ? error
         : new Error(unknownToString(error)))
+      // eslint-disable-next-line no-console
       console.error(error)
       onLoadFailed?.(toError(error))
     } finally {
@@ -126,6 +127,7 @@ export const Subtitles: FunctionComponent<Props> = ({
 
   useEffect(() => {
     fetchAndParseSubs(src, srtFileContent)
+      // eslint-disable-next-line no-console
       .catch((error) => { console.error(error) })
   }, [fetchAndParseSubs, src, srtFileContent])
 
@@ -138,7 +140,7 @@ export const Subtitles: FunctionComponent<Props> = ({
     }),
     className
   )
-  const prevSubs = parsedSubs.filter(({ start }) => start != null && start < (timecodeMs ?? 0))
+  const prevSubs = parsedSubs.filter(({ start }) => start !== undefined && start < (timecodeMs ?? 0))
   const lastPrevSub = prevSubs[prevSubs.length - 1]
   const highestSubId = Math.max(...parsedSubs.map(sub => sub.id))
   const subsGroupsWithBoundaries = computeSubGroupsWithBoundaries(subsGroups, highestSubId)

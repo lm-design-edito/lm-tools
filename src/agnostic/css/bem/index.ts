@@ -2,12 +2,12 @@ import { isNonNullObject } from '../../objects/is-object/index.js'
 import { isFalsy } from '../../booleans/is-falsy/index.js'
 import { isValidClassName } from '../is-valid-css-class-name/index.js'
 
-export function getNamesArr (arg: any): string[] {
+export function getNamesArr (arg: unknown): string[] {
   const returned: string[] = []
   if (typeof arg === 'string') {
-    arg.trim().split(/\s+/gm).forEach(name => { if (isValidClassName(name)) returned.push(name) })
+    arg.trim().split(/\s+/gmv).forEach(name => { if (isValidClassName(name)) returned.push(name) })
   } else if (Array.isArray(arg)) {
-    arg.forEach(elt => returned.push(...getNamesArr(elt)))
+    arg.forEach(elt => { returned.push(...getNamesArr(elt)) })
   } else if (isNonNullObject(arg)) {
     Object.entries(arg).forEach(([key, val]) => {
       if (!isFalsy(val)) returned.push(...getNamesArr(key))
@@ -43,23 +43,23 @@ export class BEM {
     this.getCurrentBlock = this.getCurrentBlock.bind(this)
   }
 
-  addBlock (blockNameArg: any): this {
+  addBlock (blockNameArg: unknown): this {
     const blocksNames = getNamesArr(blockNameArg)
-    blocksNames.forEach(this.addSingleBlock.bind(this))
+    blocksNames.forEach(() => { this.addSingleBlock.bind(this) })
     return this
   }
 
-  addElement (elementNameArg: any): this {
+  addElement (elementNameArg: unknown): this {
     const elementsNames = getNamesArr(elementNameArg)
-    elementsNames.forEach(this.addSingleElement.bind(this))
+    elementsNames.forEach(() => { this.addSingleElement.bind(this) })
     return this
   }
 
-  addModifier (modifierNameArg: any): this {
+  addModifier (modifierNameArg: unknown): this {
     const currentBlock = this.getCurrentBlock()
     if (currentBlock === undefined) return this
     const modifiersNames = getNamesArr(modifierNameArg)
-    modifiersNames.forEach(this.addSingleModifier.bind(this))
+    modifiersNames.forEach(() => { this.addSingleModifier.bind(this) })
     return this
   }
 
@@ -67,17 +67,17 @@ export class BEM {
     const copy = new BEM()
     this.blocks.forEach(block => {
       copy.addBlock(block.name)
-      block.modifiers.forEach(copy.addModifier.bind(copy))
+      block.modifiers.forEach(() => { copy.addModifier.bind(copy) })
     })
     return copy
   }
 
-  block (blockNameArg: any): BEM { return this.copy().addBlock(blockNameArg) }
-  element (elementNameArg: any): BEM { return this.copy().addElement(elementNameArg) }
-  modifier (modifierNameArg: any): BEM { return this.copy().addModifier(modifierNameArg) }
-  blk (blockNameArg: any): BEM { return this.block(blockNameArg) }
-  elt (elementNameArg: any): BEM { return this.element(elementNameArg) }
-  mod (modifierNameArg: any): BEM { return this.modifier(modifierNameArg) }
+  block (blockNameArg: unknown): BEM { return this.copy().addBlock(blockNameArg) }
+  element (elementNameArg: unknown): BEM { return this.copy().addElement(elementNameArg) }
+  modifier (modifierNameArg: unknown): BEM { return this.copy().addModifier(modifierNameArg) }
+  blk (blockNameArg: unknown): BEM { return this.block(blockNameArg) }
+  elt (elementNameArg: unknown): BEM { return this.element(elementNameArg) }
+  mod (modifierNameArg: unknown): BEM { return this.modifier(modifierNameArg) }
   cp (): BEM { return this.copy() }
 
   get value (): string {
@@ -134,6 +134,7 @@ export class BEM {
     return this
   }
 
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
   private createBlockByName (blockName: string): Block {
     return { name: blockName, modifiers: [] }
   }
@@ -143,7 +144,7 @@ export class BEM {
   }
 }
 
-export function bem (blockNameArg: any): BEM {
+export function bem (blockNameArg: unknown): BEM {
   const bem = new BEM()
   if (blockNameArg instanceof BEM) return blockNameArg.copy()
   return bem.addBlock(blockNameArg)

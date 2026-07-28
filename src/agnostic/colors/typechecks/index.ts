@@ -27,7 +27,7 @@ export const isHex = (color: unknown): color is Hex => {
   const withoutHashLength = withoutHash.length
   const allowedLengths = [3, 4, 6, 8]
   if (!allowedLengths.includes(withoutHashLength)) return false
-  return /^[0-9a-f]+$/igm.test(withoutHash)
+  return /^[0-9a-f]+$/igmv.test(withoutHash)
 }
 
 /**

@@ -24,7 +24,7 @@ export function replaceInElement (inputElement: Element, replaceMap: Map<Node, N
       toReplace.parentNode?.insertBefore(replacer, toReplace)
     } else {
       const replacerNodes = Array.from(replacer)
-      replacerNodes.forEach(rpl => toReplace.parentNode?.insertBefore(rpl, toReplace))
+      replacerNodes.forEach(rpl => { toReplace.parentNode?.insertBefore(rpl, toReplace) })
     }
     toReplace.parentNode?.removeChild(toReplace)
   })

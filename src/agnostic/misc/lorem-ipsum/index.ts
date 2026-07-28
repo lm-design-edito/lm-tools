@@ -35,8 +35,8 @@ export const generateSentence = (wordCount: number): string => {
   }
   const [firstWord, ...otherWords] = resultArr
   if (firstWord === undefined) return ''
-  const capFirstLetter = firstWord?.charAt(0).toUpperCase()
-  const restOfFirstWord = firstWord?.slice(1)
+  const capFirstLetter = firstWord.charAt(0).toUpperCase()
+  const restOfFirstWord = firstWord.slice(1)
   const sentence = [
     `${capFirstLetter}${restOfFirstWord}`,
     ...otherWords
@@ -46,8 +46,8 @@ export const generateSentence = (wordCount: number): string => {
 
 export const generateSentences = (
   sentencesCount: number,
-  maxSentenceLength: number = 12,
-  minSentenceLength: number = 4): string [] => {
+  maxSentenceLength = 12,
+  minSentenceLength = 4): string [] => {
   const sentences: string[] = []
   for (let i = 0; i < sentencesCount; i = i + 1) {
     const length = randomInt(maxSentenceLength, minSentenceLength) ?? 8

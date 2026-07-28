@@ -31,7 +31,7 @@ export type Processor<T> = (
     processed: Set<string>
     waitlist: string[]
   }
-) => any
+) => unknown
 
 /**
  * Configuration options for the crawler.
@@ -99,7 +99,7 @@ export type Crawler = {
 export function create<T> (options: Options<T>): Crawler {
   let ops = 0
   const waitlist: string[] = []
-  const push = (...urls: string[]): number => waitlist.push(...urls)
+  const push = (...urls: string[]): void => { waitlist.push(...urls) }
   const flush = (): void => { waitlist.length = 0 }
   const processed = new Set<string>()
   const crawl = async (startUrl: string): Promise<void> => {

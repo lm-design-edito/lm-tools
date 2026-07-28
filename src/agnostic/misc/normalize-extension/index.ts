@@ -110,6 +110,6 @@ export function normalizeExtension (
   extWithoutDot: string,
   aliasesWithoutDot: Record<string, string> = defaultAliases
 ): string {
-  const cleaned = extWithoutDot.toLowerCase().replace(/^\./, '')
+  const cleaned = extWithoutDot.toLowerCase().replace(/^\./v, '')
   return aliasesWithoutDot[cleaned] ?? cleaned
 }

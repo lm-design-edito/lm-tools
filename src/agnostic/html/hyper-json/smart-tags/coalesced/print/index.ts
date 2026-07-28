@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import * as Outcome from '../../../../../misc/outcome/index.js'
 import type { Types } from '../../../types/index.js'
 import { Utils } from '../../../utils/index.js'

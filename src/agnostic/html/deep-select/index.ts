@@ -1,4 +1,5 @@
 import * as Window from '../../misc/crossenv/window/index.js'
+import { deepGetProperty } from '../../objects/deep-get-property/index.js'
 
 /** Options for `deepSelect`. */
 type Options = {
@@ -8,9 +9,11 @@ type Options = {
   chunkSize?: number
 }
 
-const yieldToMain = async (windowLike: any): Promise<void> => {
-  if (typeof windowLike.scheduler?.yield === 'function') return windowLike.scheduler.yield()
-  return await new Promise(resolve => setTimeout(resolve, 0))
+const yieldToMain = async (windowLike: unknown): Promise<void> => {
+  const yild = deepGetProperty(windowLike, 'scheduler.yield')
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  if (typeof yild === 'function') yild()
+  else await new Promise(resolve => { setTimeout(resolve, 0) })
 }
 
 /**

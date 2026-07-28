@@ -39,7 +39,7 @@ type Options = {
  */
 export const watchSelection = async (
   selector: string,
-  options: Options
+  options?: Options
 ): Promise<{ kill: () => void }> => {
   const watch = options?.watch ?? (() => undefined)
   const unwatch = options?.unwatch ?? (() => undefined)

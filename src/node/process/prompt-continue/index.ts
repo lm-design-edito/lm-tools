@@ -21,6 +21,7 @@ export async function promptContinue (
   message?: string,
   throws: boolean = false
 ): Promise<boolean> {
+  // eslint-disable-next-line no-console
   console.log('')
   const answer = await inquirer.confirm({
     message: message ?? 'Continue?',

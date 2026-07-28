@@ -25,6 +25,7 @@ export function replaceAll (
   input: string,
   pattern: string | RegExp,
   replacer: string | ((substring: string, ...args: any[]) => string)): string {
+  // eslint-disable-next-line no-console
   console.warn('[DEPRECATED] Use String.replaceAll instead')
   const found = Array.from(input.match(pattern) ?? [])
   const foundReplaced = typeof replacer === 'string'

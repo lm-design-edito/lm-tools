@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- generic type params (T/K/Value) and DOM NodeList casts here can't be narrowed from a generic/runtime check at compile time; guarded by runtime typeCheck(s)/instanceof checks immediately prior */
+/* eslint-disable max-lines, @typescript-eslint/no-unsafe-type-assertion -- generic type params (T/K/Value) and DOM NodeList casts here can't be narrowed from a generic/runtime check at compile time; guarded by runtime typeCheck(s)/instanceof checks immediately prior */
 import * as Window from '../../../misc/crossenv/window/index.js'
 import { isRecord } from '../../../objects/is-record/index.js'
 import { recordMap } from '../../../objects/record-map/index.js'
@@ -29,6 +29,7 @@ export namespace Utils {
     if (value instanceof Method) return Method.clone(value) as T
     if (Array.isArray(value)) return [...value.map(clone)] as T
     if (isRecord(value)) return recordMap(value, prop => clone(prop as Types.Tree.Value)) as T
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     throw new Error(`Cannot clone value: ${value}`)
   }
 
@@ -44,11 +45,13 @@ export namespace Utils {
       const transformer = toCoalesce
       const transformationResult = transformer.apply(currentValue)
       if (!transformationResult.success) {
+        // eslint-disable-next-line no-console
         console.warn({ ...transformationResult.error })
         return currentValue
       }
       const evaluated = transformationResult.payload
       if (transformer.mode === 'isolation') {
+        // eslint-disable-next-line no-param-reassign
         toCoalesce = evaluated // We set toCoalesce to the result of the evaluation, and process this result below as a non-Transformer value
       } else {
         return evaluated // If mode is coalescion, the reduced value is the output of the Transformer
@@ -72,12 +75,12 @@ export namespace Utils {
       if (toCoalesce instanceof Text) return `${currentValue}${toCoalesce.textContent}`
       if (toCoalesce instanceof Element) {
         const frag = document.createDocumentFragment()
-        frag.append(currentValue, Utils.clone(toCoalesce))
+        frag.append(currentValue, clone(toCoalesce))
         return frag.childNodes as NodeListOf<Element | Text>
       }
       if (toCoalesce instanceof NodeList) {
         const frag = document.createDocumentFragment()
-        frag.append(currentValue, ...Array.from(Utils.clone(toCoalesce)))
+        frag.append(currentValue, ...Array.from(clone(toCoalesce)))
         return frag.childNodes as NodeListOf<Element | Text>
       }
       return toCoalesce
@@ -162,7 +165,7 @@ export namespace Utils {
     const { document, Element, Text, NodeList } = Window.get()
     if (value instanceof Text) {
       const elt = document.createElement('text')
-      elt.innerHTML = value.textContent ?? ''
+      elt.innerHTML = value.textContent
       return elt
     }
     if (value instanceof Element) return value.cloneNode(true) as Element
@@ -345,6 +348,7 @@ export namespace Utils {
       if (name === 'nodelist') return document.createDocumentFragment().childNodes as NodeListOf<Element | Text>
       if (name === 'element') return document.createElement('div')
       if (name === 'array') return []
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (name === 'record') return {}
       throw new Error(`Unknown value type name: ${name}`)
     }
@@ -488,7 +492,7 @@ export namespace Utils {
     export const makeMainValueError = (
       expected: string,
       found: string,
-      details?: any
+      details?: unknown
     ): Types.Transformations.FunctionMainValueFailure => ({
       expected,
       found,
@@ -499,7 +503,7 @@ export namespace Utils {
       expected: string,
       found: string,
       position?: number,
-      details?: any
+      details?: unknown
     ): Types.Transformations.FunctionArgsValueFailure => ({
       expected,
       found,
@@ -508,7 +512,7 @@ export namespace Utils {
     })
 
     export const makeTransformationError = (
-      details?: any
+      details?: unknown
     ): Types.Transformations.FunctionTransformationFailure => ({
       details
     })

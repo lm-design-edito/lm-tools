@@ -8,11 +8,10 @@ export namespace Serialize {
   export function serialize (value: Types.Tree.Value): Types.Tree.Serialized {
     const { Text, Element, NodeList } = Window.get()
     if (value === null) return { type: 'null', value: null }
-    if (typeof value === 'boolean'
-      || typeof value === 'number'
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- narrowed to boolean/number/string by the typeof checks above
-      || typeof value === 'string') return { type: typeof value as any, value }
-    if (value instanceof Text) return { type: 'text', value: value.textContent ?? '' }
+    if (typeof value === 'boolean') return { type: 'boolean', value }
+    if (typeof value === 'number') return { type: 'number', value }
+    if (typeof value === 'string') return { type: 'string', value }
+    if (value instanceof Text) return { type: 'text', value: value.textContent }
     if (value instanceof Element) return { type: 'element', value: value.outerHTML }
     if (value instanceof NodeList) return {
       type: 'nodelist',

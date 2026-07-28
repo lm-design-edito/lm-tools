@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import * as Window from '../../misc/crossenv/window/index.js'
 import type {
   SanitizeHtmlOptions,

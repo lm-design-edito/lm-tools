@@ -16,8 +16,8 @@ export type FormatterFunc<InputType, OutputType> = (val: InputType) => OutputTyp
  *
  * @template InputObject - The type of the input object being formatted.
  */
-export type Format<InputObject extends Record<PropertyKey, any>> = {
-  [Key in keyof InputObject]?: FormatterFunc<InputObject[Key], any>
+export type Format<InputObject extends Record<PropertyKey, unknown>> = {
+  [Key in keyof InputObject]?: FormatterFunc<InputObject[Key], unknown>
 }
 
 /**
@@ -26,7 +26,7 @@ export type Format<InputObject extends Record<PropertyKey, any>> = {
  * @template FormatObject - The type of the format object mapping keys to formatter functions.
  */
 export type Formatted<FormatObject> = {
-  [Key in keyof FormatObject]: FormatObject[Key] extends FormatterFunc<any, any>
+  [Key in keyof FormatObject]: FormatObject[Key] extends FormatterFunc<unknown, unknown>
     ? UnwrapPromise<ReturnType<FormatObject[Key]>>
     : never
 }
@@ -41,7 +41,7 @@ export type Formatted<FormatObject> = {
  * @returns A Promise resolving to the formatted object with all promises unwrapped.
  */
 export async function recordFormat<
-  InputObject extends Record<PropertyKey, any>,
+  InputObject extends Record<PropertyKey, unknown>,
   FormatObject extends Format<InputObject>
 > (
   input: InputObject,
@@ -49,9 +49,12 @@ export async function recordFormat<
 ): Promise<Formatted<FormatObject>> {
   const result: Partial<Formatted<FormatObject>> = {}
   for (const key in format) {
+    // eslint-disable-next-line prefer-object-has-own
+    if (!Object.prototype.hasOwnProperty.call(format, key)) continue;
     const formatter = format[key]
     if (formatter === undefined) continue
-    result[key] = await formatter(input[key])
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-explicit-any
+    result[key] = await formatter(input[key]) as any
   }
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- result was populated with a formatted value for every key of format in the loop above
   return result as Formatted<FormatObject>

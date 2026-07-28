@@ -19,12 +19,12 @@ import * as Window from '../../misc/crossenv/window/index.js'
  */
 export function selectorToElement (selector: string): Element {
   // RegExps
-  const tagRegexp = /^[A-Za-z]+/
+  const tagRegexp = /^[A-Za-z]+/v
   // The dot is apparently a valid character but is prevented here
   // in order to be able to match class elements
-  const idRegexp = /#[A-Za-z]+[\w\-\:]*/
-  const classRegexp = /\.[A-Za-z]+[\w\-]*/g
-  const attributeRegexp = /\[[A-Za-z]+[\w\-]*(="[\w\-]+")?\]/g
+  const idRegexp = /#[A-Za-z]+[\w\-\:]*/v
+  const classRegexp = /\.[A-Za-z]+[\w\-]*/gv
+  const attributeRegexp = /\[[A-Za-z]+[\w\-]*(="[\w\-]+")?\]/gv
   // Matched
   const matchedTags = selector.match(tagRegexp) ?? []
   const matchedIds = selector.match(idRegexp) ?? []
@@ -33,12 +33,12 @@ export function selectorToElement (selector: string): Element {
   // Extracted
   const tag = matchedTags[matchedTags.length - 1] ?? 'div'
   const id = matchedIds.length > 0
-    ? matchedIds[matchedIds.length - 1]?.replace(/^#/, '') ?? null
+    ? matchedIds[matchedIds.length - 1]?.replace(/^#/v, '') ?? null
     : null
-  const classes = matchedClasses.map(matchedClass => matchedClass.replace(/^\./, ''))
+  const classes = matchedClasses.map(matchedClass => matchedClass.replace(/^\./v, ''))
   const attributes = matchedAttrs.map(matchedAttr => matchedAttr
-    .replace(/^\[/, '')
-    .replace(/\]$/, '')
+    .replace(/^\[/v, '')
+    .replace(/\]$/v, '')
     .split('='))
   // Returning
   const element = Window.get().document.createElement(tag)
@@ -46,7 +46,7 @@ export function selectorToElement (selector: string): Element {
   element.classList.add(...classes)
   attributes.forEach(([name, value = '']) => {
     if (name === undefined) return
-    const cleanValue = value.replace(/^"(.*)"$/, '$1')
+    const cleanValue = value.replace(/^"(.*)"$/v, '$1')
     element.setAttribute(name, cleanValue)
   })
   return element

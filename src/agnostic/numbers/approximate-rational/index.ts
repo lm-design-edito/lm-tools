@@ -66,7 +66,7 @@ export function approximateRationalDumb (
  */
 export function approximateRational (
   target: number,
-  maxDenominator: number = 1000
+  maxDenominator = 1000
 ): [number, number] {
   const sign = target < 0 ? -1 : 1
   const absTarget = Math.abs(target)

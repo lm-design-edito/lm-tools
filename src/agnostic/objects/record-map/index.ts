@@ -7,7 +7,7 @@
  * @param mapper - Function to transform each value.
  * @returns A new record with the same keys and mapped values.
  */
-export function recordMap<Input extends Record<string, any>, MappedValue> (
+export function recordMap<Input extends Record<string, unknown>, MappedValue> (
   record: Input,
   mapper: (value: Input[keyof Input], key: keyof Input) => MappedValue
 ): { [K in keyof Input]: MappedValue } {
@@ -15,6 +15,7 @@ export function recordMap<Input extends Record<string, any>, MappedValue> (
     [K in keyof Input]: MappedValue
   }> = {}
   for (const key in record) {
+    // eslint-disable-next-line prefer-object-has-own
     if (Object.prototype.hasOwnProperty.call(record, key)) {
       result[key] = mapper(record[key], key)
     }

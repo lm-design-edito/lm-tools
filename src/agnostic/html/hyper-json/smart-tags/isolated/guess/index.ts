@@ -25,10 +25,11 @@ export const guess = SmartTags.makeSmartTag<Main, Args, Output>({
     const strCoalesced = Cast.toString(coalesced)
     if (strCoalesced.trim().toLowerCase() === 'true') return makeSuccess(true)
     if (strCoalesced.trim().toLowerCase() === 'false') return makeSuccess(false)
-    if (strCoalesced.trim().toLowerCase().match(/^\s*-?\s*(\d+(\.\d*)?|\.\d+)\s*$/) !== null) return makeSuccess(parseFloat(strCoalesced))
+    if (strCoalesced.trim().toLowerCase().match(/^\s*-?\s*(\d+(\.\d*)?|\.\d+)\s*$/v) !== null) return makeSuccess(parseFloat(strCoalesced))
     if (strCoalesced.trim().toLowerCase() === 'null') return makeSuccess(null)
     try {
-      const parsed = JSON.parse(strCoalesced)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      const parsed = JSON.parse(strCoalesced) as string
       const arrayChecked = typeCheck(parsed, 'array')
       const recordChecked = typeCheck(parsed, 'record')
       if (arrayChecked.success) return makeSuccess(arrayChecked.payload)

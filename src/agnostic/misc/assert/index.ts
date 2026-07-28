@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated */
 import { unknownToString } from '../../errors/unknown-to-string/index.js'
 import * as Outcome from '../outcome/index.js'
 
@@ -7,6 +8,7 @@ type Assertion = (() => boolean) | (() => Promise<boolean>) | boolean
 
 function makeSuccess (label: string): void {
   const formattedLabel = label.split('\n').join('\n  ')
+  // eslint-disable-next-line no-console
   console.info(`✅ SUCCESS:\n  ${formattedLabel}`)
 }
 
@@ -60,7 +62,7 @@ export async function assertVerbose (
   assertion: Assertion | Assertion[] | Map<string, Assertion>
 ): Promise<undefined | Outcome.Success<string>> {
   const asserted = await assert(label, assertion)
-  if (asserted?.success) {
+  if (asserted.success) {
     makeSuccess(asserted.payload)
     return asserted
   }

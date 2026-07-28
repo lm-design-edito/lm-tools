@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- TransformedColor<C> can't be narrowed from a generic type param at compile time; every assertion here is guarded by an isX(...) runtime check immediately prior */
+/* eslint-disable max-lines */
 import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
 import { tidy } from '../tidy/index.js'
 import type {
@@ -75,8 +76,7 @@ function _rgb2hex (rgb: Rgba): Hex {
 
 // RGB ↔ CSS
 function _css2rgb (color: CssColor): Rgba
-function _css2rgb (color: string): Rgba | undefined
-function _css2rgb (color: string | CssColor): Rgba | undefined {
+function _css2rgb (color: string): Rgba | undefined {
   if (color in cssColors) return cssColors[color as CssColor]
   return undefined
 }
@@ -100,19 +100,19 @@ function _hsl2rgb (hsl: Hsla): Rgba {
   const L = Math.max(0, Math.min(1, l / 100))
   const A = Math.max(0, Math.min(1, a))
   const hue2rgb = (p: number, q: number, t: number): number => {
-    if (t < 0) t += 1
-    if (t > 1) t -= 1
+    // eslint-disable-next-line no-param-reassign
+    if (t < 0) { t += 1 }
+    // eslint-disable-next-line no-param-reassign
+    if (t > 1) { t -= 1 }
     if (t < 1 / 6) return p + (q - p) * 6 * t
     if (t < 1 / 2) return q
     if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6
     return p
-  }
-  let r: number
-  let g: number
-  let b: number
-  if (S === 0) {
-    r = g = b = L // achromatic
-  } else {
+  }  
+  let r = L
+  let g = L
+  let b = L
+  if (S !== 0) {
     const q = L < 0.5 ? L * (1 + S) : L + S - L * S
     const p = 2 * L - q
     r = hue2rgb(p, q, H + 1 / 3)
@@ -178,7 +178,10 @@ function _hsb2rgb (hsb: Hsba): Rgba {
     case 3: r = p; g = q; blue = B; break
     case 4: r = t; g = p; blue = B; break
     case 5: r = B; g = p; blue = q; break
-    default: r = g = blue = 0
+    default:
+      r = 0
+      g = 0
+      blue = 0
   }
   return {
     r: Math.round(r * 255),
@@ -328,7 +331,7 @@ function _rgb2xyz (rgb: Rgba): Xyza {
 
 // XYZ ↔ LAB
 function _lab2xyz (lab: Laba): Xyza {
-  const { l, a: A = 0, b: B = 0, al: alpha = 1 } = lab
+  const { l, a: A, b: B, al: alpha = 1 } = lab
   // D65 reference white
   const REF_X = 95.047
   const REF_Y = 100.0

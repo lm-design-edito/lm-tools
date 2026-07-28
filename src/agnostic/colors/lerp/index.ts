@@ -95,16 +95,15 @@ function lerpXyz (xyz1: Xyza, xyz2: Xyza, amount: number): Xyza {
  * Linearly interpolates between two colors using the specified method.
  *
  * @template C1 - The first color type.
- * @template C2 - The second color type.
  * @param c1 - The starting color.
  * @param c2 - The ending color.
  * @param amount - The interpolation amount (0-1), where 0 returns c1 and 1 returns c2.
  * @param [method='rgb'] - The interpolation method to use.
  * @returns The interpolated color in the format of c1.
  */
-export function lerp <C1 extends Color, C2 extends Color> (
+export function lerp <C1 extends Color> (
   c1: C1,
-  c2: C2,
+  c2: Color,
   amount: number,
   method: LerpMethod = 'rgb'
 ): TransformedColor<C1> {

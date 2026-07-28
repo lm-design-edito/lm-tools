@@ -72,8 +72,13 @@ function distanceCiede2000 (c1: Laba, c2: Laba): number {
  * @param [method='ciede2000'] - The calculation method to use.
  * @returns The perceptual distance between the colors. Lower values indicate more similar colors.
  */
-export function distance (c1: Color, c2: Color, method: DistanceMethod = 'ciede2000'): number {
+export function distance (
+  c1: Color,
+  c2: Color,
+  method: DistanceMethod = 'ciede2000'
+): number {
   switch (method) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     case 'ciede2000': return distanceCiede2000(toLab(c1), toLab(c2))
   }
 }

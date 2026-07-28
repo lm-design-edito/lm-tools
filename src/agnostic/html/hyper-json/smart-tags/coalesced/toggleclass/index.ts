@@ -17,12 +17,12 @@ export const toggleclass = SmartTags.makeSmartTag<Main, Args, Output>({
   func: (main, args) => {
     const { Element, document } = Window.get()
     if (main instanceof Element) {
-      args.forEach(arg => main.classList.toggle(Cast.toString(arg)))
+      args.forEach(arg => { main.classList.toggle(Cast.toString(arg)) })
       return Outcome.makeSuccess(main)
     }
     const children = Array.from(main).map(child => {
       if (child instanceof Element) {
-        args.forEach(arg => child.classList.toggle(Cast.toString(arg)))
+        args.forEach(arg => { child.classList.toggle(Cast.toString(arg)) })
         return child
       }
       return child
