@@ -57,12 +57,13 @@ export function isOperationDescriptor (obj: unknown): Outcome.Either<OperationDe
   if (!('name' in obj) || typeof obj.name !== 'string') return Outcome.makeFailure('Field named \'name\' in operation descriptor is required and must be a string')
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- not yet proven; verified below via Set.has(...)/object-key lookup, which are safe regardless of this type
   const name = obj.name as OpName
-  const validateOperation = (validatorFn: typeof validators[keyof typeof validators]): Outcome.Either<any, any> => {
+  const validateOperation = (validatorFn: typeof validators[keyof typeof validators]): Outcome.Either<OperationDescriptor, string> => {
     const result = validatorFn(obj)
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions, @typescript-eslint/no-unsafe-type-assertion
     if (result.success) return Outcome.makeSuccess({
-      name: obj.name,
+      name,
       ...result.payload
-    })
+    } as OperationDescriptor)
     return Outcome.makeFailure(result.error)
   }
   const simpleOperations = new Set([OpName.FLIP, OpName.FLOP] as const)
@@ -73,6 +74,7 @@ export function isOperationDescriptor (obj: unknown): Outcome.Either<OperationDe
   })
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- the object-key lookup that follows returns undefined for any non-matching name, which is handled below
   const validator = validators[name as keyof typeof validators]
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (validator !== undefined) return validateOperation(validator)
   return Outcome.makeFailure('Invalid operation descriptor')
 }
@@ -107,10 +109,12 @@ export async function transform (
     return limits?.opTimeoutMs === undefined
       ? await op()
       : await Promise.race([op(), new Promise<TransformErrCodes.OP_TIMEOUT>(
-        resolve => setTimeout(
-          () => resolve(TransformErrCodes.OP_TIMEOUT),
-          limits.opTimeoutMs
-        )
+        resolve => {
+          setTimeout(
+            () => resolve(TransformErrCodes.OP_TIMEOUT),
+            limits.opTimeoutMs
+          )
+        }
       )])
   }
 
@@ -125,6 +129,7 @@ export async function transform (
     // Apply transformation
     let result: Sharp | TransformErrCodes.OP_TIMEOUT
     try {
+      // eslint-disable-next-line no-loop-func
       result = await runWithOpTimeout(async () => {
         switch (operation.name) {
           case OpName.BLUR: return await blur(sharpInstance, operation)
@@ -142,6 +147,7 @@ export async function transform (
           case OpName.RESIZE: return await resize(sharpInstance, operation)
           case OpName.ROTATE: return await rotate(sharpInstance, operation)
           case OpName.SATURATE: return await saturate(sharpInstance, operation)
+          // eslint-disable-next-line @typescript-eslint/switch-exhaustiveness-check
           default: return sharpInstance
         }
       })

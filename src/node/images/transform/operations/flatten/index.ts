@@ -15,6 +15,7 @@ export function isFlattenOperationParams (obj: unknown): Outcome.Either<FlattenO
   return Outcome.makeSuccess(result.data)
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function flatten (
   sharpInstance: Sharp,
   params: FlattenOperationParams

@@ -13,6 +13,7 @@ export function isNormalizeOperationParams (obj: unknown): Outcome.Either<Normal
   return Outcome.makeSuccess(result.data)
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function normalize (
   sharpInstance: Sharp,
   params: NormalizeOperationParams

@@ -19,7 +19,7 @@ import * as inquirer from '@inquirer/prompts'
  */
 export async function promptContinue (
   message?: string,
-  throws: boolean = false
+  throws = false
 ): Promise<boolean> {
   // eslint-disable-next-line no-console
   console.log('')

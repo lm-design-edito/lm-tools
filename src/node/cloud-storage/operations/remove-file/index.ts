@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- options is narrowed based on a runtime check of the separate `client` param; TS can't connect the two at compile time */
 import type { Bucket as GCSBucket } from '@google-cloud/storage'
 import type { Client as FtpClient } from 'basic-ftp'
 import type SftpClient from 'ssh2-sftp-client'
@@ -77,9 +76,9 @@ export async function removeFile (client: SftpClient, path: string, options?: Sf
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
 export async function removeFile (client: AnyClient, path: string, options?: GcsRemoveOptions | S3RemoveOptions | FtpRemoveOptions | SftpRemoveOptions): Promise<Returned> {
-  if (isGcsBucket(client)) return await gcsRemove(client, path, options as GcsRemoveOptions)
-  if (isS3ClientWithBucket(client)) return await s3Remove(client.client, path, client.bucketName, options as S3RemoveOptions)
-  if (isFtpClient(client)) return await ftpRemove(client, path, options as FtpRemoveOptions)
-  if (isSftpClient(client)) return await sftpRemove(client, path, options as SftpRemoveOptions)
+  if (isGcsBucket(client)) return await gcsRemove(client, path, options)
+  if (isS3ClientWithBucket(client)) return await s3Remove(client.client, path, client.bucketName, options)
+  if (isFtpClient(client)) return await ftpRemove(client, path, options)
+  if (isSftpClient(client)) return await sftpRemove(client, path, options)
   return Outcome.makeFailure('Invalid client type')
 }

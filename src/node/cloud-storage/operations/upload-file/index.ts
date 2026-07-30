@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- options is narrowed based on a runtime check of the separate `client` param; TS can't connect the two at compile time */
 import type { Readable } from 'node:stream'
 import type { Bucket as GCSBucket } from '@google-cloud/storage'
 import type { Client as FtpClient } from 'basic-ftp'
@@ -83,9 +82,9 @@ export async function uploadFile (fileStream: Readable, path: string, client: Sf
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
 export async function uploadFile (fileStream: Readable, path: string, client: AnyClient, options?: GcsUploadOptions | S3UploadOptions | FtpUploadOptions | SftpUploadOptions): Promise<Returned> {
-  if (isGcsBucket(client)) return await gcsUpload(client, path, fileStream, options as GcsUploadOptions)
-  if (isS3ClientWithBucket(client)) return await s3Upload(client.client, client.bucketName, path, fileStream, options as S3UploadOptions)
-  if (isFtpClient(client)) return await ftpUpload(client, path, fileStream, options as FtpUploadOptions)
-  if (isSftpClient(client)) return await sftpUpload(client, path, fileStream, options as SftpUploadOptions)
+  if (isGcsBucket(client)) return await gcsUpload(client, path, fileStream, options)
+  if (isS3ClientWithBucket(client)) return await s3Upload(client.client, client.bucketName, path, fileStream, options)
+  if (isFtpClient(client)) return await ftpUpload(client, path, fileStream, options)
+  if (isSftpClient(client)) return await sftpUpload(client, path, fileStream, options)
   return Outcome.makeFailure('Invalid client type')
 }

@@ -15,6 +15,7 @@ export function isExtractOperationParams (obj: unknown): Outcome.Either<ExtractO
   return Outcome.makeSuccess(result.data)
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function extract (
   sharpInstance: Sharp,
   params: ExtractOperationParams

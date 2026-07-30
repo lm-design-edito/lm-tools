@@ -20,11 +20,11 @@ export type DownloadOptions = ReadStreamOptions
  * - On success: Outcome.makeSuccess(stream) containing the downloaded file's content as a Readable stream.
  * - On failure: Outcome.makeFailure(errStr) with an error message if the download fails.
  */
-export async function download (
+export function download (
   sftp: Client,
   sourcePath: string,
   options?: DownloadOptions
-): Promise<Outcome.Either<Readable, string>> {
+): Outcome.Either<Readable, string> {
   try {
     const stream = sftp.createReadStream(sourcePath, options)
     stream.on('error', (err: Error & ClientErrorExtensions) => { throw err })

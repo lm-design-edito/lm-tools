@@ -12,6 +12,7 @@ export function isSaturateOperationParams (obj: unknown): Outcome.Either<Saturat
   return Outcome.makeSuccess(result.data)
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function saturate (
   sharpInstance: Sharp,
   params: SaturateOperationParams

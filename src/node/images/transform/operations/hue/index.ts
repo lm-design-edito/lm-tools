@@ -12,6 +12,7 @@ export function isHueOperationParams (obj: unknown): Outcome.Either<HueOperation
   return Outcome.makeSuccess(result.data)
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function hue (
   sharpInstance: Sharp,
   params: HueOperationParams

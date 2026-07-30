@@ -31,7 +31,7 @@ export type UpdateFileMetadataOptions = {
 export async function updateFileMetadata (
   bucket: Bucket,
   targetPath: string,
-  metadata: Record<string, any>,
+  metadata: Record<string, unknown>,
   options?: UpdateFileMetadataOptions
 ): Promise<Outcome.Either<true, string>> {
   const { fileOptions, metadataOptions } = options ?? {}

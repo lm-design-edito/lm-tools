@@ -20,6 +20,7 @@ export function isExtendOperationParams (obj: unknown): Outcome.Either<ExtendOpe
   return Outcome.makeSuccess(result.data)
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function extend (
   sharpInstance: Sharp,
   params: ExtendOperationParams

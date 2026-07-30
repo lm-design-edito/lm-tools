@@ -1,6 +1,7 @@
 import type Client from 'ssh2-sftp-client'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
+import { deepGetProperty } from 'agnostic/objects/deep-get-property/index.js'
 
 export type RemoveDirOptions = {
   /**
@@ -44,15 +45,13 @@ export async function removeDir (
     }
     await sftp.rmdir(dir)
   }
-
   try {
     await recurse(directoryPath)
     return Outcome.makeSuccess(true)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const code = deepGetProperty(err, 'code')
     // ssh2-sftp-client uses code 2 / ENOENT for “No such file or directory”
-    if (ignoreMissing
-      && (err?.code === 2 || err?.code === 'ENOENT')) return Outcome.makeSuccess(true)
+    if (ignoreMissing && (code === 2 || code === 'ENOENT')) return Outcome.makeSuccess(true)
     return Outcome.makeFailure(unknownToString(err))
   }
 }

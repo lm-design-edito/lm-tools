@@ -117,7 +117,7 @@ async function listAbsoluteSubpaths (
   const options = fillOptions(_options)
   // eslint-disable-next-line @typescript-eslint/naming-convention
   const _private_context = fillListContext(__private_context)
-  if (_private_context.rootPath === null) { _private_context.rootPath = inputPath }
+  _private_context.rootPath ??= inputPath
   const subpaths: string[] = []
   if (_private_context.depth > options.maxDepth) return subpaths
   try {
@@ -160,6 +160,7 @@ async function listAbsoluteSubpaths (
           subpaths.push(realPath, ...childSubpaths)
         }
       } else {
+        // eslint-disable-next-line no-lonely-if
         if (isDirectory) {
           const childSubpaths = await listAbsoluteSubpaths(childAbsPath, options, {
             ..._private_context,
@@ -172,7 +173,7 @@ async function listAbsoluteSubpaths (
         }
       }
     } catch (err: unknown) {
-      if (typeof err !== 'boolean') throw new Error('This try/catch block should only throw booleans')
+      if (typeof err !== 'boolean') throw new Error('This try/catch block should only throw booleans', { cause: err })
       const shouldDiveDeeper = err
       if (!shouldDiveDeeper) return []
       const childSubpaths = await listAbsoluteSubpaths(childAbsPath, options, {

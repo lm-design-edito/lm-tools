@@ -41,6 +41,7 @@ export function isResizeOperationParams (obj: unknown): Outcome.Either<ResizeOpe
   return Outcome.makeSuccess(result.data)
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function resize (
   sharpInstance: Sharp,
   params: ResizeOperationParams

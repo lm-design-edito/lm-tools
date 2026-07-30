@@ -10,6 +10,7 @@ export function isBrightenOperationParams (obj: unknown): Outcome.Either<Brighte
   return Outcome.makeSuccess(result.data)
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function brighten (
   sharpInstance: Sharp,
   params: BrightenOperationParams

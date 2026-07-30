@@ -1,4 +1,5 @@
-type BasicFunc = (...args: unknown[]) => unknown
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type BasicFunc = (...args: any[]) => any
 
 /**
  * Creates a memoized version of a function, caching the result for repeated calls with the same arguments.

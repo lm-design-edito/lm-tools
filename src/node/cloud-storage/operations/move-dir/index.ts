@@ -84,7 +84,7 @@ export async function moveDir (client: SftpClient, sourcePath: string, targetPat
 export async function moveDir (client: AnyClient, sourcePath: string, targetPath: string, options?: GcsMoveDirOptions | S3MoveDirOptions | FtpsMoveDirOptions | SftpMoveDirOptions): Promise<Returned> {
   if (isGcsBucket(client)) return await gcsMoveDir(client, sourcePath, targetPath, options as GcsMoveDirOptions)
   if (isS3ClientWithBucket(client)) return await s3MoveDir(client.client, client.bucketName, sourcePath, targetPath, options as S3MoveDirOptions)
-  if (isFtpClient(client)) return await ftpMoveDir(client, sourcePath, targetPath, options as FtpsMoveDirOptions)
-  if (isSftpClient(client)) return await sftpMoveDir(client, sourcePath, targetPath, options as SftpMoveDirOptions)
+  if (isFtpClient(client)) return await ftpMoveDir(client, sourcePath, targetPath, options)
+  if (isSftpClient(client)) return await sftpMoveDir(client, sourcePath, targetPath, options)
   return Outcome.makeFailure('Invalid client type')
 }

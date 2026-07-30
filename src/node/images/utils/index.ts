@@ -78,7 +78,7 @@ export function toCreateOptions (options: CreateOptions): SharpOptions['create']
  * @param [clone=false] - If `true` and input is a Sharp instance, returns a cloned instance.
  * @returns A Sharp instance ready for image operations.
  */
-export async function toSharpInstance (imageLike: ImageLike, clone: boolean = false): Promise<Sharp> {
+export async function toSharpInstance (imageLike: ImageLike, clone = false): Promise<Sharp> {
   if (typeof imageLike === 'string') return sharp(await readFile(imageLike))
   if (Buffer.isBuffer(imageLike)) return sharp(imageLike)
   if (isDuckTypedSharpInstance(imageLike)) return clone

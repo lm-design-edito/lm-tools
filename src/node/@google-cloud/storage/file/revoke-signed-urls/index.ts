@@ -31,7 +31,7 @@ export async function revokeSignedUrls (
   options?: RevokeSignedUrlsOptions
 ): Promise<Outcome.Either<true, string>> {
   const { downloadOptions, removeOptions, uploadOptions } = options ?? {}
-  const downloadAttempt = await download(bucket, targetPath, downloadOptions)
+  const downloadAttempt = download(bucket, targetPath, downloadOptions)
   if (!downloadAttempt.success) return downloadAttempt
   const deletionAttempt = await remove(bucket, targetPath, removeOptions)
   if (!deletionAttempt.success) return deletionAttempt

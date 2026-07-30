@@ -10,6 +10,7 @@ export function isBlurOperationParams (obj: unknown): Outcome.Either<BlurOperati
   return Outcome.makeSuccess(result.data)
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function blur (
   sharpInstance: Sharp,
   params: BlurOperationParams

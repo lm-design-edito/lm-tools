@@ -16,6 +16,7 @@ export function isRotateOperationParams (obj: unknown): Outcome.Either<RotateOpe
   return Outcome.makeSuccess(result.data)
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function rotate (
   sharpInstance: Sharp,
   params: RotateOperationParams

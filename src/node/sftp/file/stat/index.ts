@@ -2,6 +2,7 @@
 import type SftpClient from 'ssh2-sftp-client'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
+import { deepGetProperty } from 'agnostic/objects/deep-get-property/index.js'
 
 export interface Stat {
   size?: number
@@ -33,9 +34,9 @@ export async function stat (
       gid: info.gid,
       raw: info
     })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
-    if (err?.code === 2 || err?.code === 'ENOENT') return Outcome.makeFailure(`File not found: ${path}`)
+  } catch (err: unknown) {
+    const code = deepGetProperty(err, 'code')
+    if (code === 2 || code === 'ENOENT') return Outcome.makeFailure(`File not found: ${path}`)
     return Outcome.makeFailure(unknownToString(err))
   }
 }

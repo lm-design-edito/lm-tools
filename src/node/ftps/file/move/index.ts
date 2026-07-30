@@ -1,6 +1,7 @@
 import type { Client } from 'basic-ftp'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
+import { deepGetProperty } from '../../../../agnostic/objects/deep-get-property/index.js';
 
 export type MoveOptions = {
   /**
@@ -48,25 +49,22 @@ export async function move (
     ensureDir = true,
     overwrite = false
   } = options ?? {}
-
   try {
     if (ensureDir) {
       const dirPath = targetPath.substring(0, targetPath.lastIndexOf('/'))
       await ftpClient.ensureDir(dirPath)
     }
-
     if (!overwrite) {
       try {
         await ftpClient.size(targetPath) // will succeed if file exists
         return Outcome.makeFailure(`File already exists at ${targetPath}.`)
-      } catch (err: any) {
-        if (err.code !== 550) { // 550 = "not found"; any other error -> propagate
-          return Outcome.makeFailure(unknownToString(err))
-        }
+      } catch (err: unknown) {
+        const code = deepGetProperty(err, 'code')
+        // 550 = "not found"; any other error -> propagate
+        if (code !== 550) return Outcome.makeFailure(unknownToString(err))
         // 550 means destination does not exist – proceed
       }
     }
-
     await ftpClient.rename(sourcePath, targetPath)
     return Outcome.makeSuccess(true)
   } catch (err) {

@@ -27,16 +27,13 @@ export async function stat (
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     const dir = slash === -1 ? '.' : path.slice(0, slash) || '/'
     const name = slash === -1 ? path : path.slice(slash + 1)
-
     const list = await ftp.list(dir)
     const entry = list.find(e => e.name === name && e.isFile)
-
     if (entry === undefined) return Outcome.makeFailure(`File not found: ${path}`)
-
     return Outcome.makeSuccess({
       size: entry.size,
       modifiedAt: entry.modifiedAt ?? undefined,
-      permissions: entry.rawModifiedAt.toString(),
+      permissions: entry.rawModifiedAt,
       raw: entry
     })
   } catch (err) {

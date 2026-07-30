@@ -13,6 +13,7 @@ export function isLevelOperationParams (obj: unknown): Outcome.Either<LevelOpera
   return Outcome.makeSuccess(result.data)
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function level (
   sharpInstance: Sharp,
   params: LevelOperationParams

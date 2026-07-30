@@ -129,8 +129,8 @@ export function spawnerSync (
     : args
   console.log(styles.light(`> ${command} ${printableArgs.join(' ')}\n`))
   const result = spawnSync(command, args, { stdio: 'pipe', encoding: 'utf8', ...options })
-  const stderr = result.stderr?.toString().trim()
-  const stdout = result.stdout?.toString().trim()
+  const stderr = result.stderr.toString().trim()
+  const stdout = result.stdout.toString().trim()
   const err = result.error
   if (err !== undefined) {
     console.log(styles.light(chalk.italic('err:\n')))

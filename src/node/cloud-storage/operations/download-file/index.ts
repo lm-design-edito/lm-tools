@@ -87,9 +87,9 @@ export async function downloadFile (client: SftpClient, path: string, options?: 
  * - On failure:  `Outcome.makeFailure(errStr)`.
  */
 export async function downloadFile (client: AnyClient, path: string, options?: GcsDownloadOptions | S3DownloadOptions | FtpDownloadOptions | SftpDownloadOptions): Promise<Returned> {
-  if (isGcsBucket(client)) return await gcsDownload(client, path, options as GcsDownloadOptions)
+  if (isGcsBucket(client)) return gcsDownload(client, path, options as GcsDownloadOptions)
   if (isS3ClientWithBucket(client)) return await s3Download(client.client, client.bucketName, path, options as S3DownloadOptions)
   if (isFtpClient(client)) return await ftpDownload(client, path, options as FtpDownloadOptions)
-  if (isSftpClient(client)) return await sftpDownload(client, path, options as SftpDownloadOptions)
+  if (isSftpClient(client)) return sftpDownload(client, path, options as SftpDownloadOptions)
   return Outcome.makeFailure('Invalid client type')
 }

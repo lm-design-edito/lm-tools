@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment */
+
 import type { NodeTimeout } from './types.js'
 
-type BasicFunction = (...args: unknown[]) => unknown
+type BasicFunction = (...args: any[]) => any
 
 type ThrottledResult<T extends BasicFunction> = {
   throttled: (...args: unknown[]) => {

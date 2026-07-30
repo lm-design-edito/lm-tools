@@ -84,7 +84,7 @@ export async function copyFile (client: SftpClient, sourcePath: string, targetPa
 export async function copyFile (client: AnyClient, sourcePath: string, targetPath: string, options?: GcsCopyOptions | S3CopyOptions | FtpsCopyOptions | SftpCopyOptions): Promise<Returned> {
   if (isGcsBucket(client)) return await gcsCopy(client, sourcePath, targetPath, options as GcsCopyOptions)
   if (isS3ClientWithBucket(client)) return await s3Copy(client.client, client.bucketName, sourcePath, targetPath, options as S3CopyOptions)
-  if (isFtpClient(client)) return await ftpCopy(client, sourcePath, targetPath, options as FtpsCopyOptions)
-  if (isSftpClient(client)) return await sftpCopy(client, sourcePath, targetPath, options as SftpCopyOptions)
+  if (isFtpClient(client)) return await ftpCopy(client, sourcePath, targetPath, options)
+  if (isSftpClient(client)) return await sftpCopy(client, sourcePath, targetPath, options)
   return Outcome.makeFailure('Invalid client type')
 }
