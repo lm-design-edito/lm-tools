@@ -27,7 +27,7 @@
 export const splitTrim = (
   toSplit: string,
   splitter: string | RegExp | Array<string | RegExp>,
-  removeEmpty: boolean = false
+  removeEmpty = false
 ): string[] => {
   const splitters = Array.isArray(splitter) ? splitter : [splitter]
   let returned: string[] = [toSplit]

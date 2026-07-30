@@ -8,6 +8,7 @@ import {
 } from '@aws-sdk/client-s3'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
+import { deepGetProperty } from '../../../../../agnostic/objects/deep-get-property/index.js';
 
 export type MoveOptions = {
   /** Extra parameters forwarded to `CopyObjectCommand` (`Bucket`, `Key`, `CopySource` are filled internally). */
@@ -59,15 +60,15 @@ export async function move (
       try {
         await client.send(new HeadObjectCommand({ Bucket: bucketName, Key: targetPath }))
         return Outcome.makeFailure(`Object already exists at ${targetPath}.`)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        const notFound = err?.$metadata?.httpStatusCode === 404
-          || err?.name === 'NotFound'
-          || err?.Code === 'NotFound'
-          || err?.Code === 'NoSuchKey'
-        if (!notFound) {
-          return Outcome.makeFailure(unknownToString(err))
-        }
+      } catch (err: unknown) {
+        const name = deepGetProperty(err, 'name')
+        const Code = deepGetProperty(err, 'Code')
+        const httpStatusCode = deepGetProperty(err, '$metadata.httpStatusCode')
+        const notFound = httpStatusCode === 404
+          || name === 'NotFound'
+          || Code === 'NotFound'
+          || Code === 'NoSuchKey'
+        if (!notFound) return Outcome.makeFailure(unknownToString(err))
         // If not found, proceed with copy
       }
     }

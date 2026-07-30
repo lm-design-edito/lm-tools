@@ -22,13 +22,13 @@
  */
 export function normalizeIndent (
   input: string,
-  indentLevel: number = 0
+  indentLevel = 0
 ): string {
   const indent = (' ').repeat(indentLevel)
   const lines = input.split('\n')
-  const noIndentLines = lines.map(line => line.replace(/^\s*/igm, ''))
+  const noIndentLines = lines.map(line => line.replace(/^\s*/igmv, ''))
   const pipeReplacedLines = noIndentLines.map(line => {
-    const nbPipeCharsOnLineStart = line.match(/^\|+/igm)?.[0].length ?? 0
+    const nbPipeCharsOnLineStart = line.match(/^\|+/igmv)?.[0].length ?? 0
     const noPipeLine = line.slice(nbPipeCharsOnLineStart)
     const replacedPipes = (' ').repeat(nbPipeCharsOnLineStart)
     return replacedPipes + noPipeLine

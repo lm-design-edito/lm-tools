@@ -5,6 +5,7 @@ import {
 } from '@aws-sdk/client-s3'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
+import { deepGetProperty } from '../../../../../agnostic/objects/deep-get-property/index.js';
 
 export type ExistsOptions = {
   /**
@@ -34,27 +35,22 @@ export async function exists (
   options?: ExistsOptions
 ): Promise<Outcome.Either<boolean, string>> {
   const { headObjectOptions } = options ?? {}
-
   try {
-    await client.send(
-      new HeadObjectCommand({
-        Bucket: bucketName,
-        Key: sourcePath,
-        ...headObjectOptions
-      })
-    )
+    await client.send(new HeadObjectCommand({
+      Bucket: bucketName,
+      Key: sourcePath,
+      ...headObjectOptions
+    }))
     return Outcome.makeSuccess(true)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
-    const notFound = err?.$metadata?.httpStatusCode === 404
-      || err?.name === 'NotFound'
-      || err?.Code === 'NotFound' // some SDKs emit Code
-      || err?.Code === 'NoSuchKey'
-
-    if (notFound) {
-      return Outcome.makeSuccess(false)
-    }
-
+  } catch (err: unknown) {
+    const name = deepGetProperty(err, 'name')
+    const Code = deepGetProperty(err, 'Code')
+    const httpStatusCode = deepGetProperty(err, '$metadata.httpStatusCode')
+    const notFound = httpStatusCode === 404
+      || name === 'NotFound'
+      || Code === 'NotFound' // some SDKs emit Code
+      || Code === 'NoSuchKey'
+    if (notFound) return Outcome.makeSuccess(false)
     return Outcome.makeFailure(unknownToString(err))
   }
 }

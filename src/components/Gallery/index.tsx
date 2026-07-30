@@ -223,7 +223,7 @@ export const Gallery: FunctionComponent<Props> = ({
         }
         return <div
           key={pos}
-          className={`${slotClss}`}
+          className={slotClss}
           style={{ ...style }}
           data-slot={pos}>
           {child}

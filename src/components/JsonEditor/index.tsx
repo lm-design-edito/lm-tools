@@ -152,7 +152,7 @@ export const ValueEditor: FunctionComponent<{
     array: Array.isArray(value),
     record: !Array.isArray(value) && isNonNullObject(value)
   })
-  const pathStringDataAttr = (path ?? []).map(e => e.toString()).join('.')
+  const pathStringDataAttr = path.map(e => e.toString()).join('.')
   return <span
     className={valueEditorClss}
     data-path={pathStringDataAttr}>

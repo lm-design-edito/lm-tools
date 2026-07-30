@@ -8,17 +8,17 @@
  */
 export async function timeout<T> (timeoutMs: number, callback: () => T): Promise<T> {
   let hasRejected = false
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises, no-async-promise-executor
-  return await new Promise(async (resolve, reject) => {
+  return await new Promise<T>((resolve, reject) => {
     const rejectTimeout = setTimeout(() => {
-      // eslint-disable-next-line prefer-promise-reject-errors
+      // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
       reject(false)
       hasRejected = true
     }, timeoutMs)
-    // eslint-disable-next-line @typescript-eslint/await-thenable
-    const callbackResult = await callback()
-    if (hasRejected) return
-    clearTimeout(rejectTimeout)
-    return resolve(callbackResult)
+    void (async () => {
+      const callbackResult = await callback()
+      if (hasRejected) return
+      clearTimeout(rejectTimeout)
+      resolve(callbackResult)
+    })()
   })
 }

@@ -6,6 +6,7 @@ import {
 } from '@aws-sdk/client-s3'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
+import { deepGetProperty } from '../../../../../agnostic/objects/deep-get-property/index.js';
 
 export interface Stat {
   size?: number
@@ -46,16 +47,17 @@ export async function stat (
     const stat: Stat = {
       size: res.ContentLength,
       modifiedAt: res.LastModified,
-      checksum: res.ETag?.replace(/"/g, ''),
+      checksum: res.ETag?.replace(/"/gv, ''),
       contentType: res.ContentType,
       metadata: res.Metadata,
       storageClass: res.StorageClass,
       raw: res
     }
     return Outcome.makeSuccess(stat)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
-    const notFound = err?.$metadata?.httpStatusCode === 404 || err?.name === 'NotFound'
+  } catch (err: unknown) {
+    const name = deepGetProperty(err, 'name')
+    const httpStatusCode = deepGetProperty(err, '$metadata.httpStatusCode')
+    const notFound = httpStatusCode === 404 || name === 'NotFound'
     if (notFound) return Outcome.makeFailure(`Object not found: ${key}`)
     return Outcome.makeFailure(unknownToString(err))
   }

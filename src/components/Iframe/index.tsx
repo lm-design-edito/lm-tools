@@ -82,10 +82,12 @@ export const Iframe: FunctionComponent<Props> = ({
         || event.source !== iframe.contentWindow
         || typeof event.data !== 'object'
         || event.data === null
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         || event.data.type !== innerMessageType
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         || typeof event.data.height !== 'number'
       ) return
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- event.data.height was already checked to be a number above; event.data is typed any by MessageEvent
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-type-assertion -- event.data.height was already checked to be a number above; event.data is typed any by MessageEvent
       setHeight(event.data.height as number)
     }
     window.addEventListener('message', handleMessage)

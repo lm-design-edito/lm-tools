@@ -40,6 +40,7 @@ export default [
       '@typescript-eslint/no-unnecessary-type-arguments': 'off',
       '@typescript-eslint/only-throw-error': 'off',
       '@typescript-eslint/prefer-destructuring': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
       '@typescript-eslint/prefer-regexp-exec': 'off',
       '@typescript-eslint/restrict-template-expressions': 'off',
       'arrow-body-style': 'off',

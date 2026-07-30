@@ -1,15 +1,37 @@
-import { type FunctionComponent, type PropsWithChildren, type VideoHTMLAttributes, type ReactEventHandler, useMemo, useRef, useState, useCallback, useEffect } from 'react'
+import {
+  type FunctionComponent,
+  type PropsWithChildren,
+  type VideoHTMLAttributes,
+  type ReactEventHandler,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+  useEffect
+} from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import cssModule from './styles.module.css'
 import { video as publicClassName } from '../public-classnames.js'
-
 import {
   Subtitles,
   type Props as SubsProps
 } from '../Subtitles/index.js'
-import { forceExitFullscreen, forceFullscreen, forceLoud, forceMute, forcePause, forcePlay, forcePlaybackRate, forceVolume, formatTime, getTimelineClickProgress, msToSeconds, secondsToMs } from './utils.js'
+import {
+  forceExitFullscreen,
+  forceFullscreen,
+  forceLoud,
+  forceMute,
+  forcePause,
+  forcePlay,
+  forcePlaybackRate,
+  forceVolume,
+  formatTime,
+  getTimelineClickProgress,
+  msToSeconds,
+  secondsToMs
+} from './utils.js'
 
 /**
  * Describes a single video source.
@@ -212,17 +234,15 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   const handleMetadataLoadEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     if (videoRef.current === null) return
     const video = videoRef.current
-    setTotalTime(Number(video.duration))
+    setTotalTime(video.duration)
     intrinsicVideoAttributes.onLoadedMetadata?.(e)
   }, [intrinsicVideoAttributes.onLoadedMetadata])
 
   const handleOnTimeUpdateEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     const video = e.currentTarget
-    const newTimeMs = secondsToMs(Number(video.currentTime))
+    const newTimeMs = secondsToMs(video.currentTime)
     setCurrentTimeMs(newTimeMs)
-    if (intrinsicVideoAttributes?.onTimeUpdate !== undefined) {
-      intrinsicVideoAttributes.onTimeUpdate(e)
-    }
+    if (intrinsicVideoAttributes.onTimeUpdate !== undefined) intrinsicVideoAttributes.onTimeUpdate(e)
   }, [intrinsicVideoAttributes.onTimeUpdate])
 
   const handleOnPlayEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
@@ -236,12 +256,12 @@ export const ControlledVideo: FunctionComponent<Props> = ({
 
   // Custom action handlers
   const handlePlayButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const isPlaying = videoRef.current !== null ? Boolean(videoRef.current.paused) : false
+    const isPlaying = videoRef.current !== null ? videoRef.current.paused : false
     actionHandlers?.playButtonClick?.(e, isPlaying, videoRef.current)
   }, [actionHandlers?.playButtonClick])
 
   const handlePauseButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const isPlaying = videoRef.current !== null ? Boolean(videoRef.current.paused) : false
+    const isPlaying = videoRef.current !== null ? videoRef.current.paused : false
     actionHandlers?.pauseButtonClick?.(e, isPlaying, videoRef.current)
   }, [actionHandlers?.pauseButtonClick])
 
@@ -295,7 +315,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     ..._modifiers
   }), className)
 
-  const appliedVolume = volume ?? 0
+  const appliedVolume = volume
   const rootAttributes = {
     'data-play-on': isPlaying ? '' : undefined,
     'data-play-off': !isPlaying ? '' : undefined,
@@ -380,9 +400,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   }, [play, isTimeControlled])
 
   useEffect(() => {
-    if (volume !== undefined) {
-      forceVolume(videoRef.current, volume)
-    }
+    forceVolume(videoRef.current, volume)
   }, [volume])
 
   useEffect(() => {

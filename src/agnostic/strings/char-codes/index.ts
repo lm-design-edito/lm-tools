@@ -12,7 +12,6 @@ export type B36CharCode = string
  * @returns Base-36 encoded character code.
  */
 export function charCodeToB36 (charCode: CharCode): B36CharCode {
-  if (charCode === null) return '\x00'
   return charCode.toString(36)
 }
 
@@ -22,7 +21,6 @@ export function charCodeToB36 (charCode: CharCode): B36CharCode {
  * @returns Unicode character code.
  */
 export function b36CharCodeToCharCode (b36CharCode: B36CharCode): CharCode {
-  if (b36CharCode === null) return 0
   const charCode = parseInt(b36CharCode, 36)
   if (!Number.isInteger(charCode)) return 0
   return charCode
@@ -105,7 +103,7 @@ export function toB36CharCodes (string: string): B36CharCode[] {
 export function fromCharCodes (charCodes: CharCode[]): string {
   return charCodes
     .map(charFromCharCode)
-    .map(char => char ?? '\x00')
+    .map(char => char)
     .join('')
 }
 
@@ -117,7 +115,7 @@ export function fromCharCodes (charCodes: CharCode[]): string {
 export function fromB36CharCodes (b36CharCodes: B36CharCode[]): string {
   return b36CharCodes
     .map(charFromB36CharCode)
-    .map(char => char ?? '\x00')
+    .map(char => char)
     .join('')
 }
 

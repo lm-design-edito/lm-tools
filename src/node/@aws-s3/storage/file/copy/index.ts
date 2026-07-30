@@ -6,6 +6,7 @@ import {
 } from '@aws-sdk/client-s3'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
+import { deepGetProperty } from '../../../../../agnostic/objects/deep-get-property/index.js';
 
 export type CopyOptions = {
   /**
@@ -52,9 +53,10 @@ export async function copy (
       try {
         await client.send(new HeadObjectCommand({ Bucket: bucketName, Key: targetPath }))
         return Outcome.makeFailure(`Object already exists at ${targetPath}.`)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        const notFound = err?.$metadata?.httpStatusCode === 404 || err?.name === 'NotFound'
+      } catch (err: unknown) {
+        const name = deepGetProperty(err, 'name')
+        const httpStatusCode = deepGetProperty(err, '$metadata.httpStatusCode')
+        const notFound = httpStatusCode === 404 || name === 'NotFound'
         if (!notFound) throw err // propagate unexpected errors
       }
     }

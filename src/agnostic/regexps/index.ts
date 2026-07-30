@@ -8,7 +8,7 @@ export function mergeFlags (...flagStrs: string[]): string {
   const flagsSet = new Set<string>()
   flagStrs.forEach(flagStr => flagStr
     .split('')
-    .forEach(char => flagsSet.add(char))
+    .forEach(char => { flagsSet.add(char) })
   )
   return Array.from(flagsSet.values()).join('')
 }
@@ -22,7 +22,7 @@ export function mergeFlags (...flagStrs: string[]): string {
  */
 export function setFlags (regexp: RegExp, flags: string): RegExp {
   const mergedFlags = mergeFlags(regexp.flags, flags)
-  return new RegExp(`${regexp.source}`, mergedFlags)
+  return new RegExp(regexp.source, mergedFlags)
 }
 
 /**
@@ -32,7 +32,7 @@ export function setFlags (regexp: RegExp, flags: string): RegExp {
  * @param [flags='g'] - Optional flags to apply.
  * @returns Anchored RegExp.
  */
-export function fromStart (regexp: RegExp, flags: string = 'g'): RegExp {
+export function fromStart (regexp: RegExp, flags = 'g'): RegExp {
   const mergedFlags = mergeFlags(regexp.flags, flags)
   return new RegExp(`^(${regexp.source})`, mergedFlags)
 }
@@ -44,7 +44,7 @@ export function fromStart (regexp: RegExp, flags: string = 'g'): RegExp {
  * @param [flags='g'] - Optional flags to apply.
  * @returns Anchored RegExp.
  */
-export function toEnd (regexp: RegExp, flags: string = 'g'): RegExp {
+export function toEnd (regexp: RegExp, flags = 'g'): RegExp {
   const mergedFlags = mergeFlags(regexp.flags, flags)
   return new RegExp(`(${regexp.source})$`, mergedFlags)
 }
@@ -56,7 +56,7 @@ export function toEnd (regexp: RegExp, flags: string = 'g'): RegExp {
  * @param [flags='g'] - Optional flags to apply.
  * @returns Anchored RegExp.
  */
-export function fromStartToEnd (regexp: RegExp, flags: string = 'g'): RegExp {
+export function fromStartToEnd (regexp: RegExp, flags = 'g'): RegExp {
   const mergedFlags = mergeFlags(regexp.flags, flags)
   return fromStart(toEnd(regexp, mergedFlags), mergedFlags)
 }
@@ -65,7 +65,7 @@ export function fromStartToEnd (regexp: RegExp, flags: string = 'g'): RegExp {
 export function stringStartsWith (string: string, regexp: RegExp, returnMatches?: false, flags?: string): boolean
 /** Returns the match array if `string` starts with `regexp` using `flags`, or `null` if not. */
 export function stringStartsWith (string: string, regexp: RegExp, returnMatches: true, flags?: string): RegExpMatchArray | null
-export function stringStartsWith (string: string, regexp: RegExp, returnMatches = false, flags: string = 'g'): RegExpMatchArray | null | boolean {
+export function stringStartsWith (string: string, regexp: RegExp, returnMatches = false, flags = 'g'): RegExpMatchArray | null | boolean {
   const actualRegexp = fromStart(regexp, flags)
   return returnMatches ? string.match(actualRegexp) : actualRegexp.test(string)
 }
@@ -74,7 +74,7 @@ export function stringStartsWith (string: string, regexp: RegExp, returnMatches 
 export function stringEndsWith (string: string, regexp: RegExp, returnMatches?: false, flags?: string): boolean
 /** Returns the match array if `string` ends with `regexp` using `flags`, or `null` if not. */
 export function stringEndsWith (string: string, regexp: RegExp, returnMatches: true, flags?: string): RegExpMatchArray | null
-export function stringEndsWith (string: string, regexp: RegExp, returnMatches = false, flags: string = 'g'): RegExpMatchArray | null | boolean {
+export function stringEndsWith (string: string, regexp: RegExp, returnMatches = false, flags = 'g'): RegExpMatchArray | null | boolean {
   const actualRegexp = toEnd(regexp, flags)
   return returnMatches ? string.match(actualRegexp) : actualRegexp.test(string)
 }
@@ -83,7 +83,7 @@ export function stringEndsWith (string: string, regexp: RegExp, returnMatches = 
 export function stringIs (string: string, regexp: RegExp, returnMatches?: false, flags?: string): boolean
 /** Returns the match array if `string` fully matches `regexp` using `flags`, or `null` if not. */
 export function stringIs (string: string, regexp: RegExp, returnMatches: true, flags?: string): RegExpMatchArray | null
-export function stringIs (string: string, regexp: RegExp, returnMatches = false, flags: string = 'g'): RegExpMatchArray | null | boolean {
+export function stringIs (string: string, regexp: RegExp, returnMatches = false, flags = 'g'): RegExpMatchArray | null | boolean {
   const actualRegexp = fromStartToEnd(regexp, flags)
   return returnMatches ? string.match(actualRegexp) : actualRegexp.test(string)
 }
@@ -97,7 +97,7 @@ export function stringIs (string: string, regexp: RegExp, returnMatches = false,
 export function fromStrings (strings: string[]): RegExp {
   const rootsMap = stringsToRootsMap(strings)
   const source = sourceFromRootsMap(rootsMap, false)
-  const regexp = new RegExp(source)
+  const regexp = new RegExp(source, 'v')
   return regexp
 }
 
@@ -115,9 +115,9 @@ export function escape (string: string): string {
   for (const ch of string) {
     if (ch === '\n') {
       result += '\\n'
-    } else if (/\s/.test(ch)) {
+    } else if (/\s/v.test(ch)) {
       result += '\\s' // any other whitespace (space, tab, etc.)
-    } else if (/[.*+?^${}()|[\]\\]/.test(ch)) {
+    } else if (/[.*+?^$\{\}\(\)\|\[\]\\]/v.test(ch)) {
       result += `\\${ch}` // regex special chars (including backslash)
     } else {
       result += ch
@@ -137,14 +137,15 @@ function stringsToRootsMap (strings: string[], rootsMap: RootsMap = new Map()): 
     const isWordEnd = lastChars.length === 0
     if (firstChar === undefined) return
     const roots = Array.from(rootsMap.keys())
-    const foundRoot = roots.find(root => new RegExp(`^(${escape(root)})`).test(string))
+    const foundRoot = roots.find(root => new RegExp(`^(${escape(root)})`, 'v').test(string))
     const subRootsMap = foundRoot !== undefined
       ? rootsMap.get(foundRoot)?.subRootsMap
       : undefined
     if (foundRoot === undefined || subRootsMap === undefined) {
       const subRootsMap: RootsMap = new Map()
       stringsToRootsMap([lastChars.join('')], subRootsMap)
-      return rootsMap.set(firstChar, { subRootsMap, isWordEnd })
+      rootsMap.set(firstChar, { subRootsMap, isWordEnd })
+      return
     }
     stringsToRootsMap([lastChars.join('')], subRootsMap)
   })

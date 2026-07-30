@@ -23,7 +23,7 @@ export async function getPermissions (
   bucket: Bucket,
   sourcePath: string,
   options?: GetPermissionsOptions
-): Promise<Outcome.Either<any, string>> {
+): Promise<Outcome.Either<unknown, string>> {
   const { fileOptions, getAclOptions } = options ?? {}
   try {
     const file = bucket.file(sourcePath, fileOptions)

@@ -117,7 +117,7 @@ export const SequencerControlled: FunctionComponent<ControlledProps> = ({
           ? childPos === step
           : Array.isArray(thisStepActivateOnStep)
             ? thisStepActivateOnStep.includes(childPos)
-            : thisStepActivateOnStep === childPos
+            : false
         const isNext = !isPrevious && !isCurrent
         const childClss = c('child', {
           current: isCurrent,

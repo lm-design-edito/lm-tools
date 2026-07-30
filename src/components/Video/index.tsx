@@ -119,23 +119,23 @@ export const Video: FunctionComponent<Props> = ({
     }
     setPlay(true)
     hasBeenAutoPlayed.current = true
-  }, [controlledProps?.onPlay, shouldDisclaimerBeOn])
+  }, [controlledProps.onPlay, shouldDisclaimerBeOn])
 
   const handleOnPauseEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
     setPlay(false)
     controlledProps.onPause?.(e)
-  }, [controlledProps?.onPause])
+  }, [controlledProps.onPause])
 
   const handleOnVolumeChangeEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
-    setMute(Boolean(e.currentTarget.muted))
-    setVolume(Number(e.currentTarget.volume))
+    setMute(e.currentTarget.muted)
+    setVolume(e.currentTarget.volume)
     controlledProps.onVolumeChange?.(e)
-  }, [controlledProps?.onVolumeChange])
+  }, [controlledProps.onVolumeChange])
 
   const handleOnRateChangeEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
-    setPlaybackRate(Number(e.currentTarget.playbackRate))
+    setPlaybackRate(e.currentTarget.playbackRate)
     controlledProps.onRateChange?.(e)
-  }, [controlledProps?.onRateChange])
+  }, [controlledProps.onRateChange])
 
   const handleOnFullscreenChangeEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
     if (document.fullscreenElement === null || shouldDisclaimerBeOn) {
@@ -146,7 +146,7 @@ export const Video: FunctionComponent<Props> = ({
   const handleOnLoadedMetadataEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
     muteAttributeWorkaround(e.currentTarget, controlledProps.muted ?? false)
     controlledProps.onLoadedMetadata?.(e)
-  }, [controlledProps?.onLoadedMetadata, controlledProps?.muted])
+  }, [controlledProps.onLoadedMetadata, controlledProps.muted])
 
   // User actions
   const handlePlayButtonClick = useCallback<NonNullable<ActionHandlersProps['playButtonClick']>>((e, isPlaying, video) => {
@@ -188,20 +188,24 @@ export const Video: FunctionComponent<Props> = ({
 
   const onIntersected = useCallback<NonNullable<IntersectionObserverComponentProps['onIntersected']>>(({ ioEntry }) => {
     if (ioEntry === undefined) return
-    const { isIntersecting = false } = ioEntry
-    if (autoPauseWhenHidden === true && !isIntersecting) {
-      setPlay(false)
-    }
-    if (autoLoudWhenVisible === true && isIntersecting) {
-      setMute(false)
-    }
-    if (autoPlayWhenVisible === true && !shouldDisclaimerBeOn && !hasBeenAutoPlayed.current && isIntersecting) {
-      setPlay(true)
-    }
-    if (autoMuteWhenHidden === true && !shouldDisclaimerBeOn && !hasBeenAutoPlayed.current && !isIntersecting) {
-      setMute(true)
-    }
-  }, [autoPlayWhenVisible, autoPauseWhenHidden, autoMuteWhenHidden, autoLoudWhenVisible, shouldDisclaimerBeOn])
+    const { isIntersecting } = ioEntry
+    if (autoPauseWhenHidden === true && !isIntersecting) setPlay(false)
+    if (autoLoudWhenVisible === true && isIntersecting) setMute(false)
+    if (autoPlayWhenVisible === true
+      && !shouldDisclaimerBeOn
+      && !hasBeenAutoPlayed.current
+      && isIntersecting) setPlay(true)
+    if (autoMuteWhenHidden === true
+      && !shouldDisclaimerBeOn
+      && !hasBeenAutoPlayed.current
+      && !isIntersecting) setMute(true)
+  }, [
+    autoPlayWhenVisible,
+    autoPauseWhenHidden,
+    autoMuteWhenHidden,
+    autoLoudWhenVisible,
+    shouldDisclaimerBeOn
+  ])
 
   const handleDiclaimerDismiss = useCallback<NonNullable<NonNullable<DisclaimerProps['actionHandlers']>['dismissClick']>>((prevIsOn) => {
     setIsDisclaimerOn(false)
@@ -212,9 +216,7 @@ export const Video: FunctionComponent<Props> = ({
   }, [controlledProps.autoPlay, disclaimer?.actionHandlers?.dismissClick])
 
   useEffect(() => {
-    if (isDisclaimerOn !== shouldDisclaimerBeOn) {
-      setIsDisclaimerOn(shouldDisclaimerBeOn)
-    }
+    if (isDisclaimerOn !== shouldDisclaimerBeOn) setIsDisclaimerOn(shouldDisclaimerBeOn)
   }, [isDisclaimerOn, shouldDisclaimerBeOn])
 
   useEffect(() => {

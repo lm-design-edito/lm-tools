@@ -7,6 +7,7 @@ import {
 import { Upload } from '@aws-sdk/lib-storage'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
+import { deepGetProperty } from '../../../../../agnostic/objects/deep-get-property/index.js';
 
 export type UploadOptions = {
   fileMetadata?: Partial<PutObjectCommandInput>
@@ -48,12 +49,11 @@ export async function upload (
       await s3.send(headCommand)
       // If no error, object exists
       return Outcome.makeFailure(`File already exists at ${targetPath}.`)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      const code = err?.name ?? err?.$metadata?.httpStatusCode
-      if (code !== 'NotFound' && code !== 404) {
-        return Outcome.makeFailure(unknownToString(err))
-      }
+    } catch (err: unknown) {
+      const name = deepGetProperty(err, 'name')
+      const httpStatusCode = deepGetProperty(err, '$metadata.httpStatusCode')
+      const code = name ?? httpStatusCode
+      if (code !== 'NotFound' && code !== 404) return Outcome.makeFailure(unknownToString(err))
       // Object not found, proceed with upload
     }
   }

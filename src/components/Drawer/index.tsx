@@ -95,7 +95,7 @@ export const Drawer: FunctionComponent<Props> = ({
     setInternalIsOpened(false)
   }
   const handleROCompResize: RSOProps['onResized'] = ({ entry }): void => {
-    const { width, height } = entry?.contentRect ?? {}
+    const { width, height } = entry.contentRect
     setContentDimensions({ width, height })
   }
 

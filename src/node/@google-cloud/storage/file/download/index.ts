@@ -1,5 +1,9 @@
 import type { Readable } from 'node:stream'
-import type { Bucket, FileOptions, DownloadOptions as GCSFileDownloadOptions } from '@google-cloud/storage'
+import type {
+  Bucket,
+  FileOptions,
+  DownloadOptions as GCSFileDownloadOptions
+} from '@google-cloud/storage'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 
@@ -21,11 +25,11 @@ export type DownloadOptions = {
  * - On success: `Outcome.makeSuccess(stream)` containing the downloaded file's content as a `Readable`.
  * - On failure: `Outcome.makeFailure(errStr)` with an error message if the download fails.
  */
-export async function download (
+export function download (
   bucket: Bucket,
   sourcePath: string,
   options?: DownloadOptions
-): Promise<Outcome.Either<Readable, string>> {
+): Outcome.Either<Readable, string> {
   const { fileOptions, downloadOptions } = options ?? {}
   try {
     const file = bucket.file(sourcePath, fileOptions)

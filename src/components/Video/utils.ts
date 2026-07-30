@@ -18,11 +18,13 @@ export const muteAttributeWorkaround = (
 
 export const forceMute = (video: HTMLVideoElement | null): void => {
   if (video === null) return
+  // eslint-disable-next-line no-param-reassign
   video.muted = true
 }
 
 export const forceLoud = (video: HTMLVideoElement | null): void => {
   if (video === null) return
+  // eslint-disable-next-line no-param-reassign
   video.muted = false
 }
 
@@ -31,6 +33,7 @@ export const forceVolume = (
   volume: number
 ): void => {
   if (video === null) return
+  // eslint-disable-next-line no-param-reassign
   video.volume = volume
 }
 
@@ -40,6 +43,7 @@ export const forceCurrentTime = (
   setCurrentTime: Dispatch<SetStateAction<number>>
 ): void => {
   if (video === null) return
+  // eslint-disable-next-line no-param-reassign
   video.currentTime = time
   setCurrentTime(time)
 }
@@ -59,12 +63,11 @@ export const forcePlay = async (
   return false
 }
 
-export const forcePause = async (
+export const forcePause = (
   video: HTMLVideoElement | null
-): Promise<boolean> => {
+): boolean => {
   if (video === null) return false
   if (video.paused) return true
-
   try {
     video.pause()
     return video.paused
@@ -80,6 +83,7 @@ export const forcePlaybackRate = (
   rate: number
 ): void => {
   if (video === null) return
+  // eslint-disable-next-line no-param-reassign
   video.playbackRate = rate
 }
 
@@ -123,7 +127,11 @@ export function msToSeconds (ms: number): number {
   return ms / 1000
 }
 
-export function formatTime (ms: number, format: string, fps: number = 25): string {
+export function formatTime (
+  ms: number,
+  format: string,
+  fps = 25
+): string {
   const totalSeconds = Math.floor(ms / 1000)
   const hours = Math.floor(totalSeconds / 3600)
   const minutes = Math.floor((totalSeconds % 3600) / 60)
@@ -145,7 +153,7 @@ export function formatTime (ms: number, format: string, fps: number = 25): strin
     .keys(tokens)
     .sort((a, b) => b.length - a.length)
     .reduce(
-      (acc, t) => acc.replace(new RegExp(t, 'g'), String(tokens[t])),
+      (acc, t) => acc.replace(new RegExp(t, 'gv'), String(tokens[t])),
       format
     )
   return result

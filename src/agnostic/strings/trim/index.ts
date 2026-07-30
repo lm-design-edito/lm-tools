@@ -8,7 +8,7 @@
  * trimStart("   hello") // => "hello"
  */
 export function trimStart (string: string): string {
-  return string.replace(/^\s*/, '')
+  return string.replace(/^\s*/v, '')
 }
 
 /**
@@ -21,5 +21,5 @@ export function trimStart (string: string): string {
  * trimEnd("hello   ") // => "hello"
  */
 export function trimEnd (string: string): string {
-  return string.replace(/\s*$/, '')
+  return string.replace(/\s*$/v, '')
 }

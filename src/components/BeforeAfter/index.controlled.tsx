@@ -77,6 +77,7 @@ export const BeforeAfterControlled: FunctionComponent<Props> = ({
   children,
   actionHandlers
 }) => {
+  // eslint-disable-next-line no-param-reassign
   ratio = clamp(ratio, 0, 1)
 
   // State & refs

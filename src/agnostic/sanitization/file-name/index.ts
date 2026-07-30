@@ -12,16 +12,16 @@
  */
 export function sanitizeFileName (
   input: string,
-  maxLength: number = 255
+  maxLength = 255
 ): string | null {
-  input = input
+  const _input = input
     .normalize('NFKC') // Normalize Unicode to avoid homoglyph attacks
     // eslint-disable-next-line no-control-regex
-    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '') // Remove invalid characters (e.g., Windows and Unix forbidden characters)
+    .replace(/[<>:"\/\\\|?*\x00-\x1F]/gv, '') // Remove invalid characters (e.g., Windows and Unix forbidden characters)
     .trim() // Trim whitespace
-    .replace(/\s+/g, ' ') // Replace multiple spaces with a single space
-    .replace(/\.+/g, '.') // Replace multiple dots with a single dot
-    .replace(/^\.+|\.+$/g, '') // Remove leading/trailing dots
-  if (input.length > maxLength) return null
-  return input.length > 0 ? input : null
+    .replace(/\s+/gv, ' ') // Replace multiple spaces with a single space
+    .replace(/\.+/gv, '.') // Replace multiple dots with a single dot
+    .replace(/^\.+|\.+$/gv, '') // Remove leading/trailing dots
+  if (_input.length > maxLength) return null
+  return _input.length > 0 ? _input : null
 }

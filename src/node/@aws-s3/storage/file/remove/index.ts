@@ -5,6 +5,7 @@ import {
 } from '@aws-sdk/client-s3'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
+import { deepGetProperty } from '../../../../../agnostic/objects/deep-get-property/index.js';
 
 export type RemoveOptions = {
   ignoreMissing?: boolean // defaults to true
@@ -33,13 +34,16 @@ export async function remove (
     // Check if object exists, respecting ignoreMissing
     try {
       await s3.send(new HeadObjectCommand({ Bucket: bucketName, Key: targetPath }))
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      const code = err?.name ?? err?.Code ?? err?.code
-      if (code === 'NotFound' || code === 'NoSuchKey' || code === 'NotFoundException') {
-        if (ignoreMissing) return Outcome.makeSuccess(true)
-        return Outcome.makeFailure(`File not found at ${targetPath}.`)
-      }
+    } catch (err: unknown) {
+      const name = deepGetProperty(err, 'name')
+      const Code = deepGetProperty(err, 'Code')
+      const _code = deepGetProperty(err, 'code')
+      const code = name ?? Code ?? _code
+      if (code === 'NotFound'
+        || code === 'NoSuchKey'
+        || code === 'NotFoundException') return ignoreMissing
+        ? Outcome.makeSuccess(true)
+        : Outcome.makeFailure(`File not found at ${targetPath}.`)
       return Outcome.makeFailure(unknownToString(err))
     }
 

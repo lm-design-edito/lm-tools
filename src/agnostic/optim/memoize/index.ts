@@ -1,4 +1,4 @@
-type BasicFunc = (...args: any[]) => any
+type BasicFunc = (...args: unknown[]) => unknown
 
 /**
  * Creates a memoized version of a function, caching the result for repeated calls with the same arguments.
@@ -12,13 +12,13 @@ type BasicFunc = (...args: any[]) => any
 export function memoize<T extends BasicFunc> (toMemoizeFunc: T): T {
   let cachedArgs: Parameters<T> | undefined
   let cachedResult: { value: ReturnType<T> } | undefined
-
   const memoizedFunc = (...args: Parameters<T>): ReturnType<T> => {
     const argsMatch = cachedArgs !== undefined
       && args.length === cachedArgs.length
       && args.every((arg, i) => arg === cachedArgs?.[i])
     if (argsMatch && cachedResult !== undefined) return cachedResult.value
-    const result = toMemoizeFunc(...args)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    const result = toMemoizeFunc(...args) as ReturnType<T>
     cachedArgs = args
     cachedResult = { value: result }
     return result

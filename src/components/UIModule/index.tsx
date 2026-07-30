@@ -165,7 +165,7 @@ export const UIModule: FunctionComponent<Props> = ({
               : new Error(unknownToString(err))
             setLoadedModule(e)
           }
-        }).catch(err => {
+        }).catch((err: unknown) => {
           setLoading(false)
           setLoadedModule(err instanceof Error ? err : new Error(unknownToString(err)))
           setModuleTarget(null)

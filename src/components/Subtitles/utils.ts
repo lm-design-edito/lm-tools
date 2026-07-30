@@ -23,8 +23,8 @@ export const getTimecodeToMs = (timecode: string): number => {
  * @returns Array of parsed subtitle entries.
  */
 export const parseSubs = (rawSubs: string): ParsedSub[] => {
-  const numberRegex = /^\d+$/
-  const timecodeRegex = /^[0-9]+:[0-9]+:[0-9]+,[0-9]+\s*-->\s*[0-9]+:[0-9]+:[0-9]+,[0-9]+$/
+  const numberRegex = /^\d+$/v
+  const timecodeRegex = /^[0-9]+:[0-9]+:[0-9]+,[0-9]+\s*-->\s*[0-9]+:[0-9]+:[0-9]+,[0-9]+$/v
   const parsedSubs: ParsedSub[] = []
 
   rawSubs.split('\n').forEach(line => {
@@ -56,9 +56,9 @@ export const parseSubs = (rawSubs: string): ParsedSub[] => {
 
     // content
     if (lastParsedSub?.id !== undefined
-      && lastParsedSub?.start !== undefined
-      && lastParsedSub?.end !== undefined) {
-      if (lastParsedSub?.content !== undefined) {
+      && lastParsedSub.start !== undefined
+      && lastParsedSub.end !== undefined) {
+      if (lastParsedSub.content !== undefined) {
         lastParsedSub.content += `\n${line}`
         return
       }
@@ -83,12 +83,13 @@ export const computeSubGroupsWithBoundaries = (
   const fallback = [{ startId: 1, endId: highestSubId }]
   if (subsGroups === undefined || subsGroups.length === 0) return fallback
   const emptySubGroupBoundaries: SubGroupBoundaries[] = []
-  return subsGroups?.reduce(
+  return subsGroups.reduce(
     (acc, curr, currIndex) => {
       const lastInAcc = acc[acc.length - 1]
       const startId = lastInAcc === undefined ? 1 : lastInAcc.endId + 1
       const endId = curr
-      if (currIndex === (subsGroups?.length ?? 0) - 1 && endId !== highestSubId) {
+      if (currIndex === subsGroups.length - 1
+        && endId !== highestSubId) {
         return [
           ...acc,
           { startId, endId },
@@ -98,7 +99,7 @@ export const computeSubGroupsWithBoundaries = (
       return [...acc, { startId, endId }]
     },
     emptySubGroupBoundaries
-  ) ?? fallback
+  )
 }
 
 /**

@@ -51,11 +51,12 @@
 export function formatDate (
   date: Date,
   format: string,
-  locale: string = 'en'
+  locale = 'en'
 ): string {
   if (Intl
     .DateTimeFormat
     .supportedLocalesOf(locale).length === 0) {
+    // eslint-disable-next-line no-param-reassign
     locale = 'en'
   }
   const day = date.getDate()
@@ -66,19 +67,19 @@ export function formatDate (
   const minutes = date.getMinutes()
   const seconds = date.getSeconds()
   const isPM = hours >= 12
-  const shortDateNames = [...Array(7)].map((_, i) => new Intl.DateTimeFormat(
+  const shortDateNames = [...Array<string>(7)].map((_, i) => new Intl.DateTimeFormat(
     locale,
     { weekday: 'short' }
   ).format(new Date(2023, 0, i + 1)))
-  const dateNames = [...Array(7)].map((_, i) => new Intl.DateTimeFormat(
+  const dateNames = [...Array<string>(7)].map((_, i) => new Intl.DateTimeFormat(
     locale,
     { weekday: 'long' }
   ).format(new Date(2023, 0, i + 1)))
-  const shortMonthNames = [...Array(12)].map((_, i) => new Intl.DateTimeFormat(
+  const shortMonthNames = [...Array<string>(12)].map((_, i) => new Intl.DateTimeFormat(
     locale,
     { month: 'short' }
   ).format(new Date(2023, i, 1)))
-  const monthNames = [...Array(12)].map((_, i) => new Intl.DateTimeFormat(
+  const monthNames = [...Array<string>(12)].map((_, i) => new Intl.DateTimeFormat(
     locale,
     { month: 'long' }
   ).format(new Date(2023, i, 1)))
@@ -122,7 +123,8 @@ export function formatDate (
     }
   }
 
-  const regexp = /{{(DD|D|dd|d|MM|M|MMMM|MMM|YYYY|YY|HH|H|hh|h|mm|m|ss|s|A|a|th|ms)}}/g
+  const regexp = /\{\{(DD|D|dd|d|MM|M|MMMM|MMM|YYYY|YY|HH|H|hh|h|mm|m|ss|s|A|a|th|ms)\}\}/gv
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   return format.replace(regexp, (match, token) => replacements[token]?.() ?? match)
 }
 

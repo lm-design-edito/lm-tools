@@ -70,10 +70,11 @@ export const ControlledInput: FunctionComponent<Props> = ({
       className={rootClss}
       value={value ?? ''}
       onChange={e => {
+        const { target } = e
         rest.onChange?.(e)
         if (value === undefined) return
-        if (typeof value === 'number') { e.target.value = `${value}` }
-        else if (typeof value === 'string') { e.target.value = value }
+        if (typeof value === 'number') { target.value = `${value}` }
+        else if (typeof value === 'string') { target.value = value }
         else {
           // value is readonly string[]
           // not supported for <input>; ignore or normalize if needed

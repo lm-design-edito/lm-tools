@@ -89,7 +89,7 @@ export const Theatre: FunctionComponent<Props> = ({
 }) => {
   // State & refs
   const [internalIsOn, setInternalIsOn] = useState(defaultIsOn ?? false)
-  const stageRef = useRef(null)
+  const stageRef = useRef<HTMLDivElement>(null)
   const isTheatreOn = isOn ?? internalIsOn
   const prevIsTheatreOnRef = useRef(isTheatreOn)
 

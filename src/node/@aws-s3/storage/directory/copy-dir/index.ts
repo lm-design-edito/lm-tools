@@ -8,6 +8,7 @@ import {
 } from '@aws-sdk/client-s3'
 import * as Outcome from '../../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../../agnostic/errors/unknown-to-string/index.js'
+import { deepGetProperty } from '../../../../../agnostic/objects/deep-get-property/index.js'
 
 export type CopyDirOptions = {
   /** Extra parameters forwarded to each `ListObjectsV2Command`. `Bucket` and `Prefix` are supplied by this utility. */
@@ -58,26 +59,24 @@ export async function copyDir (
           ...listObjectsOptions
         })
       )
-
       for (const obj of listResp.Contents ?? []) {
         if (obj.Key === undefined) continue
         const rel = obj.Key.substring(from.length)
         const dest = `${to}${rel}`
-
         if (!overwrite) {
           try {
             await client.send(new HeadObjectCommand({ Bucket: bucketName, Key: dest }))
             // If headObject succeeds, file exists - skip copy
             continue
-          } catch (err: any) {
-            const code = err?.name ?? err?.$metadata?.httpStatusCode
-            if (code !== 'NotFound' && code !== 404) {
-              return Outcome.makeFailure(unknownToString(err))
-            }
+          } catch (err: unknown) {
+            const name = deepGetProperty(err, 'name')
+            const httpStatusCode = deepGetProperty(err, '$metadata.httpStatusCode')
+            const code = name ?? httpStatusCode
+            // eslint-disable-next-line max-depth
+            if (code !== 'NotFound' && code !== 404) return Outcome.makeFailure(unknownToString(err))
             // Not found, proceed with copy
           }
         }
-
         await client.send(
           new CopyObjectCommand({
             Bucket: bucketName,
@@ -87,12 +86,10 @@ export async function copyDir (
           })
         )
       }
-
       token = listResp.IsTruncated === true
         ? listResp.NextContinuationToken
         : undefined
     } while (token !== undefined)
-
     return Outcome.makeSuccess(true)
   } catch (err) {
     return Outcome.makeFailure(unknownToString(err))

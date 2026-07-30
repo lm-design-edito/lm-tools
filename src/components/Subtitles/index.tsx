@@ -128,7 +128,7 @@ export const Subtitles: FunctionComponent<Props> = ({
   useEffect(() => {
     fetchAndParseSubs(src, srtFileContent)
       // eslint-disable-next-line no-console
-      .catch((error) => { console.error(error) })
+      .catch((error: unknown) => { console.error(error) })
   }, [fetchAndParseSubs, src, srtFileContent])
 
   // Rendering

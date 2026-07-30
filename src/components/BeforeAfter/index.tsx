@@ -55,7 +55,9 @@ export const BeforeAfter: FunctionComponent<Props> = ({
   const isControlled = ratio !== undefined
   const effectiveRatio = isControlled ? ratio : internalRatio
   const handleDrag = (x: number, y: number): void => {
+    // eslint-disable-next-line no-param-reassign
     x = 1.02 * x - 0.01
+    // eslint-disable-next-line no-param-reassign
     y = 1.02 * y - 0.01
     actionHandlers?.dragged?.(x, y)
     if (!isControlled) {
@@ -64,7 +66,9 @@ export const BeforeAfter: FunctionComponent<Props> = ({
     }
   }
   const handleClick = (x: number, y: number): void => {
+    // eslint-disable-next-line no-param-reassign
     x = 1.02 * x - 0.01
+    // eslint-disable-next-line no-param-reassign
     y = 1.02 * y - 0.01
     actionHandlers?.clicked?.(x, y)
     if (!isControlled) {

@@ -71,19 +71,25 @@ export async function useMulterMiddleware (
     fileFilter
   })
   let middleware: RequestHandler
-  if (options.mode === 'none') { middleware = uploader.none() } else if (options.mode === 'single') { middleware = uploader.single(options.fieldName) } else if (options.mode === 'array') { middleware = uploader.array(options.fieldName, options.maxCount) } else if (options.mode === 'fields') { middleware = uploader.fields(options.fields) } else { middleware = uploader.any() }
-  return await new Promise<Outcome.Either<true, WithMulterError>>(resolve => middleware(req, res, (err: unknown) => {
-    if (err instanceof multer.MulterError) return resolve(Outcome.makeFailure({
-      code: err.code,
-      message: err.message,
-      field: err.field
-    }))
-    return resolve(err !== undefined
-      ? Outcome.makeFailure({
-        code: 'UNKNOWN',
-        message: unknownToString(err)
-      })
-      : Outcome.makeSuccess(true)
-    )
-  }))
+  if (options.mode === 'none') { middleware = uploader.none() }
+  else if (options.mode === 'single') { middleware = uploader.single(options.fieldName) }
+  else if (options.mode === 'array') { middleware = uploader.array(options.fieldName, options.maxCount) }
+  else if (options.mode === 'fields') { middleware = uploader.fields(options.fields) }
+  else { middleware = uploader.any() }
+  return await new Promise<Outcome.Either<true, WithMulterError>>(resolve => {
+    middleware(req, res, (err: unknown) => {
+      if (err instanceof multer.MulterError) return resolve(Outcome.makeFailure({
+        code: err.code,
+        message: err.message,
+        field: err.field
+      }))
+      return resolve(err !== undefined
+        ? Outcome.makeFailure({
+          code: 'UNKNOWN',
+          message: unknownToString(err)
+        })
+        : Outcome.makeSuccess(true)
+      )
+    })
+  })
 }

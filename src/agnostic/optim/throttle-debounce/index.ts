@@ -1,9 +1,9 @@
 import type { NodeTimeout } from './types.js'
 
-type BasicFunction = (...args: any[]) => any
+type BasicFunction = (...args: unknown[]) => unknown
 
 type ThrottledResult<T extends BasicFunction> = {
-  throttled: (...args: any[]) => {
+  throttled: (...args: unknown[]) => {
     returnValue: ReturnType<T> | undefined
     lastExecutedOn: number
     delayMs: number
@@ -22,8 +22,8 @@ export function throttle <T extends BasicFunction = BasicFunction> (
   delayMs: number
 ): ThrottledResult<T> {
   let currentDelayMs = delayMs
-  let lastArgs: any[] = []
-  let lastExecutedOn: number = 0
+  let lastArgs: unknown[] = []
+  let lastExecutedOn = 0
   let lastReturnValue: ReturnType<T> | undefined
   let nextExecutionTimeout: NodeTimeout | number | null = null
 
@@ -38,21 +38,21 @@ export function throttle <T extends BasicFunction = BasicFunction> (
     const msTillNextExecution = nextExecutionTimestamp - now
     nextExecutionTimeout = setTimeout(() => {
       nextExecutionTimeout = null
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const returnValue = toThrottleFunc(...lastArgs)
-      lastReturnValue = returnValue
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      lastReturnValue = returnValue as ReturnType<T> | undefined
       lastExecutedOn = now
-    }, msTillNextExecution) ?? null
+    }, msTillNextExecution)
   }
 
   /** The throttled function */
-  function throttled (...args: any[]): ReturnType<ThrottledResult<T>['throttled']> {
+  function throttled (...args: unknown[]): ReturnType<ThrottledResult<T>['throttled']> {
     const now = Date.now()
     lastArgs = args
     if (now - lastExecutedOn >= delayMs) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const returnValue = toThrottleFunc(...lastArgs)
-      lastReturnValue = returnValue
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      lastReturnValue = returnValue as ReturnType<T> | undefined
       lastExecutedOn = now
       return {
         returnValue: lastReturnValue,
@@ -83,7 +83,7 @@ export function throttle <T extends BasicFunction = BasicFunction> (
 }
 
 type DebounceResult<T extends BasicFunction> = {
-  debounced: (...args: any[]) => {
+  debounced: (...args: unknown[]) => {
     returnValue: ReturnType<T> | undefined
     lastExecutedOn: number
     delayMs: number
@@ -102,9 +102,9 @@ export function debounce <T extends BasicFunction = BasicFunction> (
   delayMs: number
 ): DebounceResult<T> {
   let currentDelayMs = delayMs
-  let lastArgs: any[] = []
-  let lastCalledOn: number = 0
-  let lastExecutedOn: number = 0
+  let lastArgs: unknown[] = []
+  let lastCalledOn = 0
+  let lastExecutedOn = 0
   let lastReturnValue: ReturnType<T> | undefined
   let nextExecutionTimeout: NodeTimeout | number | null = null
 
@@ -119,22 +119,22 @@ export function debounce <T extends BasicFunction = BasicFunction> (
     const msTillNextExecution = nextExecutionTimestamp - now
     nextExecutionTimeout = setTimeout(() => {
       nextExecutionTimeout = null
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const returnValue = toDebounceFunc(...lastArgs)
-      lastReturnValue = returnValue
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      lastReturnValue = returnValue as ReturnType<T> | undefined
       lastExecutedOn = now
-    }, msTillNextExecution) ?? null
+    }, msTillNextExecution)
   }
 
   /** The debounced function */
-  function debounced (...args: any[]): ReturnType<DebounceResult<T>['debounced']> {
+  function debounced (...args: unknown[]): ReturnType<DebounceResult<T>['debounced']> {
     const now = Date.now()
     lastArgs = args
     if (now - lastCalledOn >= currentDelayMs) {
       lastCalledOn = now
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const returnValue = toDebounceFunc(...lastArgs)
-      lastReturnValue = returnValue
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      lastReturnValue = returnValue as ReturnType<T> | undefined
       lastExecutedOn = now
       return {
         returnValue: lastReturnValue,

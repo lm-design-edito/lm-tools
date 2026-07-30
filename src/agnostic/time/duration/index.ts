@@ -31,7 +31,16 @@ export class Duration {
     this.toMonths = this.toMonths.bind(this)
     this.toYear = this.toYear.bind(this)
     this.value = value
-    if (type === 'ms' || type === 'milliseconds') { this.type = 'milliseconds' } else if (type === 's' || type === 'sec' || type === 'seconds') { this.type = 'seconds' } else if (type === 'm' || type === 'min' || type === 'minutes') { this.type = 'minutes' } else if (type === 'h' || type === 'hours') { this.type = 'hours' } else if (type === 'd' || type === 'days') { this.type = 'days' } else if (type === 'w' || type === 'weeks') { this.type = 'weeks' } else if (type === 'mo' || type === 'mth' || type === 'months') { this.type = 'months' } else if (type === 'y' || type === 'years') { this.type = 'years' } else { this.type = 'milliseconds' } // defaults to milliseconds
+    if (type === 'ms' || type === 'milliseconds') { this.type = 'milliseconds' }
+    else if (type === 's' || type === 'sec' || type === 'seconds') { this.type = 'seconds' }
+    else if (type === 'm' || type === 'min' || type === 'minutes') { this.type = 'minutes' }
+    else if (type === 'h' || type === 'hours') { this.type = 'hours' }
+    else if (type === 'd' || type === 'days') { this.type = 'days' }
+    else if (type === 'w' || type === 'weeks') { this.type = 'weeks' }
+    else if (type === 'mo' || type === 'mth' || type === 'months') { this.type = 'months' }
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    else if (type === 'y' || type === 'years') { this.type = 'years' }
+    else { this.type = 'milliseconds' } // defaults to milliseconds
   }
 
   // [WIP] why only toMs and no other shorthands ?
@@ -43,6 +52,7 @@ export class Duration {
     if (this.type === 'days') return this.value * 1000 * 60 * 60 * 24
     if (this.type === 'weeks') return this.value * 1000 * 60 * 60 * 24 * 7
     if (this.type === 'months') return this.value * 1000 * 60 * 60 * 24 * 30
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (this.type === 'years') return this.value * 1000 * 60 * 60 * 24 * 365
     return this.value // defaults to milliseconds
   }

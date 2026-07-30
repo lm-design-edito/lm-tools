@@ -116,10 +116,11 @@ const c5 = (2 * PI) / 4.5
 const bounceOut: EasingFunction = function (x) {
   const n1 = 7.5625
   const d1 = 2.75
-  if (x < 1 / d1) return n1 * x * x
-  if (x < 2 / d1) return n1 * (x -= 1.5 / d1) * x + 0.75
-  if (x < 2.5 / d1) return n1 * (x -= 2.25 / d1) * x + 0.9375
-  return n1 * (x -= 2.625 / d1) * x + 0.984375
+  let t = x
+  if (t < 1 / d1) return n1 * t * t
+  if (t < 2 / d1) return n1 * (t -= 1.5 / d1) * t + 0.75
+  if (t < 2.5 / d1) return n1 * (t -= 2.25 / d1) * t + 0.9375
+  return n1 * (t -= 2.625 / d1) * t + 0.984375
 }
 
 /**

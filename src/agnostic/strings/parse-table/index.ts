@@ -1,4 +1,5 @@
 import * as Outcome from '../../misc/outcome/index.js'
+import { isRecord } from '../../objects/is-record/index.js'
 
 /**
  * Options for delimiter-based table parsing mode.
@@ -88,17 +89,24 @@ export type ParseTableOptions<T extends Record<string, string>> =
   | ParseTableLineModeOptions<T>
   | ParseTableColumnModeOptions<T>
 
-const defaultLineModeOptions: ParseTableLineModeOptions<any> = {
+const defaultLineModeOptions: ParseTableLineModeOptions<Record<string, string>> = {
   mode: 'line',
   splitLines: i => i.split('\n'),
   headerPos: 0,
   splitHeaderCells: h => h.split('\t'),
   bodyBounds: [1, Infinity],
   splitBodyCells: i => i.split('\t'),
-  schema: i => i
+  schema: i => {
+    if (isRecord(i)
+      && Object.values(i).every(v => typeof v === 'string')) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      return i as Record<string, string>
+    }
+    return {}
+  }
 }
 
-const defaultColumnModeOptions: ParseTableColumnModeOptions<any> = {
+const defaultColumnModeOptions: ParseTableColumnModeOptions<Record<string, string>> = {
   mode: 'column',
   splitLines: i => i.split('\n'),
   headerPos: 0,
@@ -106,7 +114,14 @@ const defaultColumnModeOptions: ParseTableColumnModeOptions<any> = {
   columns: [],
   headerCellRefine: h => h,
   bodyCellRefine: v => v,
-  schema: i => i
+  schema: i => {
+    if (isRecord(i)
+      && Object.values(i).every(v => typeof v === 'string')) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      return i as Record<string, string>
+    }
+    return {}
+  }
 }
 
 /**

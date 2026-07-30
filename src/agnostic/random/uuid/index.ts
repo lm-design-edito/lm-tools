@@ -6,7 +6,7 @@ import { randomHexChar } from '../hex-char/index.js'
  * @param [length=4] - Number of hex characters.
  * @returns Random hexadecimal string.
  */
-export function randomHash (length: number = 4): string {
+export function randomHash (length = 4): string {
   return new Array(length)
     .fill(null)
     .map(randomHexChar)
@@ -20,7 +20,7 @@ export function randomHash (length: number = 4): string {
  * @param [joiner='-'] - String used to join the segments.
  * @returns Random hexadecimal string with segments joined by `joiner`.
  */
-export function randomHashPattern (pattern: number[], joiner: string = '-'): string {
+export function randomHashPattern (pattern: number[], joiner = '-'): string {
   return pattern.map(randomHash).join(joiner)
 }
 
