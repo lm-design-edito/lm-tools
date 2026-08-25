@@ -1,7 +1,7 @@
 import type Client from 'ssh2-sftp-client'
 import * as Outcome from '../../../../agnostic/misc/outcome/index.js'
 import { unknownToString } from '../../../../agnostic/errors/unknown-to-string/index.js'
-import { deepGetProperty } from 'agnostic/objects/deep-get-property/index.js'
+import { deepGetProperty } from '../../../../agnostic/objects/deep-get-property/index.js'
 
 export type RemoveDirOptions = {
   /**

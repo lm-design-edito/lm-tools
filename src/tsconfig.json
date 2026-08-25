@@ -2,7 +2,6 @@
   "compilerOptions": {
     "lib": ["ESNext"],
     "strict": true,
-    "baseUrl": ".",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "../lib",
