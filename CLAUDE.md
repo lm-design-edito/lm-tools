@@ -6,6 +6,31 @@
 - Do not add a `Co-Authored-By: Claude` trailer to commits in this repo — use a plain commit message.
 - Only run `git commit` when asked. Never run `git add`, `git push`, or `git pull` — the user handles staging, pushing, and pulling themselves.
 
+## Code style
+
+Formatting is enforced by `eslint-config-love` (see `eslint.config.js`). Run `npx eslint <files>` before considering a change done. The conventions that matter in practice:
+
+- **Single quotes, no semicolons, 2-space indentation.** Double quotes only when the string itself contains a single quote (e.g. `"Jour de l'opinion"`).
+- **Space before the parenthesis** in function declarations: `export function toRoman (n: number): string`.
+- **Line breaks go *before* binary operators** (`operator-linebreak`), except `=` whose right-hand side stays on the same line:
+  ```ts
+  const jde0 = 2451810.21715
+    + 365242.01767 * y
+    - 0.11575 * y * y
+  ```
+- **Never reassign a function parameter** (`no-param-reassign`) — copy it into a local `let` first.
+- `noUncheckedIndexedAccess` is on: an indexed access is `T | undefined`. When an index is provably in range, assert with `!` and a preceding `// eslint-disable-next-line @typescript-eslint/no-non-null-assertion`.
+
+### Module layout
+
+- Each utility is a folder whose entry point is `index.ts`. The folder name is the util name (kebab-case); the exported symbol is its camelCase form.
+- When `index.ts` grows, split concerns into sibling files:
+  - `types.ts` — exported types, interfaces and enums (the domain vocabulary).
+  - `utils.ts` — constants, lookup tables and internal helper functions.
+  - `index.ts` — keeps only the public entry function(s), importing what it needs from `./types.js` / `./utils.js`.
+- **Relative imports always carry the `.js` extension**, even from `.ts` files (`import { toRoman } from './utils.js'`) — required by the NodeNext/ESM resolution.
+- **Do not add convenience re-exports** from `index.ts`. Consumers import each symbol from the file that owns it (the entry function from the module, types and enums from `./types`).
+
 ## JSDoc
 
 ### General principles
@@ -145,3 +170,43 @@ Use `@throws` when a function can throw in documented, meaningful ways.
 - Do not use `@deprecated` without a migration path in the comment.
 - Do not write `@example` blocks that merely echo the type signature.
 - Do not include type annotations inside JSDoc tags (e.g. `@param {string} name`) — rely on TypeScript types instead.
+
+## Tests
+
+Tests run on **Vitest**. Run a single module's tests with `npx vitest run <path>`, or the whole suite with `npm run tests`.
+
+### Conventions
+
+- A test file lives next to the code it covers and is named `index.test.ts` (matching the `index.ts` it exercises). Test files are excluded from `lint:src` and from the build.
+- Always import the primitives explicitly: `import { describe, it, expect } from 'vitest'`. Use `it`, never `test`.
+- Import the code under test through the same public path a consumer would use, with the `.js` extension: the entry function from `./index.js`, types and enums from `./types.js`.
+
+### Structure
+
+- A top-level `describe` per exported symbol, named exactly after it.
+- Group related behaviors under nested `describe` blocks (e.g. `'regular days'`, `'complementary days'`, `'year handling'`).
+- Each `it` states a behavior, not a mechanic: `it('steps back a Gregorian year for dates before the new year')`, not `it('works')`.
+
+```ts
+import { describe, it, expect } from 'vitest'
+import { toFrenchRepublican } from './index.js'
+import { RepublicanMonth } from './types.js'
+
+describe('toFrenchRepublican', () => {
+  it('converts a well-known historical date (18 Brumaire an VIII)', () => {
+    const result = toFrenchRepublican(new Date(1799, 10, 9))
+    expect(result.formatted).toBe('18 Brumaire an VIII')
+    expect(result.monthName).toBe(RepublicanMonth.BRUMAIRE)
+  })
+
+  describe('complementary days', () => {
+    it('nulls out the month fields', () => { /* ... */ })
+  })
+})
+```
+
+### What to assert
+
+- Prefer concrete, meaningful fixtures over synthetic ones — a known historical date reads better than an arbitrary one, and doubles as documentation.
+- Use `toMatchObject` to assert the shape of a returned object in one go; use targeted `expect(...).toBe(...)` when a single field carries the meaning of the test.
+- Cover the edge cases the logic actually has (boundaries, discriminated-union branches, leap/sextile years, roll-overs), not just the happy path.
