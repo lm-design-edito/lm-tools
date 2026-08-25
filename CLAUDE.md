@@ -210,3 +210,25 @@ describe('toFrenchRepublican', () => {
 - Prefer concrete, meaningful fixtures over synthetic ones — a known historical date reads better than an arbitrary one, and doubles as documentation.
 - Use `toMatchObject` to assert the shape of a returned object in one go; use targeted `expect(...).toBe(...)` when a single field carries the meaning of the test.
 - Cover the edge cases the logic actually has (boundaries, discriminated-union branches, leap/sextile years, roll-overs), not just the happy path.
+
+### Coverage roadmap
+
+Prioritised backlog of missing tests in `agnostic` and `node`, ranked by real usage in the main consumer (`lm-publisher-composer` + its critical `modules/lm-publisher`, an HTTP/API server) crossed with server-side risk. `components` tests are intentionally out of scope for now.
+
+**How to use this list:** work items top-to-bottom, follow the conventions above, and **delete each entry once its `index.test.ts` exists and passes** (`npx vitest run <path>`). Keep the counts as rationale, not as targets. When usage patterns change, re-derive by cross-referencing the consumer's `.ts` imports against modules lacking a colocated `index.test.ts`.
+
+Usage counts below are `.ts` import sites in `lm-publisher-composer` (the number in parentheses is the subset inside `modules/lm-publisher`).
+
+- **P1 — high usage, pure logic, quick win**
+  - [ ] `agnostic/time/duration` — 48 (18). Pure unit conversions feeding every timeout/delay; a silent bug propagates everywhere. Start here.
+- **P2 — critical server path, higher risk**
+  - [ ] `node/process/spawner` — 12. Spawns child processes → correctness + argument escaping/injection surface.
+  - [ ] `node/images/transform` — 20 (8). Core image pipeline (sharp); bad output / crash on user-supplied images. Medium effort (buffer fixtures).
+  - [ ] `node/images/format` — 15 (6). Format conversion, same family.
+- **P3 — storage/deploy backend, large surface, network I/O (needs fakes/mocks)**
+  - [ ] `node/cloud-storage/operations/*` — ~5 each. Best entry point: the path-handling logic (traversal/overwrite risk), testable without network.
+  - [ ] `node/sftp/*`, `node/ftps/*`, `node/@google-cloud/storage/*` — ~5 each. Remote file ops; expensive to unit-test well.
+
+**Deliberately deprioritised** (low ROI or off the consumer's path, do not add unless usage changes): `agnostic/time/wait` (trivial `setTimeout`), `node/process/prompt-continue` (interactive stdin, CLI-only), `agnostic/misc/logs/styles` (cosmetic ANSI), any `*/types.ts` (types only), and the large `agnostic/html/hyper-json/*` subtree (~90 smart-tags, not imported by the publisher).
+
+**Security modules not currently on the consumer's path** — worth testing for the library's own robustness (defense-in-depth) but lower priority than P1–P2 until the publisher starts importing them: `agnostic/sanitization/html` (XSS), `node/files/is-in-directory` (path traversal), `node/encryption/*`.
