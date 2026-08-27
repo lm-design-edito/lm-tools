@@ -1,6 +1,7 @@
 import { type PathLike, type Stats, promises as fs } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { Duration } from '../../../agnostic/time/duration/index.js'
 
 /**
  * How to react to a per-entry read error (a failing `lstat`/`readdir`):
@@ -18,6 +19,8 @@ export type GetSizeOptions = {
   onError?: OnError
   /** Abort the traversal; aborting rejects with the signal's reason. */
   signal?: AbortSignal
+  /** Abort the traversal after this delay. A `number` is milliseconds; a `Duration` is converted via `toMs()`. Combined with `signal` when both are given. */
+  timeoutMs?: number | Duration
   /** Maximum directory depth to descend; entries deeper than this are not counted. @default Infinity */
   maxDepth?: number
   /** Follow symbolic links instead of counting the link itself. Cycle-safe via inode tracking. @default false */
@@ -69,9 +72,11 @@ type ResolvedOptions = {
  */
 export async function getSize (target: PathLike, options: GetSizeOptions = {}): Promise<number> {
   const concurrency = Math.max(1, Math.floor(options.concurrency ?? defaultGetSizeOptions.concurrency))
+  const timeoutMs = options.timeoutMs instanceof Duration ? options.timeoutMs.toMs() : options.timeoutMs
+  const timeout = timeoutMs === undefined ? null : createTimeoutSignal(timeoutMs, options.signal)
   const resolved: ResolvedOptions = {
     onError: options.onError ?? defaultGetSizeOptions.onError,
-    signal: options.signal,
+    signal: timeout?.signal ?? options.signal,
     limit: createLimiter(concurrency),
     maxDepth: options.maxDepth ?? defaultGetSizeOptions.maxDepth,
     followSymlinks: options.followSymlinks ?? defaultGetSizeOptions.followSymlinks,
@@ -79,7 +84,39 @@ export async function getSize (target: PathLike, options: GetSizeOptions = {}): 
     sizeOf: options.sizeOf ?? defaultGetSizeOptions.sizeOf,
     visited: new Set<string>()
   }
-  return await computeSize(toPathString(target), resolved, 0)
+  try {
+    return await computeSize(toPathString(target), resolved, 0)
+  } finally {
+    timeout?.dispose()
+  }
+}
+
+// Builds an abort signal that fires after `timeoutMs`, merged with a caller
+// signal when provided. Aborting either aborts the returned one. `dispose`
+// clears the timer and detaches the listener.
+function createTimeoutSignal (
+  timeoutMs: number,
+  userSignal: AbortSignal | undefined
+): { signal: AbortSignal, dispose: () => void } {
+  const controller = new AbortController()
+  const timer = setTimeout(
+    () => { controller.abort(new Error(`getSize timed out after ${timeoutMs} ms`)) },
+    Math.max(0, timeoutMs)
+  )
+  timer.unref()
+  if (userSignal === undefined) {
+    return { signal: controller.signal, dispose: () => { clearTimeout(timer) } }
+  }
+  if (userSignal.aborted) controller.abort(userSignal.reason)
+  const onUserAbort = (): void => { controller.abort(userSignal.reason) }
+  userSignal.addEventListener('abort', onUserAbort, { once: true })
+  return {
+    signal: controller.signal,
+    dispose: () => {
+      clearTimeout(timer)
+      userSignal.removeEventListener('abort', onUserAbort)
+    }
+  }
 }
 
 function toPathString (target: PathLike): string {

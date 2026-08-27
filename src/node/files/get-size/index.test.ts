@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url'
 import os from 'node:os'
 import path from 'node:path'
 import { getSize } from './index.js'
+import { seconds } from '../../../agnostic/time/duration/index.js'
 
 // Fixtures (all under the OS temp dir):
 //   root/         a.txt (10) + sub/b.txt (5) + sub/empty/
@@ -159,6 +160,22 @@ describe('getSize', () => {
       const content = await getSize(root)
       const allocated = await getSize(root, { sizeOf: 'allocated' })
       expect(allocated).toBeGreaterThanOrEqual(content)
+    })
+  })
+
+  describe('timeoutMs', () => {
+    it('completes normally within a generous timeout (number)', async () => {
+      expect(await getSize(root, { timeoutMs: 10_000 })).toBe(aBytes + bBytes)
+    })
+
+    it('accepts a Duration', async () => {
+      expect(await getSize(root, { timeoutMs: seconds(10) })).toBe(aBytes + bBytes)
+    })
+
+    it('still honours an already-aborted signal when combined with a timeout', async () => {
+      await expect(
+        getSize(root, { timeoutMs: 10_000, signal: AbortSignal.abort() })
+      ).rejects.toThrow()
     })
   })
 })
