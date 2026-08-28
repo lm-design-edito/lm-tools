@@ -1,4 +1,4 @@
-import { useEffect, type FunctionComponent } from 'react'
+import { type FunctionComponent } from 'react'
 import {
   IntersectionObserverComponent,
   type Props as IOCompProps
