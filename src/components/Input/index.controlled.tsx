@@ -13,7 +13,7 @@ import { mergeClassNames } from '../utils/index.js'
 import cssModule from './styles.module.css'
 
 /**
- * Props for the {@link Input} component.
+ * Props for the {@link ControlledInput} component.
  *
  * Extends all native {@link InputHTMLAttributes} and {@link WithClassName}
  * with optional label and error content.
