@@ -110,6 +110,17 @@ export const JsonEditor: FunctionComponent<Props> = ({
  *
  * * * * * * * * * * * * * * * * */
 
+type ValueType = 'string' | 'number' | 'boolean' | 'null' | 'array' | 'record'
+
+function getValueType (value: JsonValue): ValueType {
+  if (value === null) return 'null'
+  if (Array.isArray(value)) return 'array'
+  if (isNonNullObject(value)) return 'record'
+  if (typeof value === 'string') return 'string'
+  if (typeof value === 'number') return 'number'
+  return 'boolean'
+}
+
 export const ValueEditor: FunctionComponent<{
   defaultValue?: JsonValue
   onChange?: (newValue: JsonValue) => void
@@ -144,27 +155,22 @@ export const ValueEditor: FunctionComponent<{
   const handleArrayValueChange: (val: JsonValue[]) => void = e => setValueAndDispatch(e)
 
   // Rendering
-  const valueEditorClss = c('value', {
-    string: typeof value === 'string',
-    number: typeof value === 'number',
-    boolean: typeof value === 'boolean',
-    null: value === null,
-    array: Array.isArray(value),
-    record: !Array.isArray(value) && isNonNullObject(value)
-  })
+  const valueType = getValueType(value)
+  const valueEditorClss = c('value', valueType)
   const pathStringDataAttr = path.map(e => e.toString()).join('.')
   return <span
     className={valueEditorClss}
     data-path={pathStringDataAttr}>
     <Select
       className={c('type')}
+      value={valueType}
       onChange={handleTypeSelectChange}>
-      <option value='string' selected={typeof value === 'string'}>string</option>
-      <option value='number' selected={typeof value === 'number'}>number</option>
-      <option value='boolean' selected={typeof value === 'boolean'}>boolean</option>
-      <option value='null' selected={value === null}>null</option>
-      <option value='record' selected={isNonNullObject(value) && !Array.isArray(value)}>record</option>
-      <option value='array' selected={Array.isArray(value)}>array</option>
+      <option value='string'>string</option>
+      <option value='number'>number</option>
+      <option value='boolean'>boolean</option>
+      <option value='null'>null</option>
+      <option value='record'>record</option>
+      <option value='array'>array</option>
     </Select>
     {typeof value === 'string' && <StringEditor
       type='textarea'
