@@ -42,23 +42,19 @@ const tsxDetails = `
 /**
  * Props for the {@link Iframe} component.
  *
- * Extends native {@link IframeHTMLAttributes} with optional class name support.
+ * Extends native {@link IframeHTMLAttributes} with class name support and
+ * automatic height adjustment.
  *
- * @property className - Additional class name(s) applied to the root element.
- * @property children - React content rendered as the iframe document body.
- * @property srcDoc - Raw HTML string used as iframe content when \`children\` is not provided.
- *
- * @remarks
- * This component behaves as a hybrid between a native \`<iframe>\` and a React renderer.
- *
- * Rendering priority:
- * - \`children\` takes precedence over \`srcDoc\` when provided.
- * - If \`children\` is \`null\` or \`undefined\`, \`srcDoc\` is used directly.
- *
- * When \`children\` is provided, it is converted to static HTML using
- * \`renderToStaticMarkup\` and injected into a complete HTML document:
- * \`<!doctype html><html><body>...</body></html>\`.
- */`
+ * @property autoHeight - Enables automatic iframe height adjustment based on
+ * document content size. Only supported with \`srcDoc\`.
+ * @property className - Optional additional class names applied to the iframe.
+ * @property style - Optional inline style applied to the iframe.
+ * @property srcDoc - Raw HTML string rendered inside the iframe.
+ */
+export type Props = WithClassName<{
+  autoHeight?: boolean
+}> & Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'children'>
+`
 
 const demoProps1: IframeProps = {
   autoHeight: true,

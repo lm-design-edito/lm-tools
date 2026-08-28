@@ -39,15 +39,33 @@ const demoStyles = ``
 
 const tsxDetails = `
 /**
+ * Props for the {@link ControlledTextarea} component.
+ *
+ * Extends all native {@link TextareaHTMLAttributes} and {@link WithClassName}
+ * with optional label, error content, and automatic height adjustment.
+ *
+ * @property label - Content rendered as an associated \`<label>\`. When omitted, no label is rendered.
+ * @property error - Content rendered as an error message below the textarea. When omitted, no error is rendered.
+ * @property autoHeight - When \`true\`, automatically adjusts the textarea height
+ * to fit its content. Defaults to \`false\`.
+ * @property className - Additional class name(s) applied to the textarea element.
+ */
+export type ControlledProps = TextareaHTMLAttributes<HTMLTextAreaElement> & WithClassName<{
+  label?: ReactNode
+  error?: ReactNode
+  autoHeight?: boolean
+}>
+
+/**
  * Props for the {@link Textarea} component.
  *
  * Alias of {@link ControlledProps}.
  *
- * All native input attributes remain available, including \`value\`
+ * All native textarea attributes remain available, including \`value\`
  * and \`onChange\`, allowing the component to operate in either
  * controlled or hybrid mode.
  */
-export type Props = ControlledProps & {}
+export type Props = ControlledProps
 `
 
 const demoProps: TextareaProps = {

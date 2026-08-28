@@ -87,6 +87,18 @@ const tsxDetails = `
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Content rendered inside the copyable container.
  */
+export type Props = PropsWithChildren<WithClassName<{
+  toClip?: string | ((curr: string | undefined) => string | undefined)
+  actionHandlers?: {
+    clicked?: (
+      e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>,
+      rawContent: string | undefined
+    ) => void
+  }
+  stateHandlers?: {
+    clipped?: (content: string) => void
+  }
+}>>
 `
 
 const demoProps1: ClippableProps = {

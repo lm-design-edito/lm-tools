@@ -25,12 +25,12 @@ type ROEntryWithBoundingRect = {
  * Props for the ResizeObserverComponent.
  *
  * @property className - Optional additional class name(s) applied to the root element.
- * @property onResize - Callback invoked when the element is resized.
+ * @property onResized - Callback invoked when the element is resized.
  * Receives the \`ResizeObserverEntry\` from the observed element, or \`undefined\` if none.
  * @property children - React children rendered inside the root element. Only the root element is observed
  */
 export type Props = PropsWithChildren<WithClassName<{
-  onResize?: (entry: ROEntryWithBoundingRect) => void
+  onResized?: (entry: ROEntryWithBoundingRect) => void
 }>>`
 
 const demoProps: RSOProps = {

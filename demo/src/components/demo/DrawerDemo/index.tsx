@@ -38,8 +38,8 @@ const tsxDetails = `/**
  * Ignored when \`isOpened\` is provided.
  * @property isOpened - Controlled open state. When defined, the component
  * behaves as a controlled component and internal state is ignored.
- * @property onToggled - Callback invoked when the open state changes due to
- * user interaction (only in uncontrolled mode). Receives the next state.
+ * @property stateHandlers - Callbacks invoked after the state changes
+ * @property stateHandlers.toggled - Callbacks invoked after the isOpened state has changed
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Drawer content.
  */
@@ -48,7 +48,9 @@ export type Props = PropsWithChildren<WithClassName<{
   closerContent?: ReactNode
   initialIsOpened?: boolean
   isOpened?: boolean
-  onToggled?: (isOpen: boolean) => void
+  stateHandlers?: {
+    toggled?: (isOpen: boolean) => void
+  }
 }>>`
 
 /* Demo CSS */

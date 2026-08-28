@@ -39,6 +39,21 @@ const demoStyles = ``
 
 const tsxDetails = `
 /**
+ * Props for the {@link ControlledInput} component.
+ *
+ * Extends all native {@link InputHTMLAttributes} and {@link WithClassName}
+ * with optional label and error content.
+ *
+ * @property label - Content rendered as an associated \`<label>\`. When omitted, no label is rendered.
+ * @property error - Content rendered as an error message below the input. When omitted, no error is rendered.
+ * @property className - Additional class name(s) applied to the root element.
+ */
+export type ControlledProps = InputHTMLAttributes<HTMLInputElement> & WithClassName<{
+  label?: ReactNode
+  error?: ReactNode
+}>
+
+/**
  * Props for the {@link Input} component.
  *
  * Alias of {@link ControlledProps}.
@@ -47,7 +62,7 @@ const tsxDetails = `
  * and \`onChange\`, allowing the component to operate in either
  * controlled or hybrid mode.
  */
-export type Props = ControlledProps & {}
+export type Props = ControlledProps
 `
 
 const demoProps: InputProps = {

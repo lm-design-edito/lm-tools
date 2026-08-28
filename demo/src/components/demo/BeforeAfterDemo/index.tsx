@@ -122,20 +122,6 @@ const demoStyles = `
 
 const tsxDetails = `
 /**
- * Props for the {@link BeforeAfter} component.
- *
- * Extends {@link ControlledProps} with uncontrolled defaults and state callbacks.
- * When \`ratio\` is provided (inherited from {@link ControlledProps}), the component
- * operates in controlled mode and internal state is ignored.
- *
- * @property defaultRatio - Initial divider position in uncontrolled mode, as a value
- * between \`0\` and \`1\`. Ignored when \`ratio\` is provided. Defaults to \`0.5\`.
- * @property stateHandlers - Optional callbacks invoked when derived state changes:
- *   - \`ratioChanged\` — called after the internal ratio has been updated, with the new ratio value.
- * 
- */
-
-/**
  * Props for the {@link BeforeAfterControlled} component.
  *
  * Extends {@link WithClassName} with layout, content, and interaction configuration.
@@ -153,6 +139,35 @@ const tsxDetails = `
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Arbitrary content to inject inside the component
  */
+export type ControlledProps = PropsWithChildren<WithClassName<{
+  mode?: 'vertical' | 'horizontal'
+  ratio?: number
+  before?: ReactNode
+  after?: ReactNode
+  actionHandlers?: {
+    dragged?: (xRatio: number, yRatio: number) => void
+    clicked?: (xRatio: number, yRatio: number) => void
+  }
+}>>
+
+/**
+ * Props for the {@link BeforeAfter} component.
+ *
+ * Extends {@link ControlledProps} with uncontrolled defaults and state callbacks.
+ * When \`ratio\` is provided (inherited from {@link ControlledProps}), the component
+ * operates in controlled mode and internal state is ignored.
+ *
+ * @property defaultRatio - Initial divider position in uncontrolled mode, as a value
+ * between \`0\` and \`1\`. Ignored when \`ratio\` is provided. Defaults to \`0.5\`.
+ * @property stateHandlers - Optional callbacks invoked when derived state changes:
+ *   - \`ratioChanged\` — called after the internal ratio has been updated, with the new ratio value.
+ */
+export type Props = ControlledProps & {
+  defaultRatio?: number
+  stateHandlers?: {
+    ratioChanged?: (ratio: number) => void
+  }
+}
 `
 
 const demoProps: BeforeAfterProps = {

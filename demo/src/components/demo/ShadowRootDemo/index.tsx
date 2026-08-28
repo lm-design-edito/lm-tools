@@ -30,8 +30,6 @@ const tsxDetails = `/**
  * assigned to \`shadowRoot.adoptedStyleSheets\` (if supported by the browser).
  * @property injectedStyles - Raw CSS string injected into the Shadow Root inside a \`<style>\` element.
  * Useful as a fallback when constructable stylesheets are not used.
- * @property onMount - Callback invoked once the Shadow Root is created.
- * Receives the created \`ShadowRoot\` instance.
  * @property children - React children rendered inside the Shadow Root via a React portal.
  */
 export type Props = PropsWithChildren<WithClassName<{
@@ -40,7 +38,6 @@ export type Props = PropsWithChildren<WithClassName<{
   slotAssignment?: 'named' | 'manual'
   adoptedStyleSheets?: CSSStyleSheet[]
   injectedStyles?: string
-  onMount?: (shadowRoot: ShadowRoot) => void
 }>>`
 
 const demoProps: SRCompProps = {

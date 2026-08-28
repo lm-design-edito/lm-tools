@@ -46,9 +46,9 @@ const tsxDetails = `
  * regardless of \`timecodeMs\`. Useful to keep the final subtitle group visible after
  * media playback finishes.
  * @property onLoaded - Callback invoked with the raw SRT string after a successful
- * fetch. Not called when \`srtFileContent\` is used directly.
+ * fetch and parse. Not called when \`srtFileContent\` is used directly.
  * @property onParsed - Callback invoked with the raw SRT string has been parsed.
- * @property onLoadError - Callback invoked with an \`Error\` if the fetch or parse step fails.
+ * @property onLoadFailed - Callback invoked with an \`Error\` if the fetch or parse step fails.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React children rendered inside the root element, after the subtitle groups.
  */
@@ -60,7 +60,7 @@ export type Props = PropsWithChildren<WithClassName<{
   isEnded?: boolean
   onLoaded?: (subs: string) => void
   onParsed?: (subs: ParsedSub[]) => void
-  onLoadError?: (error: Error) => void
+  onLoadFailed?: (error: Error) => void
 }>>`
 
 

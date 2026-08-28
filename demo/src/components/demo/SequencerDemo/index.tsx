@@ -103,8 +103,6 @@ export type ControlledProps = PropsWithChildren<WithClassName<{
  * time the component leaves the viewport. No-op when \`step\` or \`play\` is controlled.
  * @property playOnVisible - When \`true\`, starts internal playback when the
  * component enters the viewport. No-op when \`play\` is controlled.
- * @property playOnVisibleMaxCount - Sets a maximum amount of automatic plays when the
- * comp becomes visible.
  * @property pauseOnHidden - When \`true\`, pauses internal playback when the
  * component leaves the viewport. No-op when \`play\` is controlled.
  * @property actionHandlers - Optional handlers for imperative actions triggered
@@ -126,7 +124,6 @@ export type Props = Omit<ControlledProps, '_modifiers'> & {
   resetOnVisible?: boolean
   resetOnHidden?: boolean
   playOnVisible?: boolean
-  playOnVisibleMaxCount?: number
   pauseOnHidden?: boolean
   actionHandlers?: {
     intersected?: IOCompProps['onIntersected']

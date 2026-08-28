@@ -31,11 +31,9 @@ const tsxDetails = `
  * Extends all native {@link ButtonHTMLAttributes} and {@link WithClassName}
  * with optional label and error content.
  *
- * @property label - Content rendered as the button label.
- * @property error - Content rendered to convey an error state associated with the button.
  * @property className - Additional class name(s) applied to the root element.
  */
-export type Props = ButtonHTMLAttributes<HTMLButtonElement> & WithClassName<{}>
+export type Props = ButtonHTMLAttributes<HTMLButtonElement> & WithClassName<Record<string, unknown>>
 `
 
 const demoProps: ButtonProps = {

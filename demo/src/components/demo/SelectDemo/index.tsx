@@ -39,15 +39,31 @@ const demoStyles = ``
 
 const tsxDetails = `
 /**
+ * Props for the {@link ControlledSelect} component.
+ *
+ * Extends all native {@link SelectHTMLAttributes} and {@link WithClassName}
+ * with optional label, error content, and option children.
+ *
+ * @property label - Content rendered as an associated \`<label>\`. When omitted, no label is rendered.
+ * @property error - Content rendered as an error message below the select. When omitted, no error is rendered.
+ * @property className - Additional class name(s) applied to the select element.
+ * @property children - \`<option>\` or \`<optgroup>\` elements rendered inside the select.
+ */
+export type ControlledProps = SelectHTMLAttributes<HTMLSelectElement> & PropsWithChildren<WithClassName<{
+  label?: ReactNode
+  error?: ReactNode
+}>>
+
+/**
  * Props for the {@link Select} component.
  *
  * Alias of {@link ControlledProps}.
  *
- * All native input attributes remain available, including \`value\`
+ * All native select attributes remain available, including \`value\`
  * and \`onChange\`, allowing the component to operate in either
  * controlled or hybrid mode.
  */
-export type Props = ControlledProps & {}
+export type Props = ControlledProps
 `
 
 const demoProps: SelectProps = {
