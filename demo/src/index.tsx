@@ -15,6 +15,7 @@ import { ImageDemo } from './components/demo/ImageDemo/index.js'
 import { InputDemo } from './components/demo/InputDemo/index.js'
 import { IntersectionObserverDemo } from './components/demo/IntersectionObserverDemo/index.js'
 import { JsonEditorDemo } from './components/demo/JsonEditorDemo/index.js'
+import { ListLoaderDemo } from './components/demo/ListLoaderDemo/index.js'
 import { OverlayerDemo } from './components/demo/OverlayerDemo/index.js'
 import { PaginatorDemo } from './components/demo/PaginatorDemo/index.js'
 import { ResizeObserverDemo } from './components/demo/ResizeObserverDemo/index.js'
@@ -48,6 +49,7 @@ const components: Array<{
   { name: 'Input', comp: <InputDemo /> },
   { name: 'IntersectionObserver', comp: <IntersectionObserverDemo /> },
   { name: 'JsonEditor', comp: <JsonEditorDemo /> },
+  { name: 'ListLoader', comp: <ListLoaderDemo /> },
   { name: 'Overlayer', comp: <OverlayerDemo /> },
   { name: 'Paginator', comp: <PaginatorDemo /> },
   { name: 'ResizeObserver', comp: <ResizeObserverDemo /> },
