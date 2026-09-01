@@ -12,13 +12,132 @@ import { unknownToString } from '../../agnostic/errors/unknown-to-string/index.j
 import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import { subtitles as publicClassName } from '../public-classnames.js'
-import type { ParsedSub } from './types.js'
-import {
-  computeSubGroupsWithBoundaries,
-  getCurrentGroup,
-  parseSubs
-} from './utils.js'
 import cssModule from './styles.module.css'
+
+/**
+ * A single parsed subtitle entry from an SRT file.
+ *
+ * @property id - Sequential subtitle number.
+ * @property start - Start time in milliseconds.
+ * @property end - End time in milliseconds.
+ * @property content - Subtitle text content.
+ */
+export type ParsedSub = {
+  id: number
+  start?: number
+  end?: number
+  content?: string
+}
+
+/**
+ * The inclusive ID boundaries of a subtitle group.
+ *
+ * @property startId - ID of the first subtitle in the group.
+ * @property endId - ID of the last subtitle in the group.
+ */
+export type SubGroupBoundaries = {
+  startId: number
+  endId: number
+}
+
+/** Converts an SRT timecode (hh:mm:ss,ms) to milliseconds. */
+const getTimecodeToMs = (timecode: string): number => {
+  const [hours = '0', minutes = '0', secondsAndMs = '0,0'] = timecode.split(':')
+  const [seconds = '0', milliseconds = '0'] = secondsAndMs.split(',')
+  let result = parseInt(hours) * 60 * 60 * 1000
+  result += parseInt(minutes) * 60 * 1000
+  result += parseInt(seconds) * 1000
+  result += parseInt(milliseconds)
+  return result
+}
+
+/** Parses a raw SRT subtitle text into a list of {@link ParsedSub} entries. */
+const parseSubs = (rawSubs: string): ParsedSub[] => {
+  const numberRegex = /^\d+$/v
+  const timecodeRegex = /^[0-9]+:[0-9]+:[0-9]+,[0-9]+\s*-->\s*[0-9]+:[0-9]+:[0-9]+,[0-9]+$/v
+  const parsedSubs: ParsedSub[] = []
+
+  rawSubs.split('\n').forEach(line => {
+    if (line.trim() === '') return
+    const lastParsedSub = parsedSubs[parsedSubs.length - 1]
+    const matchId = line.match(numberRegex)
+    const matchTimecode = line.match(timecodeRegex)
+    // id
+    if (matchId !== null) {
+      if (lastParsedSub === undefined
+        || lastParsedSub.content !== undefined) {
+        const parsedSub: ParsedSub = { id: parseInt(line) }
+        parsedSubs.push(parsedSub)
+        return
+      }
+    }
+
+    // timecode
+    if (matchTimecode !== null) {
+      if (lastParsedSub?.id !== undefined) {
+        const [rawStart = '', rawEnd = ''] = line.split('-->')
+        const startTime = rawStart.trim()
+        const endTime = rawEnd.trim()
+        lastParsedSub.start = getTimecodeToMs(startTime)
+        lastParsedSub.end = getTimecodeToMs(endTime)
+        return
+      }
+    }
+
+    // content
+    if (lastParsedSub?.id !== undefined
+      && lastParsedSub.start !== undefined
+      && lastParsedSub.end !== undefined) {
+      if (lastParsedSub.content !== undefined) {
+        lastParsedSub.content += `\n${line}`
+        return
+      }
+      lastParsedSub.content = line
+    }
+  })
+
+  return parsedSubs
+}
+
+/** Computes subtitle groups with their inclusive `startId` / `endId` boundaries. */
+const computeSubGroupsWithBoundaries = (
+  subsGroups: number[] | undefined,
+  highestSubId: number
+): SubGroupBoundaries[] => {
+  const fallback = [{ startId: 1, endId: highestSubId }]
+  if (subsGroups === undefined || subsGroups.length === 0) return fallback
+  const emptySubGroupBoundaries: SubGroupBoundaries[] = []
+  return subsGroups.reduce(
+    (acc, curr, currIndex) => {
+      const lastInAcc = acc[acc.length - 1]
+      const startId = lastInAcc === undefined ? 1 : lastInAcc.endId + 1
+      const endId = curr
+      if (currIndex === subsGroups.length - 1
+        && endId !== highestSubId) {
+        return [
+          ...acc,
+          { startId, endId },
+          { startId: endId + 1, endId: highestSubId }
+        ]
+      }
+      return [...acc, { startId, endId }]
+    },
+    emptySubGroupBoundaries
+  )
+}
+
+/** Returns the group holding the last elapsed subtitle, or the last group once playback ended. */
+const getCurrentGroup = (
+  subsGroupsWithBoundaries: SubGroupBoundaries[],
+  lastPrevSubId: number | undefined,
+  isEnded: boolean | undefined
+): SubGroupBoundaries | undefined => {
+  const previousGroups = subsGroupsWithBoundaries.filter(group => group.startId <= (lastPrevSubId ?? 0))
+  if (previousGroups.length === 0) return isEnded === true
+    ? subsGroupsWithBoundaries[subsGroupsWithBoundaries.length - 1]
+    : subsGroupsWithBoundaries[0]
+  return previousGroups[previousGroups.length - 1]
+}
 
 /**
  * Props for the {@link Subtitles} component.
