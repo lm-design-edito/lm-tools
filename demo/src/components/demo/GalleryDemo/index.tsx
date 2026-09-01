@@ -43,12 +43,14 @@ const tsxDetails = `/**
  * value instead of internal scroll-derived state. When omitted, the component manages its own
  * active index based on scroll position.
  * @property noSnap - Optional, defines if scroll is free in side the scroller or not (defaults to false)
- * @property stateHandlers - Callbacks called after the state changed
- * @property stateHandlers.slotChanged - Called when the active slot changes due to scrolling. Receives the new active index.
- * @property actionHandlers - Callbacks called after a user interaction
- * @property actionHandlers.prevClick - Called when the "previous" control is clicked. Receives the current active index before navigation occurs.
- * @property actionHandlers.nextClick - Called when the "next" control is clicked. Receives the current active index before navigation occurs.
- * @property actionHandlers.paginationClick - Called when a pagination item is clicked. Receives the current active index and the target index.
+ * @property onPrevClicked - Called when the "previous" control is clicked,
+ * before the gallery reacts, with the active index as it was.
+ * @property onNextClicked - Called when the "next" control is clicked, before
+ * the gallery reacts, with the active index as it was.
+ * @property onPaginationClicked - Called when a pagination item is clicked,
+ * before the gallery reacts, with the active index as it was and the target index.
+ * @property onActiveSlotChanged - Called after the active slot changed, with
+ * the new index.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Elements rendered as gallery slots. Each child is wrapped in a slot container.
  */
@@ -62,14 +64,10 @@ export type Props = PropsWithChildren<WithClassName<{
   defaultActive?: number
   active?: number
   noSnap?: boolean
-  stateHandlers?: {
-    slotChanged?: (activePos: number) => void
-  }
-  actionHandlers?: {
-    prevClick?: (activePos: number) => void
-    nextClick?: (activePos: number) => void
-    paginationClick?: (activePos: number, targetPos: number) => void
-  }
+  onPrevClicked?: (activePos: number) => void
+  onNextClicked?: (activePos: number) => void
+  onPaginationClicked?: (activePos: number, targetPos: number) => void
+  onActiveSlotChanged?: (activePos: number) => void
 }>>`
 
 const demoStyles = `

@@ -9,10 +9,22 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { mergeClassNames } from '../utils/index.js'
+import {
+  mergeClassNames,
+  useChangeDispatch
+} from '../utils/index.js'
 import { gallery as publicClassName } from '../public-classnames.js'
 import { forceActivateSlot } from './utils.js'
 import cssModule from './styles.module.css'
+
+/** Resolves one side's padding to a CSS length, falling back to the shorthand then to `0px`. */
+function resolvePadding (
+  side: string | number | undefined,
+  shorthand: string | number | undefined
+): string {
+  const value = side ?? shorthand ?? 0
+  return typeof value === 'number' ? `${value}px` : value
+}
 
 /**
  * Props for the Gallery component.
@@ -37,12 +49,14 @@ import cssModule from './styles.module.css'
  * value instead of internal scroll-derived state. When omitted, the component manages its own
  * active index based on scroll position.
  * @property noSnap - Optional, defines if scroll is free in side the scroller or not (defaults to false)
- * @property stateHandlers - Callbacks called after the state changed
- * @property stateHandlers.slotChanged - Called when the active slot changes due to scrolling. Receives the new active index.
- * @property actionHandlers - Callbacks called after a user interaction
- * @property actionHandlers.prevClick - Called when the "previous" control is clicked. Receives the current active index before navigation occurs.
- * @property actionHandlers.nextClick - Called when the "next" control is clicked. Receives the current active index before navigation occurs.
- * @property actionHandlers.paginationClick - Called when a pagination item is clicked. Receives the current active index and the target index.
+ * @property onPrevClicked - Called when the "previous" control is clicked,
+ * before the gallery reacts, with the active index as it was.
+ * @property onNextClicked - Called when the "next" control is clicked, before
+ * the gallery reacts, with the active index as it was.
+ * @property onPaginationClicked - Called when a pagination item is clicked,
+ * before the gallery reacts, with the active index as it was and the target index.
+ * @property onActiveSlotChanged - Called after the active slot changed, with
+ * the new index.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Elements rendered as gallery slots. Each child is wrapped in a slot container.
  */
@@ -56,14 +70,10 @@ export type Props = PropsWithChildren<WithClassName<{
   defaultActive?: number
   active?: number
   noSnap?: boolean
-  stateHandlers?: {
-    slotChanged?: (activePos: number) => void
-  }
-  actionHandlers?: {
-    prevClick?: (activePos: number) => void
-    nextClick?: (activePos: number) => void
-    paginationClick?: (activePos: number, targetPos: number) => void
-  }
+  onPrevClicked?: (activePos: number) => void
+  onNextClicked?: (activePos: number) => void
+  onPaginationClicked?: (activePos: number, targetPos: number) => void
+  onActiveSlotChanged?: (activePos: number) => void
 }>>
 
 /**
@@ -89,8 +99,10 @@ export const Gallery: FunctionComponent<Props> = ({
   defaultActive,
   active,
   noSnap,
-  stateHandlers,
-  actionHandlers,
+  onPrevClicked,
+  onNextClicked,
+  onPaginationClicked,
+  onActiveSlotChanged,
   children,
   className
 }) => {
@@ -100,24 +112,26 @@ export const Gallery: FunctionComponent<Props> = ({
   const [canGoLeft, setCanGoLeft] = useState(false)
   const [canGoRight, setCanGoRight] = useState(false)
   const childrenCount = Children.count(children)
+  const isControlled = active !== undefined
 
-  // State change handlers
-  useEffect(() => {
-    stateHandlers?.slotChanged?.(activeIndex)
-  }, [activeIndex])
+  // State dispatch
+  useChangeDispatch(activeIndex, onActiveSlotChanged)
 
   // User actions handlers
   const handlePrevClick = (): void => {
-    actionHandlers?.prevClick?.(activeIndex)
-    if (active === undefined) forceActivateSlot(scrollerRef.current, activeIndex - 1)
+    onPrevClicked?.(activeIndex)
+    if (isControlled) return
+    forceActivateSlot(scrollerRef.current, activeIndex - 1)
   }
   const handleNextClick = (): void => {
-    actionHandlers?.nextClick?.(activeIndex)
-    if (active === undefined) forceActivateSlot(scrollerRef.current, activeIndex + 1)
+    onNextClicked?.(activeIndex)
+    if (isControlled) return
+    forceActivateSlot(scrollerRef.current, activeIndex + 1)
   }
   const handlePaginationClick = (pos: number): void => {
-    actionHandlers?.paginationClick?.(activeIndex, pos)
-    if (active === undefined) forceActivateSlot(scrollerRef.current, pos)
+    onPaginationClicked?.(activeIndex, pos)
+    if (isControlled) return
+    forceActivateSlot(scrollerRef.current, pos)
   }
 
   // Scroll position calculation
@@ -191,20 +205,8 @@ export const Gallery: FunctionComponent<Props> = ({
   const nextBtnClss = c('next')
   const paginationClss = c('pagination')
   const dataAttributes: Record<string, string> = { 'data-active': `${activeIndex}` }
-  const actualPaddingLeft = typeof paddingLeft === 'number'
-    ? `${paddingLeft}px`
-    : typeof paddingLeft === 'string'
-      ? paddingLeft
-      : typeof padding === 'number'
-        ? `${padding}px`
-        : padding ?? '0px'
-  const actualPaddingRight = typeof paddingRight === 'number'
-    ? `${paddingRight}px`
-    : typeof paddingRight === 'string'
-      ? paddingRight
-      : typeof padding === 'number'
-        ? `${padding}px`
-        : padding ?? '0px'
+  const actualPaddingLeft = resolvePadding(paddingLeft, padding)
+  const actualPaddingRight = resolvePadding(paddingRight, padding)
   return <div
     className={rootClss}
     {...dataAttributes}>
