@@ -16,7 +16,7 @@ via an {@link IntersectionObserverComponent}.
 Supports mixed controlled/uncontrolled usage: passing \`step\` disables the
 internal interval while still applying loop/clamp arithmetic before forwarding
 to the controlled layer. Passing \`play\` disables internal play state management
-while still allowing viewport handlers to fire \`actionHandlers.intersected\`.
+while still allowing viewport handlers to fire \`onIntersected\`.
 
 ### Forwarded to {@link ControlledSequencer}
 - \`step\` — the effective step, after loop/clamp arithmetic.
@@ -95,14 +95,13 @@ export type ControlledProps = PropsWithChildren<WithClassName<{
  * component enters the viewport. No-op when \`play\` is controlled.
  * @property pauseOnHidden - When \`true\`, pauses internal playback when the
  * component leaves the viewport. No-op when \`play\` is controlled.
- * @property actionHandlers - Optional handlers for imperative actions triggered
- * by external events:
- * - \`intersected\` — forwarded verbatim to the internal
- * {@link IntersectionObserverComponent}'s \`onIntersected\`, called on every
- * intersection change regardless of controlled state.
- * @property stateHandlers - Optional callbacks invoked when derived state changes:
- * - \`isPlaying\` — called with the new play state whenever it changes.
- * - \`stepChanged\` — called with the new forwarded step index whenever it changes.
+ * @property onIntersected - Forwarded verbatim to the internal
+ * {@link IntersectionObserverComponent}, and called on every intersection
+ * change whichever mode the sequencer runs in.
+ * @property onIsPlayingChanged - Called after the effective play state changed,
+ * with the new value.
+ * @property onStepChanged - Called after the forwarded step changed, with the
+ * new value.
  */
 export type Props = Omit<ControlledProps, 'isPlaying' | 'tempo'> & {
   defaultStep?: number
@@ -115,13 +114,9 @@ export type Props = Omit<ControlledProps, 'isPlaying' | 'tempo'> & {
   resetOnHidden?: boolean
   playOnVisible?: boolean
   pauseOnHidden?: boolean
-  actionHandlers?: {
-    intersected?: IOCompProps['onIntersected']
-  }
-  stateHandlers?: {
-    isPlaying?: (isPlaying: boolean) => void
-    stepChanged?: (step: number) => void
-  }
+  onIntersected?: IOCompProps['onIntersected']
+  onIsPlayingChanged?: (isPlaying: boolean) => void
+  onStepChanged?: (step: number) => void
 }`
 
 const demoStyles = `

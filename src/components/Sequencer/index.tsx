@@ -3,8 +3,7 @@ import {
   useEffect,
   useCallback,
   Children,
-  type FunctionComponent,
-  useRef
+  type FunctionComponent
 } from 'react'
 import { absoluteModulo } from '../../agnostic/numbers/absolute-modulo/index.js'
 import { clamp } from '../../agnostic/numbers/clamp/index.js'
@@ -12,6 +11,7 @@ import {
   type Props as IOCompProps,
   IntersectionObserverComponent
 } from '../IntersectionObserver/index.js'
+import { useChangeDispatch } from '../utils/index.js'
 import {
   type Props as ControlledProps,
   ControlledSequencer
@@ -45,14 +45,13 @@ import {
  * component enters the viewport. No-op when `play` is controlled.
  * @property pauseOnHidden - When `true`, pauses internal playback when the
  * component leaves the viewport. No-op when `play` is controlled.
- * @property actionHandlers - Optional handlers for imperative actions triggered
- * by external events:
- * - `intersected` — forwarded verbatim to the internal
- * {@link IntersectionObserverComponent}'s `onIntersected`, called on every
- * intersection change regardless of controlled state.
- * @property stateHandlers - Optional callbacks invoked when derived state changes:
- * - `isPlaying` — called with the new play state whenever it changes.
- * - `stepChanged` — called with the new forwarded step index whenever it changes.
+ * @property onIntersected - Forwarded verbatim to the internal
+ * {@link IntersectionObserverComponent}, and called on every intersection
+ * change whichever mode the sequencer runs in.
+ * @property onIsPlayingChanged - Called after the effective play state changed,
+ * with the new value.
+ * @property onStepChanged - Called after the forwarded step changed, with the
+ * new value.
  */
 export type Props = Omit<ControlledProps, 'isPlaying' | 'tempo'> & {
   defaultStep?: number
@@ -65,13 +64,9 @@ export type Props = Omit<ControlledProps, 'isPlaying' | 'tempo'> & {
   resetOnHidden?: boolean
   playOnVisible?: boolean
   pauseOnHidden?: boolean
-  actionHandlers?: {
-    intersected?: IOCompProps['onIntersected']
-  }
-  stateHandlers?: {
-    isPlaying?: (isPlaying: boolean) => void
-    stepChanged?: (step: number) => void
-  }
+  onIntersected?: IOCompProps['onIntersected']
+  onIsPlayingChanged?: (isPlaying: boolean) => void
+  onStepChanged?: (step: number) => void
 }
 
 /**
@@ -83,7 +78,7 @@ export type Props = Omit<ControlledProps, 'isPlaying' | 'tempo'> & {
  * Supports mixed controlled/uncontrolled usage: passing `step` disables the
  * internal interval while still applying loop/clamp arithmetic before forwarding
  * to the controlled layer. Passing `play` disables internal play state management
- * while still allowing viewport handlers to fire `actionHandlers.intersected`.
+ * while still allowing viewport handlers to fire `onIntersected`.
  *
  * ### Forwarded to {@link ControlledSequencer}
  * - `step` — the effective step, after loop/clamp arithmetic.
@@ -110,8 +105,9 @@ export const Sequencer: FunctionComponent<Props> = ({
   resetOnHidden,
   playOnVisible,
   pauseOnHidden,
-  actionHandlers,
-  stateHandlers,
+  onIntersected,
+  onIsPlayingChanged,
+  onStepChanged,
   ...controlledProps
 }) => {
   // State
@@ -120,7 +116,6 @@ export const Sequencer: FunctionComponent<Props> = ({
   const [internalStep, setInternalStep] = useState(step ?? defaultStep ?? 0)
   const actualPlay = play ?? internalPlay
   const actualStep = step ?? internalStep
-  const actualPlayRef = useRef(actualPlay)
 
   // Effects
   useEffect(() => {
@@ -144,25 +139,16 @@ export const Sequencer: FunctionComponent<Props> = ({
     const rightClamp = clampLast === true ? stepsCount - 1 : Infinity
     forwardedStep = clamp(actualStep, leftClamp, rightClamp)
   }
-  const forwardedStepRef = useRef(forwardedStep)
 
-  // State change handlers
-  useEffect(() => {
-    if (actualPlay !== actualPlayRef.current) {
-      actualPlayRef.current = actualPlay
-      stateHandlers?.isPlaying?.(actualPlay)
-    }
-    if (forwardedStep !== forwardedStepRef.current) {
-      forwardedStepRef.current = forwardedStep
-      stateHandlers?.stepChanged?.(forwardedStep)
-    }
-  }, [actualPlay, forwardedStep])
+  // State dispatch
+  useChangeDispatch(actualPlay, onIsPlayingChanged)
+  useChangeDispatch(forwardedStep, onStepChanged)
 
   // Action handlers
   const handleIntersection = useCallback<NonNullable<IOCompProps['onIntersected']>>(({ ioEntry, observer }) => {
+    onIntersected?.({ ioEntry, observer })
     if (play === true || step !== undefined) return
     const { isIntersecting } = ioEntry ?? {}
-    actionHandlers?.intersected?.({ ioEntry, observer })
     if (isIntersecting === true) {
       if (resetOnVisible === true) setInternalStep(0)
       if (playOnVisible === true) setInternalPlay(true)
@@ -177,7 +163,7 @@ export const Sequencer: FunctionComponent<Props> = ({
     pauseOnHidden,
     play,
     step,
-    actionHandlers
+    onIntersected
   ])
 
   // Rendering
