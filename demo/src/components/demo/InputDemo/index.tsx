@@ -8,10 +8,10 @@ import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 const name = 'Input'
 
 const description = `
-Input field component supporting controlled and hybrid usage.
+Input field supporting controlled and uncontrolled usage.
 
-Wraps {@link ControlledInput} and automatically manages the input value
-when no \`value\` prop is provided.
+Renders a native \`<input>\` with optional label and error feedback. All
+standard input attributes are forwarded to the underlying element.
 
 ### CSS elements
 - \`label\`
@@ -20,16 +20,14 @@ when no \`value\` prop is provided.
 @param props - Component properties.
 @see {@link Props}
 
-@returns A labelled input with optional internal value management.
+@returns A labelled input with optional error feedback.
 
 @remarks
-- When \`value\` is defined, the component behaves as a controlled component:
-  displayed value updates are entirely driven by the parent component.
-- When \`value\` is omitted, the component behaves in hybrid mode:
-  it initializes an internal state from the initial \`value\` prop and
-  subsequently manages value updates itself.
-- In hybrid mode, the internal value is updated before forwarding
-  the \`onChange\` callback.
+- In controlled mode (\`value\` defined), the displayed value is fully driven
+  by the parent and internal state is never updated.
+- In uncontrolled mode, internal state is initialized from \`defaultValue\` and
+  updated before \`onChange\` is forwarded.
+- \`onChange\` fires in both modes.
 `
 
 /* Demo CSS */
@@ -39,30 +37,19 @@ const demoStyles = ``
 
 const tsxDetails = `
 /**
- * Props for the {@link ControlledInput} component.
+ * Props for the {@link Input} component.
  *
  * Extends all native {@link InputHTMLAttributes} and {@link WithClassName}
  * with optional label and error content.
  *
  * @property label - Content rendered as an associated \`<label>\`. When omitted, no label is rendered.
  * @property error - Content rendered as an error message below the input. When omitted, no error is rendered.
- * @property className - Additional class name(s) applied to the root element.
+ * @property className - Additional class name(s) applied to the input element.
  */
-export type ControlledProps = InputHTMLAttributes<HTMLInputElement> & WithClassName<{
+export type Props = InputHTMLAttributes<HTMLInputElement> & WithClassName<{
   label?: ReactNode
   error?: ReactNode
 }>
-
-/**
- * Props for the {@link Input} component.
- *
- * Alias of {@link ControlledProps}.
- *
- * All native input attributes remain available, including \`value\`
- * and \`onChange\`, allowing the component to operate in either
- * controlled or hybrid mode.
- */
-export type Props = ControlledProps
 `
 
 const demoProps: InputProps = {

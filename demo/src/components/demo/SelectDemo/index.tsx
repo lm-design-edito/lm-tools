@@ -8,10 +8,10 @@ import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 const name = 'Select'
 
 const description = `
-Select field component supporting controlled and hybrid usage.
+Select field supporting controlled and uncontrolled usage.
 
-Wraps {@link ControlledSelect} and automatically manages the input value
-when no \`value\` prop is provided.
+Renders a native \`<select>\` with optional label and error feedback. All
+standard select attributes are forwarded to the underlying element.
 
 ### CSS elements
 - \`label\`
@@ -20,16 +20,14 @@ when no \`value\` prop is provided.
 @param props - Component properties.
 @see {@link Props}
 
-@returns A labelled input with optional internal value management.
+@returns A labelled select with optional error feedback.
 
 @remarks
-- When \`value\` is defined, the component behaves as a controlled component:
-  displayed value updates are entirely driven by the parent component.
-- When \`value\` is omitted, the component behaves in hybrid mode:
-  it initializes an internal state from the initial \`value\` prop and
-  subsequently manages value updates itself.
-- In hybrid mode, the internal value is updated before forwarding
-  the \`onChange\` callback.
+- In controlled mode (\`value\` defined), the displayed value is fully driven
+  by the parent and internal state is never updated.
+- In uncontrolled mode, internal state is initialized from \`defaultValue\` and
+  updated before \`onChange\` is forwarded.
+- \`onChange\` fires in both modes.
 `
 
 /* Demo CSS */
@@ -39,7 +37,7 @@ const demoStyles = ``
 
 const tsxDetails = `
 /**
- * Props for the {@link ControlledSelect} component.
+ * Props for the {@link Select} component.
  *
  * Extends all native {@link SelectHTMLAttributes} and {@link WithClassName}
  * with optional label, error content, and option children.
@@ -49,21 +47,10 @@ const tsxDetails = `
  * @property className - Additional class name(s) applied to the select element.
  * @property children - \`<option>\` or \`<optgroup>\` elements rendered inside the select.
  */
-export type ControlledProps = SelectHTMLAttributes<HTMLSelectElement> & PropsWithChildren<WithClassName<{
+export type Props = SelectHTMLAttributes<HTMLSelectElement> & PropsWithChildren<WithClassName<{
   label?: ReactNode
   error?: ReactNode
 }>>
-
-/**
- * Props for the {@link Select} component.
- *
- * Alias of {@link ControlledProps}.
- *
- * All native select attributes remain available, including \`value\`
- * and \`onChange\`, allowing the component to operate in either
- * controlled or hybrid mode.
- */
-export type Props = ControlledProps
 `
 
 const demoProps: SelectProps = {
