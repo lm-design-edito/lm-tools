@@ -222,8 +222,8 @@ export const Subtitles: FunctionComponent<Props> = ({
     src?: string,
     srtFileContent?: string
   ): Promise<void> => {
-    if (src === undefined) return
     if (srtFileContent !== undefined) return setParsedSubs(parseSubs(srtFileContent))
+    if (src === undefined) return
     setIsLoading(true)
     setLoadError(null)
     try {
