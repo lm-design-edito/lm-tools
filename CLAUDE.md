@@ -233,7 +233,6 @@ Ordered alphabetically, remaining work only — a component drops off the list o
 ### Reporté (à traiter plus tard, pas maintenant)
 
 - Extraire les constructions de custom props CSS et de data-attributes, réinventées dans 6 composants, en utilitaires partagés (`toCssVars`, `toDataAttributes`).
-- Uniformiser l'échappatoire `_modifiers` / `_dataAttributes`, aujourd'hui présente chez `Sequencer` (les deux, préfixage `data-` interne) et `Video` (`_modifiers` seul, pré-formaté) — soit la généraliser, soit la supprimer.
 - Trancher le mode hybride mono-fichier pour `Gallery`, `Drawer`, `Theatre`, `Disclaimer` par rapport au split des autres.
 - `JsonEditor` en mode contrôlé.
 
