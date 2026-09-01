@@ -213,7 +213,6 @@ Ordered alphabetically, remaining work only — a component drops off the list o
 | BeforeAfter | handlers plats ; `onRatioChanged` doit aussi partir en mode contrôlé ; nommer/expliquer le `1.02 * x - 0.01` ; `event` inutilisés dans 4 handlers |
 | Clippable | handlers plats (`onCopyClicked`, `onClipped`) |
 | Disclaimer | handlers plats (`onDismissClicked`, `onIsOnChanged`) ; `useChangeDispatch` |
-| Drawer | **bug** — en mode contrôlé les clics opener/closer ne remontent rien, ajouter `onOpenerClicked` / `onCloserClicked` qui partent dans les deux modes ; `onIsOpenedChanged` ; `useChangeDispatch` |
 | Gallery | handlers plats ; `useChangeDispatch` (`slotChanged` part au montage) ; factoriser l'échelle de ternaires `actualPaddingLeft` / `actualPaddingRight` |
 | Image | **bug** — `handleDisclaimerDismissClick` est un `useCallback([])` qui capture un `isDisclaimerOn` périmé ; double source de vérité sur l'état du disclaimer (force `isOn` sur l'enfant) |
 | Input | fusionner `index.controlled.tsx` dans `index.tsx` ; vérifier si le bloc `target.value = …` sert encore, sinon le supprimer |
