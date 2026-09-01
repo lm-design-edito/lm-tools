@@ -33,6 +33,6 @@ export const Button: FunctionComponent<Props> = ({
   ...rest
 }) => {
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null), className)
+  const rootClss = mergeClassNames(c(), className)
   return <button {...rest} className={rootClss} />
 }

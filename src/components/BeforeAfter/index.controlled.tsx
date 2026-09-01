@@ -15,7 +15,7 @@ import { beforeAfter as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
 /**
- * Props for the {@link BeforeAfterControlled} component.
+ * Props for the {@link ControlledBeforeAfter} component.
  *
  * Extends {@link WithClassName} with layout, content, and interaction configuration.
  *
@@ -68,7 +68,7 @@ export type Props = PropsWithChildren<WithClassName<{
  * @see {@link Props}
  * @returns A split-panel container with pointer interaction handlers and ratio state applied.
  */
-export const BeforeAfterControlled: FunctionComponent<Props> = ({
+export const ControlledBeforeAfter: FunctionComponent<Props> = ({
   mode = 'horizontal',
   ratio = 0,
   before,

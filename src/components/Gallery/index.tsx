@@ -32,7 +32,7 @@ import cssModule from './styles.module.css'
  * - A ReactNode used for all pages,
  * - A function receiving the page index and returning a ReactNode,
  * - Undefined, in which case the page index is displayed.
- * @property initActive - Optional. When uncontrolled mode, sets the default active slot at mount
+ * @property defaultActive - Optional. When uncontrolled mode, sets the default active slot at mount
  * @property active - Optional controlled index. When provided, the active slot is driven by this
  * value instead of internal scroll-derived state. When omitted, the component manages its own
  * active index based on scroll position.
@@ -53,7 +53,7 @@ export type Props = PropsWithChildren<WithClassName<{
   prevButtonContent?: ReactNode
   nextButtonContent?: ReactNode
   paginationContent?: ReactNode | ((page: number) => ReactNode)
-  initActive?: number
+  defaultActive?: number
   active?: number
   noSnap?: boolean
   stateHandlers?: {
@@ -86,7 +86,7 @@ export const Gallery: FunctionComponent<Props> = ({
   prevButtonContent,
   nextButtonContent,
   paginationContent,
-  initActive,
+  defaultActive,
   active,
   noSnap,
   stateHandlers,
@@ -160,7 +160,7 @@ export const Gallery: FunctionComponent<Props> = ({
 
   // Sync scroll position to 'active' prop at mount time
   useEffect(() => {
-    const toActivate = active ?? initActive
+    const toActivate = active ?? defaultActive
     if (toActivate === undefined) return
     const id = setTimeout(() => forceActivateSlot(scrollerRef.current, toActivate, false), 50)
     return () => clearTimeout(id)

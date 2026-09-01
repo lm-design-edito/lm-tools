@@ -94,7 +94,7 @@ export const JsonEditor: FunctionComponent<Props> = ({
       else throw err
     }
   }
-  const rootClss = mergeClassNames(c(null, {}), className)
+  const rootClss = mergeClassNames(c(), className)
   return <div className={rootClss}>
     <ValueEditor
       defaultValue={defaultValue}

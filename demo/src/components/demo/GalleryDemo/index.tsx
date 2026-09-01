@@ -38,7 +38,7 @@ const tsxDetails = `/**
  * - A ReactNode used for all pages,
  * - A function receiving the page index and returning a ReactNode,
  * - Undefined, in which case the page index is displayed.
- * @property initActive - Optional. When uncontrolled mode, sets the default active slot at mount
+ * @property defaultActive - Optional. When uncontrolled mode, sets the default active slot at mount
  * @property active - Optional controlled index. When provided, the active slot is driven by this
  * value instead of internal scroll-derived state. When omitted, the component manages its own
  * active index based on scroll position.
@@ -59,7 +59,7 @@ export type Props = PropsWithChildren<WithClassName<{
   prevButtonContent?: ReactNode
   nextButtonContent?: ReactNode
   paginationContent?: ReactNode | ((page: number) => ReactNode)
-  initActive?: number
+  defaultActive?: number
   active?: number
   noSnap?: boolean
   stateHandlers?: {

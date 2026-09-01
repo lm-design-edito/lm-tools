@@ -231,8 +231,7 @@ export const Video: FunctionComponent<Props> = ({
 
   // Render
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null, {
-  }), wrapperClassName)
+  const rootClss = mergeClassNames(c(), wrapperClassName)
 
   const sensitiveContent = <ControlledVideo
     {...controlledProps}

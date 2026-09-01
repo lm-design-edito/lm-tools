@@ -1,6 +1,6 @@
 import { type FunctionComponent, useState } from 'react'
 import {
-  BeforeAfterControlled,
+  ControlledBeforeAfter,
   type Props as ControlledProps
 } from './index.controlled.js'
 
@@ -26,7 +26,7 @@ export type Props = ControlledProps & {
 /**
  * Before/after comparison component with optional controlled and uncontrolled behavior.
  *
- * Wraps {@link BeforeAfterControlled} and manages internal divider position when
+ * Wraps {@link ControlledBeforeAfter} and manages internal divider position when
  * operating in uncontrolled mode. The active axis used to derive the ratio from
  * pointer position depends on `mode`: horizontal interactions use the x ratio,
  * vertical interactions use the y ratio.
@@ -41,7 +41,7 @@ export type Props = ControlledProps & {
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A {@link BeforeAfterControlled} instance with ratio state managed internally when uncontrolled.
+ * @returns A {@link ControlledBeforeAfter} instance with ratio state managed internally when uncontrolled.
  */
 export const BeforeAfter: FunctionComponent<Props> = ({
   mode = 'horizontal',
@@ -76,7 +76,7 @@ export const BeforeAfter: FunctionComponent<Props> = ({
       stateHandlers?.ratioChanged?.(mode === 'horizontal' ? x : y)
     }
   }
-  return <BeforeAfterControlled
+  return <ControlledBeforeAfter
     {...controlledProps}
     mode={mode}
     ratio={effectiveRatio}

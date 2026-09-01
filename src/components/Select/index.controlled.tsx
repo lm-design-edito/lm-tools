@@ -64,7 +64,7 @@ export const ControlledSelect: FunctionComponent<Props> = ({
 }) => {
   const [id] = useState(`_${randomHash(12)}`)
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null), className)
+  const rootClss = mergeClassNames(c(), className)
   return <>
     {isNotFalsy(label) && <label className={c('label')} htmlFor={id}>{label}</label>}
     <select

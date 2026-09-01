@@ -9,7 +9,7 @@ import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 const name = 'Sequencer'
 const description = `
 Uncontrolled, self-advancing sequencer component. Drives a
-{@link SequencerControlled} instance with an internal tempo-based interval,
+{@link ControlledSequencer} instance with an internal tempo-based interval,
 optional loop/clamp boundary behaviour, and viewport-driven play/reset triggers
 via an {@link IntersectionObserverComponent}.
 
@@ -18,24 +18,24 @@ internal interval while still applying loop/clamp arithmetic before forwarding
 to the controlled layer. Passing \`play\` disables internal play state management
 while still allowing viewport handlers to fire \`actionHandlers.intersected\`.
 
-### Forwarded modifiers to {@link SequencerControlled}
+### Forwarded modifiers to {@link ControlledSequencer}
 The following \`_modifiers\` are computed and injected automatically:
 - \`playing\` — \`true\` when the effective play state is active.
 - \`at-start\` — \`true\` when the forwarded step is \`0\`.
 - \`at-end\` — \`true\` when the forwarded step equals \`stepsCount - 1\`.
 
-### Forwarded data attributes to {@link SequencerControlled}
+### Forwarded data attributes to {@link ControlledSequencer}
 - \`data-tempo\` — the current \`tempo\` value.
 
 @param props - Component properties.
 @see {@link Props}
-@see {@link SequencerControlled}
+@see {@link ControlledSequencer}
 @returns An {@link IntersectionObserverComponent} wrapping a
-{@link SequencerControlled} with the computed step and modifiers applied.`
+{@link ControlledSequencer} with the computed step and modifiers applied.`
 
 const tsxDetails = `
 /**
- * Props for the {@link SequencerControlled} component.
+ * Props for the {@link ControlledSequencer} component.
  *
  * This is the low-level controlled interface. All state is driven externally —
  * the component holds no internal state of its own. For the uncontrolled

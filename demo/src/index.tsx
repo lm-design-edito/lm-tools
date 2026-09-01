@@ -66,12 +66,12 @@ const components: Array<{
 ]
 
 const App = () => {
-  const initActiveTab = components.findIndex(e => e.name === 'Input')
-  const [activeTab, setActiveTab] = useState(initActiveTab)
+  const defaultActiveTab = components.findIndex(e => e.name === 'Input')
+  const [activeTab, setActiveTab] = useState(defaultActiveTab)
   return <div className={cssModule['app']}>
     <Gallery
       className={cssModule['components-nav']}
-      initActive={initActiveTab}>
+      defaultActive={defaultActiveTab}>
       {components.map(({ name }, pos) => {
         const classes = [cssModule['components-nav-item']]
         if (pos === activeTab) classes.push(cssModule['components-nav-item--active'])

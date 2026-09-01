@@ -7,7 +7,7 @@ import { clss } from '../../agnostic/css/clss/index.js'
 import { isFalsy } from '../../agnostic/booleans/is-falsy/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
-import { overlayer as publicClassname } from '../public-classnames.js'
+import { overlayer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
 /**
@@ -72,7 +72,7 @@ export const Overlayer: FunctionComponent<Props> = ({
   children,
   className
 }) => {
-  const c = clss(publicClassname, { cssModule })
+  const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(), className)
   const baseClss = c('base')
   return <div className={rootClss}>
@@ -82,7 +82,7 @@ export const Overlayer: FunctionComponent<Props> = ({
       xPercent = 0,
       yPercent = 0,
       justify
-    }) => {
+    }, overlayPos) => {
       const overlayClss = c('overlay')
       let computedTranslateX: string
       if (typeof justify === 'number') { computedTranslateX = `-${justify}%` }
@@ -97,6 +97,7 @@ export const Overlayer: FunctionComponent<Props> = ({
       }
       if (isFalsy(content)) return null
       return <div
+        key={overlayPos}
         className={overlayClss}
         style={overlayCustomProps}>
         {content}

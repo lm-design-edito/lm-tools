@@ -11,7 +11,7 @@ import cssModule from './styles.module.css'
 type LoadButtonKind = 'prev' | 'next' | 'gap'
 
 /**
- * Props for the {@link ListLoaderControlled} component.
+ * Props for the {@link ControlledListLoader} component.
  *
  * @template T - The item type carried by each page.
  *
@@ -86,7 +86,7 @@ export type Props<T> = WithClassName<{
  * Deduplication runs after `filter`, so an item hidden by `filter` never evicts
  * an earlier duplicate.
  */
-export const ListLoaderControlled = <T,>({
+export const ControlledListLoader = <T,>({
   className,
   pages,
   firstPagePos,
@@ -142,7 +142,7 @@ export const ListLoaderControlled = <T,>({
     .filter(pagePos => inBoundsPages.includes(pagePos))
     .sort((a, b) => a - b)
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null), className)
+  const rootClss = mergeClassNames(c(), className)
 
   const renderLoadButton = (pagePos: number, kind: LoadButtonKind): JSX.Element => {
     const button = <button

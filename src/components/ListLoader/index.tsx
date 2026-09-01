@@ -9,7 +9,7 @@ import { toError } from '../../agnostic/misc/cast/index.js'
 import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import {
   type Props as ControlledProps,
-  ListLoaderControlled
+  ControlledListLoader
 } from './index.controlled.js'
 import { rangeBetween } from './utils.js'
 
@@ -67,12 +67,12 @@ export type Props<T> = Omit<ControlledProps<T>, 'itemsPages' | 'loadingPages' | 
 
 /**
  * Paginated list abstraction. Fetches the pages it is asked for, keeps them
- * fresh, and drives a {@link ListLoaderControlled} with the result.
+ * fresh, and drives a {@link ControlledListLoader} with the result.
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @see {@link ListLoaderControlled} for the rendered markup and CSS elements.
- * @returns A {@link ListLoaderControlled} fed with the loaded pages.
+ * @see {@link ControlledListLoader} for the rendered markup and CSS elements.
+ * @returns A {@link ControlledListLoader} fed with the loaded pages.
  *
  * @remarks
  * - In controlled mode (`pages` defined), the page set is entirely driven by the
@@ -224,7 +224,7 @@ export const ListLoader = <T,>({
     .from(itemsPages)
     .map(([page, { items }]) => [page, items] as const))
 
-  return <ListLoaderControlled
+  return <ControlledListLoader
     className={className}
     pages={currentPages}
     firstPagePos={firstPagePos}

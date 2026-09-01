@@ -14,7 +14,7 @@ import type { WithClassName } from '../utils/types.js'
 import { iframe as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
-const innerAutoHeightNitifier = (messageType: string): string => `<script>
+const innerAutoHeightNotifier = (messageType: string): string => `<script>
   (() => {
     const notify = () => {
       const height = Math.max(
@@ -104,7 +104,7 @@ export const Iframe: FunctionComponent<Props> = ({
   const rootClss = mergeClassNames(c(), className)
   const html = useMemo(() => {
     const autoHeightScript = autoHeight
-      ? innerAutoHeightNitifier(innerMessageType)
+      ? innerAutoHeightNotifier(innerMessageType)
       : ''
     return `<!doctype html>
       <html>

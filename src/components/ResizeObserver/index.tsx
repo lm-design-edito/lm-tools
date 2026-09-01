@@ -10,7 +10,7 @@ import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import { resizeObserver as publicClassName } from '../public-classnames.js'
-import cssModule from './style.module.css'
+import cssModule from './styles.module.css'
 
 type ROEntryWithBoundingRect = {
   entry: ResizeObserverEntry
@@ -99,7 +99,7 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
     }
   }, {})
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null), className)
+  const rootClss = mergeClassNames(c(), className)
   return <div
     {...dataAttributes}
     className={rootClss}

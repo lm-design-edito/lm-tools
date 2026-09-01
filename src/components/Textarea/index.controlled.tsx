@@ -89,7 +89,7 @@ export const ControlledTextarea: FunctionComponent<Props> = ({
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null), className)
+  const rootClss = mergeClassNames(c(), className)
   return <>
     {isNotFalsy(label) && <label className={c('label')} htmlFor={id}>{label}</label>}
     <textarea

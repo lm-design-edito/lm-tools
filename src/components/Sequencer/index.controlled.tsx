@@ -10,7 +10,7 @@ import { sequencer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
 /**
- * Props for the {@link SequencerControlled} component.
+ * Props for the {@link ControlledSequencer} component.
  *
  * This is the low-level controlled interface. All state is driven externally —
  * the component holds no internal state of its own. For the uncontrolled
@@ -40,7 +40,7 @@ import cssModule from './styles.module.css'
  * classifier `<div>` and receives one of the `--active`, `--previous`, or
  * `--next` modifiers depending on its position relative to the current `step`.
  */
-export type ControlledProps = PropsWithChildren<WithClassName<{
+export type Props = PropsWithChildren<WithClassName<{
   step?: number
   activateOnStep?: number[][]
   _modifiers?: {
@@ -82,10 +82,10 @@ export type ControlledProps = PropsWithChildren<WithClassName<{
  * - `--next` — this child has not yet been reached.
  *
  * @param props - Component properties.
- * @see {@link ControlledProps}
+ * @see {@link Props}
  * @returns A root `<div>` containing one classifier wrapper per child.
  */
-export const SequencerControlled: FunctionComponent<ControlledProps> = ({
+export const ControlledSequencer: FunctionComponent<Props> = ({
   step = 0,
   activateOnStep,
   _modifiers,
@@ -124,7 +124,11 @@ export const SequencerControlled: FunctionComponent<ControlledProps> = ({
           prev: isPrevious,
           next: isNext
         })
-        return <div className={childClss}>{child}</div>
+        return <div
+          key={childPos}
+          className={childClss}>
+          {child}
+        </div>
       })}
   </div>
 }

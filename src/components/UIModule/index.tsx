@@ -215,7 +215,7 @@ export const UIModule: FunctionComponent<Props> = ({
     {loadedModule === null && ''}
     {loadedModule !== null
       && !(loadedModule instanceof Error)
-      && loadedModule.css?.map(css => <style>
+      && loadedModule.css?.map((css, cssPos) => <style key={cssPos}>
         {`.${publicClassName}#${id} { ${css} }`}
       </style>)}
   </div>

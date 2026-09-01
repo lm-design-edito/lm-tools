@@ -14,7 +14,7 @@ const description = `Drawer component with optional controlled and uncontrolled 
 
 @remarks
 - In controlled mode (\`isOpened\` defined), visibility is fully driven by the prop.
-- In uncontrolled mode, internal state is initialized from \`initialIsOpened\`.
+- In uncontrolled mode, internal state is initialized from \`defaultIsOpened\`.
 - The component measures its content using \`ResizeObserverComponent\`
   and exposes the dimensions:
   - As CSS custom properties:
@@ -34,7 +34,7 @@ const tsxDetails = `/**
  *
  * @property openerContent - Content rendered inside the opener control.
  * @property closerContent - Content rendered inside the closer control.
- * @property initialIsOpened - Initial open state in uncontrolled mode.
+ * @property defaultIsOpened - Initial open state in uncontrolled mode.
  * Ignored when \`isOpened\` is provided.
  * @property isOpened - Controlled open state. When defined, the component
  * behaves as a controlled component and internal state is ignored.
@@ -46,7 +46,7 @@ const tsxDetails = `/**
 export type Props = PropsWithChildren<WithClassName<{
   openerContent?: ReactNode
   closerContent?: ReactNode
-  initialIsOpened?: boolean
+  defaultIsOpened?: boolean
   isOpened?: boolean
   stateHandlers?: {
     toggled?: (isOpen: boolean) => void
@@ -77,7 +77,7 @@ const demoStyles = `.${publicClassName}.${publicClassName}--opened .${publicClas
 
 /* Demo props */
 const demoProps: DrawerProps = {
-  initialIsOpened: true,
+  defaultIsOpened: true,
   openerContent: <button>Open this</button>,
   closerContent: <button>Close this</button>,
   children: <div style={{

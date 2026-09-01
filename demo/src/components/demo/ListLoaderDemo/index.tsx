@@ -11,12 +11,12 @@ const name = 'ListLoader'
 
 const description = `
 Paginated list abstraction. Fetches the pages it is asked for, keeps them
-fresh, and drives a {@link ListLoaderControlled} with the result.
+fresh, and drives a {@link ControlledListLoader} with the result.
 
 @param props - Component properties.
 @see {@link Props}
-@see {@link ListLoaderControlled} for the rendered markup and CSS elements.
-@returns A {@link ListLoaderControlled} fed with the loaded pages.
+@see {@link ControlledListLoader} for the rendered markup and CSS elements.
+@returns A {@link ControlledListLoader} fed with the loaded pages.
 
 @remarks
 - In controlled mode (\`pages\` defined), the page set is entirely driven by the
@@ -47,7 +47,7 @@ fresh, and drives a {@link ListLoaderControlled} with the result.
 
 const tsxDetails = `
 /**
- * Props for the {@link ListLoaderControlled} component.
+ * Props for the {@link ControlledListLoader} component.
  *
  * @template T - The item type carried by each page.
  *

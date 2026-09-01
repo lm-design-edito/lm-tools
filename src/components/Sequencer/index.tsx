@@ -13,8 +13,8 @@ import {
   IntersectionObserverComponent
 } from '../IntersectionObserver/index.js'
 import {
-  type ControlledProps,
-  SequencerControlled
+  type Props as ControlledProps,
+  ControlledSequencer
 } from './index.controlled.js'
 
 /**
@@ -75,7 +75,7 @@ export type Props = Omit<ControlledProps, '_modifiers'> & {
 
 /**
  * Uncontrolled, self-advancing sequencer component. Drives a
- * {@link SequencerControlled} instance with an internal tempo-based interval,
+ * {@link ControlledSequencer} instance with an internal tempo-based interval,
  * optional loop/clamp boundary behaviour, and viewport-driven play/reset triggers
  * via an {@link IntersectionObserverComponent}.
  *
@@ -84,20 +84,20 @@ export type Props = Omit<ControlledProps, '_modifiers'> & {
  * to the controlled layer. Passing `play` disables internal play state management
  * while still allowing viewport handlers to fire `actionHandlers.intersected`.
  *
- * ### Forwarded modifiers to {@link SequencerControlled}
+ * ### Forwarded modifiers to {@link ControlledSequencer}
  * The following `_modifiers` are computed and injected automatically:
  * - `playing` — `true` when the effective play state is active.
  * - `at-start` — `true` when the forwarded step is `0`.
  * - `at-end` — `true` when the forwarded step equals `stepsCount - 1`.
  *
- * ### Forwarded data attributes to {@link SequencerControlled}
+ * ### Forwarded data attributes to {@link ControlledSequencer}
  * - `data-tempo` — the current `tempo` value.
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @see {@link SequencerControlled}
+ * @see {@link ControlledSequencer}
  * @returns An {@link IntersectionObserverComponent} wrapping a
- * {@link SequencerControlled} with the computed step and modifiers applied.
+ * {@link ControlledSequencer} with the computed step and modifiers applied.
  */
 export const Sequencer: FunctionComponent<Props> = ({
   defaultStep,
@@ -183,7 +183,7 @@ export const Sequencer: FunctionComponent<Props> = ({
   // Rendering
   return <IntersectionObserverComponent
     onIntersected={handleIntersection}>
-    <SequencerControlled
+    <ControlledSequencer
       {...controlledProps}
       step={forwardedStep}
       _modifiers={{

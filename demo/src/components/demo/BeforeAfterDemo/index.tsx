@@ -11,7 +11,7 @@ const name = 'BeforeAfter'
 const description = `
 Before/after comparison component with optional controlled and uncontrolled behavior.
 
-Wraps {@link BeforeAfterControlled} and manages internal divider position when
+Wraps {@link ControlledBeforeAfter} and manages internal divider position when
 operating in uncontrolled mode. The active axis used to derive the ratio from
 pointer position depends on \`mode\`: horizontal interactions use the x ratio,
 vertical interactions use the y ratio.
@@ -26,7 +26,7 @@ vertical interactions use the y ratio.
 
 @param props - Component properties.
 @see {@link Props}
-@returns A {@link BeforeAfterControlled} instance with ratio state managed internally when uncontrolled.
+@returns A {@link ControlledBeforeAfter} instance with ratio state managed internally when uncontrolled.
 
 –
 
@@ -122,7 +122,7 @@ const demoStyles = `
 
 const tsxDetails = `
 /**
- * Props for the {@link BeforeAfterControlled} component.
+ * Props for the {@link ControlledBeforeAfter} component.
  *
  * Extends {@link WithClassName} with layout, content, and interaction configuration.
  *
