@@ -206,36 +206,29 @@ The `index.tsx` + `index.controlled.tsx` split is a readability tool, not an obl
 
 ### Per-component to-do
 
-Ordered alphabetically. Items marked **bug** are behavioural defects found during the audit, to fix in the same commit as the component's alignment.
+Ordered alphabetically, remaining work only — a component drops off the list once it is done. Items marked **bug** are behavioural defects found during the audit, to fix in the same commit as the component's alignment.
 
 | Composant | À faire |
 | --- | --- |
-| BeforeAfter | `BeforeAfterControlled` → `ControlledBeforeAfter` ; rapatrier `utils.ts` dans `index` (`getRelativePointerCoordinates` est mort) ; handlers plats ; `onRatioChanged` doit aussi partir en mode contrôlé ; nommer/expliquer le `1.02 * x - 0.01` ; `event` inutilisés dans 4 handlers |
-| Button | `c(null)` → `c()` |
+| BeforeAfter | handlers plats ; `onRatioChanged` doit aussi partir en mode contrôlé ; nommer/expliquer le `1.02 * x - 0.01` ; `event` inutilisés dans 4 handlers |
 | Clippable | handlers plats (`onCopyClicked`, `onClipped`) |
 | Disclaimer | handlers plats (`onDismissClicked`, `onIsOnChanged`) ; `useChangeDispatch` |
-| Drawer | `initialIsOpened` → `defaultIsOpened` ; **bug** — en mode contrôlé les clics opener/closer ne remontent rien, ajouter `onOpenerClicked` / `onCloserClicked` qui partent dans les deux modes ; `onIsOpenedChanged` ; `useChangeDispatch` |
-| EventListener | utiliser `WithClassName` au lieu d'un `className?: string` maison ; `onEvent` reste (passthrough DOM) |
-| Gallery | `initActive` → `defaultActive` ; handlers plats ; `useChangeDispatch` (`slotChanged` part au montage) ; factoriser l'échelle de ternaires `actualPaddingLeft` / `actualPaddingRight` |
-| Iframe | typo `innerAutoHeightNitifier` → `Notifier` |
+| Drawer | **bug** — en mode contrôlé les clics opener/closer ne remontent rien, ajouter `onOpenerClicked` / `onCloserClicked` qui partent dans les deux modes ; `onIsOpenedChanged` ; `useChangeDispatch` |
+| Gallery | handlers plats ; `useChangeDispatch` (`slotChanged` part au montage) ; factoriser l'échelle de ternaires `actualPaddingLeft` / `actualPaddingRight` |
 | Image | **bug** — `handleDisclaimerDismissClick` est un `useCallback([])` qui capture un `isDisclaimerOn` périmé ; double source de vérité sur l'état du disclaimer (force `isOn` sur l'enfant) |
 | Input | fusionner `index.controlled.tsx` dans `index.tsx` ; vérifier si le bloc `target.value = …` sert encore, sinon le supprimer |
-| IntersectionObserver | conforme |
-| JsonEditor | chantier séparé — mode contrôlé (aujourd'hui structurellement impossible : arbre de sous-éditeurs non contrôlés) et découpage du fichier (416 l., 8 sous-composants) ; `c(null, {})` → `c()` ; `Props` exportés + `className` sur les sous-composants |
-| ListLoader | `ListLoaderControlled` → `ControlledListLoader` ; passer les handlers au participe passé (`onLoadPageClicked`, `onPageFetched`, `onPageFetchFailed`) |
-| Overlayer | `publicClassname` → `publicClassName` ; **bug** — `key` manquante sur la map des overlays |
+| JsonEditor | chantier séparé — mode contrôlé (aujourd'hui structurellement impossible : arbre de sous-éditeurs non contrôlés) et découpage du fichier (416 l., 8 sous-composants) ; `Props` exportés + `className` sur les sous-composants |
+| ListLoader | passer les handlers au participe passé (`onLoadPageClicked`, `onPageFetched`, `onPageFetchFailed`) |
 | Paginator | handlers plats (`onDirectionChanged`, `onPagesChanged`) ; `useChangeDispatch` (les deux partent au montage) |
-| ResizeObserver | `style.module.css` → `styles.module.css` |
 | Scrllgngn | handlers plats (`onPageChanged`) ; découper le fichier (359 l.) ; `[WIP]` current page id à exposer en attribut |
 | ScrollListener | **bug** — `window.addEventListener('scroll')` au niveau module s'exécute à l'import, casse tout import serveur ; `utils.tsx` → `.ts` ; `registeredIds` référencé au-dessus de sa déclaration ; handlers plats |
 | Select | fusionner `index.controlled.tsx` dans `index.tsx` ; idem Input pour le bloc `target.value` |
-| Sequencer | `ControlledProps` → `Props` ; `SequencerControlled` → `ControlledSequencer` ; **bug** — `key` manquante sur la map des enfants ; handlers plats |
-| ShadowRoot | conforme |
-| Subtitles | rapatrier `types.ts` et `utils.ts` dans `index` ; **bug** — `srtFileContent` seul ne marche jamais (`if (src === undefined) return` s'exécute avant) ; handlers plats ; `useChangeDispatch` |
+| Sequencer | handlers plats |
+| Subtitles | handlers plats ; `useChangeDispatch` |
 | Textarea | fusionner `index.controlled.tsx` dans `index.tsx` ; le commentaire `// not supported for <select>` traîne ici |
 | Theatre | **bug** — `exitOnEscape` inversé, l'écoute clavier n'est installée que quand il vaut `false` ; handlers plats ; `useChangeDispatch` |
-| UIModule | handlers plats (4) ; **bug** — `key` manquante sur la map des `<style>` ; `useChangeDispatch` (les 4 partent au montage) ; revoir le couple `_setX` + ref parallèle |
-| Video | **bug** — `const isLoud = mute ?? false` : une vidéo muette reçoit `--loud` et `data-loud` ; `onFullscreenChange` n'est jamais rappelé ; parenthèses autour du `return` JSX + `/>` isolé + commentaire `{/* Vidéo */}` en français ; `c(null, { })` vide ; alias `appliedVolume` inutile ; handlers plats + `onStateChanged(state)` ; `utils.ts` — les helpers de durée/format ont vocation à rejoindre `agnostic`, pas à rester liés au composant |
+| UIModule | handlers plats (4) ; `useChangeDispatch` (les 4 partent au montage) ; revoir le couple `_setX` + ref parallèle |
+| Video | **bug** — `const isLoud = mute ?? false` : une vidéo muette reçoit `--loud` et `data-loud` ; `onFullscreenChange` n'est jamais rappelé ; parenthèses autour du `return` JSX + `/>` isolé + commentaire `{/* Vidéo */}` en français ; alias `appliedVolume` inutile ; handlers plats + `onStateChanged(state)` ; `utils.ts` — les helpers de durée/format ont vocation à rejoindre `agnostic`, pas à rester liés au composant |
 
 ### Reporté (à traiter plus tard, pas maintenant)
 
