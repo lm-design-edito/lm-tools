@@ -211,8 +211,6 @@ Ordered alphabetically, remaining work only — a component drops off the list o
 | Composant | À faire |
 | --- | --- |
 | BeforeAfter | handlers plats ; `onRatioChanged` doit aussi partir en mode contrôlé ; nommer/expliquer le `1.02 * x - 0.01` ; `event` inutilisés dans 4 handlers |
-| Clippable | handlers plats (`onCopyClicked`, `onClipped`) |
-| Disclaimer | handlers plats (`onDismissClicked`, `onIsOnChanged`) ; `useChangeDispatch` |
 | Gallery | handlers plats ; `useChangeDispatch` (`slotChanged` part au montage) ; factoriser l'échelle de ternaires `actualPaddingLeft` / `actualPaddingRight` |
 | Image | **bug** — `handleDisclaimerDismissClick` est un `useCallback([])` qui capture un `isDisclaimerOn` périmé ; double source de vérité sur l'état du disclaimer (force `isOn` sur l'enfant) |
 | Input | fusionner `index.controlled.tsx` dans `index.tsx` ; vérifier si le bloc `target.value = …` sert encore, sinon le supprimer |
@@ -225,7 +223,6 @@ Ordered alphabetically, remaining work only — a component drops off the list o
 | Sequencer | handlers plats |
 | Subtitles | handlers plats ; `useChangeDispatch` |
 | Textarea | fusionner `index.controlled.tsx` dans `index.tsx` ; le commentaire `// not supported for <select>` traîne ici |
-| Theatre | **bug** — `exitOnEscape` inversé, l'écoute clavier n'est installée que quand il vaut `false` ; handlers plats ; `useChangeDispatch` |
 | UIModule | handlers plats (4) ; `useChangeDispatch` (les 4 partent au montage) ; revoir le couple `_setX` + ref parallèle |
 | Video | **bug** — `const isLoud = mute ?? false` : une vidéo muette reçoit `--loud` et `data-loud` ; `onFullscreenChange` n'est jamais rappelé ; parenthèses autour du `return` JSX + `/>` isolé + commentaire `{/* Vidéo */}` en français ; alias `appliedVolume` inutile ; handlers plats + `onStateChanged(state)` ; `utils.ts` — les helpers de durée/format ont vocation à rejoindre `agnostic`, pas à rester liés au composant |
 
