@@ -21,8 +21,9 @@ vertical interactions use the y ratio.
   and internal state is never updated.
 - In uncontrolled mode, internal state is initialized from \`defaultRatio\` and updated
   on both drag and click interactions.
-- \`actionHandlers.dragged\` and \`actionHandlers.clicked\` are always forwarded to the
-  underlying controlled component, regardless of mode.
+- \`onDragged\` and \`onClicked\` fire in both modes — a controlled parent needs
+  them to know where the pointer went.
+- \`onRatioChanged\` fires in both modes too, and never on mount.
 
 @param props - Component properties.
 @see {@link Props}
@@ -131,11 +132,10 @@ const tsxDetails = `
  * Values outside this range are clamped automatically. Defaults to \`0\`.
  * @property before - Content rendered in the first (before) panel.
  * @property after - Content rendered in the second (after) panel.
- * @property actionHandlers - Optional user action callbacks:
- *   - \`dragged\` — called on each pointer move while dragging, with the current
- *     x and y ratios relative to the component bounds.
- *   - \`clicked\` — called on pointer release when no drag occurred, with the
- *     x and y ratios of the release position.
+ * @property onDragged - Called on each pointer move while dragging, with the
+ * pointer's x and y ratios relative to the component's bounds.
+ * @property onClicked - Called on pointer release when no drag occurred, with
+ * the release position's x and y ratios.
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Arbitrary content to inject inside the component
  */
@@ -144,39 +144,34 @@ export type ControlledProps = PropsWithChildren<WithClassName<{
   ratio?: number
   before?: ReactNode
   after?: ReactNode
-  actionHandlers?: {
-    dragged?: (xRatio: number, yRatio: number) => void
-    clicked?: (xRatio: number, yRatio: number) => void
-  }
+  onDragged?: (xRatio: number, yRatio: number) => void
+  onClicked?: (xRatio: number, yRatio: number) => void
 }>>
 
 /**
  * Props for the {@link BeforeAfter} component.
  *
- * Extends {@link ControlledProps} with uncontrolled defaults and state callbacks.
- * When \`ratio\` is provided (inherited from {@link ControlledProps}), the component
- * operates in controlled mode and internal state is ignored.
+ * Extends {@link ControlledProps} with uncontrolled divider positioning. When
+ * \`ratio\` is provided, the component operates in controlled mode.
  *
- * @property defaultRatio - Initial divider position in uncontrolled mode, as a value
+ * @property defaultRatio - Initial divider position in uncontrolled mode,
  * between \`0\` and \`1\`. Ignored when \`ratio\` is provided. Defaults to \`0.5\`.
- * @property stateHandlers - Optional callbacks invoked when derived state changes:
- *   - \`ratioChanged\` — called after the internal ratio has been updated, with the new ratio value.
+ * @property onRatioChanged - Called after the divider position changed, with the
+ * new ratio.
  */
 export type Props = ControlledProps & {
   defaultRatio?: number
-  stateHandlers?: {
-    ratioChanged?: (ratio: number) => void
-  }
+  onRatioChanged?: (ratio: number) => void
 }
 `
 
 const demoProps: BeforeAfterProps = {
   before: <div style={{ width: 500, height: 300, background: 'coral' }}><button>CORAL</button></div>,
   after: <div style={{ width: 800, height: 300, background: 'cornflowerblue' }}><button>BLUE</button></div>,
-  actionHandlers: {
-    dragged: (x, y) => console.log('x:', x, 'y:', y),
-    clicked: (x, y) => console.log('x:', x, 'y:', y)
-  }
+  // eslint-disable-next-line no-console
+  onDragged: (x, y) => console.log('x:', x, 'y:', y),
+  // eslint-disable-next-line no-console
+  onClicked: (x, y) => console.log('x:', x, 'y:', y)
 }
 
 export const BeforeAfterDemo: FunctionComponent = () => {

@@ -1,87 +1,101 @@
-import { type FunctionComponent, useState } from 'react'
+import {
+  type FunctionComponent,
+  useState
+} from 'react'
+import { useChangeDispatch } from '../utils/index.js'
 import {
   ControlledBeforeAfter,
   type Props as ControlledProps
 } from './index.controlled.js'
 
 /**
- * Props for the {@link BeforeAfter} component.
- *
- * Extends {@link ControlledProps} with uncontrolled defaults and state callbacks.
- * When `ratio` is provided (inherited from {@link ControlledProps}), the component
- * operates in controlled mode and internal state is ignored.
- *
- * @property defaultRatio - Initial divider position in uncontrolled mode, as a value
- * between `0` and `1`. Ignored when `ratio` is provided. Defaults to `0.5`.
- * @property stateHandlers - Optional callbacks invoked when derived state changes:
- *   - `ratioChanged` — called after the internal ratio has been updated, with the new ratio value.
+ * Pointer ratios are stretched by this much on each side before becoming the
+ * divider position, so the very edges stay reachable without having to land the
+ * pointer exactly on the component's border.
  */
-export type Props = ControlledProps & {
-  defaultRatio?: number
-  stateHandlers?: {
-    ratioChanged?: (ratio: number) => void
-  }
+const edgeOvershoot = 0.01
+
+/** Turns a raw pointer ratio into a divider position, edges included. */
+function toDividerRatio (pointerRatio: number): number {
+  return pointerRatio * (1 + 2 * edgeOvershoot) - edgeOvershoot
 }
 
 /**
- * Before/after comparison component with optional controlled and uncontrolled behavior.
+ * Props for the {@link BeforeAfter} component.
  *
- * Wraps {@link ControlledBeforeAfter} and manages internal divider position when
- * operating in uncontrolled mode. The active axis used to derive the ratio from
- * pointer position depends on `mode`: horizontal interactions use the x ratio,
- * vertical interactions use the y ratio.
+ * Extends {@link ControlledProps} with uncontrolled divider positioning. When
+ * `ratio` is provided, the component operates in controlled mode.
  *
- * @remarks
- * - In controlled mode (`ratio` defined), divider position is fully driven by the prop
- *   and internal state is never updated.
- * - In uncontrolled mode, internal state is initialized from `defaultRatio` and updated
- *   on both drag and click interactions.
- * - `actionHandlers.dragged` and `actionHandlers.clicked` are always forwarded to the
- *   underlying controlled component, regardless of mode.
+ * @property defaultRatio - Initial divider position in uncontrolled mode,
+ * between `0` and `1`. Ignored when `ratio` is provided. Defaults to `0.5`.
+ * @property onRatioChanged - Called after the divider position changed, with the
+ * new ratio.
+ */
+export type Props = ControlledProps & {
+  defaultRatio?: number
+  onRatioChanged?: (ratio: number) => void
+}
+
+/**
+ * Before/after comparison component supporting controlled and uncontrolled usage.
+ *
+ * Turns the pointer ratios reported by {@link ControlledBeforeAfter} into a
+ * divider position, reading the axis that matches `mode`: the x ratio when
+ * horizontal, the y ratio when vertical.
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A {@link ControlledBeforeAfter} instance with ratio state managed internally when uncontrolled.
+ * @see {@link ControlledBeforeAfter} for the rendered markup and CSS elements.
+ * @returns A {@link ControlledBeforeAfter} with the divider position managed
+ * internally when uncontrolled.
+ *
+ * @remarks
+ * - In controlled mode (`ratio` defined), the divider position is fully driven
+ *   by the parent and internal state is never updated.
+ * - `onDragged` and `onClicked` fire in both modes — a controlled parent needs
+ *   them to know where the pointer went.
+ * - `onRatioChanged` fires in both modes too, and never on mount.
  */
 export const BeforeAfter: FunctionComponent<Props> = ({
   mode = 'horizontal',
-  actionHandlers,
-  stateHandlers,
   ratio,
   defaultRatio = 0.5,
+  onDragged,
+  onClicked,
+  onRatioChanged,
   ...controlledProps
 }) => {
+  // State
   const [internalRatio, setInternalRatio] = useState(defaultRatio)
   const isControlled = ratio !== undefined
   const effectiveRatio = isControlled ? ratio : internalRatio
-  const handleDrag = (x: number, y: number): void => {
-    // eslint-disable-next-line no-param-reassign
-    x = 1.02 * x - 0.01
-    // eslint-disable-next-line no-param-reassign
-    y = 1.02 * y - 0.01
-    actionHandlers?.dragged?.(x, y)
-    if (!isControlled) {
-      setInternalRatio(mode === 'horizontal' ? x : y)
-      stateHandlers?.ratioChanged?.(mode === 'horizontal' ? x : y)
-    }
+
+  // State dispatch
+  useChangeDispatch(effectiveRatio, onRatioChanged)
+
+  // User action handlers
+  const moveDividerTo = (xRatio: number, yRatio: number): void => {
+    if (isControlled) return
+    setInternalRatio(mode === 'horizontal' ? xRatio : yRatio)
   }
-  const handleClick = (x: number, y: number): void => {
-    // eslint-disable-next-line no-param-reassign
-    x = 1.02 * x - 0.01
-    // eslint-disable-next-line no-param-reassign
-    y = 1.02 * y - 0.01
-    actionHandlers?.clicked?.(x, y)
-    if (!isControlled) {
-      setInternalRatio(mode === 'horizontal' ? x : y)
-      stateHandlers?.ratioChanged?.(mode === 'horizontal' ? x : y)
-    }
+  const handleDrag = (xRatio: number, yRatio: number): void => {
+    const x = toDividerRatio(xRatio)
+    const y = toDividerRatio(yRatio)
+    onDragged?.(x, y)
+    moveDividerTo(x, y)
   }
+  const handleClick = (xRatio: number, yRatio: number): void => {
+    const x = toDividerRatio(xRatio)
+    const y = toDividerRatio(yRatio)
+    onClicked?.(x, y)
+    moveDividerTo(x, y)
+  }
+
+  // Rendering
   return <ControlledBeforeAfter
     {...controlledProps}
     mode={mode}
     ratio={effectiveRatio}
-    actionHandlers={{
-      dragged: handleDrag,
-      clicked: handleClick
-    }} />
+    onDragged={handleDrag}
+    onClicked={handleClick} />
 }
