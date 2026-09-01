@@ -8,7 +8,10 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { mergeClassNames } from '../utils/index.js'
+import {
+  mergeClassNames,
+  useChangeDispatch
+} from '../utils/index.js'
 import { paginator as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -43,23 +46,18 @@ type DirectionState = 'forwards' | 'backwards' | null
  * the {@link IntersectionObserver} root margin. Determines how far into the viewport
  * a page must be before it is considered `'curr'`. Defaults to `0`.
  *
- * @property stateHandlers - Callbacks called after the internal state changed
- * @property stateHandlers.directionChanged - Callback invoked when the scroll direction changes.
- * Receives the new {@link DirectionState}. Only fires when the direction actually
- * changes — repeated scrolls in the same direction do not trigger it again.
- *
- * @property stateHandlers.pageChanged - Callback invoked whenever any page's {@link PageState}
- * changes. Receives a flat array of all pages' states, ordered by position.
- *
+ * @property onDirectionChanged - Called after the scroll direction changed, with
+ * the new {@link DirectionState}. Repeated scrolls in the same direction do not
+ * trigger it again.
+ * @property onPagesChanged - Called after any page's {@link PageState} changed,
+ * with a flat array of every page's state, ordered by position.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Each direct child is treated as an individual page slot.
  */
 export type Props = PropsWithChildren<WithClassName<{
   thresholdOffsetPercent?: number
-  stateHandlers?: {
-    directionChanged?: (direction: DirectionState) => void
-    pageChanged?: (pages: PageState[]) => void
-  }
+  onDirectionChanged?: (direction: DirectionState) => void
+  onPagesChanged?: (pages: PageState[]) => void
 }>>
 
 /**
@@ -87,7 +85,8 @@ export type Props = PropsWithChildren<WithClassName<{
  */
 export const Paginator: FunctionComponent<Props> = ({
   thresholdOffsetPercent,
-  stateHandlers,
+  onDirectionChanged,
+  onPagesChanged,
   className,
   children
 }) => {
@@ -97,16 +96,11 @@ export const Paginator: FunctionComponent<Props> = ({
   const pagesRef = useRef<HTMLDivElement>(null)
   const directionRef = useRef<DirectionState>(null)
 
-  // State change handlers
-  useEffect(() => {
-    stateHandlers?.pageChanged?.(Array
-      .from(pagesState)
-      .map(([, state]) => state))
-  }, [pagesState])
-
-  useEffect(() => {
-    stateHandlers?.directionChanged?.(directionState)
-  }, [directionState])
+  // State dispatch
+  useChangeDispatch(pagesState, pages => onPagesChanged?.(Array
+    .from(pages)
+    .map(([, pageState]) => pageState)))
+  useChangeDispatch(directionState, onDirectionChanged)
 
   // Catch scroll direction listening on scroll events
   useEffect(() => {

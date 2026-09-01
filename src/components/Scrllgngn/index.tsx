@@ -244,7 +244,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   const handleTopBoundDetect: IOCompProps['onIntersected'] = e => setTopVis(e.ioEntry?.isIntersecting ?? false)
   const handleCntDetect: IOCompProps['onIntersected'] = e => setCntVis(e.ioEntry?.isIntersecting ?? false)
   const handleBtmBoundDetect: IOCompProps['onIntersected'] = e => setBtmVis(e.ioEntry?.isIntersecting ?? false)
-  const handlePageChange: NonNullable<PaginatorProps['stateHandlers']>['pageChanged'] = statePages => {
+  const handlePagesChange: NonNullable<PaginatorProps['onPagesChanged']> = statePages => {
     const curPagePos = statePages.findIndex(page => page.position === 'curr')
     if (curPagePos === -1) return
     if (curPagePos === currentPagePos) return
@@ -337,9 +337,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
         <IntersectionObserverComponent onIntersected={handleCntDetect}>
           <Paginator
             thresholdOffsetPercent={thresholdOffsetPercent}
-            stateHandlers={{
-              pageChanged: handlePageChange
-            }}>
+            onPagesChanged={handlePagesChange}>
             {pages?.map(page => {
               const scrollBlocks = page.blocks
                 ?.filter(b => b.depth === 'scroll' || b.depth === undefined) ?? []
