@@ -58,14 +58,32 @@ type SourceData = {
  * - a single srcSet string,
  * - an array of srcSet strings,
  * - an array of {@link SourceData} objects for full \`<source>\` control.
- * @property disclaimer - Props forwarded to the internal {@link Disclaimer} component.
- * While the disclaimer is active the \`<img>\` is hidden.
+ * @property disclaimer - Presentation of the internal {@link Disclaimer}: its
+ * panel content and toggler. Providing it is what gates the image behind a
+ * disclaimer at all. Its state props are deliberately absent — the state lives
+ * here, on \`isDisclaimerOn\` and its siblings.
+ * @property isDisclaimerOn - Controlled disclaimer state. When defined, the
+ * disclaimer is fully driven by the parent and internal state is never updated.
+ * @property defaultIsDisclaimerOn - Initial disclaimer state in uncontrolled
+ * mode. Ignored when \`isDisclaimerOn\` is provided. Defaults to \`true\`, so a
+ * disclaimer shows up as soon as one is declared.
+ * @property onDisclaimerDismissClicked - Called when the disclaimer's toggler is
+ * clicked, before the image reacts, with the disclaimer state as it was.
+ * @property onIsDisclaimerOnChanged - Called after the disclaimer state changed,
+ * with the new value.
  * @property theatre - Props forwarded to the internal {@link Theatre} component.
  * @property className - Optional additional class name(s) applied to the root element.
  */
 export type Props = WithClassName<{
   sources?: string | string[] | SourceData[]
-  disclaimer?: DisclaimerProps
+  disclaimer?: Omit<
+    DisclaimerProps,
+    'isOn' | 'defaultIsOn' | 'onDismissClicked' | 'onIsOnChanged' | 'children'
+  >
+  isDisclaimerOn?: boolean
+  defaultIsDisclaimerOn?: boolean
+  onDisclaimerDismissClicked?: (isDisclaimerOn: boolean) => void
+  onIsDisclaimerOnChanged?: (isDisclaimerOn: boolean) => void
   theatre?: TheatreProps
 }> & ImgHTMLAttributes<HTMLImageElement>`
 
@@ -107,9 +125,9 @@ const demoProps: ImageProps = {
   alt: 'Image demo',
   disclaimer: {
     content: 'Contenu sensible',
-    togglerContent: <button>Afficher l'image</button>,
-    defaultIsOn: true
+    togglerContent: <button>Afficher l'image</button>
   },
+  defaultIsDisclaimerOn: true,
   theatre: {
     openBtnContent: <button>Ouvrir le théâtre</button>,
     closeBtnContent: <button>Fermer le théâtre</button>,
