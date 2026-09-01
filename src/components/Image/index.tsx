@@ -104,7 +104,7 @@ export const Image: FunctionComponent<Props> = ({
 
   // User actions handlers
   const handleDisclaimerDismissClick = useCallback(() => {
-    disclaimer?.actionHandlers?.dismissClick?.(isDisclaimerOn)
+    disclaimer?.onDismissClicked?.(isDisclaimerOn)
     setIsDisclaimerOn(false)
   }, [])
 
@@ -140,7 +140,7 @@ export const Image: FunctionComponent<Props> = ({
     ? <Disclaimer
         {...disclaimer}
         isOn={shouldDisclaimerBeOn}
-        actionHandlers={{ dismissClick: handleDisclaimerDismissClick }}>
+        onDismissClicked={handleDisclaimerDismissClick}>
         {theatricalContent}
       </Disclaimer>
     : theatricalContent

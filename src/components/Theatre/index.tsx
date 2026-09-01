@@ -9,30 +9,34 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { mergeClassNames } from '../utils/index.js'
+import {
+  mergeClassNames,
+  useChangeDispatch
+} from '../utils/index.js'
 import { theatre as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
 /**
  * Props for the {@link Theatre} component.
  *
- * @property closeBtnContent - Custom content rendered inside the close/exit button.
- * @property openBtnContent - Custom content rendered inside the open/enter button.
- * @property isOn - Controlled theatre mode state. When provided, overrides the
- * internal state. Use together with {@link Props.onToggleClick} for fully
- * controlled usage.
- * @property defaultIsOn - Default state for the theatre mode.
- * @property exitOnEscape — When uncontrolled and on, toggles internal state to off when 'esc' key is pressed
- * @property exitOnBgClick — When uncontrolled and on, toggles internal state to off when the background is clicked
- * @property stateHandlers - Callbacks called after the internal state changed
- * @property stateHandlers.toggled - Callback invoked after the state changed
- * @property actionHandlers - Callbacks called after a user action on children elements
- * @property actionHandlers.toggleClick - Callback invoked when either the open or close
- * button is clicked, the 'esc' key pressed or the background clicked. Receives the theatre state value (`isOn`) at the time of the click,
- * i.e. the previous state before the toggle.
+ * @property closeBtnContent - Content rendered inside the close/exit button.
+ * @property openBtnContent - Content rendered inside the open/enter button.
+ * @property isOn - Controlled theatre mode state. When defined, the component
+ * behaves as a controlled component and internal state is never updated.
+ * @property defaultIsOn - Initial theatre mode state in uncontrolled mode.
+ * Ignored when `isOn` is provided. Defaults to `false`.
+ * @property exitOnEscape - When `true`, pressing `Escape` while the stage is
+ * open counts as a toggle.
+ * @property exitOnBgClick - When `true`, clicking the stage background — and
+ * not its content — counts as a toggle.
+ * @property onToggleClicked - Called whenever a toggle is requested: the open
+ * or close button, the `Escape` key, or the stage background. Fires before the
+ * theatre reacts, with the state as it was.
+ * @property onIsOnChanged - Called after the theatre mode changed, with the new
+ * value.
  * @property className - Optional additional class name(s) applied to the root element.
- * @property children - Content rendered both in the default slot and, when theatre
- * mode is active, duplicated inside the stage element.
+ * @property children - Content rendered both in the default slot and, when
+ * theatre mode is active, duplicated inside the stage element.
  */
 export type Props = PropsWithChildren<WithClassName<{
   closeBtnContent?: ReactNode
@@ -41,120 +45,105 @@ export type Props = PropsWithChildren<WithClassName<{
   defaultIsOn?: boolean
   exitOnEscape?: boolean
   exitOnBgClick?: boolean
-  stateHandlers?: {
-    toggled?: (isOn: boolean) => void
-  }
-  actionHandlers?: {
-    toggleClick?: (prevIsOn: boolean) => void
-  }
+  onToggleClicked?: (isOn: boolean) => void
+  onIsOnChanged?: (isOn: boolean) => void
 }>>
 
 /**
  * Theatre mode component. Wraps content in a toggleable fullscreen-like "stage"
- * overlay. Supports both controlled and uncontrolled usage.
+ * overlay.
  *
- * When `isOn` is not provided the component manages its own open/closed state
- * internally. When `isOn` is provided it acts as the source of truth and the
- * internal state is ignored.
+ * ### CSS modifiers
+ * - `on` — theatre mode is active.
+ * - `off` — theatre mode is inactive.
  *
- * ### Root element modifiers
- * The root `<div>` receives the public class name defined by `theatre` and the
- * following BEM-style modifier classes:
- * - `--on` — when theatre mode is active.
- * - `--off` — when theatre mode is inactive.
- *
- * ### Child elements
- * - `__stage` — container rendered inside the root that holds the duplicated
- * `children` when theatre mode is active. Only mounted when `isOn` is `true`.
- * - `__open-btn` — clickable element that activates theatre mode.
- * - `__close-btn` — clickable element that deactivates theatre mode.
+ * ### CSS elements
+ * - `stage` — holds the duplicated `children`, mounted only when `isOn`.
+ * - `open-btn`
+ * - `close-btn`
  *
  * @param props - Component properties.
  * @see {@link Props}
  * @returns A root `<div>` containing the children in their original position,
- * a stage overlay with the duplicated children (when active), and the open/close
- * toggle buttons.
+ * a stage overlay with the duplicated children when active, and both toggles.
+ *
+ * @remarks
+ * - In controlled mode (`isOn` defined), the state is fully driven by the
+ *   parent and internal state is never updated.
+ * - `onToggleClicked` fires in both modes, for all four toggle sources — a
+ *   controlled parent needs it to know a toggle was requested at all.
+ * - `onIsOnChanged` fires in both modes too, and never on mount.
  */
 export const Theatre: FunctionComponent<Props> = ({
   closeBtnContent,
   openBtnContent,
-  isOn,
-  defaultIsOn,
+  isOn: isOnProp,
+  defaultIsOn = false,
   exitOnEscape,
   exitOnBgClick,
-  stateHandlers,
-  actionHandlers,
+  onToggleClicked,
+  onIsOnChanged,
   children,
   className
 }) => {
   // State & refs
-  const [internalIsOn, setInternalIsOn] = useState(defaultIsOn ?? false)
+  const [internalIsOn, setInternalIsOn] = useState(defaultIsOn)
   const stageRef = useRef<HTMLDivElement>(null)
-  const isTheatreOn = isOn ?? internalIsOn
-  const prevIsTheatreOnRef = useRef(isTheatreOn)
+  const isControlled = isOnProp !== undefined
+  const isOn = isOnProp ?? internalIsOn
 
-  // Handlers
-  const handleCloseBtnClick: MouseEventHandler<HTMLDivElement> = () => {
-    actionHandlers?.toggleClick?.(isTheatreOn)
-    if (isOn === undefined) setInternalIsOn(false)
-  }
-  const handleOpenBtnClick: MouseEventHandler<HTMLDivElement> = () => {
-    actionHandlers?.toggleClick?.(isTheatreOn)
-    if (isOn === undefined) setInternalIsOn(true)
-  }
+  // State dispatch
+  useChangeDispatch(isOn, onIsOnChanged)
 
+  // User action handlers
+  const requestToggle = (targetIsOn: boolean): void => {
+    onToggleClicked?.(isOn)
+    if (isControlled) return
+    setInternalIsOn(targetIsOn)
+  }
+  const handleOpenBtnClick: MouseEventHandler<HTMLDivElement> = () => requestToggle(true)
+  const handleCloseBtnClick: MouseEventHandler<HTMLDivElement> = () => requestToggle(false)
   const handleStageBgClick: MouseEventHandler<HTMLDivElement> = e => {
     if (exitOnBgClick !== true) return
     if (e.target !== stageRef.current) return
-    actionHandlers?.toggleClick?.(isTheatreOn)
-    if (isOn === undefined) setInternalIsOn(false)
+    requestToggle(false)
   }
 
-  // Effects
+  // Fx. dep. `exitOnEscape`, `isOn` - close the stage on the Escape key
   useEffect(() => {
-    if (prevIsTheatreOnRef.current !== isTheatreOn) {
-      stateHandlers?.toggled?.(isTheatreOn)
-      prevIsTheatreOnRef.current = isTheatreOn
-    }
-  }, [isTheatreOn, stateHandlers])
-
-  useEffect(() => {
-    if (exitOnEscape === true
-      || !isTheatreOn
-      || isOn !== undefined) return
-    const listener = (e: KeyboardEvent): void => {
+    if (exitOnEscape !== true || !isOn) return
+    const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key !== 'Escape') return
-      actionHandlers?.toggleClick?.(isTheatreOn)
-      setInternalIsOn(false)
+      requestToggle(false)
     }
-    window.addEventListener('keydown', listener)
-    return () => window.removeEventListener('keydown', listener)
-  }, [exitOnEscape, isTheatreOn, isOn])
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [exitOnEscape, isOn, isControlled])
 
-  // Render
+  // Rendering
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null, {
-    'on': isTheatreOn,
-    'off': !isTheatreOn
+    'on': isOn,
+    'off': !isOn
   }), className)
-  const stageClass = c('stage')
-  const openBtnClass = c('open-btn')
-  const closeBtnClass = c('close-btn')
+  const stageClss = c('stage')
+  const openBtnClss = c('open-btn')
+  const closeBtnClss = c('close-btn')
   return <div className={rootClss}>
     {children}
     <div
-      className={stageClass}
+      className={stageClss}
       onClick={handleStageBgClick}
       ref={stageRef}>
-      {isTheatreOn && children}
+      {isOn && children}
     </div>
     <div
-      className={closeBtnClass}
+      className={closeBtnClss}
       onClick={handleCloseBtnClick}>
       {closeBtnContent}
     </div>
     <div
-      className={openBtnClass}
+      className={openBtnClss}
       onClick={handleOpenBtnClick}>
       {openBtnContent}
     </div>

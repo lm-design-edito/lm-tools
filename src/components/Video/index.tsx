@@ -207,13 +207,13 @@ export const Video: FunctionComponent<Props> = ({
     shouldDisclaimerBeOn
   ])
 
-  const handleDiclaimerDismiss = useCallback<NonNullable<NonNullable<DisclaimerProps['actionHandlers']>['dismissClick']>>((prevIsOn) => {
+  const handleDiclaimerDismiss = useCallback<NonNullable<DisclaimerProps['onDismissClicked']>>((prevIsOn) => {
     setIsDisclaimerOn(false)
     if (controlledProps.autoPlay === true && !hasBeenAutoPlayed.current) {
       setPlay(true)
     }
-    disclaimer?.actionHandlers?.dismissClick?.(prevIsOn)
-  }, [controlledProps.autoPlay, disclaimer?.actionHandlers?.dismissClick])
+    disclaimer?.onDismissClicked?.(prevIsOn)
+  }, [controlledProps.autoPlay, disclaimer?.onDismissClicked])
 
   useEffect(() => {
     if (isDisclaimerOn !== shouldDisclaimerBeOn) setIsDisclaimerOn(shouldDisclaimerBeOn)
@@ -261,10 +261,7 @@ export const Video: FunctionComponent<Props> = ({
   const disclaimedContent = needsDisclaimer
     ? <Disclaimer
         {...disclaimer}
-        actionHandlers={{
-          ...disclaimer?.actionHandlers,
-          dismissClick: handleDiclaimerDismiss
-        }}
+        onDismissClicked={handleDiclaimerDismiss}
       >
       {sensitiveContent}
     </Disclaimer>

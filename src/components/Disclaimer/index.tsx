@@ -2,110 +2,109 @@ import {
   useState,
   type ReactNode,
   type PropsWithChildren,
-  type JSX,
-  type FunctionComponent,
-  useEffect,
-  useRef
+  type FunctionComponent
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { mergeClassNames } from '../utils/index.js'
+import {
+  mergeClassNames,
+  useChangeDispatch
+} from '../utils/index.js'
 import { disclaimer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
 /**
- * Props for the Disclaimer component.
+ * Props for the {@link Disclaimer} component.
  *
  * @property content - Content displayed inside the disclaimer panel.
  * @property togglerContent - Content rendered inside the dismiss toggler.
- * If not provided, the toggler is not rendered.
- * @property isOn - Controls the visibility state. When defined, the component
- * behaves as a controlled component.
- * @property defaultIsOn - Default visibility state for uncontrolled mode.
- * @property stateHandlers - Callbacks invoked after state changes.
- * @property stateHandlers.toggled - Callback invoked after the disclaimer state changes.
- * @property actionHandlers - Callbacks invoked before actions are committed.
- * @property actionHandlers.dismissClick - Callback invoked before the disclaimer is dismissed.
+ * When omitted, the toggler is not rendered.
+ * @property isOn - Controlled visibility state. When defined, the component
+ * behaves as a controlled component and internal state is never updated.
+ * @property defaultIsOn - Initial visibility state in uncontrolled mode.
+ * Ignored when `isOn` is provided. Defaults to `true`.
+ * @property onDismissClicked - Called when the toggler is clicked, before the
+ * disclaimer reacts, with the visibility state as it was.
+ * @property onIsOnChanged - Called after the visibility state changed, with the
+ * new value.
  * @property className - Optional additional class name(s) applied to the root element.
- * @property children - Additional content rendered below the disclaimer panel.
+ * @property children - The content the disclaimer gates, rendered below the panel.
  */
 export type Props = PropsWithChildren<WithClassName<{
   content?: ReactNode
   togglerContent?: ReactNode
   isOn?: boolean
   defaultIsOn?: boolean
-  stateHandlers?: {
-    toggled?: (isOn: boolean) => void
-  }
-  actionHandlers?: {
-    dismissClick?: (prevIsOn: boolean) => void
-  }
+  onDismissClicked?: (isOn: boolean) => void
+  onIsOnChanged?: (isOn: boolean) => void
 }>>
 
 /**
- * Component that displays a dismissible disclaimer panel.
+ * Dismissible disclaimer panel, gating the content it wraps.
  *
- * Supports both controlled (`isOn` provided) and uncontrolled modes.
+ * ### CSS modifiers
+ * - `on` — the disclaimer is showing.
+ * - `off` — the disclaimer has been dismissed.
+ *
+ * ### CSS elements
+ * - `panel`
+ * - `content`
+ * - `toggler`
+ * - `sensitive` — wraps `children`.
  *
  * @param props - Component properties.
  * @see {@link Props}
+ * @returns A root `<div>` holding the disclaimer panel and the gated content.
  *
  * @remarks
- * - In controlled mode, visibility is driven by `isOn` and internal state
- *   does not toggle automatically.
- * - In uncontrolled mode, the component manages its own visibility state.
- * - Applies `on` and `off` modifier classes depending on visibility state.
+ * - In controlled mode (`isOn` defined), visibility is fully driven by the
+ *   parent and internal state is never updated.
+ * - `onDismissClicked` fires in both modes — a controlled parent needs it to
+ *   know a click happened at all.
+ * - `onIsOnChanged` fires in both modes too, and never on mount.
  */
 export const Disclaimer: FunctionComponent<Props> = ({
   content,
   togglerContent,
   isOn: isOnProp,
-  defaultIsOn: defaultIsOnProp,
-  stateHandlers,
-  actionHandlers,
+  defaultIsOn = true,
+  onDismissClicked,
+  onIsOnChanged,
   children,
   className
-}): JSX.Element => {
-  // State & refs
-  const [internalIsOn, setInternalIsOn] = useState(isOnProp ?? defaultIsOnProp ?? true)
+}) => {
+  // State
+  const [internalIsOn, setInternalIsOn] = useState(defaultIsOn)
+  const isControlled = isOnProp !== undefined
   const isOn = isOnProp ?? internalIsOn
-  const pIsOn = useRef(isOn)
 
-  // State change handlers
-  useEffect(() => {
-    if (pIsOn.current === isOn) return
-    stateHandlers?.toggled?.(isOn)
-    pIsOn.current = isOn
-  }, [isOn])
+  // State dispatch
+  useChangeDispatch(isOn, onIsOnChanged)
 
-  // User actions handlers
+  // User action handlers
   const handleDismissClick = (): void => {
-    actionHandlers?.dismissClick?.(isOn)
-    if (isOnProp !== undefined) return
+    onDismissClicked?.(isOn)
+    if (isControlled) return
     setInternalIsOn(false)
   }
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(
-    c(null, {
-      on: isOn,
-      off: !isOn
-    }),
-    className
-  )
+  const rootClss = mergeClassNames(c(null, {
+    on: isOn,
+    off: !isOn
+  }), className)
   const panelClss = c('panel')
   const contentClss = c('content')
-  const btnClss = c('toggler')
+  const togglerClss = c('toggler')
   const sensitiveClss = c('sensitive')
   return <div className={rootClss}>
     <div className={panelClss}>
-      {content !== undefined && <div
-        className={contentClss}>
+      {content !== undefined && <div className={contentClss}>
         {content}
       </div>}
       {togglerContent !== undefined && <div
-        className={btnClss}
+        className={togglerClss}
         onClick={handleDismissClick}>
         {togglerContent}
       </div>}

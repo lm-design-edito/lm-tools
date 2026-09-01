@@ -80,24 +80,20 @@ const tsxDetails = `
  * @property toClip - Content written to the clipboard. When omitted, the current
  * content container's \`innerHTML\` is used. A function may be provided to transform
  * the current content before it is written.
- * @property actionHandlers - Optional user action callbacks:
- *   - \`clicked\` — called when the copy button is clicked, before clipboard content is resolved.
- * @property stateHandlers - Optional callbacks invoked when derived state changes:
- *   - \`clipped\` — called after content has been successfully written to the clipboard.
+ * @property onCopyClicked - Called when the copy button is clicked, before the
+ * clipboard content is resolved, with the container's raw HTML.
+ * @property onClipped - Called once content has been written to the clipboard.
+ * Not called when the write fails.
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Content rendered inside the copyable container.
  */
 export type Props = PropsWithChildren<WithClassName<{
   toClip?: string | ((curr: string | undefined) => string | undefined)
-  actionHandlers?: {
-    clicked?: (
-      e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>,
-      rawContent: string | undefined
-    ) => void
-  }
-  stateHandlers?: {
-    clipped?: (content: string) => void
-  }
+  onCopyClicked?: (
+    e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>,
+    rawContent: string | undefined
+  ) => void
+  onClipped?: (content: string) => void
 }>>
 `
 

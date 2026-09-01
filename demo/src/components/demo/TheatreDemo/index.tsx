@@ -39,18 +39,19 @@ const tsxDetails = `/**
  *
  * @property closeBtnContent - Custom content rendered inside the close/exit button.
  * @property openBtnContent - Custom content rendered inside the open/enter button.
- * @property isOn - Controlled theatre mode state. When provided, overrides the
- * internal state. Use together with {@link Props.onToggleClick} for fully
- * controlled usage.
- * @property defaultIsOn - Default state for the theatre mode.
- * @property exitOnEscape — When uncontrolled and on, toggles internal state to off when 'esc' key is pressed
- * @property exitOnBgClick — When uncontrolled and on, toggles internal state to off when the background is clicked
- * @property stateHandlers - Callbacks called after the internal state changed
- * @property stateHandlers.toggled - Callback invoked after the state changed
- * @property actionHandlers - Callbacks called after a user action on children elements
- * @property actionHandlers.toggleClick - Callback invoked when either the open or close
- * button is clicked, the 'esc' key pressed or the background clicked. Receives the theatre state value (\`isOn\`) at the time of the click,
- * i.e. the previous state before the toggle.
+ * @property isOn - Controlled theatre mode state. When defined, the component
+ * behaves as a controlled component and internal state is never updated.
+ * @property defaultIsOn - Initial theatre mode state in uncontrolled mode.
+ * Ignored when \`isOn\` is provided. Defaults to \`false\`.
+ * @property exitOnEscape - When \`true\`, pressing \`Escape\` while the stage is
+ * open counts as a toggle.
+ * @property exitOnBgClick - When \`true\`, clicking the stage background — and
+ * not its content — counts as a toggle.
+ * @property onToggleClicked - Called whenever a toggle is requested: the open
+ * or close button, the \`Escape\` key, or the stage background. Fires before the
+ * theatre reacts, with the state as it was.
+ * @property onIsOnChanged - Called after the theatre mode changed, with the new
+ * value.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Content rendered both in the default slot and, when theatre
  * mode is active, duplicated inside the stage element.
@@ -62,12 +63,8 @@ export type Props = PropsWithChildren<WithClassName<{
   defaultIsOn?: boolean
   exitOnEscape?: boolean
   exitOnBgClick?: boolean
-  stateHandlers?: {
-    toggled?: (isOn: boolean) => void
-  }
-  actionHandlers?: {
-    toggleClick?: (prevIsOn: boolean) => void
-  }
+  onToggleClicked?: (isOn: boolean) => void
+  onIsOnChanged?: (isOn: boolean) => void
 }>>`
 
 /* Demo CSS */
@@ -132,12 +129,9 @@ export const TheatreDemo: FunctionComponent = () => {
     closeBtnContent: <button>Fermer le théâtre</button>,
     exitOnEscape: true,
     exitOnBgClick: true,
-    actionHandlers: {
-      toggleClick: prev => prev === true && setIsTheatreOn(false)
-    },
-    stateHandlers: {
-      toggled: isOn => console.log('Theatre toggled. Is on:', isOn)
-    }
+    onToggleClicked: prevIsOn => { setIsTheatreOn(!prevIsOn) },
+    // eslint-disable-next-line no-console
+    onIsOnChanged: isOn => { console.log('Theatre toggled. Is on:', isOn) }
   }
 
   return <CompDisplayer
