@@ -3,14 +3,16 @@ import {
   type PropsWithChildren,
   useCallback,
   useEffect,
-  useRef,
   useState
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { toError } from '../../agnostic/misc/cast/index.js'
 import { unknownToString } from '../../agnostic/errors/unknown-to-string/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { mergeClassNames } from '../utils/index.js'
+import {
+  mergeClassNames,
+  useChangeDispatch
+} from '../utils/index.js'
 import { subtitles as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -154,10 +156,11 @@ const getCurrentGroup = (
  * @property isEnded - When `true`, forces the last group to be treated as current,
  * regardless of `timecodeMs`. Useful to keep the final subtitle group visible after
  * media playback finishes.
- * @property onLoaded - Callback invoked with the raw SRT string after a successful
- * fetch and parse. Not called when `srtFileContent` is used directly.
- * @property onParsed - Callback invoked with the raw SRT string has been parsed.
- * @property onLoadFailed - Callback invoked with an `Error` if the fetch or parse step fails.
+ * @property onLoaded - Called with the raw SRT string once fetched. Not called
+ * when `srtFileContent` is used directly, since nothing is fetched then.
+ * @property onParsed - Called after the subtitles have been parsed, with the
+ * resulting entries.
+ * @property onLoadFailed - Called with an `Error` when the fetch or the parse fails.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React children rendered inside the root element, after the subtitle groups.
  */
@@ -209,13 +212,9 @@ export const Subtitles: FunctionComponent<Props> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [loadError, setLoadError] = useState<Error | null>(null)
   const [parsedSubs, setParsedSubs] = useState<ParsedSub[]>([])
-  const pParsedSubs = useRef(parsedSubs)
 
-  // State change handlers
-  useEffect(() => {
-    if (pParsedSubs.current === parsedSubs) return
-    onParsed?.(parsedSubs)
-  }, [parsedSubs])
+  // State dispatch
+  useChangeDispatch(parsedSubs, onParsed)
 
   // Effects
   const fetchAndParseSubs = useCallback(async (
