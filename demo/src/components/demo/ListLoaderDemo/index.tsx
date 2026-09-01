@@ -21,9 +21,9 @@ fresh, and drives a {@link ControlledListLoader} with the result.
 @remarks
 - In controlled mode (\`pages\` defined), the page set is entirely driven by the
   parent. \`fillGaps\` and \`dropPagesFurtherThan\` are inert, and load buttons only
-  report through \`onLoadPageClick\`.
+  report through \`onLoadPageClicked\`.
 - In uncontrolled mode, internal state is initialized from \`defaultPage\` and load
-  buttons extend the set themselves. \`onLoadPageClick\` still fires, after the
+  buttons extend the set themselves. \`onLoadPageClicked\` still fires, after the
   internal state has been updated.
 - A page removed from the effective set is dropped from memory, and a request
   still in flight for it is discarded on arrival rather than re-inserted.
@@ -67,10 +67,10 @@ const tsxDetails = `
  * back to a positional key.
  * @property loadingPages - Page positions currently being fetched. Exposed on the
  * root element as \`data-loading-pages\`.
- * @property onLoadPageClick - Called with the page position a load button targets,
+ * @property onLoadPageClicked - Called with the page position a load button targets,
  * either on click or on viewport entry when auto-loading is enabled.
  * @property autoLoadPrevWhenVisible - Wraps the leading load button in an
- * {@link IntersectionObserverComponent} and fires \`onLoadPageClick\` when it enters the viewport.
+ * {@link IntersectionObserverComponent} and fires \`onLoadPageClicked\` when it enters the viewport.
  * @property autoLoadNextWhenVisible - Same, for the trailing load button.
  * @property className - Additional class name(s) applied to the root element.
  */
@@ -83,7 +83,7 @@ export type ControlledProps<T> = WithClassName<{
   display: (item: T) => ReactNode
   getIdentifier?: (item: T) => string | undefined
   loadingPages?: number[]
-  onLoadPageClick?: (pagePos: number) => void
+  onLoadPageClicked?: (pagePos: number) => void
   autoLoadPrevWhenVisible?: boolean
   autoLoadNextWhenVisible?: boolean
 }>
@@ -110,12 +110,12 @@ export type ControlledProps<T> = WithClassName<{
  * from the DOM. Applies to load-button activations only, never to retries or
  * stale reloads. Ignored when \`pages\` is provided.
  * @property fetch - Fetches one page's items. Rejections are reported through
- * \`onFetchError\` and retried according to \`fetchRetriesNb\`.
+ * \`onPageFetchFailed\` and retried according to \`fetchRetriesNb\`.
  * @property staleAfterMs - Delay after which a loaded page is refetched, counted
  * from its own last successful load. When omitted, pages are never refreshed.
- * @property onFetchSuccess - Called after a page's items have been stored. Not
+ * @property onPageFetched - Called after a page's items have been stored. Not
  * called for a page dropped while its request was in flight.
- * @property onFetchError - Called on every failed attempt, not only once retries
+ * @property onPageFetchFailed - Called on every failed attempt, not only once retries
  * are exhausted. When omitted, failures are logged with \`console.warn\`.
  * @property fetchRetriesNb - Number of retries after a failed fetch. Defaults to
  * \`Infinity\`, so a page keeps retrying until it succeeds.
@@ -128,8 +128,8 @@ export type Props<T> = Omit<ControlledProps<T>, 'itemsPages' | 'loadingPages' | 
   dropPagesFurtherThan?: number
   fetch: (page: number) => Promise<T[]>
   staleAfterMs?: number
-  onFetchSuccess?: (pagePos: number, items: T[]) => void
-  onFetchError?: (pagePos: number, error: Error) => void
+  onPageFetched?: (pagePos: number, items: T[]) => void
+  onPageFetchFailed?: (pagePos: number, error: Error) => void
   fetchRetriesNb?: number
   fetchRetriesDelayMs?: number
 }
@@ -194,8 +194,8 @@ const demoProps: ListLoaderProps<DemoItem> = {
   filter: () => true,
   display: item => <span>{item.label}</span>,
   getIdentifier: item => item.id,
-  onFetchSuccess: (pagePos, items) => console.log('loaded page', pagePos, items),
-  onFetchError: (pagePos, error) => console.log('failed page', pagePos, error)
+  onPageFetched: (pagePos, items) => console.log('loaded page', pagePos, items),
+  onPageFetchFailed: (pagePos, error) => console.log('failed page', pagePos, error)
 }
 
 export const ListLoaderDemo: FunctionComponent = () => {

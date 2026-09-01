@@ -31,10 +31,10 @@ type LoadButtonKind = 'prev' | 'next' | 'gap'
  * back to a positional key.
  * @property loadingPages - Page positions currently being fetched. Exposed on the
  * root element as `data-loading-pages`.
- * @property onLoadPageClick - Called with the page position a load button targets,
+ * @property onLoadPageClicked - Called with the page position a load button targets,
  * either on click or on viewport entry when auto-loading is enabled.
  * @property autoLoadPrevWhenVisible - Wraps the leading load button in an
- * {@link IntersectionObserverComponent} and fires `onLoadPageClick` when it enters the viewport.
+ * {@link IntersectionObserverComponent} and fires `onLoadPageClicked` when it enters the viewport.
  * @property autoLoadNextWhenVisible - Same, for the trailing load button.
  * @property className - Additional class name(s) applied to the root element.
  */
@@ -47,7 +47,7 @@ export type Props<T> = WithClassName<{
   display: (item: T) => ReactNode
   getIdentifier?: (item: T) => string | undefined
   loadingPages?: number[]
-  onLoadPageClick?: (pagePos: number) => void
+  onLoadPageClicked?: (pagePos: number) => void
   autoLoadPrevWhenVisible?: boolean
   autoLoadNextWhenVisible?: boolean
 }>
@@ -96,7 +96,7 @@ export const ControlledListLoader = <T,>({
   display,
   getIdentifier,
   loadingPages,
-  onLoadPageClick,
+  onLoadPageClicked,
   autoLoadPrevWhenVisible,
   autoLoadNextWhenVisible
 }: Props<T>): ReactNode => {
@@ -149,7 +149,7 @@ export const ControlledListLoader = <T,>({
       className={c('load', kind)}
       key={`load/${pagePos}`}
       data-page={pagePos}
-      onClick={() => onLoadPageClick?.(pagePos)} />
+      onClick={() => onLoadPageClicked?.(pagePos)} />
     const autoLoads = (kind === 'prev' && autoLoadPrevWhenVisible === true)
       || (kind === 'next' && autoLoadNextWhenVisible === true)
     if (!autoLoads) return button
@@ -158,7 +158,7 @@ export const ControlledListLoader = <T,>({
       key={`load/${pagePos}`}
       onIntersected={({ ioEntry }) => {
         if (ioEntry?.isIntersecting !== true) return
-        onLoadPageClick?.(pagePos)
+        onLoadPageClicked?.(pagePos)
       }}>
       {button}
     </IntersectionObserverComponent>

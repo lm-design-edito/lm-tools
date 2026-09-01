@@ -41,12 +41,12 @@ type LoadedPageData<T> = {
  * from the DOM. Applies to load-button activations only, never to retries or
  * stale reloads. Ignored when `pages` is provided.
  * @property fetch - Fetches one page's items. Rejections are reported through
- * `onFetchError` and retried according to `fetchRetriesNb`.
+ * `onPageFetchFailed` and retried according to `fetchRetriesNb`.
  * @property staleAfterMs - Delay after which a loaded page is refetched, counted
  * from its own last successful load. When omitted, pages are never refreshed.
- * @property onFetchSuccess - Called after a page's items have been stored. Not
+ * @property onPageFetched - Called after a page's items have been stored. Not
  * called for a page dropped while its request was in flight.
- * @property onFetchError - Called on every failed attempt, not only once retries
+ * @property onPageFetchFailed - Called on every failed attempt, not only once retries
  * are exhausted. When omitted, failures are logged with `console.warn`.
  * @property fetchRetriesNb - Number of retries after a failed fetch. Defaults to
  * `Infinity`, so a page keeps retrying until it succeeds.
@@ -59,8 +59,8 @@ export type Props<T> = Omit<ControlledProps<T>, 'itemsPages' | 'loadingPages' | 
   dropPagesFurtherThan?: number
   fetch: (page: number) => Promise<T[]>
   staleAfterMs?: number
-  onFetchSuccess?: (pagePos: number, items: T[]) => void
-  onFetchError?: (pagePos: number, error: Error) => void
+  onPageFetched?: (pagePos: number, items: T[]) => void
+  onPageFetchFailed?: (pagePos: number, error: Error) => void
   fetchRetriesNb?: number
   fetchRetriesDelayMs?: number
 }
@@ -77,9 +77,9 @@ export type Props<T> = Omit<ControlledProps<T>, 'itemsPages' | 'loadingPages' | 
  * @remarks
  * - In controlled mode (`pages` defined), the page set is entirely driven by the
  *   parent. `fillGaps` and `dropPagesFurtherThan` are inert, and load buttons only
- *   report through `onLoadPageClick`.
+ *   report through `onLoadPageClicked`.
  * - In uncontrolled mode, internal state is initialized from `defaultPage` and load
- *   buttons extend the set themselves. `onLoadPageClick` still fires, after the
+ *   buttons extend the set themselves. `onLoadPageClicked` still fires, after the
  *   internal state has been updated.
  * - A page removed from the effective set is dropped from memory, and a request
  *   still in flight for it is discarded on arrival rather than re-inserted.
@@ -100,10 +100,10 @@ export const ListLoader = <T,>({
   filter,
   display,
   getIdentifier,
-  onLoadPageClick,
+  onLoadPageClicked,
   staleAfterMs,
-  onFetchSuccess,
-  onFetchError,
+  onPageFetched,
+  onPageFetchFailed,
   fetchRetriesNb = Infinity,
   fetchRetriesDelayMs = 1000
 }: Props<T>): ReactNode => {
@@ -129,7 +129,7 @@ export const ListLoader = <T,>({
         return kept.length === next.length ? next : kept
       })
     }
-    onLoadPageClick?.(pagePos)
+    onLoadPageClicked?.(pagePos)
   }
 
   const storePage = (page: number, items: T[]): void => setItemsPages(curr => {
@@ -147,7 +147,7 @@ export const ListLoader = <T,>({
 
   const reportFetchError = (page: number, err: unknown): void => {
     const error = toError(err)
-    if (onFetchError !== undefined) return onFetchError(page, error)
+    if (onPageFetchFailed !== undefined) return onPageFetchFailed(page, error)
     // eslint-disable-next-line no-console
     console.warn(`ListLoader failed to fetch page ${page}`, error)
   }
@@ -161,7 +161,7 @@ export const ListLoader = <T,>({
       .then(items => {
         if (!requestedPages.current.has(page)) return
         storePage(page, items)
-        onFetchSuccess?.(page, items)
+        onPageFetched?.(page, items)
         setPageLoading(page, false)
       })
       .catch((err: unknown) => {
@@ -234,7 +234,7 @@ export const ListLoader = <T,>({
     display={display}
     getIdentifier={getIdentifier}
     loadingPages={Array.from(loadingPages)}
-    onLoadPageClick={handleLoadClick}
+    onLoadPageClicked={handleLoadClick}
     autoLoadPrevWhenVisible={autoLoadPrevWhenVisible}
     autoLoadNextWhenVisible={autoLoadNextWhenVisible} />
 }
