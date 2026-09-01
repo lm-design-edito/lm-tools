@@ -68,24 +68,23 @@ type ModuleData = {
  * component stays in the \`--no-module\` state.
  * @property props - Arbitrary key-value object forwarded verbatim to the
  * module's \`init\` call and, on subsequent changes, to \`update\` (if exported).
- * @property stateHandlers - Optional callbacks invoked whenever internal state changes:
- * - \`idChanged\` — called with the stable instance ID once on mount.
- * - \`isLoadingChanged\` — called with the new loading state on every transition.
- * - \`loadedModuleChanged\` — called with the new module value (\`ModuleData\`, \`Error\`, or \`null\`)
- * after each load attempt or teardown.
- * - \`moduleTargetChanged\` — called with the \`Element\` returned by \`init\`, or \`null\`
- * when the module is unloaded or errored.
+ * @property onIdGenerated - Called once on mount with the instance's generated
+ * \`id\`. The id never changes afterwards, so this fires exactly once.
+ * @property onIsLoadingChanged - Called after the loading state changed, with
+ * the new value.
+ * @property onLoadedModuleChanged - Called after the loaded module changed, with
+ * the new value: the validated {@link ModuleData}, an \`Error\`, or \`null\`.
+ * @property onModuleTargetChanged - Called after the hosted element changed,
+ * with the \`Element\` returned by \`init\`, or \`null\` once unloaded or errored.
  * @property className - Optional additional class name(s) applied to the root element.
  */
 export type Props = WithClassName<{
   src?: string
   props?: Record<string, unknown>
-  stateHandlers?: {
-    idChanged?: (id: string) => void
-    isLoadingChanged?: (isLoading: boolean) => void
-    loadedModuleChanged?: (loadedModule: ModuleData | Error | null) => void
-    moduleTargetChanged?: (moduleTarget: Element | null) => void
-  }
+  onIdGenerated?: (id: string) => void
+  onIsLoadingChanged?: (isLoading: boolean) => void
+  onLoadedModuleChanged?: (loadedModule: ModuleData | Error | null) => void
+  onModuleTargetChanged?: (moduleTarget: Element | null) => void
 }>`
 
 const demoStyles = ``
@@ -97,12 +96,12 @@ const demoProps: UIModuleProps = {
     count: 7,
     isActive: true
   },
-  stateHandlers: {
-    idChanged: id => console.log('id:', id),
-    loadedModuleChanged: loadedModule => console.log('loaded:', loadedModule),
-    isLoadingChanged: loading => console.log('loading:', loading),
-    moduleTargetChanged: moduleTarget => console.log('target:', moduleTarget)
-  }
+  /* eslint-disable no-console */
+  onIdGenerated: id => console.log('id:', id),
+  onLoadedModuleChanged: loadedModule => console.log('loaded:', loadedModule),
+  onIsLoadingChanged: isLoading => console.log('loading:', isLoading),
+  onModuleTargetChanged: moduleTarget => console.log('target:', moduleTarget)
+  /* eslint-enable no-console */
 }
 
 export const UIModuleDemo: FunctionComponent = () => {
