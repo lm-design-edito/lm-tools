@@ -171,6 +171,79 @@ Use `@throws` when a function can throw in documented, meaningful ways.
 - Do not write `@example` blocks that merely echo the type signature.
 - Do not include type annotations inside JSDoc tags (e.g. `@param {string} name`) — rely on TypeScript types instead.
 
+## Components
+
+### Naming
+
+- Component symbol is the folder name. Suffix it with `Component` **only** to avoid a collision with a DOM global (`IntersectionObserverComponent`, `ResizeObserverComponent`, `EventListenerComponent`, `ShadowRootComponent`). `ScrollListener`, `Video`, `Drawer` etc. stay bare.
+- A controlled variant is prefixed: `ControlledVideo`, `ControlledBeforeAfter`, `ControlledSequencer`, `ControlledListLoader`.
+- Every props type is exported as `Props`, in both `index.tsx` and `index.controlled.tsx`. Never `ControlledProps`.
+- The uncontrolled initial value is always `default<Something>` (`defaultValue`, `defaultRatio`, `defaultIsOpened`, `defaultActive`). Never `initial…` or `init…`.
+
+### Handlers
+
+One flat `on…` prop per callback. No `stateHandlers {}` / `actionHandlers {}` bags.
+
+- **Actions** — past participle, fired **before** the component reacts, carrying the value **as it was**: `onPlayButtonClicked`, `onTimelineClicked`, `onDividerDragged`.
+- **State** — past participle, fired **after** the change, carrying the **new** value: `onRatioChanged`, `onIsPlayingChanged`, `onVolumeChanged`.
+- The past participle is what separates a component's own semantics from a DOM passthrough. A prop that simply forwards a native handler keeps its native name (`onChange` on `Input`, `onEvent` on `EventListenerComponent`).
+- Beyond ~4 state items, a component may **additionally** expose `onStateChanged?: (state: XState) => void` taking a single object — never a spread argument list. Both feed off the same internal dispatch.
+
+The contract, in both controlled and uncontrolled mode:
+
+- action handlers always fire — only the internal state update is guarded by the controlled check;
+- state handlers always fire, and **never on mount**.
+
+### Controlled / uncontrolled
+
+The `index.tsx` + `index.controlled.tsx` split is a readability tool, not an obligation. Split when the controlled layer is substantial enough to read on its own (`Video`, `BeforeAfter`, `Sequencer`, `ListLoader`); keep a single hybrid file when the wrapper is a handful of lines (`Input`, `Select`, `Textarea`, `Drawer`, `Disclaimer`, `Theatre`, `Gallery`).
+
+### Rendering
+
+- Root class is `c()`. `c(null, { … })` only when modifiers follow. Never `c(null, {})`.
+- Type the component as `FunctionComponent<Props>` and **do not** annotate the arrow's return — the type already carries it. A generic component cannot use `FunctionComponent`; type it as a generic arrow returning `ReactNode`.
+- The stylesheet is `styles.module.css`.
+
+### Per-component to-do
+
+Ordered alphabetically. Items marked **bug** are behavioural defects found during the audit, to fix in the same commit as the component's alignment.
+
+| Composant | À faire |
+| --- | --- |
+| BeforeAfter | `BeforeAfterControlled` → `ControlledBeforeAfter` ; rapatrier `utils.ts` dans `index` (`getRelativePointerCoordinates` est mort) ; handlers plats ; `onRatioChanged` doit aussi partir en mode contrôlé ; nommer/expliquer le `1.02 * x - 0.01` ; `event` inutilisés dans 4 handlers |
+| Button | `c(null)` → `c()` |
+| Clippable | handlers plats (`onCopyClicked`, `onClipped`) |
+| Disclaimer | handlers plats (`onDismissClicked`, `onIsOnChanged`) ; `useChangeDispatch` |
+| Drawer | `initialIsOpened` → `defaultIsOpened` ; **bug** — en mode contrôlé les clics opener/closer ne remontent rien, ajouter `onOpenerClicked` / `onCloserClicked` qui partent dans les deux modes ; `onIsOpenedChanged` ; `useChangeDispatch` |
+| EventListener | utiliser `WithClassName` au lieu d'un `className?: string` maison ; `onEvent` reste (passthrough DOM) |
+| Gallery | `initActive` → `defaultActive` ; handlers plats ; `useChangeDispatch` (`slotChanged` part au montage) ; factoriser l'échelle de ternaires `actualPaddingLeft` / `actualPaddingRight` |
+| Iframe | typo `innerAutoHeightNitifier` → `Notifier` |
+| Image | **bug** — `handleDisclaimerDismissClick` est un `useCallback([])` qui capture un `isDisclaimerOn` périmé ; double source de vérité sur l'état du disclaimer (force `isOn` sur l'enfant) |
+| Input | fusionner `index.controlled.tsx` dans `index.tsx` ; vérifier si le bloc `target.value = …` sert encore, sinon le supprimer |
+| IntersectionObserver | conforme |
+| JsonEditor | chantier séparé — mode contrôlé (aujourd'hui structurellement impossible : arbre de sous-éditeurs non contrôlés) et découpage du fichier (416 l., 8 sous-composants) ; `c(null, {})` → `c()` ; `Props` exportés + `className` sur les sous-composants |
+| ListLoader | `ListLoaderControlled` → `ControlledListLoader` ; passer les handlers au participe passé (`onLoadPageClicked`, `onPageFetched`, `onPageFetchFailed`) |
+| Overlayer | `publicClassname` → `publicClassName` ; **bug** — `key` manquante sur la map des overlays |
+| Paginator | handlers plats (`onDirectionChanged`, `onPagesChanged`) ; `useChangeDispatch` (les deux partent au montage) |
+| ResizeObserver | `style.module.css` → `styles.module.css` |
+| Scrllgngn | handlers plats (`onPageChanged`) ; découper le fichier (359 l.) ; `[WIP]` current page id à exposer en attribut |
+| ScrollListener | **bug** — `window.addEventListener('scroll')` au niveau module s'exécute à l'import, casse tout import serveur ; `utils.tsx` → `.ts` ; `registeredIds` référencé au-dessus de sa déclaration ; handlers plats |
+| Select | fusionner `index.controlled.tsx` dans `index.tsx` ; idem Input pour le bloc `target.value` |
+| Sequencer | `ControlledProps` → `Props` ; `SequencerControlled` → `ControlledSequencer` ; **bug** — `key` manquante sur la map des enfants ; handlers plats |
+| ShadowRoot | conforme |
+| Subtitles | rapatrier `types.ts` et `utils.ts` dans `index` ; **bug** — `srtFileContent` seul ne marche jamais (`if (src === undefined) return` s'exécute avant) ; handlers plats ; `useChangeDispatch` |
+| Textarea | fusionner `index.controlled.tsx` dans `index.tsx` ; le commentaire `// not supported for <select>` traîne ici |
+| Theatre | **bug** — `exitOnEscape` inversé, l'écoute clavier n'est installée que quand il vaut `false` ; handlers plats ; `useChangeDispatch` |
+| UIModule | handlers plats (4) ; **bug** — `key` manquante sur la map des `<style>` ; `useChangeDispatch` (les 4 partent au montage) ; revoir le couple `_setX` + ref parallèle |
+| Video | **bug** — `const isLoud = mute ?? false` : une vidéo muette reçoit `--loud` et `data-loud` ; `onFullscreenChange` n'est jamais rappelé ; parenthèses autour du `return` JSX + `/>` isolé + commentaire `{/* Vidéo */}` en français ; `c(null, { })` vide ; alias `appliedVolume` inutile ; handlers plats + `onStateChanged(state)` ; `utils.ts` — les helpers de durée/format ont vocation à rejoindre `agnostic`, pas à rester liés au composant |
+
+### Reporté (à traiter plus tard, pas maintenant)
+
+- Extraire les constructions de custom props CSS et de data-attributes, réinventées dans 6 composants, en utilitaires partagés (`toCssVars`, `toDataAttributes`).
+- Uniformiser l'échappatoire `_modifiers` / `_dataAttributes`, aujourd'hui présente chez `Sequencer` (les deux, préfixage `data-` interne) et `Video` (`_modifiers` seul, pré-formaté) — soit la généraliser, soit la supprimer.
+- Trancher le mode hybride mono-fichier pour `Gallery`, `Drawer`, `Theatre`, `Disclaimer` par rapport au split des autres.
+- `JsonEditor` en mode contrôlé.
+
 ## Tests
 
 Tests run on **Vitest**. Run a single module's tests with `npx vitest run <path>`, or the whole suite with `npm run tests`.
