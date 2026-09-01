@@ -2,8 +2,7 @@ import {
   type FunctionComponent,
   type ImgHTMLAttributes,
   useState,
-  useMemo,
-  useCallback
+  useMemo
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import {
@@ -103,10 +102,10 @@ export const Image: FunctionComponent<Props> = ({
   }, [sources])
 
   // User actions handlers
-  const handleDisclaimerDismissClick = useCallback(() => {
-    disclaimer?.onDismissClicked?.(isDisclaimerOn)
+  const handleDisclaimerDismissClick = (): void => {
+    disclaimer?.onDismissClicked?.(shouldDisclaimerBeOn)
     setIsDisclaimerOn(false)
-  }, [])
+  }
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
