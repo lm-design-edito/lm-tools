@@ -229,7 +229,6 @@ Ordered alphabetically, remaining work only — a component drops off the list o
 
 ### Reporté (à traiter plus tard, pas maintenant)
 
-- Extraire les constructions de custom props CSS et de data-attributes, réinventées dans 6 composants, en utilitaires partagés (`toCssVars`, `toDataAttributes`).
 - Trancher le mode hybride mono-fichier pour `Gallery`, `Drawer`, `Theatre`, `Disclaimer` par rapport au split des autres.
 - `JsonEditor` en mode contrôlé.
 
