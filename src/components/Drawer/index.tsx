@@ -1,33 +1,37 @@
 import {
   type PropsWithChildren,
-  type JSX,
   type FunctionComponent,
   type ReactNode,
-  useState,
-  useRef,
-  useEffect
+  useState
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
-import type { WithClassName } from '../utils/types.js'
-import { mergeClassNames } from '../utils/index.js'
-import { drawer as publicClassName } from '../public-classnames.js'
-import cssModule from './styles.module.css'
 import {
   ResizeObserverComponent,
-  type Props as RSOProps
+  type Props as ResizeObserverProps
 } from '../ResizeObserver/index.js'
+import type { WithClassName } from '../utils/types.js'
+import {
+  mergeClassNames,
+  useChangeDispatch
+} from '../utils/index.js'
+import { drawer as publicClassName } from '../public-classnames.js'
+import cssModule from './styles.module.css'
 
 /**
- * Props for the Drawer component.
+ * Props for the {@link Drawer} component.
  *
  * @property openerContent - Content rendered inside the opener control.
  * @property closerContent - Content rendered inside the closer control.
  * @property defaultIsOpened - Initial open state in uncontrolled mode.
- * Ignored when `isOpened` is provided.
+ * Ignored when `isOpened` is provided. Defaults to `false`.
  * @property isOpened - Controlled open state. When defined, the component
- * behaves as a controlled component and internal state is ignored.
- * @property stateHandlers - Callbacks invoked after the state changes
- * @property stateHandlers.toggled - Callbacks invoked after the isOpened state has changed
+ * behaves as a controlled component and internal state is never updated.
+ * @property onOpenerClicked - Called when the opener is clicked, before the
+ * drawer reacts, with the open state as it was.
+ * @property onCloserClicked - Called when the closer is clicked, before the
+ * drawer reacts, with the open state as it was.
+ * @property onIsOpenedChanged - Called after the open state changed, with the
+ * new value.
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Drawer content.
  */
@@ -36,65 +40,80 @@ export type Props = PropsWithChildren<WithClassName<{
   closerContent?: ReactNode
   defaultIsOpened?: boolean
   isOpened?: boolean
-  stateHandlers?: {
-    toggled?: (isOpen: boolean) => void
-  }
+  onOpenerClicked?: (isOpened: boolean) => void
+  onCloserClicked?: (isOpened: boolean) => void
+  onIsOpenedChanged?: (isOpened: boolean) => void
 }>>
 
 /**
- * Drawer component with optional controlled and uncontrolled behavior.
+ * Drawer component supporting controlled and uncontrolled usage.
+ *
+ * The content is measured through a {@link ResizeObserverComponent} so its
+ * dimensions can drive the open/close transition from CSS alone.
+ *
+ * ### CSS modifiers
+ * - `opened` — the drawer is open.
+ * - `closed` — the drawer is closed.
+ *
+ * ### CSS elements
+ * - `opener`
+ * - `closer`
+ * - `content`
+ *
+ * ### CSS custom properties on the root element
+ * - `--{prefix}-content-width` / `--{prefix}-content-width-px`
+ * - `--{prefix}-content-height` / `--{prefix}-content-height-px`
+ *
+ * ### Data attributes on the root element
+ * - `data-content-width`, `data-content-height` — the measured content size.
+ * Absent until the first measurement lands.
+ *
+ * @param props - Component properties.
+ * @see {@link Props}
+ * @returns A root `<div>` holding the opener, the closer and the measured content.
  *
  * @remarks
- * - In controlled mode (`isOpened` defined), visibility is fully driven by the prop.
- * - In uncontrolled mode, internal state is initialized from `defaultIsOpened`.
- * - The component measures its content using `ResizeObserverComponent`
- *   and exposes the dimensions:
- *   - As CSS custom properties:
- *     --{prefix}-content-height
- *     --{prefix}-content-height-px
- *     --{prefix}-content-width
- *     --{prefix}-content-width-px
- *   - As `data-content-width` and `data-content-height` attributes.
- *
- * CSS modifier classes:
- * - `opened` when open
- * - `closed` when closed
+ * - In controlled mode (`isOpened` defined), the open state is fully driven by
+ *   the parent and internal state is never updated.
+ * - `onOpenerClicked` and `onCloserClicked` fire in both modes — a controlled
+ *   parent needs them to know a click happened at all.
+ * - `onIsOpenedChanged` fires in both modes too, and never on mount.
  */
 export const Drawer: FunctionComponent<Props> = ({
   openerContent,
   closerContent,
   defaultIsOpened = false,
   isOpened: isOpenedProp,
-  stateHandlers,
+  onOpenerClicked,
+  onCloserClicked,
+  onIsOpenedChanged,
   className,
   children
-}): JSX.Element => {
-  // State & handlers
-  const [internalIsOpened, setInternalIsOpened] = useState(isOpenedProp ?? defaultIsOpened)
-  const isOpened = isOpenedProp ?? internalIsOpened
-  const pIsOpened = useRef(isOpened)
-  const [{ width, height }, setContentDimensions] = useState<{
+}) => {
+  // State
+  const [internalIsOpened, setInternalIsOpened] = useState(defaultIsOpened)
+  const [contentDimensions, setContentDimensions] = useState<{
     width?: number
     height?: number
   }>({})
+  const isControlled = isOpenedProp !== undefined
+  const isOpened = isOpenedProp ?? internalIsOpened
 
-  // State change handlers
-  useEffect(() => {
-    if (pIsOpened.current === isOpened) return
-    pIsOpened.current = isOpened
-    stateHandlers?.toggled?.(isOpened)
-  }, [isOpened])
+  // State dispatch
+  useChangeDispatch(isOpened, onIsOpenedChanged)
 
   // User action handlers
   const handleOpenerClick = (): void => {
-    if (isOpenedProp !== undefined) return
+    onOpenerClicked?.(isOpened)
+    if (isControlled) return
     setInternalIsOpened(true)
   }
   const handleCloserClick = (): void => {
-    if (isOpenedProp !== undefined) return
+    onCloserClicked?.(isOpened)
+    if (isControlled) return
     setInternalIsOpened(false)
   }
-  const handleROCompResize: RSOProps['onResized'] = ({ entry }): void => {
+  const handleContentResized: ResizeObserverProps['onResized'] = ({ entry }): void => {
     const { width, height } = entry.contentRect
     setContentDimensions({ width, height })
   }
@@ -108,23 +127,19 @@ export const Drawer: FunctionComponent<Props> = ({
   const openerClss = c('opener')
   const closerClss = c('closer')
   const contentClss = c('content')
-  const dimensions = { width, height }
   const customCssProps: Record<string, string> = Object
-    .entries(dimensions)
-    .reduce((acc, [key, val]) => {
-      if (val === undefined) return acc
-      return {
-        ...acc,
-        [`--${publicClassName}-content-${key}`]: `${val}`,
-        [`--${publicClassName}-content-${key}-px`]: `${val}px`
-      }
-    }, {})
+    .entries(contentDimensions)
+    .reduce((acc, [key, val]) => ({
+      ...acc,
+      [`--${publicClassName}-content-${key}`]: `${val}`,
+      [`--${publicClassName}-content-${key}-px`]: `${val}px`
+    }), {})
   const dataAttributes: Record<string, string> = Object
-    .entries(dimensions)
-    .reduce((acc, [key, val]) => {
-      if (val === undefined) return acc
-      return { ...acc, [`data-content-${key}`]: `${val}` }
-    }, {})
+    .entries(contentDimensions)
+    .reduce((acc, [key, val]) => ({
+      ...acc,
+      [`data-content-${key}`]: `${val}`
+    }), {})
   return <div
     className={rootClss}
     {...dataAttributes}
@@ -132,7 +147,7 @@ export const Drawer: FunctionComponent<Props> = ({
     <div className={openerClss} onClick={handleOpenerClick}>{openerContent}</div>
     <div className={closerClss} onClick={handleCloserClick}>{closerContent}</div>
     <div className={contentClss}>
-      <ResizeObserverComponent onResized={handleROCompResize}>
+      <ResizeObserverComponent onResized={handleContentResized}>
         {children}
       </ResizeObserverComponent>
     </div>
