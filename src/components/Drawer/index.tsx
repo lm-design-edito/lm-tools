@@ -12,6 +12,8 @@ import {
 import type { WithClassName } from '../utils/types.js'
 import {
   mergeClassNames,
+  toCssVars,
+  toDataAttributes,
   useChangeDispatch
 } from '../utils/index.js'
 import { drawer as publicClassName } from '../public-classnames.js'
@@ -127,19 +129,12 @@ export const Drawer: FunctionComponent<Props> = ({
   const openerClss = c('opener')
   const closerClss = c('closer')
   const contentClss = c('content')
-  const customCssProps: Record<string, string> = Object
-    .entries(contentDimensions)
-    .reduce((acc, [key, val]) => ({
-      ...acc,
-      [`--${publicClassName}-content-${key}`]: `${val}`,
-      [`--${publicClassName}-content-${key}-px`]: `${val}px`
-    }), {})
-  const dataAttributes: Record<string, string> = Object
-    .entries(contentDimensions)
-    .reduce((acc, [key, val]) => ({
-      ...acc,
-      [`data-content-${key}`]: `${val}`
-    }), {})
+  const exposedDimensions = {
+    'content-width': contentDimensions.width,
+    'content-height': contentDimensions.height
+  }
+  const customCssProps = toCssVars(publicClassName, exposedDimensions)
+  const dataAttributes = toDataAttributes(exposedDimensions)
   return <div
     className={rootClss}
     {...dataAttributes}

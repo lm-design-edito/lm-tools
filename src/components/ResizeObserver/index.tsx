@@ -8,7 +8,11 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { mergeClassNames } from '../utils/index.js'
+import {
+  mergeClassNames,
+  toCssVars,
+  toDataAttributes
+} from '../utils/index.js'
 import { resizeObserver as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -82,22 +86,8 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
     height
   } = roEntry?.entry.contentRect ?? {}
   const contentRect = { x, y, top, left, bottom, right, width, height }
-  const dataAttributes = Object
-    .entries(contentRect)
-    .reduce<Record<string, string>>((acc, [key, val]) => {
-    if (val === undefined) return acc
-    return { ...acc, [`data-${key}`]: val.toString() }
-  }, {})
-  const cssCustomProps = Object
-    .entries(contentRect)
-    .reduce<Record<string, string>>((acc, [key, val]) => {
-    if (val === undefined) return acc
-    return {
-      ...acc,
-      [`--${publicClassName}-${key}`]: val.toString(),
-      [`--${publicClassName}-${key}-px`]: `${val.toString()}px`
-    }
-  }, {})
+  const dataAttributes = toDataAttributes(contentRect)
+  const cssCustomProps = toCssVars(publicClassName, contentRect)
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(), className)
   return <div

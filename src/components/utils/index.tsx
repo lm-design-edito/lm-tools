@@ -13,6 +13,64 @@ export function mergeClassNames (...names: Array<string | null | undefined | Arr
     .join(' ')
 }
 
+/** A value a component exposes to CSS or to the DOM. `undefined` entries are skipped. */
+type ExposableValue = string | number | undefined
+
+/**
+ * Builds the CSS custom properties a component exposes on its root element,
+ * namespaced under its public class name.
+ *
+ * A **number** is exposed twice: bare, usable inside `calc()`, and with a `-px`
+ * twin ready to drop into a length. A **string** is exposed as it is, on the
+ * assumption it already carries its own unit — or has none, like a ratio.
+ *
+ * @param prefix - Public class name the variables are namespaced under.
+ * @param values - Variable names, without the `--prefix-` part.
+ * @param options - Set `pxTwins` to `false` for a record of unitless numbers,
+ * such as ratios, that must not get a `-px` twin.
+ * @returns The custom properties, keyed by their full `--prefix-name`.
+ *
+ * @example
+ * toCssVars('lm-drawer', { 'content-width': 300 })
+ * // { '--lm-drawer-content-width': '300', '--lm-drawer-content-width-px': '300px' }
+ */
+export function toCssVars (
+  prefix: string,
+  values: Record<string, ExposableValue>,
+  options?: { pxTwins?: boolean }
+): Record<string, string> {
+  const { pxTwins = true } = options ?? {}
+  return Object.entries(values).reduce<Record<string, string>>((acc, [name, value]) => {
+    if (value === undefined) return acc
+    const needsTwin = pxTwins && typeof value === 'number'
+    return {
+      ...acc,
+      [`--${prefix}-${name}`]: `${value}`,
+      ...needsTwin ? { [`--${prefix}-${name}-px`]: `${value}px` } : {}
+    }
+  }, {})
+}
+
+/**
+ * Builds the `data-*` attributes a component exposes on an element.
+ *
+ * @param values - Attribute names, without the `data-` part.
+ * @returns The attributes, keyed by their full `data-name`, ready to spread onto
+ * a JSX element.
+ *
+ * @example
+ * toDataAttributes({ 'content-width': 300, ratio: 0.42 })
+ * // { 'data-content-width': '300', 'data-ratio': '0.42' }
+ */
+export function toDataAttributes (
+  values: Record<string, ExposableValue>
+): Record<string, string> {
+  return Object.entries(values).reduce<Record<string, string>>((acc, [name, value]) => {
+    if (value === undefined) return acc
+    return { ...acc, [`data-${name}`]: `${value}` }
+  }, {})
+}
+
 /**
  * Calls `onChange` whenever `value` changes, and only then — never on mount.
  *

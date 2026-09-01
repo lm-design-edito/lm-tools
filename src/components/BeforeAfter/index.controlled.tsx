@@ -10,7 +10,10 @@ import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import { round } from '../../agnostic/numbers/round/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { mergeClassNames } from '../utils/index.js'
+import {
+  mergeClassNames,
+  toCssVars
+} from '../utils/index.js'
 import { beforeAfter as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -138,10 +141,10 @@ export const ControlledBeforeAfter: FunctionComponent<Props> = ({
     horizontal: mode === 'horizontal',
     vertical: mode === 'vertical'
   }), className)
-  const customProps: Record<string, string> = {
-    [`--${publicClassName}-ratio`]: `${round(clampedRatio, 4)}`,
-    [`--${publicClassName}-ratio-percent`]: `${round(clampedRatio * 100, 2)}%`
-  }
+  const customProps = toCssVars(publicClassName, {
+    'ratio': `${round(clampedRatio, 4)}`,
+    'ratio-percent': `${round(clampedRatio * 100, 2)}%`
+  })
   return <div
     ref={rootRef}
     className={rootClss}

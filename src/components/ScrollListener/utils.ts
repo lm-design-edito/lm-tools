@@ -1,4 +1,5 @@
 import type { RefObject } from 'react'
+import { toCssVars } from '../utils/index.js'
 
 /**
  * Scroll-related measurements for the document and viewport.
@@ -199,9 +200,8 @@ function progressIn (scroll: number, [from, to]: [number, number]): number {
 /**
  * Builds the CSS custom properties exposed on a {@link ScrollListener} root.
  *
- * Every raw measurement comes in two flavours — a bare number, usable in
- * `calc()`, and a `-px` twin ready to drop into a length. Ratios are unitless
- * and have no twin.
+ * Measurements get the usual `-px` twin; ratios are unitless and are asked not
+ * to have one.
  *
  * @param prefix - Public class name the variables are namespaced under.
  * @param scrollState - The state to expose.
@@ -210,7 +210,7 @@ function progressIn (scroll: number, [from, to]: [number, number]): number {
 export function toScrollCssProps (
   prefix: string,
   scrollState: ScrollState
-): Record<string, string | number> {
+): Record<string, string> {
   const { global, local } = scrollState
   const measurements = {
     'window-width': global.win.width,
@@ -233,14 +233,7 @@ export function toScrollCssProps (
     'self-outer-scrolled-y-ratio': progressIn(global.scroll.y, outerRange(local.offsetY, local.height, global.win.height))
   }
   return {
-    ...Object.entries(measurements).reduce<Record<string, string | number>>((acc, [name, value]) => ({
-      ...acc,
-      [`--${prefix}-${name}`]: value,
-      [`--${prefix}-${name}-px`]: `${value}px`
-    }), {}),
-    ...Object.entries(ratios).reduce<Record<string, number>>((acc, [name, value]) => ({
-      ...acc,
-      [`--${prefix}-${name}`]: value
-    }), {})
+    ...toCssVars(prefix, measurements),
+    ...toCssVars(prefix, ratios, { pxTwins: false })
   }
 }
