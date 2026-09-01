@@ -18,14 +18,13 @@ internal interval while still applying loop/clamp arithmetic before forwarding
 to the controlled layer. Passing \`play\` disables internal play state management
 while still allowing viewport handlers to fire \`actionHandlers.intersected\`.
 
-### Forwarded modifiers to {@link ControlledSequencer}
-The following \`_modifiers\` are computed and injected automatically:
-- \`playing\` — \`true\` when the effective play state is active.
-- \`at-start\` — \`true\` when the forwarded step is \`0\`.
-- \`at-end\` — \`true\` when the forwarded step equals \`stepsCount - 1\`.
+### Forwarded to {@link ControlledSequencer}
+- \`step\` — the effective step, after loop/clamp arithmetic.
+- \`isPlaying\` — the effective play state, controlled or internal.
+- \`tempo\` — the current tempo, which the controlled layer exposes as \`data-tempo\`.
 
-### Forwarded data attributes to {@link ControlledSequencer}
-- \`data-tempo\` — the current \`tempo\` value.
+The \`--at-start\` and \`--at-end\` modifiers are derived by the controlled layer
+from \`step\` and the children count.
 
 @param props - Component properties.
 @see {@link Props}
@@ -50,16 +49,12 @@ const tsxDetails = `
  * child indices that should be active when \`step === i\`, allowing multiple
  * children to be simultaneously active on a given step. When omitted, exactly
  * one child is active at a time (the child at index \`step\`).
- * @property _modifiers - Internal modifier flags forwarded directly to the
- * BEM class builder on the root element. Intended to be injected by the
- * uncontrolled wrapper; avoid setting manually in consumer code.
- * - \`playing\` — sequence is currently progressing.
- * - \`at-start\` — current step is the first step.
- * - \`at-end\` — current step is the last step.
- * @property _dataAttributes - Internal data attribute values forwarded to the
- * root element as \`data-<key>\`. Intended to be injected by the uncontrolled
- * wrapper; avoid setting manually in consumer code.
- * - \`tempo\` — exposed as \`data-tempo\`, reflects the current playback tempo.
+ * @property isPlaying - Whether the sequence is currently progressing. The
+ * controlled layer never advances on its own; this only drives the \`--playing\`
+ * modifier. Defaults to \`false\`.
+ * @property tempo - Playback speed in beats per minute, exposed as \`data-tempo\`
+ * for styling and scripting. Purely informational here — the interval itself
+ * lives in the uncontrolled wrapper. When omitted, no attribute is rendered.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - The items to sequence. Each child is wrapped in a
  * classifier \`<div>\` and receives one of the \`--active\`, \`--previous\`, or
@@ -68,21 +63,16 @@ const tsxDetails = `
 export type ControlledProps = PropsWithChildren<WithClassName<{
   step?: number
   activateOnStep?: number[][]
-  _modifiers?: {
-    playing?: boolean
-    'at-start'?: boolean
-    'at-end'?: boolean
-  }
-  _dataAttributes?: {
-    tempo?: number
-  }
+  isPlaying?: boolean
+  tempo?: number
 }>>
   
 /**
  * Props for the {@link Sequencer} component.
  *
- * Extends {@link ControlledProps} (minus \`_modifiers\`, which are derived
- * internally) with uncontrolled playback and viewport-driven behaviour.
+ * Extends {@link ControlledProps} — minus \`isPlaying\` and \`tempo\`, which this
+ * component derives itself — with uncontrolled playback and viewport-driven
+ * behaviour.
  *
  * @property defaultStep - Initial step index when running in uncontrolled mode.
  * Ignored if \`step\` is provided. Defaults to \`0\`.
@@ -114,7 +104,7 @@ export type ControlledProps = PropsWithChildren<WithClassName<{
  * - \`isPlaying\` — called with the new play state whenever it changes.
  * - \`stepChanged\` — called with the new forwarded step index whenever it changes.
  */
-export type Props = Omit<ControlledProps, '_modifiers'> & {
+export type Props = Omit<ControlledProps, 'isPlaying' | 'tempo'> & {
   defaultStep?: number
   tempo?: number
   play?: boolean

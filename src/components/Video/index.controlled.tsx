@@ -132,7 +132,6 @@ export type StateHandlersProps = {
  * @property actionHandlers - Callbacks for user actions on the controls.
  * @property stateHandlers - Callbacks to synchronize internal state with the outside.
  * @property onFullscreenChange - Callback for native fullscreen mode changes.
- * @property _modifiers - Optional CSS modifiers for the root element.
  * @property className - Additional CSS class for the root element.
  * @property children - React content inserted into the <video> tag (fallback, etc).
  *
@@ -157,7 +156,6 @@ export type Props = PropsWithChildren<WithClassName<{
   onFullscreenChange?: ReactEventHandler<HTMLVideoElement>
   actionHandlers?: ActionHandlersProps
   stateHandlers?: StateHandlersProps
-  _modifiers?: Record<string, boolean>
 }> & VideoHTMLAttributes<HTMLVideoElement>>
 
 /**
@@ -215,7 +213,6 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   stateHandlers,
   children,
   className,
-  _modifiers,
   ...intrinsicVideoAttributes
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -311,8 +308,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     'fullscreen-on': isFullscreen,
     'fullscreen-off': !isFullscreen,
     'loud': isLoud,
-    'muted': !isLoud,
-    ..._modifiers
+    'muted': !isLoud
   }), className)
 
   const appliedVolume = volume

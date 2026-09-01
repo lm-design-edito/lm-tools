@@ -25,16 +25,12 @@ import cssModule from './styles.module.css'
  * child indices that should be active when `step === i`, allowing multiple
  * children to be simultaneously active on a given step. When omitted, exactly
  * one child is active at a time (the child at index `step`).
- * @property _modifiers - Internal modifier flags forwarded directly to the
- * BEM class builder on the root element. Intended to be injected by the
- * uncontrolled wrapper; avoid setting manually in consumer code.
- * - `playing` — sequence is currently progressing.
- * - `at-start` — current step is the first step.
- * - `at-end` — current step is the last step.
- * @property _dataAttributes - Internal data attribute values forwarded to the
- * root element as `data-<key>`. Intended to be injected by the uncontrolled
- * wrapper; avoid setting manually in consumer code.
- * - `tempo` — exposed as `data-tempo`, reflects the current playback tempo.
+ * @property isPlaying - Whether the sequence is currently progressing. The
+ * controlled layer never advances on its own; this only drives the `--playing`
+ * modifier. Defaults to `false`.
+ * @property tempo - Playback speed in beats per minute, exposed as `data-tempo`
+ * for styling and scripting. Purely informational here — the interval itself
+ * lives in the uncontrolled wrapper. When omitted, no attribute is rendered.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - The items to sequence. Each child is wrapped in a
  * classifier `<div>` and receives one of the `--active`, `--previous`, or
@@ -43,14 +39,8 @@ import cssModule from './styles.module.css'
 export type Props = PropsWithChildren<WithClassName<{
   step?: number
   activateOnStep?: number[][]
-  _modifiers?: {
-    playing?: boolean
-    'at-start'?: boolean
-    'at-end'?: boolean
-  }
-  _dataAttributes?: {
-    tempo?: number
-  }
+  isPlaying?: boolean
+  tempo?: number
 }>>
 
 /**
@@ -64,14 +54,14 @@ export type Props = PropsWithChildren<WithClassName<{
  *
  * ### Root element modifiers
  * The root `<div>` receives the public class name defined by `sequencer` and
- * the following BEM-style modifier classes, sourced from `_modifiers`:
- * - `--playing` — when the sequence is actively progressing.
+ * the following BEM-style modifier classes:
+ * - `--playing` — when `isPlaying` is `true`.
  * - `--at-start` — when the current step is the first step.
  * - `--at-end` — when the current step is the last step.
  *
  * ### Data attributes on the root element
- * Derived from `_dataAttributes`, each key is prefixed with `data-`:
- * - `data-tempo` — current playback tempo, when provided.
+ * - `data-step` — the current step index.
+ * - `data-tempo` — current playback tempo, when `tempo` is provided.
  *
  * ### Child wrapper elements
  * Each child is wrapped in a `<div>` with the `__child` element class and
@@ -88,24 +78,26 @@ export type Props = PropsWithChildren<WithClassName<{
 export const ControlledSequencer: FunctionComponent<Props> = ({
   step = 0,
   activateOnStep,
-  _modifiers,
-  _dataAttributes,
+  isPlaying = false,
+  tempo,
   className,
   children
 }) => {
+  const childrenArr = Children.toArray(children)
+  const stepsCount = activateOnStep?.length ?? childrenArr.length
+
   // Rendering
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null, _modifiers), className)
-  const rootAttributes: Record<string, unknown> = Object
-    .entries({ ..._dataAttributes })
-    .reduce(
-      (acc, [key, val]) => ({ ...acc, [`data-${key}`]: val }),
-      { 'data-step': step }
-    )
+  const rootClss = mergeClassNames(c(null, {
+    playing: isPlaying,
+    'at-start': step === 0,
+    'at-end': step === stepsCount - 1
+  }), className)
   return <div
     className={rootClss}
-    {...rootAttributes}>
-    {Children.toArray(children)
+    data-step={step}
+    data-tempo={tempo}>
+    {childrenArr
       .map((child, childPos) => {
         const thisStepActivateOnStep = activateOnStep?.[step]
         const isPrevious = activateOnStep === undefined
