@@ -42,7 +42,12 @@ type ActionHandlersProps = ControlledActionHandlersProps
  * component intersects the viewport, provided no disclaimer is active.
  * @property autoMuteWhenHidden - When `true`, mutes the video whenever the component
  * leaves the viewport.
- * @property currentTimeMs - When provided, forces the video's current time to the given value (in milliseconds). Giving the currentTimeMs prop puts the component in a controlled state for the current time, meaning that the parent component is responsible for updating the current time. In this mode, user interactions that would normally change the current time (play, pause, timeline click) will not have an effect unless the parent component updates the currentTimeMs prop accordingly.
+ * @property currentTimeMs - When provided, hands ownership of the current time
+ * (in milliseconds) to the parent, which is then responsible for updating it —
+ * typically to scrub the video from scroll position. A controlled time implies a
+ * stopped video, since a playing element would advance a value it does not own:
+ * `autoPlay`, `autoPlayWhenVisible` and the play button have no effect for as
+ * long as this prop is provided.
  * @property wrapperClassName - Optional additional class name(s) applied to the root wrapper element.
  * @property stateHandlers - Optional callbacks invoked whenever the corresponding
  * state changes. Useful for synchronizing external state with the internal video state.
@@ -94,6 +99,12 @@ export const Video: FunctionComponent<Props> = ({
 
   const hasBeenAutoPlayed = useRef(false)
   const needsDisclaimer = useMemo(() => disclaimer !== undefined, [disclaimer])
+
+  // Several paths below ask for playback — the play button, autoPlayWhenVisible,
+  // dismissing the disclaimer. None of them may win over a parent-owned time, so
+  // the invariant is applied where the state is forwarded rather than guarded at
+  // each of those call sites.
+  const isTimeControlled = controlledProps.currentTimeMs !== undefined
   const shouldDisclaimerBeOn = useMemo(() => {
     if (disclaimer?.isOn === false) return false
     if (disclaimer?.isOn === true) return true
@@ -235,7 +246,7 @@ export const Video: FunctionComponent<Props> = ({
 
   const sensitiveContent = <ControlledVideo
     {...controlledProps}
-    play={play}
+    play={play && !isTimeControlled}
     volume={volume}
     mute={mute}
     playbackRate={playbackRate}

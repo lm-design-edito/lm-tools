@@ -128,7 +128,13 @@ export type StateHandlersProps = {
  * @property volume - External control of volume (0 to 1).
  * @property mute - External control of mute (true = muted).
  * @property playbackRate - External control of playback speed.
- * @property currentTimeMs - External control of current time (in ms). If given, the component considers the current time to be controlled by the parent, and will not attempt to update it internally on user interactions (play, timeline click, etc.), leaving it up to the parent to update this prop accordingly.
+ * @property currentTimeMs - External control of current time (in ms). Providing
+ * it hands ownership of the time to the parent: the value is displayed as given,
+ * the element is seeked to it on every change, and user interactions that would
+ * otherwise move the time (timeline click) no longer do — the parent is expected
+ * to update the prop instead. Because a playing element advances the time by
+ * itself, a controlled time also implies a stopped video: `play` and `autoPlay`
+ * are ignored for as long as this prop is provided.
  * @property actionHandlers - Callbacks for user actions on the controls.
  * @property stateHandlers - Callbacks to synchronize internal state with the outside.
  * @property onFullscreenChange - Callback for native fullscreen mode changes.
@@ -220,10 +226,14 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   const [totalTime, setTotalTime] = useState(0)
   const totalTimeMs = useMemo(() => secondsToMs(totalTime), [totalTime])
 
-  const [currentTimeMs, setCurrentTimeMs] = useState(0)
-  const currentTime = useMemo(() => msToSeconds(currentTimeMs), [currentTimeMs])
+  const [internalCurrentTimeMs, setInternalCurrentTimeMs] = useState(0)
 
-  const isTimeControlled = useMemo(() => givenCurrentTimeMs !== undefined, [givenCurrentTimeMs])
+  const isTimeControlled = givenCurrentTimeMs !== undefined
+
+  // The parent owns the time as soon as it provides one, so that is what gets
+  // displayed — not what the element reported one render later.
+  const currentTimeMs = givenCurrentTimeMs ?? internalCurrentTimeMs
+  const currentTime = useMemo(() => msToSeconds(currentTimeMs), [currentTimeMs])
 
   const volumePercent = useMemo(() => volume * 100, [volume])
 
@@ -238,24 +248,18 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     if (videoRef.current === null) return
     const video = videoRef.current
     setTotalTime(video.duration)
+    // A seek asked for before the metadata landed was silently dropped by the
+    // element — replay it now that it can be honoured.
+    if (givenCurrentTimeMs !== undefined) video.currentTime = msToSeconds(givenCurrentTimeMs)
     intrinsicVideoAttributes.onLoadedMetadata?.(e)
-  }, [intrinsicVideoAttributes.onLoadedMetadata])
+  }, [intrinsicVideoAttributes.onLoadedMetadata, givenCurrentTimeMs])
 
   const handleOnTimeUpdateEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     const video = e.currentTarget
     const newTimeMs = secondsToMs(video.currentTime)
-    setCurrentTimeMs(newTimeMs)
+    setInternalCurrentTimeMs(newTimeMs)
     if (intrinsicVideoAttributes.onTimeUpdate !== undefined) intrinsicVideoAttributes.onTimeUpdate(e)
   }, [intrinsicVideoAttributes.onTimeUpdate])
-
-  const handleOnPlayEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
-    /* We must never play a video that has controlled time */
-    if (isTimeControlled) {
-      videoRef.current?.pause()
-      return
-    }
-    intrinsicVideoAttributes.onPlay?.(e)
-  }, [isTimeControlled, intrinsicVideoAttributes.onPlay])
 
   // Custom action handlers
   const handlePlayButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
@@ -390,7 +394,13 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   }, [fullscreen])
 
   useEffect(() => {
-    if (isTimeControlled) return
+    // A controlled time belongs to the parent, and a playing element advances
+    // the time on its own — so the two cannot coexist. Applied once, on entering
+    // the mode, rather than fought on every tick.
+    if (isTimeControlled) {
+      void forcePause(videoRef.current)
+      return
+    }
     if (play === true) {
       void forcePlay(videoRef.current)
     } else {
@@ -403,10 +413,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   }, [volume])
 
   useEffect(() => {
-    if (givenCurrentTimeMs !== undefined && videoRef.current !== null) {
-      void forcePause(videoRef.current)
-      videoRef.current.currentTime = msToSeconds(givenCurrentTimeMs)
-    }
+    if (givenCurrentTimeMs === undefined || videoRef.current === null) return
+    videoRef.current.currentTime = msToSeconds(givenCurrentTimeMs)
   }, [givenCurrentTimeMs])
 
   useEffect(() => {
@@ -453,8 +461,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
       ref={videoRef}
       className={videoClss}
       {...intrinsicVideoAttributes}
+      autoPlay={isTimeControlled ? false : intrinsicVideoAttributes.autoPlay}
       onLoadedMetadata={handleMetadataLoadEvent}
-      onPlay={handleOnPlayEvent}
       onTimeUpdate={handleOnTimeUpdateEvent}>
       {/* Sources */}
       {parsedSources.map((source, index) => typeof source === 'string'
