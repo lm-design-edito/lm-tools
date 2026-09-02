@@ -67,8 +67,9 @@ function resolveUnits (
  *
  * @remarks
  * A negative duration is broken down by magnitude, then every part is negated.
- * `roundSmallestUnit` rounds the duration *before* the cascade, so a rounded
- * part can never overflow its unit — `1m 59.6s` gives `2m 0s`, never `1m 60s`.
+ * `floorSmallestUnit` truncates the duration *before* the cascade, so the whole
+ * breakdown describes the truncated duration rather than the original one —
+ * `1m 59.6s` gives `1m 59s`, and the missing `.6s` is gone from every part.
  *
  * @example
  * getDurationParts(days(400), { units: ['Y', 'd'] })
@@ -83,7 +84,7 @@ export function getDurationParts (
 ): DurationParts {
   const {
     units,
-    roundSmallestUnit = false,
+    floorSmallestUnit = false,
     useApproximateMonthAndYear = true
   } = options
   const totalMs = duration instanceof Duration ? duration.toMs() : duration
@@ -94,17 +95,19 @@ export function getDurationParts (
   const smallestUnit = usedUnits[usedUnits.length - 1]!
   const smallestLength = lengths[smallestUnit]
   let remaining = Math.abs(totalMs)
-  if (roundSmallestUnit) { remaining = Math.round(remaining / smallestLength) * smallestLength }
+  if (floorSmallestUnit) { remaining = Math.floor(remaining / smallestLength) * smallestLength }
   const values: Record<DurationUnit, number> = {
     ms: 0, s: 0, m: 0, h: 0, d: 0, w: 0, M: 0, Y: 0
   }
   usedUnits.forEach((unit, pos) => {
     const isSmallest = pos === usedUnits.length - 1
     const exact = remaining / lengths[unit]
-    // Rounding the smallest unit again clears the floating-point dust the
-    // rounded division above leaves behind — the value is a whole one by then.
+    // Math.round, not Math.floor, and deliberately so: the truncation already
+    // happened above, on the whole duration, so this value is a whole one by
+    // now. Rounding only clears the floating-point dust the divisions leave —
+    // flooring here would turn a 29.999999999 that means 30 into a 29.
     const value = isSmallest
-      ? (roundSmallestUnit ? Math.round(exact) : exact)
+      ? (floorSmallestUnit ? Math.round(exact) : exact)
       : Math.floor(exact)
     values[unit] = value === 0 ? 0 : value * sign
     remaining -= value * lengths[unit]

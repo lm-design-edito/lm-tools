@@ -12,11 +12,11 @@ export type GetDurationPartsOptions = {
    */
   units?: DurationUnit[]
   /**
-   * Rounds the duration to a whole number of the smallest requested unit, so no
-   * part comes out fractional. Defaults to `false`, which leaves the remainder
-   * on the smallest unit.
+   * Truncates the duration to a whole number of the smallest requested unit, so
+   * no part comes out fractional. Defaults to `false`, which leaves the
+   * remainder on the smallest unit.
    */
-  roundSmallestUnit?: boolean
+  floorSmallestUnit?: boolean
   /**
    * Months and years have no fixed length, so they are approximated. `true`
    * (the default) uses 30-day months and 365-day years, matching what
