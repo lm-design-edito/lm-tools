@@ -200,7 +200,7 @@ One flat `on…` prop per callback. No `stateHandlers {}` / `actionHandlers {}` 
 - **Actions** — past participle, fired **before** the component reacts, carrying the value **as it was**: `onPlayButtonClicked`, `onTimelineClicked`, `onDividerDragged`.
 - **State** — past participle, fired **after** the change, carrying the **new** value: `onRatioChanged`, `onIsPlayingChanged`, `onVolumeChanged`.
 - The past participle is what separates a component's own semantics from a DOM passthrough. A prop that simply forwards a native handler keeps its native name (`onChange` on `Input`, `onEvent` on `EventListenerComponent`).
-- Beyond ~4 state items, a component may **additionally** expose `onStateChanged?: (state: XState) => void` taking a single object — never a spread argument list. Both feed off the same internal dispatch.
+- One handler per state item, always — no aggregate `onStateChanged` even on the components carrying six of them, such as `Video`.
 
 The contract, in both controlled and uncontrolled mode:
 
@@ -227,7 +227,6 @@ Ordered alphabetically, remaining work only — a component drops off the list o
 | --- | --- |
 | JsonEditor | chantier séparé — mode contrôlé (aujourd'hui structurellement impossible : arbre de sous-éditeurs non contrôlés) et découpage du fichier (416 l., 8 sous-composants) ; `Props` exportés + `className` sur les sous-composants |
 | Scrllgngn | `[WIP]` current page id à exposer en attribut |
-| Video | **bug** — `const isLoud = mute ?? false` : une vidéo muette reçoit `--loud` et `data-loud` ; `onFullscreenChange` n'est jamais rappelé ; parenthèses autour du `return` JSX + `/>` isolé + commentaire `{/* Vidéo */}` en français ; alias `appliedVolume` inutile ; handlers plats + `onStateChanged(state)` ; `utils.ts` — les helpers de durée/format ont vocation à rejoindre `agnostic`, pas à rester liés au composant |
 
 ### Reporté (à traiter plus tard, pas maintenant)
 
