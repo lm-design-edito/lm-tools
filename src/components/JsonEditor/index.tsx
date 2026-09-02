@@ -1,5 +1,4 @@
 import {
-  type JSX,
   type FunctionComponent,
   useState,
   type EventHandler,
@@ -10,19 +9,18 @@ import {
   type ZodType,
   type core
 } from 'zod'
-import { clss } from '../../agnostic/css/clss/index.js'
-import { isNonNullObject } from '../../agnostic/objects/is-object/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
+import { isNonNullObject } from '../../agnostic/objects/is-object/index.js'
 import { Input } from '../Input/index.js'
 import { Select } from '../Select/index.js'
 import { Textarea } from '../Textarea/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
-import { jsonEditor as publicClassName } from '../public-classnames.js'
-import cssModule from './styles.module.css'
-
-type JsonPrimitive = string | number | boolean | null
-type JsonValue = JsonPrimitive | JsonValue[] | { [k: string]: JsonValue }
+import type { JsonValue } from './types.js'
+import {
+  c,
+  getValueType
+} from './utils.js'
 
 /**
  * Props for the {@link JsonEditor} component.
@@ -41,9 +39,6 @@ export type Props = WithClassName<{
   onValidationError?: (issues: core.$ZodIssue[]) => void
   schema?: ZodType<JsonValue>
 }>
-
-/* Shared across all sub components */
-const c = clss(publicClassName, { cssModule })
 
 /**
  * Interactive JSON editor component.
@@ -68,10 +63,20 @@ const c = clss(publicClassName, { cssModule })
  * - `delete-prop` — button to remove an existing entry.
  * - `lift-prop` — button to move an array entry up.
  * - `drop-prop` — button to move an array entry down.
+ * - `preview` — the serialized JSON preview.
  *
  * @param props - Component properties.
  * @see {@link Props}
  * @returns A recursive JSON value editor with a live serialized preview.
+ *
+ * @remarks
+ * **The editor is uncontrolled, at every level of the tree, and there is no
+ * controlled variant.** Each node seeds its state from its `defaultValue` on
+ * mount and never reads it again, so handing a mounted editor a new
+ * `defaultValue` changes nothing on screen — remount it with a different `key`
+ * to load another document. A controlled mode would mean rebuilding the state
+ * model so the whole tree reads from a single owner, which is why none of these
+ * components accepts a `value` prop.
  */
 export const JsonEditor: FunctionComponent<Props> = ({
   defaultValue = null,
@@ -100,7 +105,7 @@ export const JsonEditor: FunctionComponent<Props> = ({
       defaultValue={defaultValue}
       onChange={val => setValueAndDispatch(val)}
       path={[]} />
-    <pre>{JSON.stringify(value, null, 2)}</pre>
+    <pre className={c('preview')}>{JSON.stringify(value, null, 2)}</pre>
   </div>
 }
 
@@ -110,26 +115,36 @@ export const JsonEditor: FunctionComponent<Props> = ({
  *
  * * * * * * * * * * * * * * * * */
 
-type ValueType = 'string' | 'number' | 'boolean' | 'null' | 'array' | 'record'
-
-function getValueType (value: JsonValue): ValueType {
-  if (value === null) return 'null'
-  if (Array.isArray(value)) return 'array'
-  if (isNonNullObject(value)) return 'record'
-  if (typeof value === 'string') return 'string'
-  if (typeof value === 'number') return 'number'
-  return 'boolean'
-}
-
-export const ValueEditor: FunctionComponent<{
+/**
+ * Props for the {@link ValueEditor} component.
+ *
+ * @property defaultValue - Initial value of this node. Read on mount only.
+ * @property onChange - Called after the node's value changed, with the new value.
+ * @property path - Keys and indices leading to this node from the document root,
+ * exposed on the node as `data-path` and passed down to its children.
+ * @property className - Additional class name(s) applied to the root element.
+ */
+export type ValueEditorProps = WithClassName<{
   defaultValue?: JsonValue
   onChange?: (newValue: JsonValue) => void
   path?: Array<string | number>
-}> = ({
+}>
+
+/**
+ * One node of the editor tree: a type selector, plus the editor matching the
+ * value's current type. Switching type replaces the value with an empty one of
+ * the new type.
+ *
+ * @param props - Component properties.
+ * @see {@link ValueEditorProps}
+ * @returns A span holding the type selector and the type-appropriate editor.
+ */
+export const ValueEditor: FunctionComponent<ValueEditorProps> = ({
   defaultValue = {},
   onChange,
-  path = []
-}): JSX.Element => {
+  path = [],
+  className
+}) => {
   // State
   const [value, setValue] = useState(defaultValue)
   const setValueAndDispatch = (newValue: JsonValue): void => {
@@ -156,7 +171,7 @@ export const ValueEditor: FunctionComponent<{
 
   // Rendering
   const valueType = getValueType(value)
-  const valueEditorClss = c('value', valueType)
+  const valueEditorClss = mergeClassNames(c('value', valueType), className)
   const pathStringDataAttr = path.map(e => e.toString()).join('.')
   return <span
     className={valueEditorClss}
@@ -182,7 +197,7 @@ export const ValueEditor: FunctionComponent<{
     {typeof value === 'boolean' && <BooleanEditor
       defaultValue={value}
       onChange={handleBooleanValueChange} />}
-    {value === null && <NullEditor defaultValue={value} />}
+    {value === null && <NullEditor />}
     {isNonNullObject(value) && !Array.isArray(value) && <RecordEditor
       defaultValue={value}
       onChange={handleRecordValueChange}
@@ -200,20 +215,42 @@ export const ValueEditor: FunctionComponent<{
  *
  * * * * * * * * * * * * * * * * */
 
-const StringEditor: FunctionComponent<{
+/**
+ * Props for the {@link StringEditor} component.
+ *
+ * @property type - Which control to render. Defaults to a single-line `input`.
+ * @property defaultValue - Initial text. Read on mount only.
+ * @property onChange - Native change handler, forwarded to the control.
+ * @property className - Additional class name(s) applied to the control.
+ */
+export type StringEditorProps = WithClassName<{
   type?: 'input' | 'textarea'
   defaultValue?: string
   onChange?: EventHandler<ChangeEvent<HTMLTextAreaElement | HTMLInputElement>>
-}> = (props) => props.type === 'textarea'
+}>
+
+/**
+ * The editor for a string value.
+ *
+ * @param props - Component properties.
+ * @see {@link StringEditorProps}
+ * @returns A textarea or a text input, depending on `type`.
+ */
+export const StringEditor: FunctionComponent<StringEditorProps> = ({
+  type,
+  defaultValue,
+  onChange,
+  className
+}) => type === 'textarea'
   ? <Textarea
-    className={c('string')}
-    defaultValue={props.defaultValue ?? ''}
-    onChange={props.onChange} />
+    className={mergeClassNames(c('string'), className)}
+    defaultValue={defaultValue ?? ''}
+    onChange={onChange} />
   : <Input
     type='text'
-    className={c('string')}
-    defaultValue={props.defaultValue ?? ''}
-    onChange={props.onChange} />
+    className={mergeClassNames(c('string'), className)}
+    defaultValue={defaultValue ?? ''}
+    onChange={onChange} />
 
 /* * * * * * * * * * * * * * * * *
  *
@@ -221,14 +258,34 @@ const StringEditor: FunctionComponent<{
  *
  * * * * * * * * * * * * * * * * */
 
-const NumberEditor: FunctionComponent<{
+/**
+ * Props for the {@link NumberEditor} component.
+ *
+ * @property defaultValue - Initial number. Read on mount only.
+ * @property onChange - Native change handler, forwarded to the input.
+ * @property className - Additional class name(s) applied to the input.
+ */
+export type NumberEditorProps = WithClassName<{
   defaultValue?: number
   onChange?: EventHandler<ChangeEvent<HTMLInputElement>>
-}> = (props) => <Input
-  className={c('number')}
+}>
+
+/**
+ * The editor for a number value.
+ *
+ * @param props - Component properties.
+ * @see {@link NumberEditorProps}
+ * @returns A number input.
+ */
+export const NumberEditor: FunctionComponent<NumberEditorProps> = ({
+  defaultValue,
+  onChange,
+  className
+}) => <Input
+  className={mergeClassNames(c('number'), className)}
   type='number'
-  defaultValue={props.defaultValue ?? 0}
-  onChange={props.onChange} />
+  defaultValue={defaultValue ?? 0}
+  onChange={onChange} />
 
 /* * * * * * * * * * * * * * * * *
  *
@@ -236,14 +293,34 @@ const NumberEditor: FunctionComponent<{
  *
  * * * * * * * * * * * * * * * * */
 
-const BooleanEditor: FunctionComponent<{
+/**
+ * Props for the {@link BooleanEditor} component.
+ *
+ * @property defaultValue - Initial checked state. Read on mount only.
+ * @property onChange - Native change handler, forwarded to the input.
+ * @property className - Additional class name(s) applied to the input.
+ */
+export type BooleanEditorProps = WithClassName<{
   defaultValue?: boolean
   onChange?: EventHandler<ChangeEvent<HTMLInputElement>>
-}> = (props) => <Input
-  className={c('boolean')}
+}>
+
+/**
+ * The editor for a boolean value.
+ *
+ * @param props - Component properties.
+ * @see {@link BooleanEditorProps}
+ * @returns A checkbox.
+ */
+export const BooleanEditor: FunctionComponent<BooleanEditorProps> = ({
+  defaultValue,
+  onChange,
+  className
+}) => <Input
+  className={mergeClassNames(c('boolean'), className)}
   type='checkbox'
-  defaultChecked={props.defaultValue ?? false}
-  onChange={props.onChange} />
+  defaultChecked={defaultValue ?? false}
+  onChange={onChange} />
 
 /* * * * * * * * * * * * * * * * *
  *
@@ -251,7 +328,24 @@ const BooleanEditor: FunctionComponent<{
  *
  * * * * * * * * * * * * * * * * */
 
-const NullEditor: FunctionComponent<{ defaultValue: null }> = () => <span className={c('null')}>null</span>
+/**
+ * Props for the {@link NullEditor} component.
+ *
+ * @property className - Additional class name(s) applied to the root element.
+ */
+export type NullEditorProps = WithClassName<Record<string, never>>
+
+/**
+ * The editor for a null value — there is nothing to edit, so it only states the
+ * type.
+ *
+ * @param props - Component properties.
+ * @see {@link NullEditorProps}
+ * @returns A span reading `null`.
+ */
+export const NullEditor: FunctionComponent<NullEditorProps> = ({
+  className
+}) => <span className={mergeClassNames(c('null'), className)}>null</span>
 
 /* * * * * * * * * * * * * * * * *
  *
@@ -259,14 +353,40 @@ const NullEditor: FunctionComponent<{ defaultValue: null }> = () => <span classN
  *
  * * * * * * * * * * * * * * * * */
 
-const RecordEditor: FunctionComponent<{
+/**
+ * Props for the {@link RecordEditor} component.
+ *
+ * @property defaultValue - Initial entries. Read on mount only.
+ * @property onChange - Called after any entry is added, removed, renamed or
+ * edited, with the rebuilt record.
+ * @property path - Keys and indices leading to this record from the document
+ * root, extended with each entry's key before being passed down.
+ * @property className - Additional class name(s) applied to the root element.
+ */
+export type RecordEditorProps = WithClassName<{
   defaultValue?: Record<string, JsonValue>
   onChange?: (newValue: Record<string, JsonValue>) => void
   path?: Array<string | number>
-}> = ({
+}>
+
+/**
+ * The editor for a record: one renamable, removable entry per key, each holding
+ * a nested {@link ValueEditor}.
+ *
+ * @param props - Component properties.
+ * @see {@link RecordEditorProps}
+ * @returns A list of entries, followed by the button that appends one.
+ *
+ * @remarks
+ * Entries are held in a `Map` keyed by property name, each carrying a stable id
+ * used as the React key — so renaming a property doesn't remount its editor and
+ * lose the subtree's state.
+ */
+export const RecordEditor: FunctionComponent<RecordEditorProps> = ({
   defaultValue = {},
   onChange,
-  path
+  path,
+  className
 }) => {
   const [value, setValue] = useState(new Map(Object
     .entries(defaultValue)
@@ -290,7 +410,7 @@ const RecordEditor: FunctionComponent<{
   }
 
   const handleCreateProp = (): void => {
-    let propName = ''
+    let propName = randomHash(4)
     while (value.get(propName) !== undefined) { propName = randomHash(4) }
     const newValue = new Map(value)
     newValue.set(propName, { id: randomHash(8), val: null })
@@ -318,7 +438,7 @@ const RecordEditor: FunctionComponent<{
     setValueAndDispatch(newVal)
   }
 
-  return <ul className={c('record')}>
+  return <ul className={mergeClassNames(c('record'), className)}>
     {Array.from(value).map(([key, { id, val }]) => <li
       key={id}
       data-key={key}
@@ -353,14 +473,39 @@ const RecordEditor: FunctionComponent<{
  *
  * * * * * * * * * * * * * * * * */
 
-const ArrayEditor: FunctionComponent<{
+/**
+ * Props for the {@link ArrayEditor} component.
+ *
+ * @property defaultValue - Initial items. Read on mount only.
+ * @property onChange - Called after any item is added, removed, moved or edited,
+ * with the rebuilt array.
+ * @property path - Keys and indices leading to this array from the document
+ * root, extended with each item's index before being passed down.
+ * @property className - Additional class name(s) applied to the root element.
+ */
+export type ArrayEditorProps = WithClassName<{
   defaultValue?: JsonValue[]
   onChange?: (newValue: JsonValue[]) => void
   path?: Array<string | number>
-}> = ({
+}>
+
+/**
+ * The editor for an array: one removable, movable item per index, each holding a
+ * nested {@link ValueEditor}.
+ *
+ * @param props - Component properties.
+ * @see {@link ArrayEditorProps}
+ * @returns An ordered list of items, followed by the button that appends one.
+ *
+ * @remarks
+ * Items are held in a `Map` keyed by a stable id used as the React key, so
+ * reordering moves the editors rather than remounting them.
+ */
+export const ArrayEditor: FunctionComponent<ArrayEditorProps> = ({
   defaultValue = [],
   onChange,
-  path
+  path,
+  className
 }) => {
   const [value, setValue] = useState(new Map(defaultValue.map(val => [randomHash(8), val])))
   const setValueAndDispatch = (newValue: typeof value): void => {
@@ -384,21 +529,36 @@ const ArrayEditor: FunctionComponent<{
     ...Array.from(value).slice(pos + 1)
   ]))
 
-  const handleLiftProp = (pos: number): void => setValueAndDispatch(new Map([
-    ...Array.from(value).slice(0, pos - 1),
-    Array.from(value)[pos],
-    Array.from(value)[pos - 1],
-    ...Array.from(value).slice(pos + 1)
-  ].filter(e => e !== undefined)))
+  // Swapping with the entry before, so position 0 has nothing to swap with. The
+  // guard is what keeps `pos - 1` from reaching back into the array as `-1`.
+  const handleLiftProp = (pos: number): void => {
+    if (pos <= 0) return
+    const entries = Array.from(value)
+    setValueAndDispatch(new Map([
+      ...entries.slice(0, pos - 1),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      entries[pos]!,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      entries[pos - 1]!,
+      ...entries.slice(pos + 1)
+    ]))
+  }
 
-  const handleDropProp = (pos: number): void => setValueAndDispatch(new Map([
-    ...Array.from(value).slice(0, pos),
-    Array.from(value)[pos + 1],
-    Array.from(value)[pos],
-    ...Array.from(value).slice(pos + 2)
-  ].filter(e => e !== undefined)))
+  // Same, mirrored: the last entry has nothing to swap with.
+  const handleDropProp = (pos: number): void => {
+    const entries = Array.from(value)
+    if (pos < 0 || pos >= entries.length - 1) return
+    setValueAndDispatch(new Map([
+      ...entries.slice(0, pos),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      entries[pos + 1]!,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      entries[pos]!,
+      ...entries.slice(pos + 2)
+    ]))
+  }
 
-  return <ol>
+  return <ol className={mergeClassNames(className)}>
     {Array.from(value).map(([id, val], pos) => <li
       className={c('array')}
       key={id}
