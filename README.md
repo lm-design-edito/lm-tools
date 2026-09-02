@@ -30,9 +30,12 @@ Coding conventions live in [CLAUDE.md](./CLAUDE.md) and in the root
 
 Ordered alphabetically, remaining work only — a component drops off the list once it is done. Items marked **bug** are behavioural defects found during the audit, to fix in the same commit as the component's alignment.
 
+La passe d'alignement est terminée — plus aucun composant en attente. Ce qui reste
+est listé sous « À vérifier », « Ménage » et « Reporté ».
+
 | Composant | À faire |
 | --- | --- |
-| JsonEditor | découper le fichier (416 l., 8 sous-composants) selon `types.ts` / `utils.ts` / `index.tsx` ; exporter les `Props` des sous-composants et leur donner un `className`. Le mode contrôlé est un chantier distinct, voir « Reporté ». |
+| — | — |
 
 ## À vérifier
 
@@ -54,9 +57,18 @@ Ordered alphabetically, remaining work only — a component drops off the list o
 
 - Supprimer le motif `disclaimer` des props de `Video` et `Image` — décidé, à traiter dans un chantier à part. Ne pas l'aligner en attendant, il est destiné à disparaître.
 - Trancher le mode hybride mono-fichier pour `Gallery`, `Drawer`, `Theatre`, `Disclaimer` par rapport au split des autres.
-- **`JsonEditor` en mode contrôlé.** Aujourd'hui structurellement impossible : l'arbre
-  de sous-éditeurs est non contrôlé de bout en bout. C'est une réécriture du modèle
-  d'état, pas un alignement — à faire après le découpage du fichier.
+- **`JsonEditor` en mode contrôlé.** Structurellement impossible aujourd'hui : chaque
+  éditeur amorce son état depuis `defaultValue` au montage et ne le relit jamais.
+  C'est une réécriture du modèle d'état pour que l'arbre lise chez un propriétaire
+  unique, pas un alignement. La limite est documentée en `@remarks` sur `JsonEditor`.
+- **Trois défauts de `JsonEditor` laissés de côté**, parce qu'ils changent du
+  comportement visible et méritent leur propre décision :
+  - `handleRenameProp` perd une entrée quand on renomme vers une clé existante — la
+    `Map` reconstruite garde la dernière, l'autre disparaît sans rien dire.
+  - Défauts incohérents : `JsonEditor` part de `null`, `ValueEditor` de `{}` ; et
+    basculer un nœud vers `record` injecte `{ a: 0, b: false }`, un exemple arbitraire.
+  - Asymétrie de classes : `c('record')` est sur le `<ul>`, alors que `c('array')` est
+    sur les `<li>` et que le `<ol>` n'a rien.
 
 ## Coverage roadmap
 
