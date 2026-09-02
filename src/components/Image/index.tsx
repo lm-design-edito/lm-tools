@@ -1,22 +1,14 @@
 import {
   type FunctionComponent,
   type ImgHTMLAttributes,
-  useState,
   useMemo
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import {
-  Disclaimer,
-  type Props as DisclaimerProps
-} from '../Disclaimer/index.js'
-import {
   Theatre,
   type Props as TheatreProps
 } from '../Theatre/index.js'
-import {
-  mergeClassNames,
-  useChangeDispatch
-} from '../utils/index.js'
+import { mergeClassNames } from '../utils/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { image as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
@@ -48,40 +40,17 @@ type SourceData = {
  * - a single srcSet string,
  * - an array of srcSet strings,
  * - an array of {@link SourceData} objects for full `<source>` control.
- * @property disclaimer - Presentation of the internal {@link Disclaimer}: its
- * panel content and toggler. Providing it is what gates the image behind a
- * disclaimer at all. Its state props are deliberately absent — the state lives
- * here, on `isDisclaimerOn` and its siblings.
- * @property isDisclaimerOn - Controlled disclaimer state. When defined, the
- * disclaimer is fully driven by the parent and internal state is never updated.
- * @property defaultIsDisclaimerOn - Initial disclaimer state in uncontrolled
- * mode. Ignored when `isDisclaimerOn` is provided. Defaults to `true`, so a
- * disclaimer shows up as soon as one is declared.
- * @property onDisclaimerDismissClicked - Called when the disclaimer's toggler is
- * clicked, before the image reacts, with the disclaimer state as it was.
- * @property onIsDisclaimerOnChanged - Called after the disclaimer state changed,
- * with the new value.
  * @property theatre - Props forwarded to the internal {@link Theatre} component.
  * @property className - Optional additional class name(s) applied to the root element.
  */
 export type Props = WithClassName<{
   sources?: string | string[] | SourceData[]
-  disclaimer?: Omit<
-    DisclaimerProps,
-    'isOn' | 'defaultIsOn' | 'onDismissClicked' | 'onIsOnChanged' | 'children'
-  >
-  isDisclaimerOn?: boolean
-  defaultIsDisclaimerOn?: boolean
-  onDisclaimerDismissClicked?: (isDisclaimerOn: boolean) => void
-  onIsDisclaimerOnChanged?: (isDisclaimerOn: boolean) => void
   theatre?: TheatreProps
 }> & ImgHTMLAttributes<HTMLImageElement>
 
 /**
  * Image component. Wraps a native `<img>` (or `<picture>`) element with
- * optional responsive sources, an optional disclaimer gate, and
- * viewport-driven visibility tracking.
- *
+ * optional responsive sources and an optional theatre mode.
  *
  * ### CSS elements
  * - `picture` — wrapping `<picture>` element, always rendered. Contains the
@@ -90,30 +59,15 @@ export type Props = WithClassName<{
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A `<figure>` element containing a `<picture>` with the image,
- * and an optional disclaimer overlay.
- *
- * @remarks
- * The disclaimer state is owned here, and the internal {@link Disclaimer} is
- * always driven as a controlled component. Consumers never reach into it to
- * read or set that state: `isDisclaimerOn`, `defaultIsDisclaimerOn`,
- * `onDisclaimerDismissClicked` and `onIsDisclaimerOnChanged` are the whole API.
+ * @returns A `<figure>` element containing a `<picture>` with the image.
  */
 export const Image: FunctionComponent<Props> = ({
   sources,
-  disclaimer,
-  isDisclaimerOn: isDisclaimerOnProp,
-  defaultIsDisclaimerOn = true,
-  onDisclaimerDismissClicked,
-  onIsDisclaimerOnChanged,
   theatre,
   className,
   ...intrinsicImgAttributes
 }) => {
   // State
-  const [internalIsDisclaimerOn, setInternalIsDisclaimerOn] = useState(defaultIsDisclaimerOn)
-  const isDisclaimerControlled = isDisclaimerOnProp !== undefined
-  const isDisclaimerOn = isDisclaimerOnProp ?? internalIsDisclaimerOn
   const parsedSources = useMemo(() => {
     if (sources === undefined) return []
     if (typeof sources === 'string') return [{ srcSet: sources }]
@@ -127,23 +81,13 @@ export const Image: FunctionComponent<Props> = ({
     return []
   }, [sources])
 
-  // State dispatch
-  useChangeDispatch(isDisclaimerOn, onIsDisclaimerOnChanged)
-
-  // User actions handlers
-  const handleDisclaimerDismissClick = (): void => {
-    onDisclaimerDismissClicked?.(isDisclaimerOn)
-    if (isDisclaimerControlled) return
-    setInternalIsDisclaimerOn(false)
-  }
-
   // Rendering
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(), className)
   const pictureClss = c('picture')
   const imgClss = c('image')
 
-  const sensitiveContent = <picture className={pictureClss}>
+  const pictureContent = <picture className={pictureClss}>
     {parsedSources.map((source, index) => <source
       key={index}
       srcSet={typeof source === 'string' ? source : source.srcSet}
@@ -160,20 +104,11 @@ export const Image: FunctionComponent<Props> = ({
     ? <Theatre
         defaultIsOn={false}
         {...theatre}>
-        {sensitiveContent}
+        {pictureContent}
       </Theatre>
-    : sensitiveContent
-
-  const disclaimedContent = disclaimer !== undefined
-    ? <Disclaimer
-        {...disclaimer}
-        isOn={isDisclaimerOn}
-        onDismissClicked={handleDisclaimerDismissClick}>
-        {theatricalContent}
-      </Disclaimer>
-    : theatricalContent
+    : pictureContent
 
   return <figure className={rootClss}>
-    {disclaimedContent}
+    {theatricalContent}
   </figure>
 }

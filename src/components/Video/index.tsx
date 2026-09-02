@@ -8,10 +8,6 @@ import {
   useState
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
-import {
-  Disclaimer,
-  type Props as DisclaimerProps
-} from '../Disclaimer/index.js'
 import { IntersectionObserverComponent, type Props as IntersectionObserverComponentProps } from '../IntersectionObserver/index.js'
 import { mergeClassNames } from '../utils/index.js'
 import { videoWrapper as publicClassName } from '../public-classnames.js'
@@ -28,15 +24,12 @@ import {
  * Props for the {@link Video} component.
  *
  * Extends all ControlledVideo props except play, mute, fullscreen, volume, playbackRate, and their associated event handlers
- * @property disclaimer - Props forwarded to the internal {@link Disclaimer} component.
- * While the disclaimer is active, `autoPlay` and `muted` are suppressed on the
- * underlying `<video>` element.
  * @property autoPlayWhenVisible - When `true`, triggers playback the first time the
- * component intersects the viewport, provided no disclaimer is active.
+ * component intersects the viewport.
  * @property autoPauseWhenHidden - When `true`, pauses playback whenever the component
  * leaves the viewport.
  * @property autoLoudWhenVisible - When `true`, unmutes the video the first time the
- * component intersects the viewport, provided no disclaimer is active.
+ * component intersects the viewport.
  * @property autoMuteWhenHidden - When `true`, mutes the video whenever the component
  * leaves the viewport.
  * @property currentTimeMs - When provided, hands ownership of the current time
@@ -51,7 +44,6 @@ import {
  * (e.g. fallback content).
  */
 export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mute' | 'playbackRate'> & {
-  disclaimer?: DisclaimerProps
   autoPlayWhenVisible?: boolean
   autoPauseWhenHidden?: boolean
   autoLoudWhenVisible?: boolean
@@ -61,18 +53,17 @@ export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mu
 
 /**
  * Full-featured video player component. Wraps a native `<video>` element with
- * playback controls, volume, playback rate, a timeline, optional subtitles,
- * an optional disclaimer gate, and viewport-driven auto-play/mute behaviours.
+ * playback controls, volume, playback rate, a timeline, optional subtitles, and
+ * viewport-driven auto-play/mute behaviours.
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A `<figure>` element containing the video, its controls, optional
- * subtitles, and an optional disclaimer overlay.
+ * @returns A `<figure>` element containing the video, its controls and optional
+ * subtitles.
  */
 
 export const Video: FunctionComponent<Props> = ({
   loop,
-  disclaimer,
   autoPlayWhenVisible,
   autoPauseWhenHidden,
   autoMuteWhenHidden,
@@ -93,25 +84,14 @@ export const Video: FunctionComponent<Props> = ({
   const [mute, setMute] = useState(false)
   const [playbackRate, setPlaybackRate] = useState(1)
   const [fullscreen, setFullscreen] = useState(false)
-  const [isDisclaimerOn, setIsDisclaimerOn] = useState(
-    disclaimer?.isOn === true
-    || disclaimer?.defaultIsOn === true
-    || (disclaimer !== undefined && disclaimer.defaultIsOn === undefined)
-  )
 
   const hasBeenAutoPlayed = useRef(false)
-  const needsDisclaimer = useMemo(() => disclaimer !== undefined, [disclaimer])
 
   // Several paths below ask for playback — the play button, autoPlayWhenVisible,
-  // dismissing the disclaimer. None of them may win over a parent-owned time, so
-  // the invariant is applied where the state is forwarded rather than guarded at
-  // each of those call sites.
+  // autoPlay itself. None of them may win over a parent-owned time, so the
+  // invariant is applied where the state is forwarded rather than guarded at each
+  // of those call sites.
   const isTimeControlled = controlledProps.currentTimeMs !== undefined
-  const shouldDisclaimerBeOn = useMemo(() => {
-    if (disclaimer?.isOn === false) return false
-    if (disclaimer?.isOn === true) return true
-    return isDisclaimerOn
-  }, [disclaimer, isDisclaimerOn])
 
   const needsObserve = useMemo(() => autoLoudWhenVisible === true
     || autoMuteWhenHidden === true
@@ -126,13 +106,9 @@ export const Video: FunctionComponent<Props> = ({
   // Intrisic event handlers
   const handleOnPlayEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
     controlledProps.onPlay?.(e)
-    if (shouldDisclaimerBeOn) {
-      setPlay(false)
-      return
-    }
     setPlay(true)
     hasBeenAutoPlayed.current = true
-  }, [controlledProps.onPlay, shouldDisclaimerBeOn])
+  }, [controlledProps.onPlay])
 
   const handleOnPauseEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
     setPlay(false)
@@ -151,8 +127,8 @@ export const Video: FunctionComponent<Props> = ({
   }, [controlledProps.onRateChange])
 
   const handleFullscreenChange = useCallback((isFullscreen: boolean) => {
-    if (!isFullscreen || shouldDisclaimerBeOn) setFullscreen(false)
-  }, [shouldDisclaimerBeOn])
+    if (!isFullscreen) setFullscreen(false)
+  }, [])
 
   const handleOnLoadedMetadataEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
     muteAttributeWorkaround(e.currentTarget, controlledProps.muted ?? false)
@@ -162,8 +138,8 @@ export const Video: FunctionComponent<Props> = ({
   // User actions
   const handlePlayButtonClick = useCallback<NonNullable<Props['onPlayButtonClicked']>>((e, isPlaying, video) => {
     onPlayButtonClicked?.(e, isPlaying, video)
-    setPlay(!shouldDisclaimerBeOn)
-  }, [onPlayButtonClicked, shouldDisclaimerBeOn])
+    setPlay(true)
+  }, [onPlayButtonClicked])
 
   const handlePauseButtonClick = useCallback<NonNullable<Props['onPauseButtonClicked']>>((e, isPlaying, video) => {
     onPauseButtonClicked?.(e, isPlaying, video)
@@ -192,10 +168,10 @@ export const Video: FunctionComponent<Props> = ({
 
   const handleFullscreenButtonClick = useCallback<NonNullable<Props['onFullscreenButtonClicked']>>((e, isFullscreen, video) => {
     onFullscreenButtonClicked?.(e, isFullscreen, video)
-    setFullscreen(shouldDisclaimerBeOn ? false : !isFullscreen)
-  }, [onFullscreenButtonClicked, shouldDisclaimerBeOn])
+    setFullscreen(!isFullscreen)
+  }, [onFullscreenButtonClicked])
 
-  // Intersection Observer + Disclaimer
+  // Intersection Observer
 
   const onIntersected = useCallback<NonNullable<IntersectionObserverComponentProps['onIntersected']>>(({ ioEntry }) => {
     if (ioEntry === undefined) return
@@ -203,48 +179,29 @@ export const Video: FunctionComponent<Props> = ({
     if (autoPauseWhenHidden === true && !isIntersecting) setPlay(false)
     if (autoLoudWhenVisible === true && isIntersecting) setMute(false)
     if (autoPlayWhenVisible === true
-      && !shouldDisclaimerBeOn
       && !hasBeenAutoPlayed.current
       && isIntersecting) setPlay(true)
     if (autoMuteWhenHidden === true
-      && !shouldDisclaimerBeOn
       && !hasBeenAutoPlayed.current
       && !isIntersecting) setMute(true)
   }, [
     autoPlayWhenVisible,
     autoPauseWhenHidden,
     autoMuteWhenHidden,
-    autoLoudWhenVisible,
-    shouldDisclaimerBeOn
+    autoLoudWhenVisible
   ])
 
-  const handleDiclaimerDismiss = useCallback<NonNullable<DisclaimerProps['onDismissClicked']>>((prevIsOn) => {
-    setIsDisclaimerOn(false)
-    if (controlledProps.autoPlay === true && !hasBeenAutoPlayed.current) {
-      setPlay(true)
-    }
-    disclaimer?.onDismissClicked?.(prevIsOn)
-  }, [controlledProps.autoPlay, disclaimer?.onDismissClicked])
-
+  // `autoPlay` is forwarded to the element, but the play state is owned here, so
+  // it has to be seeded once on mount for the controls to agree with the element.
   useEffect(() => {
-    if (isDisclaimerOn !== shouldDisclaimerBeOn) setIsDisclaimerOn(shouldDisclaimerBeOn)
-  }, [isDisclaimerOn, shouldDisclaimerBeOn])
-
-  useEffect(() => {
-    if (shouldDisclaimerBeOn) {
-      setMute(true)
-      setPlay(false)
-      setFullscreen(false)
-    } else if (controlledProps.autoPlay === true && !hasBeenAutoPlayed.current) {
-      setPlay(true)
-    }
-  }, [shouldDisclaimerBeOn])
+    if (controlledProps.autoPlay === true && !hasBeenAutoPlayed.current) setPlay(true)
+  }, [])
 
   // Render
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(), wrapperClassName)
 
-  const sensitiveContent = <ControlledVideo
+  const videoContent = <ControlledVideo
     {...controlledProps}
     play={play && !isTimeControlled}
     volume={volume}
@@ -265,20 +222,11 @@ export const Video: FunctionComponent<Props> = ({
     onRateRangeChanged={handleRateRangeChange}
     onFullscreenButtonClicked={handleFullscreenButtonClick} />
 
-  const disclaimedContent = needsDisclaimer
-    ? <Disclaimer
-        {...disclaimer}
-        onDismissClicked={handleDiclaimerDismiss}
-      >
-      {sensitiveContent}
-    </Disclaimer>
-    : sensitiveContent
-
   return <div className={rootClss}>
     {needsObserve
       ? <IntersectionObserverComponent onIntersected={onIntersected}>
-        {disclaimedContent}
+        {videoContent}
       </IntersectionObserverComponent>
-      : disclaimedContent}
+      : videoContent}
   </div>
 }
