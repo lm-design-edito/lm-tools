@@ -216,6 +216,8 @@ The `index.tsx` + `index.controlled.tsx` split is a readability tool, not an obl
 - Root class is `c()`. `c(null, { … })` only when modifiers follow. Never `c(null, {})`.
 - Type the component as `FunctionComponent<Props>` and **do not** annotate the arrow's return — the type already carries it. A generic component cannot use `FunctionComponent`; type it as a generic arrow returning `ReactNode`.
 - The stylesheet is `styles.module.css`.
+- Public custom properties are namespaced under the public class name and built with `toCssVars`. A measurement is exposed twice: the bare name carries the ready-to-use `px` length, the `-raw` twin the plain number for `calc()`. Never name a variable after a unit it does not carry.
+- `--PRIVATE-<name>` is a custom property the component's own `styles.module.css` reads, deliberately unprefixed and outside the public API. It is safe because the component sets it itself, so nothing can shadow it by inheritance — provided it is emitted unconditionally.
 
 ### Per-component to-do
 
