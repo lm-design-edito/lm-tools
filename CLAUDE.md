@@ -98,9 +98,18 @@ so in the JSDoc.
 - Type as `FunctionComponent<Props>`, don't annotate the arrow's return. A generic
   component can't use it: type it as a generic arrow returning `ReactNode`.
 - The stylesheet is `styles.module.css`.
-- Public custom properties are namespaced under the public class name and built with
-  `toCssVars`: the bare name carries the ready-to-use `px` length, the `-raw` twin the
-  plain number for `calc()`. Never name a variable after a unit it doesn't carry.
+- Public custom properties and `data-` attributes are **written out in full, one
+  literal per line** — `'--lm-drawer-content-width'`, not a name built from the
+  prefix. They are the component's public API: a consumer greps for the exact
+  string, and it must exist in the source they read. Same reason the JSDoc lists
+  them literally.
+- A length carries its `px` under the bare name and the plain number under a `-raw`
+  twin, for `calc()`. Ratios are unitless and have no twin. Never name a variable
+  after a unit it doesn't carry.
+- An object holding only custom properties needs an explicit `Record<string, string>`
+  annotation — `style` rejects a literal that shares no property with `CSSProperties`.
+- When every value comes from the same measurement, guard once on that measurement
+  rather than per value.
 - `--PRIVATE-<name>` is what the component's own stylesheet reads — unprefixed,
   outside the API. Safe only because the component sets it itself, so **emit it
   unconditionally**: a gap lets an ancestor's value inherit through.
