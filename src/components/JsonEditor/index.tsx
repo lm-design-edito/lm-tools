@@ -31,6 +31,9 @@ import {
  * with the list of Zod issues. Not called when no `schema` is provided.
  * @property schema - Optional Zod schema used to validate the value after each change.
  * When provided, validation runs after `onChange` is dispatched.
+ * @property preventSameNameKeys - Refuses a record key rename that would collide
+ * with a sibling key, instead of letting the renamed entry replace it. Applies to
+ * every record in the tree. Defaults to `false`.
  * @property className - Additional class name(s) applied to the root element.
  */
 export type Props = WithClassName<{
@@ -38,6 +41,7 @@ export type Props = WithClassName<{
   onChange?: (val: JsonValue) => void
   onValidationError?: (issues: core.$ZodIssue[]) => void
   schema?: ZodType<JsonValue>
+  preventSameNameKeys?: boolean
 }>
 
 /**
@@ -56,8 +60,8 @@ export type Props = WithClassName<{
  *   matching the current value type (`string`, `number`, `boolean`, `null`, `array`, `record`).
  * - `type` — the type selector control.
  * - `string`, `number`, `boolean`, `null` — primitive value inputs.
- * - `record` — record entry list.
- * - `array` — array entry list items.
+ * - `record` — record entry list; `record-item` — one entry of it.
+ * - `array` — array item list; `array-item` — one item of it.
  * - `prop-name` — key input for record entries.
  * - `create-prop` — button to append a new entry to a record or array.
  * - `delete-prop` — button to remove an existing entry.
@@ -83,6 +87,7 @@ export const JsonEditor: FunctionComponent<Props> = ({
   onChange,
   onValidationError,
   schema,
+  preventSameNameKeys,
   className
 }) => {
   const [value, setValue] = useState(defaultValue)
@@ -104,6 +109,7 @@ export const JsonEditor: FunctionComponent<Props> = ({
     <ValueEditor
       defaultValue={defaultValue}
       onChange={val => setValueAndDispatch(val)}
+      preventSameNameKeys={preventSameNameKeys}
       path={[]} />
     <pre className={c('preview')}>{JSON.stringify(value, null, 2)}</pre>
   </div>
@@ -122,12 +128,14 @@ export const JsonEditor: FunctionComponent<Props> = ({
  * @property onChange - Called after the node's value changed, with the new value.
  * @property path - Keys and indices leading to this node from the document root,
  * exposed on the node as `data-path` and passed down to its children.
+ * @property preventSameNameKeys - Forwarded to every record below this node.
  * @property className - Additional class name(s) applied to the root element.
  */
 export type ValueEditorProps = WithClassName<{
   defaultValue?: JsonValue
   onChange?: (newValue: JsonValue) => void
   path?: Array<string | number>
+  preventSameNameKeys?: boolean
 }>
 
 /**
@@ -140,9 +148,10 @@ export type ValueEditorProps = WithClassName<{
  * @returns A span holding the type selector and the type-appropriate editor.
  */
 export const ValueEditor: FunctionComponent<ValueEditorProps> = ({
-  defaultValue = {},
+  defaultValue = null,
   onChange,
   path = [],
+  preventSameNameKeys,
   className
 }) => {
   // State
@@ -159,7 +168,7 @@ export const ValueEditor: FunctionComponent<ValueEditorProps> = ({
     if (newType === 'number') return setValueAndDispatch(0)
     if (newType === 'boolean') return setValueAndDispatch(false)
     if (newType === 'null') return setValueAndDispatch(null)
-    if (newType === 'record') return setValueAndDispatch({ a: 0, b: false })
+    if (newType === 'record') return setValueAndDispatch({})
     if (newType === 'array') return setValueAndDispatch([])
   }
 
@@ -201,10 +210,12 @@ export const ValueEditor: FunctionComponent<ValueEditorProps> = ({
     {isNonNullObject(value) && !Array.isArray(value) && <RecordEditor
       defaultValue={value}
       onChange={handleRecordValueChange}
+      preventSameNameKeys={preventSameNameKeys}
       path={path} />}
     {Array.isArray(value) && <ArrayEditor
       defaultValue={value}
       onChange={handleArrayValueChange}
+      preventSameNameKeys={preventSameNameKeys}
       path={path} />}
   </span>
 }
@@ -361,12 +372,16 @@ export const NullEditor: FunctionComponent<NullEditorProps> = ({
  * edited, with the rebuilt record.
  * @property path - Keys and indices leading to this record from the document
  * root, extended with each entry's key before being passed down.
+ * @property preventSameNameKeys - Refuses a rename that would collide with a
+ * sibling key, instead of letting the renamed entry replace it. Defaults to
+ * `false`. Forwarded to every record nested below.
  * @property className - Additional class name(s) applied to the root element.
  */
 export type RecordEditorProps = WithClassName<{
   defaultValue?: Record<string, JsonValue>
   onChange?: (newValue: Record<string, JsonValue>) => void
   path?: Array<string | number>
+  preventSameNameKeys?: boolean
 }>
 
 /**
@@ -386,6 +401,7 @@ export const RecordEditor: FunctionComponent<RecordEditorProps> = ({
   defaultValue = {},
   onChange,
   path,
+  preventSameNameKeys = false,
   className
 }) => {
   const [value, setValue] = useState(new Map(Object
@@ -395,6 +411,7 @@ export const RecordEditor: FunctionComponent<RecordEditorProps> = ({
       val
     }])
   ))
+  const [refusedRenames, setRefusedRenames] = useState(0)
   const setValueAndDispatch = (newValue: typeof value): void => {
     setValue(newValue)
     onChange?.(Array.from(newValue).reduce((acc, [key, { val }]) => ({
@@ -419,13 +436,23 @@ export const RecordEditor: FunctionComponent<RecordEditorProps> = ({
 
   const handleRenameProp = (oldName: string): EventHandler<ChangeEvent<HTMLTextAreaElement | HTMLInputElement>> => e => {
     const newName = e.target.value
+    if (newName === oldName) return
+    if (preventSameNameKeys && value.has(newName)) {
+      // Refusing leaves the state untouched, and the name input is uncontrolled —
+      // it would go on showing what was typed. Bumping this counter is what puts
+      // the field back: it feeds the input's key, so the input remounts and reads
+      // its `defaultValue` again.
+      setRefusedRenames(count => count + 1)
+      return
+    }
+    // Dropping the colliding entry first is what makes the outcome predictable:
+    // the renamed entry wins, and keeps its own position in the record. Rebuilding
+    // the Map without this leaves two entries under the same key, and `new Map`
+    // silently keeps the last one — losing the value being renamed.
     const newValue = new Map(Array
       .from(value)
-      .map(([key, { id, val }]) => [
-        key === oldName ? newName : key,
-        { id, val }
-      ]
-      )
+      .filter(([key]) => key !== newName)
+      .map(([key, entry]) => [key === oldName ? newName : key, entry])
     )
     setValueAndDispatch(newValue)
   }
@@ -440,6 +467,7 @@ export const RecordEditor: FunctionComponent<RecordEditorProps> = ({
 
   return <ul className={mergeClassNames(c('record'), className)}>
     {Array.from(value).map(([key, { id, val }]) => <li
+      className={c('record-item')}
       key={id}
       data-key={key}
       data-path={[...(path ?? []), key].join('.')}>
@@ -450,6 +478,7 @@ export const RecordEditor: FunctionComponent<RecordEditorProps> = ({
       </button>
       <span className={c('prop-name')}>
         <StringEditor
+          key={`${id}-${refusedRenames}`}
           type='input'
           defaultValue={key}
           onChange={handleRenameProp(key)} />
@@ -457,6 +486,7 @@ export const RecordEditor: FunctionComponent<RecordEditorProps> = ({
       <ValueEditor
         defaultValue={val}
         onChange={handleChangeProp(key)}
+        preventSameNameKeys={preventSameNameKeys}
         path={[...(path ?? []), key]} />
     </li>)}
     <button
@@ -481,12 +511,14 @@ export const RecordEditor: FunctionComponent<RecordEditorProps> = ({
  * with the rebuilt array.
  * @property path - Keys and indices leading to this array from the document
  * root, extended with each item's index before being passed down.
+ * @property preventSameNameKeys - Forwarded to every record nested below.
  * @property className - Additional class name(s) applied to the root element.
  */
 export type ArrayEditorProps = WithClassName<{
   defaultValue?: JsonValue[]
   onChange?: (newValue: JsonValue[]) => void
   path?: Array<string | number>
+  preventSameNameKeys?: boolean
 }>
 
 /**
@@ -505,6 +537,7 @@ export const ArrayEditor: FunctionComponent<ArrayEditorProps> = ({
   defaultValue = [],
   onChange,
   path,
+  preventSameNameKeys,
   className
 }) => {
   const [value, setValue] = useState(new Map(defaultValue.map(val => [randomHash(8), val])))
@@ -558,9 +591,9 @@ export const ArrayEditor: FunctionComponent<ArrayEditorProps> = ({
     ]))
   }
 
-  return <ol className={mergeClassNames(className)}>
+  return <ol className={mergeClassNames(c('array'), className)}>
     {Array.from(value).map(([id, val], pos) => <li
-      className={c('array')}
+      className={c('array-item')}
       key={id}
       data-path={[...(path ?? []), pos].join('.')}>
       <button className={c('delete-prop')} onClick={() => handleDeleteProp(pos)}>x</button>
@@ -569,6 +602,7 @@ export const ArrayEditor: FunctionComponent<ArrayEditorProps> = ({
       <ValueEditor
         defaultValue={val}
         onChange={handleChangeProp(pos)}
+        preventSameNameKeys={preventSameNameKeys}
         path={[...(path ?? []), pos]} />
     </li>)}
     <button className={c('create-prop')} onClick={handleCreateProp}>+</button>
