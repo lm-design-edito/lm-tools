@@ -181,7 +181,7 @@ export const Video: FunctionComponent<Props> = ({
 
   const handleFullscreenButtonClick = useCallback<NonNullable< ActionHandlersProps['fullscreenButtonClick']>>((e, isFullscreen, video) => {
     controlledProps.actionHandlers?.fullscreenButtonClick?.(e, isFullscreen, video)
-    setFullscreen((prev) => shouldDisclaimerBeOn ? false : !isFullscreen)
+    setFullscreen(shouldDisclaimerBeOn ? false : !isFullscreen)
   }, [controlledProps.actionHandlers, shouldDisclaimerBeOn])
 
   // Intersection Observer + Disclaimer
@@ -267,14 +267,11 @@ export const Video: FunctionComponent<Props> = ({
     </Disclaimer>
     : sensitiveContent
 
-  return (
-    <div className={rootClss}>
-      { needsObserve
-        ? <IntersectionObserverComponent onIntersected={onIntersected}>
-          {disclaimedContent}
-        </IntersectionObserverComponent>
-        : disclaimedContent
-      }
-    </div>
-  )
+  return <div className={rootClss}>
+    {needsObserve
+      ? <IntersectionObserverComponent onIntersected={onIntersected}>
+        {disclaimedContent}
+      </IntersectionObserverComponent>
+      : disclaimedContent}
+  </div>
 }

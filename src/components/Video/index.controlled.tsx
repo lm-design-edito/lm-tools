@@ -227,6 +227,12 @@ export const ControlledVideo: FunctionComponent<Props> = ({
 
   const volumePercent = useMemo(() => volume * 100, [volume])
 
+  // Every state item this component displays is read from its props, never from
+  // the element: it is the parent's job to keep them in sync.
+  const isPlaying = play ?? false
+  const isLoud = !(mute ?? false)
+  const isFullscreen = fullscreen ?? false
+
   // Intrinsic event handler
   const handleMetadataLoadEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     if (videoRef.current === null) return
@@ -253,28 +259,26 @@ export const ControlledVideo: FunctionComponent<Props> = ({
 
   // Custom action handlers
   const handlePlayButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const isPlaying = videoRef.current !== null ? videoRef.current.paused : false
-    actionHandlers?.playButtonClick?.(e, isPlaying, videoRef.current)
+    const wasPlaying = videoRef.current?.paused === false
+    actionHandlers?.playButtonClick?.(e, wasPlaying, videoRef.current)
   }, [actionHandlers?.playButtonClick])
 
   const handlePauseButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const isPlaying = videoRef.current !== null ? videoRef.current.paused : false
-    actionHandlers?.pauseButtonClick?.(e, isPlaying, videoRef.current)
+    const wasPlaying = videoRef.current?.paused === false
+    actionHandlers?.pauseButtonClick?.(e, wasPlaying, videoRef.current)
   }, [actionHandlers?.pauseButtonClick])
 
   const handleLoudButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const isLoud = mute !== undefined ? !mute : false
     actionHandlers?.loudButtonClick?.(e, isLoud, videoRef.current)
-  }, [actionHandlers?.loudButtonClick, mute])
+  }, [actionHandlers?.loudButtonClick, isLoud])
 
   const handleMuteButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const isLoud = mute !== undefined ? !mute : false
     actionHandlers?.muteButtonClick?.(e, isLoud, videoRef.current)
-  }, [actionHandlers?.muteButtonClick, mute])
+  }, [actionHandlers?.muteButtonClick, isLoud])
 
   const handleFullscreenButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    actionHandlers?.fullscreenButtonClick?.(e, fullscreen ?? false, videoRef.current)
-  }, [actionHandlers?.fullscreenButtonClick, fullscreen])
+    actionHandlers?.fullscreenButtonClick?.(e, isFullscreen, videoRef.current)
+  }, [actionHandlers?.fullscreenButtonClick, isFullscreen])
 
   const handleVolumeRangeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const targetVolume = Number(e.currentTarget.value) / 100
@@ -298,9 +302,6 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   }, [actionHandlers?.timelineClick, totalTime, currentTime, isTimeControlled])
 
   // Rendering
-  const isPlaying = play ?? false
-  const isLoud = mute ?? false
-  const isFullscreen = fullscreen ?? false
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null, {
     'play-on': isPlaying,
@@ -311,7 +312,9 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     'muted': !isLoud
   }), className)
 
-  const appliedVolume = volume
+  // Guarded: the duration is unknown until the metadata lands, and an unguarded
+  // division would expose the string 'NaN' on every render until then.
+  const currentTimeRatio = totalTime > 0 ? currentTime / totalTime : 0
   const rootAttributes = {
     'data-play-on': isPlaying ? '' : undefined,
     'data-play-off': !isPlaying ? '' : undefined,
@@ -319,16 +322,16 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     'data-fullscreen-off': !isFullscreen ? '' : undefined,
     'data-loud': isLoud ? '' : undefined,
     'data-muted': !isLoud ? '' : undefined,
-    'data-volume': appliedVolume.toFixed(8),
+    'data-volume': volume.toFixed(8),
     'data-volume-percent': volumePercent,
     'data-playback-rate': playbackRate,
     'data-current-time-ms': currentTimeMs.toFixed(2),
-    'data-current-time-ratio': (currentTime / totalTime).toFixed(8),
+    'data-current-time-ratio': currentTimeRatio.toFixed(8),
     'data-total-time-ms': totalTimeMs
   }
 
   const rootStyles: Record<string, string> = {
-    [`--${publicClassName}-current-time-ratio`]: (currentTime / totalTime).toFixed(8)
+    [`--${publicClassName}-current-time-ratio`]: currentTimeRatio.toFixed(8)
   }
 
   const parsedSources = useMemo(() => {
@@ -444,17 +447,15 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   return <figure
     className={rootClss}
     style={rootStyles}
-    {...rootAttributes}
-  >
-     {/* Vidéo */}
-      <video
-        ref={videoRef}
-        className={videoClss}
-        {...intrinsicVideoAttributes}
-        onLoadedMetadata={handleMetadataLoadEvent}
-        onPlay={handleOnPlayEvent}
-        onTimeUpdate={handleOnTimeUpdateEvent}
-    >
+    {...rootAttributes}>
+    {/* Video */}
+    <video
+      ref={videoRef}
+      className={videoClss}
+      {...intrinsicVideoAttributes}
+      onLoadedMetadata={handleMetadataLoadEvent}
+      onPlay={handleOnPlayEvent}
+      onTimeUpdate={handleOnTimeUpdateEvent}>
       {/* Sources */}
       {parsedSources.map((source, index) => typeof source === 'string'
         ? <source
@@ -487,24 +488,20 @@ export const ControlledVideo: FunctionComponent<Props> = ({
       {/* Play / pause */}
       <button
         className={playBtnClss}
-        onClick={handlePlayButtonClick}
-        >{playBtnContent}</button>
+        onClick={handlePlayButtonClick}>{playBtnContent}</button>
       <button
         className={pauseBtnClss}
-        onClick={handlePauseButtonClick}
-        >{pauseBtnContent}</button>
+        onClick={handlePauseButtonClick}>{pauseBtnContent}</button>
       {/* Loud / mute */}
       <button
         className={loudBtnClss}
-        onClick={handleLoudButtonClick}
-        >{loudBtnContent}</button>
+        onClick={handleLoudButtonClick}>{loudBtnContent}</button>
       <button
         className={muteBtnClss}
-        onClick={handleMuteButtonClick}
-        >{muteBtnContent}</button>
+        onClick={handleMuteButtonClick}>{muteBtnContent}</button>
       {/* Volume */}
       <input
-        type="range"
+        type='range'
         className={volumeRangeClss}
         value={volumePercent}
         onChange={handleVolumeRangeChange}
@@ -513,12 +510,12 @@ export const ControlledVideo: FunctionComponent<Props> = ({
         step={1} />
       <span className={volumePcntClss}>{Math.round(volumePercent)}</span>
       {/* Fullscreen */}
-      <button className={fullscreenBtnClss}
-        onClick={handleFullscreenButtonClick}
-      >{fullscreenBtnContent}</button>
+      <button
+        className={fullscreenBtnClss}
+        onClick={handleFullscreenButtonClick}>{fullscreenBtnContent}</button>
       {/* Playback rate */}
       <input
-        type="range"
+        type='range'
         className={playbackRateRangeClss}
         value={playbackRate}
         onChange={handleRateRangeChange}
@@ -539,15 +536,14 @@ export const ControlledVideo: FunctionComponent<Props> = ({
         {formatTime(totalTimeMs, 'mm:ss:ms')}
       </span>
       {/* Timeline */}
-      <div className={timelineClss}
-        onClick={handleTimelineClick}
-      />
+      <div
+        className={timelineClss}
+        onClick={handleTimelineClick} />
     </div>
 
     {/* Subtitles */}
-    { subtitles !== undefined && <Subtitles
+    {subtitles !== undefined && <Subtitles
       {...subtitles}
-      timecodeMs={currentTimeMs} />
-    }
+      timecodeMs={currentTimeMs} />}
   </figure>
 }
