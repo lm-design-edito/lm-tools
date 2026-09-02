@@ -146,11 +146,11 @@ export type Props = WithClassName<{
  * ### CSS custom properties
  * Exposed on the root element and updated on resize via the internal
  * {@link ResizeObserverComponent}:
- * - `--{prefix}-screen-left` / `--{prefix}-screen-left-raw` — left edge of the
- * bounding rect.
- * - `--{prefix}-screen-right` / `--{prefix}-screen-right-raw` — right edge.
- * - `--{prefix}-screen-width` / `--{prefix}-screen-width-raw` — total width.
- * - `--{prefix}-screen-height` / `--{prefix}-screen-height-raw` — total height.
+ * - `--lm-scrllgngn-screen-left` / `--lm-scrllgngn-screen-left-raw` — left edge
+ * of the bounding rect.
+ * - `--lm-scrllgngn-screen-right` / `--lm-scrllgngn-screen-right-raw` — right edge.
+ * - `--lm-scrllgngn-screen-width` / `--lm-scrllgngn-screen-width-raw` — total width.
+ * - `--lm-scrllgngn-screen-height` / `--lm-scrllgngn-screen-height-raw` — total height.
  *
  * The same four measurements are also exposed as `--PRIVATE-left`, `-right`,
  * `-width` and `-height` for the component's own stylesheet. They are internal:
@@ -225,7 +225,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     }),
     className
   )
-  const customCssProps = toScreenCssProps(publicClassName, partialBoundingRect)
+  const customCssProps = toScreenCssProps(partialBoundingRect)
   return <div
     className={rootClss}
     data-current-page-pos={currentPagePos}

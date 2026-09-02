@@ -1,5 +1,4 @@
 import { randomHash } from '../../agnostic/random/uuid/index.js'
-import { toCssVars } from '../utils/index.js'
 import type {
   PropsBlock,
   PropsPage,
@@ -101,21 +100,24 @@ export function lazyLoadedBlocks (
  * never inherit the same names from an ancestor component. `initial` leaves them
  * behaving exactly as an unset variable would, without opening the hole.
  *
- * @param prefix - Public class name the public variables are namespaced under.
  * @param rect - The measured bounding rect, absent until the first resize lands.
  * @returns The custom properties, keyed by their full name.
  */
-export function toScreenCssProps (
-  prefix: string,
-  rect?: ScreenRect
-): Record<string, string> {
+export function toScreenCssProps (rect?: ScreenRect): Record<string, string> {
+  const publicProps: Record<string, string> = rect === undefined
+    ? {}
+    : {
+        '--lm-scrllgngn-screen-left': `${rect.left}px`,
+        '--lm-scrllgngn-screen-left-raw': `${rect.left}`,
+        '--lm-scrllgngn-screen-right': `${rect.right}px`,
+        '--lm-scrllgngn-screen-right-raw': `${rect.right}`,
+        '--lm-scrllgngn-screen-width': `${rect.width}px`,
+        '--lm-scrllgngn-screen-width-raw': `${rect.width}`,
+        '--lm-scrllgngn-screen-height': `${rect.height}px`,
+        '--lm-scrllgngn-screen-height-raw': `${rect.height}`
+      }
   return {
-    ...toCssVars(prefix, {
-      'screen-left': rect?.left,
-      'screen-right': rect?.right,
-      'screen-width': rect?.width,
-      'screen-height': rect?.height
-    }),
+    ...publicProps,
     '--PRIVATE-left': toPrivateLength(rect?.left),
     '--PRIVATE-right': toPrivateLength(rect?.right),
     '--PRIVATE-width': toPrivateLength(rect?.width),

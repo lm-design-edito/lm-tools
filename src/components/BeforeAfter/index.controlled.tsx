@@ -10,10 +10,7 @@ import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import { round } from '../../agnostic/numbers/round/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
-import {
-  mergeClassNames,
-  toCssVars
-} from '../utils/index.js'
+import { mergeClassNames } from '../utils/index.js'
 import { beforeAfter as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -49,7 +46,8 @@ export type Props = PropsWithChildren<WithClassName<{
  * click apart from a drag.
  *
  * The active ratio is exposed as:
- * - CSS custom properties `--{prefix}-ratio` and `--{prefix}-ratio-percent`,
+ * - CSS custom properties `--lm-before-after-ratio` and
+ * `--lm-before-after-ratio-percent`,
  * - a `data-ratio` attribute on the root element.
  *
  * ### CSS modifiers
@@ -141,10 +139,11 @@ export const ControlledBeforeAfter: FunctionComponent<Props> = ({
     horizontal: mode === 'horizontal',
     vertical: mode === 'vertical'
   }), className)
-  const customProps = toCssVars(publicClassName, {
-    'ratio': `${round(clampedRatio, 4)}`,
-    'ratio-percent': `${round(clampedRatio * 100, 2)}%`
-  })
+  const roundedRatio = round(clampedRatio, 4)
+  const customProps: Record<string, string> = {
+    '--lm-before-after-ratio': `${roundedRatio}`,
+    '--lm-before-after-ratio-percent': `${round(clampedRatio * 100, 2)}%`
+  }
   return <div
     ref={rootRef}
     className={rootClss}
@@ -155,7 +154,7 @@ export const ControlledBeforeAfter: FunctionComponent<Props> = ({
     onTouchMove={handleTouchMove}
     onTouchEnd={handleTouchEnd}
     style={{ ...customProps }}
-    data-ratio={round(clampedRatio, 4)}>
+    data-ratio={roundedRatio}>
     <div className={c('before')}>{before}</div>
     <div className={c('after')}>{after}</div>
     <div className={c('separator')} />

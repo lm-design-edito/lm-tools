@@ -12,8 +12,6 @@ import {
 import type { WithClassName } from '../utils/types.js'
 import {
   mergeClassNames,
-  toCssVars,
-  toDataAttributes,
   useChangeDispatch
 } from '../utils/index.js'
 import { drawer as publicClassName } from '../public-classnames.js'
@@ -63,8 +61,9 @@ export type Props = PropsWithChildren<WithClassName<{
  * - `content`
  *
  * ### CSS custom properties on the root element
- * - `--{prefix}-content-width` / `--{prefix}-content-width-raw`
- * - `--{prefix}-content-height` / `--{prefix}-content-height-raw`
+ * - `--lm-drawer-content-width` / `--lm-drawer-content-width-raw`
+ * - `--lm-drawer-content-height` / `--lm-drawer-content-height-raw`
+ * Absent until the first measurement lands.
  *
  * ### Data attributes on the root element
  * - `data-content-width`, `data-content-height` — the measured content size.
@@ -95,9 +94,9 @@ export const Drawer: FunctionComponent<Props> = ({
   // State
   const [internalIsOpened, setInternalIsOpened] = useState(defaultIsOpened)
   const [contentDimensions, setContentDimensions] = useState<{
-    width?: number
-    height?: number
-  }>({})
+    width: number
+    height: number
+  }>()
   const isControlled = isOpenedProp !== undefined
   const isOpened = isOpenedProp ?? internalIsOpened
 
@@ -129,12 +128,21 @@ export const Drawer: FunctionComponent<Props> = ({
   const openerClss = c('opener')
   const closerClss = c('closer')
   const contentClss = c('content')
-  const exposedDimensions = {
-    'content-width': contentDimensions.width,
-    'content-height': contentDimensions.height
+  let dataAttributes: Record<string, string> = {}
+  let customCssProps: Record<string, string> = {}
+  if (contentDimensions !== undefined) {
+    const { width, height } = contentDimensions
+    dataAttributes = {
+      'data-content-width': `${width}`,
+      'data-content-height': `${height}`
+    }
+    customCssProps = {
+      '--lm-drawer-content-width': `${width}px`,
+      '--lm-drawer-content-width-raw': `${width}`,
+      '--lm-drawer-content-height': `${height}px`,
+      '--lm-drawer-content-height-raw': `${height}`
+    }
   }
-  const customCssProps = toCssVars(publicClassName, exposedDimensions)
-  const dataAttributes = toDataAttributes(exposedDimensions)
   return <div
     className={rootClss}
     {...dataAttributes}
