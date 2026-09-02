@@ -21,11 +21,8 @@ import {
 import cssModule from './styles.module.css'
 import {
   ControlledVideo,
-  type Props as ControlledProps,
-  type ActionHandlersProps as ControlledActionHandlersProps
+  type Props as ControlledProps
 } from './index.controlled.js'
-
-type ActionHandlersProps = ControlledActionHandlersProps
 
 /**
  * Props for the {@link Video} component.
@@ -83,6 +80,13 @@ export const Video: FunctionComponent<Props> = ({
   autoMuteWhenHidden,
   autoLoudWhenVisible,
   wrapperClassName,
+  onPlayButtonClicked,
+  onPauseButtonClicked,
+  onLoudButtonClicked,
+  onMuteButtonClicked,
+  onVolumeRangeChanged,
+  onRateRangeChanged,
+  onFullscreenButtonClicked,
   ...controlledProps
 }) => {
   // State & refs
@@ -148,10 +152,8 @@ export const Video: FunctionComponent<Props> = ({
     controlledProps.onRateChange?.(e)
   }, [controlledProps.onRateChange])
 
-  const handleOnFullscreenChangeEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
-    if (document.fullscreenElement === null || shouldDisclaimerBeOn) {
-      setFullscreen(false)
-    }
+  const handleFullscreenChange = useCallback((isFullscreen: boolean) => {
+    if (!isFullscreen || shouldDisclaimerBeOn) setFullscreen(false)
   }, [shouldDisclaimerBeOn])
 
   const handleOnLoadedMetadataEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
@@ -160,40 +162,40 @@ export const Video: FunctionComponent<Props> = ({
   }, [controlledProps.onLoadedMetadata, controlledProps.muted])
 
   // User actions
-  const handlePlayButtonClick = useCallback<NonNullable<ActionHandlersProps['playButtonClick']>>((e, isPlaying, video) => {
-    controlledProps.actionHandlers?.playButtonClick?.(e, isPlaying, video)
+  const handlePlayButtonClick = useCallback<NonNullable<Props['onPlayButtonClicked']>>((e, isPlaying, video) => {
+    onPlayButtonClicked?.(e, isPlaying, video)
     setPlay(!shouldDisclaimerBeOn)
-  }, [controlledProps.actionHandlers, shouldDisclaimerBeOn])
+  }, [onPlayButtonClicked, shouldDisclaimerBeOn])
 
-  const handlePauseButtonClick = useCallback<NonNullable<ActionHandlersProps['pauseButtonClick']>>((e, isPlaying, video) => {
-    controlledProps.actionHandlers?.pauseButtonClick?.(e, isPlaying, video)
+  const handlePauseButtonClick = useCallback<NonNullable<Props['onPauseButtonClicked']>>((e, isPlaying, video) => {
+    onPauseButtonClicked?.(e, isPlaying, video)
     setPlay(false)
-  }, [controlledProps.actionHandlers])
+  }, [onPauseButtonClicked])
 
-  const handleLoudButtonClick = useCallback<NonNullable<ActionHandlersProps['loudButtonClick']>>((e, isLoud, video) => {
-    controlledProps.actionHandlers?.loudButtonClick?.(e, isLoud, video)
+  const handleLoudButtonClick = useCallback<NonNullable<Props['onLoudButtonClicked']>>((e, isLoud, video) => {
+    onLoudButtonClicked?.(e, isLoud, video)
     setMute(false)
-  }, [controlledProps.actionHandlers])
+  }, [onLoudButtonClicked])
 
-  const handleMuteButtonClick = useCallback<NonNullable<ActionHandlersProps['muteButtonClick']>>((e, isLoud, video) => {
-    controlledProps.actionHandlers?.muteButtonClick?.(e, isLoud, video)
+  const handleMuteButtonClick = useCallback<NonNullable<Props['onMuteButtonClicked']>>((e, isLoud, video) => {
+    onMuteButtonClicked?.(e, isLoud, video)
     setMute(true)
-  }, [controlledProps.actionHandlers])
+  }, [onMuteButtonClicked])
 
-  const handleRateRangeChange = useCallback<NonNullable<ActionHandlersProps['rateRangeChange']>>((e, targetRate, currentRate, video) => {
-    controlledProps.actionHandlers?.rateRangeChange?.(e, targetRate, currentRate, video)
+  const handleRateRangeChange = useCallback<NonNullable<Props['onRateRangeChanged']>>((e, targetRate, currentRate, video) => {
+    onRateRangeChanged?.(e, targetRate, currentRate, video)
     setPlaybackRate(targetRate)
-  }, [controlledProps.actionHandlers])
+  }, [onRateRangeChanged])
 
-  const handleVolumeRangeChange = useCallback<NonNullable<ActionHandlersProps['volumeRangeChange']>>((e, targetVolume, currentVolume, video) => {
-    controlledProps.actionHandlers?.volumeRangeChange?.(e, targetVolume, currentVolume, video)
+  const handleVolumeRangeChange = useCallback<NonNullable<Props['onVolumeRangeChanged']>>((e, targetVolume, currentVolume, video) => {
+    onVolumeRangeChanged?.(e, targetVolume, currentVolume, video)
     setVolume(targetVolume)
-  }, [controlledProps.actionHandlers])
+  }, [onVolumeRangeChanged])
 
-  const handleFullscreenButtonClick = useCallback<NonNullable< ActionHandlersProps['fullscreenButtonClick']>>((e, isFullscreen, video) => {
-    controlledProps.actionHandlers?.fullscreenButtonClick?.(e, isFullscreen, video)
+  const handleFullscreenButtonClick = useCallback<NonNullable<Props['onFullscreenButtonClicked']>>((e, isFullscreen, video) => {
+    onFullscreenButtonClicked?.(e, isFullscreen, video)
     setFullscreen(shouldDisclaimerBeOn ? false : !isFullscreen)
-  }, [controlledProps.actionHandlers, shouldDisclaimerBeOn])
+  }, [onFullscreenButtonClicked, shouldDisclaimerBeOn])
 
   // Intersection Observer + Disclaimer
 
@@ -256,18 +258,14 @@ export const Video: FunctionComponent<Props> = ({
     onVolumeChange={handleOnVolumeChangeEvent}
     onRateChange={handleOnRateChangeEvent}
     onLoadedMetadata={handleOnLoadedMetadataEvent}
-    onFullscreenChange={handleOnFullscreenChangeEvent}
-    actionHandlers={{
-      ...controlledProps.actionHandlers,
-      playButtonClick: handlePlayButtonClick,
-      pauseButtonClick: handlePauseButtonClick,
-      loudButtonClick: handleLoudButtonClick,
-      muteButtonClick: handleMuteButtonClick,
-      volumeRangeChange: handleVolumeRangeChange,
-      rateRangeChange: handleRateRangeChange,
-      fullscreenButtonClick: handleFullscreenButtonClick
-    }}
-  />
+    onFullscreenChange={handleFullscreenChange}
+    onPlayButtonClicked={handlePlayButtonClick}
+    onPauseButtonClicked={handlePauseButtonClick}
+    onLoudButtonClicked={handleLoudButtonClick}
+    onMuteButtonClicked={handleMuteButtonClick}
+    onVolumeRangeChanged={handleVolumeRangeChange}
+    onRateRangeChanged={handleRateRangeChange}
+    onFullscreenButtonClicked={handleFullscreenButtonClick} />
 
   const disclaimedContent = needsDisclaimer
     ? <Disclaimer

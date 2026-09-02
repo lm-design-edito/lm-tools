@@ -2,7 +2,6 @@ import {
   type FunctionComponent,
   type PropsWithChildren,
   type VideoHTMLAttributes,
-  type ReactEventHandler,
   useMemo,
   useRef,
   useState,
@@ -11,7 +10,10 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { mergeClassNames } from '../utils/index.js'
+import {
+  mergeClassNames,
+  useChangeDispatch
+} from '../utils/index.js'
 import cssModule from './styles.module.css'
 import { video as publicClassName } from '../public-classnames.js'
 import {
@@ -61,56 +63,6 @@ type TrackData = {
   default?: boolean
 }
 
-/**
- * Callbacks for user actions on the video player controls.
- * Allows you to intercept user actions on the player's buttons and sliders.
- *
- * @property playButtonClick - Called when the play button is clicked. Receives the event, isPlaying state and HTMLVideoElement before any change happens. If the time is not controlled by parent (no currentTime given as props), the component will play to the target time right after.
- * @property pauseButtonClick - Called when the pause button is clicked. Receives the event, isPlaying state and HTMLVideoElement before any change happens. If the time is not controlled by parent (no currentTime given as props), the component will pause to the target time right after.
- * @property loudButtonClick - Called when the "loud" (unmute) button is clicked. Receives the event, isLoud state and HTMLVideoElement before any change happens.
- * @property muteButtonClick - Called when the mute button is clicked. Receives the event, isLoud state and HTMLVideoElement before any change happens.
- * @property volumeRangeChange - Called when the volume slider is changed. Receives the event, target volume (0 to 1), current volume (0 to 1) and HTMLVideoElement before any change happens.
- * @property fullscreenButtonClick - Called when the fullscreen button is clicked. Receives the event, isFullscreen state and HTMLVideoElement before any change happens.
- * @property rateRangeChange - Called when the playback rate slider is changed. Receives the event, target rate, current rate and HTMLVideoElement before any change happens.
- * @property timelineClick - Called when the timeline is clicked. Receives the event, target time (in seconds), current time (in seconds) and HTMLVideoElement before any change happens. If the time is not controlled by parent (no currentTime given as props), the component will update the video current time to the target time right after.
- */
-export type ActionHandlersProps = {
-  playButtonClick?: (
-    e: React.MouseEvent<HTMLButtonElement>,
-    isPlaying: boolean,
-    video: HTMLVideoElement | null
-  ) => void
-  pauseButtonClick?: (
-    e: React.MouseEvent<HTMLButtonElement>,
-    isPlaying: boolean,
-    video: HTMLVideoElement | null
-  ) => void
-  loudButtonClick?: (e: React.MouseEvent<HTMLButtonElement>, isLoud: boolean, video: HTMLVideoElement | null) => void
-  muteButtonClick?: (e: React.MouseEvent<HTMLButtonElement>, isLoud: boolean, video: HTMLVideoElement | null) => void
-  volumeRangeChange?: (e: React.ChangeEvent<HTMLInputElement>, targetVolumePercent: number, currentVolumePercent: number, video: HTMLVideoElement | null) => void
-  fullscreenButtonClick?: (e: React.MouseEvent<HTMLButtonElement>, isFullscreen: boolean, video: HTMLVideoElement | null) => void
-  rateRangeChange?: (e: React.ChangeEvent<HTMLInputElement>, targetRate: number, rate: number, video: HTMLVideoElement | null) => void
-  timelineClick?: (e: React.MouseEvent<HTMLDivElement>, time: number, currentTime: number, video: HTMLVideoElement | null) => void
-}
-
-/**
- * Callbacks to synchronize the internal player state with the outside.
- *
- * @property isPlaying - Called whenever the play/pause state changes.
- * @property isFullscreen - Called whenever the fullscreen state changes.
- * @property isLoud - Called whenever the mute/unmute state changes (true = unmuted, false = muted).
- * @property volume - Called whenever the volume changes (value between 0 and 1).
- * @property playbackRate - Called whenever the playback speed changes.
- * @property currentTime - Called on every change of the current time (in seconds).
- */
-export type StateHandlersProps = {
-  isPlaying?: (isPlaying: boolean) => void
-  isFullscreen?: (isFullscreen: boolean) => void
-  isLoud?: (isLoud: boolean) => void
-  volume?: (volume: number) => void
-  playbackRate?: (rate: number) => void
-  currentTime?: (currentTime: number) => void
-}
 
 /**
  * Props for the ControlledVideo component.
@@ -135,15 +87,39 @@ export type StateHandlersProps = {
  * to update the prop instead. Because a playing element advances the time by
  * itself, a controlled time also implies a stopped video: `play` and `autoPlay`
  * are ignored for as long as this prop is provided.
- * @property actionHandlers - Callbacks for user actions on the controls.
- * @property stateHandlers - Callbacks to synchronize internal state with the outside.
- * @property onFullscreenChange - Callback for native fullscreen mode changes.
+ * @property onPlayButtonClicked - Called when the play button is clicked, before
+ * the component reacts, with the playback state as it was.
+ * @property onPauseButtonClicked - Called when the pause button is clicked, before
+ * the component reacts, with the playback state as it was.
+ * @property onLoudButtonClicked - Called when the unmute button is clicked, before
+ * the component reacts, with the mute state as it was (`true` = unmuted).
+ * @property onMuteButtonClicked - Called when the mute button is clicked, before
+ * the component reacts, with the mute state as it was (`true` = unmuted).
+ * @property onVolumeRangeChanged - Called when the volume slider moves, before the
+ * component reacts, with the target and current volumes (both `0` to `1`).
+ * @property onRateRangeChanged - Called when the playback rate slider moves, before
+ * the component reacts, with the target and current rates.
+ * @property onFullscreenButtonClicked - Called when the fullscreen button is
+ * clicked, before the component reacts, with the fullscreen state as it was.
+ * @property onTimelineClicked - Called when the timeline is clicked, before the
+ * component reacts, with the target and current times (in seconds). The component
+ * seeks to the target right after, unless the time is controlled.
+ * @property onIsPlayingChanged - Called once the playback state has changed.
+ * @property onIsFullscreenChanged - Called once the fullscreen state has changed.
+ * @property onIsLoudChanged - Called once the mute state has changed (`true` = unmuted).
+ * @property onVolumeChanged - Called once the volume has changed (`0` to `1`).
+ * @property onPlaybackRateChanged - Called once the playback rate has changed.
+ * @property onCurrentTimeMsChanged - Called once the current time has changed, in
+ * milliseconds, to match the `currentTimeMs` prop.
+ * @property onFullscreenChange - Called when the *browser* enters or leaves
+ * fullscreen on its own — pressing Escape, typically — with the new state. This is
+ * the signal a parent needs to update its `fullscreen` prop, and it is distinct
+ * from `onIsFullscreenChanged`, which merely echoes that prop back once changed.
  * @property className - Additional CSS class for the root element.
  * @property children - React content inserted into the <video> tag (fallback, etc).
  *
  * Also inherits all standard HTML props for a <video> element.
  */
-
 export type Props = PropsWithChildren<WithClassName<{
   sources?: string | string[] | SourceData[]
   tracks?: string | string[] | TrackData[]
@@ -159,9 +135,21 @@ export type Props = PropsWithChildren<WithClassName<{
   mute?: boolean
   playbackRate?: number
   currentTimeMs?: number
-  onFullscreenChange?: ReactEventHandler<HTMLVideoElement>
-  actionHandlers?: ActionHandlersProps
-  stateHandlers?: StateHandlersProps
+  onPlayButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isPlaying: boolean, video: HTMLVideoElement | null) => void
+  onPauseButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isPlaying: boolean, video: HTMLVideoElement | null) => void
+  onLoudButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isLoud: boolean, video: HTMLVideoElement | null) => void
+  onMuteButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isLoud: boolean, video: HTMLVideoElement | null) => void
+  onVolumeRangeChanged?: (e: React.ChangeEvent<HTMLInputElement>, targetVolume: number, currentVolume: number, video: HTMLVideoElement | null) => void
+  onRateRangeChanged?: (e: React.ChangeEvent<HTMLInputElement>, targetRate: number, currentRate: number, video: HTMLVideoElement | null) => void
+  onFullscreenButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isFullscreen: boolean, video: HTMLVideoElement | null) => void
+  onTimelineClicked?: (e: React.MouseEvent<HTMLDivElement>, targetTime: number, currentTime: number, video: HTMLVideoElement | null) => void
+  onIsPlayingChanged?: (isPlaying: boolean) => void
+  onIsFullscreenChanged?: (isFullscreen: boolean) => void
+  onIsLoudChanged?: (isLoud: boolean) => void
+  onVolumeChanged?: (volume: number) => void
+  onPlaybackRateChanged?: (playbackRate: number) => void
+  onCurrentTimeMsChanged?: (currentTimeMs: number) => void
+  onFullscreenChange?: (isFullscreen: boolean) => void
 }> & VideoHTMLAttributes<HTMLVideoElement>>
 
 /**
@@ -215,8 +203,21 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   volume = 1,
   playbackRate = 1,
   currentTimeMs: givenCurrentTimeMs,
-  actionHandlers,
-  stateHandlers,
+  onPlayButtonClicked,
+  onPauseButtonClicked,
+  onLoudButtonClicked,
+  onMuteButtonClicked,
+  onVolumeRangeChanged,
+  onRateRangeChanged,
+  onFullscreenButtonClicked,
+  onTimelineClicked,
+  onIsPlayingChanged,
+  onIsFullscreenChanged,
+  onIsLoudChanged,
+  onVolumeChanged,
+  onPlaybackRateChanged,
+  onCurrentTimeMsChanged,
+  onFullscreenChange,
   children,
   className,
   ...intrinsicVideoAttributes
@@ -264,46 +265,46 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   // Custom action handlers
   const handlePlayButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     const wasPlaying = videoRef.current?.paused === false
-    actionHandlers?.playButtonClick?.(e, wasPlaying, videoRef.current)
-  }, [actionHandlers?.playButtonClick])
+    onPlayButtonClicked?.(e, wasPlaying, videoRef.current)
+  }, [onPlayButtonClicked])
 
   const handlePauseButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     const wasPlaying = videoRef.current?.paused === false
-    actionHandlers?.pauseButtonClick?.(e, wasPlaying, videoRef.current)
-  }, [actionHandlers?.pauseButtonClick])
+    onPauseButtonClicked?.(e, wasPlaying, videoRef.current)
+  }, [onPauseButtonClicked])
 
   const handleLoudButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    actionHandlers?.loudButtonClick?.(e, isLoud, videoRef.current)
-  }, [actionHandlers?.loudButtonClick, isLoud])
+    onLoudButtonClicked?.(e, isLoud, videoRef.current)
+  }, [onLoudButtonClicked, isLoud])
 
   const handleMuteButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    actionHandlers?.muteButtonClick?.(e, isLoud, videoRef.current)
-  }, [actionHandlers?.muteButtonClick, isLoud])
+    onMuteButtonClicked?.(e, isLoud, videoRef.current)
+  }, [onMuteButtonClicked, isLoud])
 
   const handleFullscreenButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    actionHandlers?.fullscreenButtonClick?.(e, isFullscreen, videoRef.current)
-  }, [actionHandlers?.fullscreenButtonClick, isFullscreen])
+    onFullscreenButtonClicked?.(e, isFullscreen, videoRef.current)
+  }, [onFullscreenButtonClicked, isFullscreen])
 
   const handleVolumeRangeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const targetVolume = Number(e.currentTarget.value) / 100
-    actionHandlers?.volumeRangeChange?.(e, targetVolume, volume, videoRef.current)
-  }, [actionHandlers?.volumeRangeChange, volume])
+    onVolumeRangeChanged?.(e, targetVolume, volume, videoRef.current)
+  }, [onVolumeRangeChanged, volume])
 
   const handleRateRangeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    actionHandlers?.rateRangeChange?.(e, Number(e.currentTarget.value), playbackRate, videoRef.current)
-  }, [actionHandlers?.rateRangeChange, playbackRate])
+    onRateRangeChanged?.(e, Number(e.currentTarget.value), playbackRate, videoRef.current)
+  }, [onRateRangeChanged, playbackRate])
 
   const handleTimelineClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (videoRef.current === null) return
     const progress = getTimelineClickProgress(e, e.currentTarget, videoRef.current)
     const targetTime = progress * totalTime
-    actionHandlers?.timelineClick?.(e, targetTime, currentTime, videoRef.current)
-
-    /* If we are given a currentTimeMs prop, we consider that the current time is controlled by the parent component, and we should not attempt to set it here on timeline click, as it would create conflicts. The parent comp should update the currentTimeMs prop itself */
+    onTimelineClicked?.(e, targetTime, currentTime, videoRef.current)
+    // A controlled time is the parent's to move: it is expected to update the
+    // prop in response to this very handler.
     if (!isTimeControlled) {
       videoRef.current.currentTime = targetTime
     }
-  }, [actionHandlers?.timelineClick, totalTime, currentTime, isTimeControlled])
+  }, [onTimelineClicked, totalTime, currentTime, isTimeControlled])
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
@@ -425,32 +426,25 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     }
   }, [mute])
 
-  // State handlers
+  // The browser can leave fullscreen without going through our button — Escape,
+  // or the platform's own exit gesture. Nothing in React reports it, so the real
+  // event is the only way for a parent to keep its `fullscreen` prop truthful.
   useEffect(() => {
-    if (stateHandlers?.currentTime !== undefined) {
-      stateHandlers.currentTime(msToSeconds(currentTimeMs))
+    if (onFullscreenChange === undefined) return
+    const onDocumentFullscreenChange = (): void => {
+      onFullscreenChange(document.fullscreenElement !== null)
     }
-  }, [currentTimeMs, stateHandlers?.currentTime])
+    document.addEventListener('fullscreenchange', onDocumentFullscreenChange)
+    return () => { document.removeEventListener('fullscreenchange', onDocumentFullscreenChange) }
+  }, [onFullscreenChange])
 
-  useEffect(() => {
-    stateHandlers?.isPlaying?.(isPlaying)
-  }, [isPlaying, stateHandlers?.isPlaying])
-
-  useEffect(() => {
-    stateHandlers?.isFullscreen?.(isFullscreen)
-  }, [isFullscreen, stateHandlers?.isFullscreen])
-
-  useEffect(() => {
-    stateHandlers?.isLoud?.(isLoud)
-  }, [isLoud, stateHandlers?.isLoud])
-
-  useEffect(() => {
-    stateHandlers?.volume?.(volume)
-  }, [volume, stateHandlers?.volume])
-
-  useEffect(() => {
-    stateHandlers?.playbackRate?.(playbackRate)
-  }, [playbackRate, stateHandlers?.playbackRate])
+  // State handlers
+  useChangeDispatch(currentTimeMs, onCurrentTimeMsChanged)
+  useChangeDispatch(isPlaying, onIsPlayingChanged)
+  useChangeDispatch(isFullscreen, onIsFullscreenChanged)
+  useChangeDispatch(isLoud, onIsLoudChanged)
+  useChangeDispatch(volume, onVolumeChanged)
+  useChangeDispatch(playbackRate, onPlaybackRateChanged)
 
   return <figure
     className={rootClss}
