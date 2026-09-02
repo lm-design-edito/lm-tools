@@ -7,7 +7,6 @@ import {
   type Props as VideoProps
 } from '~/components/Video/index.js'
 import { demoStyles as subsDemoStyles } from '../SubtitlesDemo/index.js'
-import { demoStyles as disclaimerDemoStyles } from '../DisclaimerDemo/index.js'
 import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 
 import {
@@ -22,7 +21,7 @@ const name = 'Video'
 const description = `
 Full-featured video player component. Wraps a native \`<video>\` element with
 playback controls, volume, playback speed, a timeline, optional subtitles,
-an optional disclaimer gate, and viewport-driven auto-play/mute behaviours.
+and viewport-driven auto-play/mute behaviours.
 
 ### Root element modifiers
 The root \`<figure>\` receives the public class name defined by \`video\` and
@@ -52,7 +51,7 @@ Useful for driving progress-bar animations purely in CSS.
 @param props - Component properties.
 @see {@link Props}
 @returns A \`<figure>\` element containing the video, its controls, optional
-subtitles, and an optional disclaimer overlay.`
+subtitles.`
 
 const tsxDetails = `
 /**
@@ -105,15 +104,12 @@ type TrackData = {
  * @property fullscreenBtnContent - Custom content for the fullscreen button. Defaults to \`'fullscreen'\`.
  * @property subtitles - Props forwarded to the internal {@link Subtitles} component.
  * \`timecodeMs\` is injected automatically from the current playback position.
- * @property disclaimer - Props forwarded to the internal {@link Disclaimer} component.
- * While the disclaimer is active, \`autoPlay\` and \`muted\` are suppressed on the
- * underlying \`<video>\` element.
  * @property autoPlayWhenVisible - When \`true\`, triggers playback the first time the
- * component intersects the viewport, provided no disclaimer is active.
+ * component intersects the viewport.
  * @property autoPauseWhenHidden - When \`true\`, pauses playback whenever the component
  * leaves the viewport.
  * @property autoLoudWhenVisible - When \`true\`, unmutes the video the first time the
- * component intersects the viewport, provided no disclaimer is active.
+ * component intersects the viewport.
  * @property autoMuteWhenHidden - When \`true\`, mutes the video whenever the component
  * leaves the viewport.
  * @property className - Optional additional class name(s) applied to the root element.
@@ -129,7 +125,6 @@ export type Props = PropsWithChildren<WithClassName<{
   soundOffBtnContent?: React.ReactNode
   fullscreenBtnContent?: React.ReactNode
   subtitles?: SubsProps
-  disclaimer?: DisclaimerProps
   autoPlayWhenVisible?: boolean
   autoPauseWhenHidden?: boolean
   autoLoudWhenVisible?: boolean
@@ -182,10 +177,7 @@ const demoStyles = `
 .${publicClassName} {
   ${subsDemoStyles.split('\n').join('\n  ')}
 }
-  
-.${wrapperPublicClassName} {
-  ${disclaimerDemoStyles.split('\n').join('\n  ')}
-}`
+`
 
 
 const add = (x: number, amountPercent: number, max: number) => Math.min(max, (x * 100 + amountPercent) / 100)
@@ -194,7 +186,6 @@ const sub = (x: number, amountPercent: number, min: number) => Math.max(min, (x 
 
 
 const VideoControlledDemo: FunctionComponent = ({
-  disclaimer,
   autoPlayWhenVisible,
   autoPauseWhenHidden,
   autoLoudWhenVisible,
@@ -354,8 +345,6 @@ const VideoUncontrolledDemo: FunctionComponent = (demoProps: VideoProps) => <>
 </>
 
 export const VideoDemo: FunctionComponent = () => {
-  const [disclaimerIsOn, setDisclaimerIsOn] = useState<boolean | undefined>(undefined)
-  const [disclaimerDefaultIsOn, setDisclaimerDefaultIsOn] = useState<boolean | undefined>(true)
   const [currentTimeMs, setCurrentTimeMs] = useState<undefined | number>(undefined)
   const [totalTimeMs, setTotalTimeMs] = useState<undefined | number>(undefined)
 
@@ -392,12 +381,6 @@ export const VideoDemo: FunctionComponent = () => {
     autoMuteWhenHidden: true,
     // autoLoudWhenVisible: true,
     loop: true,
-    disclaimer: {
-      content: 'Contenu sensible.',
-      togglerContent: <button>Cliquer pour afficher.</button>,
-      defaultIsOn: disclaimerDefaultIsOn,
-      isOn: disclaimerIsOn
-    },
     currentTimeMs,
     onLoadedMetadata: (e) => {
       setTotalTimeMs(secondsToMs(e.currentTarget.duration))
@@ -434,18 +417,6 @@ export const VideoDemo: FunctionComponent = () => {
         <button onClick={() => setCurrentTimeMs((currentTimeMs) => currentTimeMs === undefined ? 0 : add(currentTimeMs, 100000, totalTimeMs ?? 100000))}>+100s</button>
         <button onClick={() => setCurrentTimeMs((currentTimeMs) => currentTimeMs === undefined ? 0 : sub(currentTimeMs, 100000, 0))}>-100s</button>
         – <strong>{currentTimeMs === undefined ? 'undefined' : currentTimeMs}</strong> – <em>If currentTimeMs === undefined, the video can be played. Otherwise it won't be played and you must go forward or back thanks to the currentTimeMs property</em>
-      </div>
-      <div>
-        isOn:
-        <button onClick={() => setDisclaimerIsOn(undefined)}>{disclaimerIsOn === undefined ? <strong>undefined</strong> : 'undefined'}</button>
-        <button onClick={() => setDisclaimerIsOn(true)}>{disclaimerIsOn === true ? <strong>true</strong> : 'true'}</button>
-        <button onClick={() => setDisclaimerIsOn(false)}>{disclaimerIsOn === false ? <strong>false</strong> : 'false'}</button>
-      </div>
-      <div>
-        defaultIsOn
-        <button onClick={() => setDisclaimerDefaultIsOn(undefined)}>{disclaimerDefaultIsOn === undefined ? <strong>undefined</strong> : 'undefined'}</button>
-        <button onClick={() => setDisclaimerDefaultIsOn(true)}>{disclaimerDefaultIsOn === true ? <strong>true</strong> : 'true'}</button>
-        <button onClick={() => setDisclaimerDefaultIsOn(false)}>{disclaimerDefaultIsOn === false ? <strong>false</strong> : 'false'}</button>
       </div>
     </div>
     <div style={{ height: '80vh' }} />   

@@ -4,10 +4,8 @@ import {
   type Props as ImageProps
 } from '~/components/Image/index.js'
 import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
-import { demoStyles as disclaimerDemoStyles } from '../DisclaimerDemo/index.js' 
 import { demoStyles as theatreDemoStyles } from '../TheatreDemo/index.js' 
 import {
-  disclaimer as disclaimerClassName,
   image as publicClassName,
   theatre as theatrePublicClassName
 } from '~/components/public-classnames.js'
@@ -16,7 +14,7 @@ const name = 'Image'
 
 const description = `
 Image component. Wraps a native \`<img>\` (or \`<picture>\`) element with
-optional responsive sources, an optional disclaimer gate.
+optional responsive sources and an optional theatre mode.
 
 
 ### Child elements
@@ -26,8 +24,7 @@ optional responsive sources, an optional disclaimer gate.
 
 @param props - Component properties.
 @see {@link Props}
-@returns A \`<figure>\` element containing a \`<picture>\` with the image,
-and an optional disclaimer overlay.`
+@returns A \`<figure>\` element containing a \`<picture>\` with the image.`
 
 const tsxDetails = `/**
  * Describes a single responsive image source for use in a \`<picture>\` element.
@@ -58,32 +55,11 @@ type SourceData = {
  * - a single srcSet string,
  * - an array of srcSet strings,
  * - an array of {@link SourceData} objects for full \`<source>\` control.
- * @property disclaimer - Presentation of the internal {@link Disclaimer}: its
- * panel content and toggler. Providing it is what gates the image behind a
- * disclaimer at all. Its state props are deliberately absent — the state lives
- * here, on \`isDisclaimerOn\` and its siblings.
- * @property isDisclaimerOn - Controlled disclaimer state. When defined, the
- * disclaimer is fully driven by the parent and internal state is never updated.
- * @property defaultIsDisclaimerOn - Initial disclaimer state in uncontrolled
- * mode. Ignored when \`isDisclaimerOn\` is provided. Defaults to \`true\`, so a
- * disclaimer shows up as soon as one is declared.
- * @property onDisclaimerDismissClicked - Called when the disclaimer's toggler is
- * clicked, before the image reacts, with the disclaimer state as it was.
- * @property onIsDisclaimerOnChanged - Called after the disclaimer state changed,
- * with the new value.
  * @property theatre - Props forwarded to the internal {@link Theatre} component.
  * @property className - Optional additional class name(s) applied to the root element.
  */
 export type Props = WithClassName<{
   sources?: string | string[] | SourceData[]
-  disclaimer?: Omit<
-    DisclaimerProps,
-    'isOn' | 'defaultIsOn' | 'onDismissClicked' | 'onIsOnChanged' | 'children'
-  >
-  isDisclaimerOn?: boolean
-  defaultIsDisclaimerOn?: boolean
-  onDisclaimerDismissClicked?: (isDisclaimerOn: boolean) => void
-  onIsDisclaimerOnChanged?: (isDisclaimerOn: boolean) => void
   theatre?: TheatreProps
 }> & ImgHTMLAttributes<HTMLImageElement>`
 
@@ -105,29 +81,17 @@ const demoStyles = `
   ${theatreDemoStyles.split('\n').join('\n  ')}
 }
 
-.${publicClassName} {
-  ${disclaimerDemoStyles.split('\n').join('\n  ')}
-}
   
 .${publicClassName} .${theatrePublicClassName}__open-btn {
   position: absolute;
   top: 16px;
   right: 16px;
 }
-  
-.${publicClassName} .${disclaimerClassName}.${disclaimerClassName}--on .${theatrePublicClassName}__stage,
-.${publicClassName} .${disclaimerClassName}.${disclaimerClassName}--on .${theatrePublicClassName}__close-btn {
-  display: none;
-}`
+  `
 
 const demoProps: ImageProps = {
   src: 'https://assets-decodeurs.lemonde.fr/redacweb/2602-campus-engagement/campus-engagement-ep01-1.jpg',
   alt: 'Image demo',
-  disclaimer: {
-    content: 'Contenu sensible',
-    togglerContent: <button>Afficher l'image</button>
-  },
-  defaultIsDisclaimerOn: true,
   theatre: {
     openBtnContent: <button>Ouvrir le théâtre</button>,
     closeBtnContent: <button>Fermer le théâtre</button>,
