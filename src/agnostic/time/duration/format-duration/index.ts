@@ -87,8 +87,10 @@ function unitsInFormat (format: string): DurationUnit[] {
  *
  * @remarks
  * A negative duration yields negative parts, so every token renders a signed
- * number — `'{{m}}:{{ss}}'` gives `-1:-30`, not `-1:30`. Format the magnitude
- * and write the sign yourself when that matters.
+ * number — `'{{m}}:{{ss}}'` gives `-1:-30`, not `-1:30`. This is deliberate: the
+ * output stays faithful to the parts, and keeping a duration positive is the
+ * caller's business. Format the magnitude and write the sign yourself when a
+ * single leading minus is what you need.
  *
  * @example
  * formatDuration(seconds(3725), '{{h}}:{{mm}}:{{ss}}')
