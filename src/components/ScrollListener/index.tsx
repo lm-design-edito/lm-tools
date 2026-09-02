@@ -55,21 +55,24 @@ export type Props = PropsWithChildren<WithClassName<{
  * ### CSS custom properties on the root element
  * Each measurement comes as a `px` length under its bare name, and as a `-raw`
  * twin holding the plain number:
- * - `--{prefix}-window-width`, `--{prefix}-window-height`
- * - `--{prefix}-html-width`, `--{prefix}-html-height`
- * - `--{prefix}-scroll-x`, `--{prefix}-scroll-y`
- * - `--{prefix}-width`, `--{prefix}-height`
- * - `--{prefix}-offset-x`, `--{prefix}-offset-y`
+ * - `--lm-scroll-listener-window-width`, `--lm-scroll-listener-window-height`
+ * - `--lm-scroll-listener-html-width`, `--lm-scroll-listener-html-height`
+ * - `--lm-scroll-listener-scroll-x`, `--lm-scroll-listener-scroll-y`
+ * - `--lm-scroll-listener-width`, `--lm-scroll-listener-height`
+ * - `--lm-scroll-listener-offset-x`, `--lm-scroll-listener-offset-y`
  *
  * Ratios are unitless and have no twin:
- * - `--{prefix}-window-scrolled-x-ratio`, `--{prefix}-window-scrolled-y-ratio` —
- *   how far the document is scrolled.
- * - `--{prefix}-self-inner-scrolled-x-ratio`, `--{prefix}-self-inner-scrolled-y-ratio` —
- *   `0` when the element's start edge meets the viewport's start edge, `1` when
- *   its end edge meets the viewport's end edge. The span where it is fully visible.
- * - `--{prefix}-self-outer-scrolled-x-ratio`, `--{prefix}-self-outer-scrolled-y-ratio` —
- *   `0` when the element is about to enter the viewport, `1` once it has fully
- *   left it. The span where it overlaps the viewport at all.
+ * - `--lm-scroll-listener-window-scrolled-x-ratio`,
+ *   `--lm-scroll-listener-window-scrolled-y-ratio` — how far the document is
+ *   scrolled.
+ * - `--lm-scroll-listener-self-inner-scrolled-x-ratio`,
+ *   `--lm-scroll-listener-self-inner-scrolled-y-ratio` — `0` when the element's
+ *   start edge meets the viewport's start edge, `1` when its end edge meets the
+ *   viewport's end edge. The span where it is fully visible.
+ * - `--lm-scroll-listener-self-outer-scrolled-x-ratio`,
+ *   `--lm-scroll-listener-self-outer-scrolled-y-ratio` — `0` when the element is
+ *   about to enter the viewport, `1` once it has fully left it. The span where it
+ *   overlaps the viewport at all.
  *
  * @param props - Component properties.
  * @see {@link Props}
@@ -122,7 +125,7 @@ export const ScrollListener: FunctionComponent<Props> = ({
   const rootClss = mergeClassNames(c(), className)
   const customProps = scrollState === undefined
     ? {}
-    : toScrollCssProps(publicClassName, scrollState)
+    : toScrollCssProps(scrollState)
   return <div
     className={rootClss}
     ref={rootRef}

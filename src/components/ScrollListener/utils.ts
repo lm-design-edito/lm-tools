@@ -1,5 +1,4 @@
 import type { RefObject } from 'react'
-import { toCssVars } from '../utils/index.js'
 
 /**
  * Scroll-related measurements for the document and viewport.
@@ -200,40 +199,46 @@ function progressIn (scroll: number, [from, to]: [number, number]): number {
 /**
  * Builds the CSS custom properties exposed on a {@link ScrollListener} root.
  *
- * Measurements are lengths and get the usual `-raw` twin; ratios are unitless
- * and are asked not to have one.
+ * Measurements are lengths and come with a `-raw` twin carrying the plain number
+ * for `calc()`; ratios are unitless and have no twin.
  *
- * @param prefix - Public class name the variables are namespaced under.
  * @param scrollState - The state to expose.
- * @returns The custom properties, keyed by their full `--prefix-name`.
+ * @returns The custom properties, keyed by their full name.
  */
-export function toScrollCssProps (
-  prefix: string,
-  scrollState: ScrollState
-): Record<string, string> {
-  const { global, local } = scrollState
-  const measurements = {
-    'window-width': global.win.width,
-    'window-height': global.win.height,
-    'html-width': global.html.width,
-    'html-height': global.html.height,
-    'scroll-x': global.scroll.x,
-    'scroll-y': global.scroll.y,
-    'width': local.width,
-    'height': local.height,
-    'offset-x': local.offsetX,
-    'offset-y': local.offsetY
-  }
-  const ratios = {
-    'window-scrolled-x-ratio': global.scroll.x / Math.max(global.html.width - global.win.width, 1),
-    'window-scrolled-y-ratio': global.scroll.y / Math.max(global.html.height - global.win.height, 1),
-    'self-inner-scrolled-x-ratio': progressIn(global.scroll.x, innerRange(local.offsetX, local.width, global.win.width)),
-    'self-outer-scrolled-x-ratio': progressIn(global.scroll.x, outerRange(local.offsetX, local.width, global.win.width)),
-    'self-inner-scrolled-y-ratio': progressIn(global.scroll.y, innerRange(local.offsetY, local.height, global.win.height)),
-    'self-outer-scrolled-y-ratio': progressIn(global.scroll.y, outerRange(local.offsetY, local.height, global.win.height))
-  }
+export function toScrollCssProps (scrollState: ScrollState): Record<string, string> {
+  const { global: { win, html, scroll }, local } = scrollState
+  const windowScrolledXRatio = scroll.x / Math.max(html.width - win.width, 1)
+  const windowScrolledYRatio = scroll.y / Math.max(html.height - win.height, 1)
+  const selfInnerScrolledXRatio = progressIn(scroll.x, innerRange(local.offsetX, local.width, win.width))
+  const selfOuterScrolledXRatio = progressIn(scroll.x, outerRange(local.offsetX, local.width, win.width))
+  const selfInnerScrolledYRatio = progressIn(scroll.y, innerRange(local.offsetY, local.height, win.height))
+  const selfOuterScrolledYRatio = progressIn(scroll.y, outerRange(local.offsetY, local.height, win.height))
   return {
-    ...toCssVars(prefix, measurements),
-    ...toCssVars(prefix, ratios, { unitless: true })
+    '--lm-scroll-listener-window-width': `${win.width}px`,
+    '--lm-scroll-listener-window-width-raw': `${win.width}`,
+    '--lm-scroll-listener-window-height': `${win.height}px`,
+    '--lm-scroll-listener-window-height-raw': `${win.height}`,
+    '--lm-scroll-listener-html-width': `${html.width}px`,
+    '--lm-scroll-listener-html-width-raw': `${html.width}`,
+    '--lm-scroll-listener-html-height': `${html.height}px`,
+    '--lm-scroll-listener-html-height-raw': `${html.height}`,
+    '--lm-scroll-listener-scroll-x': `${scroll.x}px`,
+    '--lm-scroll-listener-scroll-x-raw': `${scroll.x}`,
+    '--lm-scroll-listener-scroll-y': `${scroll.y}px`,
+    '--lm-scroll-listener-scroll-y-raw': `${scroll.y}`,
+    '--lm-scroll-listener-width': `${local.width}px`,
+    '--lm-scroll-listener-width-raw': `${local.width}`,
+    '--lm-scroll-listener-height': `${local.height}px`,
+    '--lm-scroll-listener-height-raw': `${local.height}`,
+    '--lm-scroll-listener-offset-x': `${local.offsetX}px`,
+    '--lm-scroll-listener-offset-x-raw': `${local.offsetX}`,
+    '--lm-scroll-listener-offset-y': `${local.offsetY}px`,
+    '--lm-scroll-listener-offset-y-raw': `${local.offsetY}`,
+    '--lm-scroll-listener-window-scrolled-x-ratio': `${windowScrolledXRatio}`,
+    '--lm-scroll-listener-window-scrolled-y-ratio': `${windowScrolledYRatio}`,
+    '--lm-scroll-listener-self-inner-scrolled-x-ratio': `${selfInnerScrolledXRatio}`,
+    '--lm-scroll-listener-self-outer-scrolled-x-ratio': `${selfOuterScrolledXRatio}`,
+    '--lm-scroll-listener-self-inner-scrolled-y-ratio': `${selfInnerScrolledYRatio}`,
+    '--lm-scroll-listener-self-outer-scrolled-y-ratio': `${selfOuterScrolledYRatio}`
   }
 }
