@@ -200,8 +200,8 @@ function progressIn (scroll: number, [from, to]: [number, number]): number {
 /**
  * Builds the CSS custom properties exposed on a {@link ScrollListener} root.
  *
- * Measurements get the usual `-px` twin; ratios are unitless and are asked not
- * to have one.
+ * Measurements are lengths and get the usual `-raw` twin; ratios are unitless
+ * and are asked not to have one.
  *
  * @param prefix - Public class name the variables are namespaced under.
  * @param scrollState - The state to expose.
@@ -234,6 +234,6 @@ export function toScrollCssProps (
   }
   return {
     ...toCssVars(prefix, measurements),
-    ...toCssVars(prefix, ratios, { pxTwins: false })
+    ...toCssVars(prefix, ratios, { unitless: true })
   }
 }

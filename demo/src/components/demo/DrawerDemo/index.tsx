@@ -25,8 +25,8 @@ can drive the open/close transition from CSS alone.
 - \`content\`
 
 ### CSS custom properties on the root element
-- \`--{prefix}-content-width\` / \`--{prefix}-content-width-px\`
-- \`--{prefix}-content-height\` / \`--{prefix}-content-height-px\`
+- \`--{prefix}-content-width\` / \`--{prefix}-content-width-raw\`
+- \`--{prefix}-content-height\` / \`--{prefix}-content-height-raw\`
 
 ### Data attributes on the root element
 - \`data-content-width\`, \`data-content-height\` — the measured content size.
@@ -85,7 +85,7 @@ const demoStyles = `.${publicClassName}.${publicClassName}--opened .${publicClas
 }
 
 .${publicClassName}.${publicClassName}--opened .${publicClassName}__content {
-  height: var(--${publicClassName}-content-height-px);
+  height: var(--${publicClassName}-content-height);
   opacity: 1;
   transition: height 200ms, opacity 200ms 200ms;
 }`

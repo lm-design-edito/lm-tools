@@ -50,7 +50,7 @@
 
 .demo-css :global(.lm-drawer.lm-drawer--opened .lm-drawer__content),
 .demo-props :global(.lm-drawer.lm-drawer--opened .lm-drawer__content) {
-  height: var(--lm-drawer-content-height-px);
+  height: var(--lm-drawer-content-height);
   opacity: 1;
   transition: 
     opacity 400ms 100ms,

@@ -15,7 +15,7 @@ properties on its root element, so scroll-driven styling needs no JavaScript
 of its own.
 
 ### CSS custom properties on the root element
-Each measurement comes as a bare number and as a \`-px\` twin:
+Each measurement comes as a \`px\` length under its bare name, and as a \`-raw\` twin holding the plain number:
 - \`--{prefix}-window-width\`, \`--{prefix}-window-height\`
 - \`--{prefix}-html-width\`, \`--{prefix}-html-height\`
 - \`--{prefix}-scroll-x\`, \`--{prefix}-scroll-y\`

@@ -10,7 +10,7 @@ const name = 'ResizeObserverComponent'
 const description = `
 Component that observes its own size changes and exposes the dimensions.
 Updates are exposed both via data attributes (e.g., \`data-width\`) and CSS custom properties
-(e.g., \`--<prefix>-width\`, \`--<prefix>-width-px\`) for styling or scripting purposes.
+(e.g., \`--<prefix>-width\`, \`--<prefix>-width-raw\`) for styling or scripting purposes.
 @param props - Component properties
 @see {@link Props}
 @returns A div wrapping \`children\`, with resize observation applied.`

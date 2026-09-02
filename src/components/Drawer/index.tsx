@@ -63,8 +63,8 @@ export type Props = PropsWithChildren<WithClassName<{
  * - `content`
  *
  * ### CSS custom properties on the root element
- * - `--{prefix}-content-width` / `--{prefix}-content-width-px`
- * - `--{prefix}-content-height` / `--{prefix}-content-height-px`
+ * - `--{prefix}-content-width` / `--{prefix}-content-width-raw`
+ * - `--{prefix}-content-height` / `--{prefix}-content-height-raw`
  *
  * ### Data attributes on the root element
  * - `data-content-width`, `data-content-height` — the measured content size.
