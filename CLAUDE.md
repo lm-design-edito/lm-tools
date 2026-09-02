@@ -56,12 +56,6 @@ reader.
 Consumed almost exclusively **under Preact**, though they typecheck against React
 types. When the two disagree, Preact wins.
 
-> **To revisit:** `Input`, `Select` and `Textarea` used to re-assign `target.value`
-> right after `onChange`, forcing the DOM back to the controlled value. Removed as
-> redundant — React restores controlled inputs by itself — but never checked against
-> Preact. If a controlled field whose parent *rejects* the input keeps showing the
-> typed characters, that block is why. Check `npm run demo:preact` first.
-
 ### Naming
 
 - Symbol is the folder name, suffixed with `Component` **only** to dodge a DOM global
