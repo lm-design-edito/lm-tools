@@ -33,7 +33,6 @@ Ordered alphabetically, remaining work only — a component drops off the list o
 | Composant | À faire |
 | --- | --- |
 | JsonEditor | découper le fichier (416 l., 8 sous-composants) selon `types.ts` / `utils.ts` / `index.tsx` ; exporter les `Props` des sous-composants et leur donner un `className`. Le mode contrôlé est un chantier distinct, voir « Reporté ». |
-| Scrllgngn | exposer l'id de la page courante en attribut. `data-current-page-pos` existe déjà (`index.tsx`), et `PropsPage` porte un `id?: string` : il manque `data-current-page-id` alimenté par `pages?.[currentPagePos]?.id`, plus sa ligne sous « Data attributes » dans le JSDoc. Marqué `[WIP]` en tête de `index.tsx`. |
 
 ## À vérifier
 
