@@ -5,8 +5,13 @@ export type DurationType = 'milliseconds' | 'seconds' | 'minutes' | 'hours' | 'd
 
 /**
  * Supported duration types (short form aliases).
+ *
+ * @remarks
+ * `'M'` and `'Y'` are the `format-date` style tokens, and the ones
+ * {@link DurationUnit} is keyed on; `'mo'`, `'mth'` and `'y'` predate them and
+ * stay accepted. Mind the casing: `'m'` is minutes, `'M'` is months.
  */
-export type DurationTypeShort = 'ms' | 's' | 'sec' | 'min' | 'm' | 'h' | 'd' | 'w' | 'mo' | 'mth' | 'y'
+export type DurationTypeShort = 'ms' | 's' | 'sec' | 'min' | 'm' | 'h' | 'd' | 'w' | 'mo' | 'mth' | 'M' | 'y' | 'Y'
 
 /**
  * Represents a duration in a specific unit and allows conversion to other units.
@@ -37,9 +42,9 @@ export class Duration {
     else if (type === 'h' || type === 'hours') { this.type = 'hours' }
     else if (type === 'd' || type === 'days') { this.type = 'days' }
     else if (type === 'w' || type === 'weeks') { this.type = 'weeks' }
-    else if (type === 'mo' || type === 'mth' || type === 'months') { this.type = 'months' }
+    else if (type === 'mo' || type === 'mth' || type === 'M' || type === 'months') { this.type = 'months' }
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    else if (type === 'y' || type === 'years') { this.type = 'years' }
+    else if (type === 'y' || type === 'Y' || type === 'years') { this.type = 'years' }
     else { this.type = 'milliseconds' } // defaults to milliseconds
   }
 
