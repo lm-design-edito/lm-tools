@@ -46,8 +46,6 @@ import {
  * `autoPlay`, `autoPlayWhenVisible` and the play button have no effect for as
  * long as this prop is provided.
  * @property wrapperClassName - Optional additional class name(s) applied to the root wrapper element.
- * @property stateHandlers - Optional callbacks invoked whenever the corresponding
- * state changes. Useful for synchronizing external state with the internal video state.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React children rendered inside the `<video>` element itself
  * (e.g. fallback content).

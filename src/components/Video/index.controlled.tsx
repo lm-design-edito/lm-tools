@@ -9,6 +9,7 @@ import {
   useEffect
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
+import { formatDuration } from '../../agnostic/time/format-duration/index.js'
 import type { WithClassName } from '../utils/types.js'
 import {
   mergeClassNames,
@@ -29,7 +30,6 @@ import {
   forcePlay,
   forcePlaybackRate,
   forceVolume,
-  formatTime,
   getTimelineClickProgress,
   msToSeconds,
   secondsToMs
@@ -296,7 +296,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
 
   const handleTimelineClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (videoRef.current === null) return
-    const progress = getTimelineClickProgress(e, e.currentTarget, videoRef.current)
+    const progress = getTimelineClickProgress(e)
     const targetTime = progress * totalTime
     onTimelineClicked?.(e, targetTime, currentTime, videoRef.current)
     // A controlled time is the parent's to move: it is expected to update the
@@ -531,11 +531,11 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     <div className={timeControlsClss}>
       {/* Current time */}
       <span className={currentTimeClss}>
-        {formatTime(currentTimeMs, 'mm:ss:ms')}
+        {formatDuration(currentTimeMs, 'mm:ss:ms')}
       </span>
       {/* Total time */}
       <span className={totalTimeClss}>
-        {formatTime(totalTimeMs, 'mm:ss:ms')}
+        {formatDuration(totalTimeMs, 'mm:ss:ms')}
       </span>
       {/* Timeline */}
       <div

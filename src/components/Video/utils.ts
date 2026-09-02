@@ -1,8 +1,3 @@
-import type {
-  Dispatch,
-  SetStateAction
-} from 'react'
-
 /* Video element triggers */
 export const muteAttributeWorkaround = (
   video: HTMLVideoElement | null,
@@ -35,17 +30,6 @@ export const forceVolume = (
   if (video === null) return
   // eslint-disable-next-line no-param-reassign
   video.volume = volume
-}
-
-export const forceCurrentTime = (
-  video: HTMLVideoElement | null,
-  time: number,
-  setCurrentTime: Dispatch<SetStateAction<number>>
-): void => {
-  if (video === null) return
-  // eslint-disable-next-line no-param-reassign
-  video.currentTime = time
-  setCurrentTime(time)
 }
 
 export const forcePlay = async (
@@ -127,46 +111,16 @@ export function msToSeconds (ms: number): number {
   return ms / 1000
 }
 
-export function formatTime (
-  ms: number,
-  format: string,
-  fps = 25
-): string {
-  const totalSeconds = Math.floor(ms / 1000)
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = Math.floor(totalSeconds % 60)
-  const frames = Math.floor(((ms % 1000) / 1000) * fps)
-  const msRest = Math.floor(ms % 1000)
-  const tokens: Record<string, string | number> = {
-    hh: String(hours).padStart(2, '0'),
-    mm: String(minutes).padStart(2, '0'),
-    ss: String(seconds).padStart(2, '0'),
-    frame: String(frames).padStart(2, '0'),
-    ms: String(msRest).padStart(3, '0'),
-    h: hours,
-    m: minutes,
-    s: seconds,
-    f: frames
-  }
-  const result = Object
-    .keys(tokens)
-    .sort((a, b) => b.length - a.length)
-    .reduce(
-      (acc, t) => acc.replace(new RegExp(t, 'gv'), String(tokens[t])),
-      format
-    )
-  return result
-}
-
+/**
+ * Where along the timeline a click landed.
+ *
+ * @param event - The click on the timeline element.
+ * @returns A ratio between `0` and `1`, clamped to the element's own bounds.
+ */
 export const getTimelineClickProgress = (
-  event: React.MouseEvent<HTMLDivElement>,
-  timeline: HTMLDivElement | null,
-  video: HTMLVideoElement | null
+  event: React.MouseEvent<HTMLDivElement>
 ): number => {
-  if (video === null || timeline === null) return 0
   const timelineRect = event.currentTarget.getBoundingClientRect()
   const position = event.clientX - timelineRect.left
-  const progress = Math.min(1, Math.max(0, position / timelineRect.width))
-  return progress
+  return Math.min(1, Math.max(0, position / timelineRect.width))
 }
