@@ -37,15 +37,6 @@ est listé sous « À vérifier », « Ménage » et « Reporté ».
 | --- | --- |
 | — | — |
 
-## À vérifier
-
-- **`Input`, `Select`, `Textarea` sous Preact.** Ces trois composants réassignaient
-  `target.value` juste après `onChange`, forçant le DOM à revenir à la valeur
-  contrôlée. Retiré comme redondant — React restaure les champs contrôlés lui-même —
-  mais jamais vérifié contre Preact, qui est la cible réelle. Si un champ contrôlé
-  dont le parent *rejette* la saisie garde les caractères tapés, c'est de là que ça
-  vient. Passer par `npm run demo:preact`.
-
 ## Ménage
 
 - `src/components/_WIP_AudioQuote/index.tsx` et `src/components/_WIP_Icon/index.tsx`
@@ -61,14 +52,6 @@ est listé sous « À vérifier », « Ménage » et « Reporté ».
   éditeur amorce son état depuis `defaultValue` au montage et ne le relit jamais.
   C'est une réécriture du modèle d'état pour que l'arbre lise chez un propriétaire
   unique, pas un alignement. La limite est documentée en `@remarks` sur `JsonEditor`.
-- **Trois défauts de `JsonEditor` laissés de côté**, parce qu'ils changent du
-  comportement visible et méritent leur propre décision :
-  - `handleRenameProp` perd une entrée quand on renomme vers une clé existante — la
-    `Map` reconstruite garde la dernière, l'autre disparaît sans rien dire.
-  - Défauts incohérents : `JsonEditor` part de `null`, `ValueEditor` de `{}` ; et
-    basculer un nœud vers `record` injecte `{ a: 0, b: false }`, un exemple arbitraire.
-  - Asymétrie de classes : `c('record')` est sur le `<ul>`, alors que `c('array')` est
-    sur les `<li>` et que le `<ol>` n'a rien.
 
 ## Coverage roadmap
 
