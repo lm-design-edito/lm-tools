@@ -87,8 +87,6 @@ Prioritised backlog of missing tests in `agnostic` and `node`, ranked by real us
 
 Usage counts below are `.ts` import sites in `lm-publisher-composer` (the number in parentheses is the subset inside `modules/lm-publisher`).
 
-- **P1 — high usage, pure logic, quick win**
-  - [ ] `agnostic/time/duration` — 48 (18). Pure unit conversions feeding every timeout/delay; a silent bug propagates everywhere. Start here.
 - **P2 — critical server path, higher risk**
   - [ ] `node/process/spawner` — 12. Spawns child processes → correctness + argument escaping/injection surface.
   - [ ] `node/images/transform` — 20 (8). Core image pipeline (sharp); bad output / crash on user-supplied images. Medium effort (buffer fixtures).
@@ -116,8 +114,6 @@ restent à réconcilier.**
   - [ ] agnostic/strings/parse-table
   - [ ] agnostic/strings/to-alphanum
   - [ ] agnostic/strings/trim
-  - [ ] agnostic/time/dates/format-date
-  - [ ] agnostic/time/duration (dont format-duration/parts)
   - [ ] agnostic/time/timeout
   - [ ] agnostic/time/transitions
   - [ ] agnostic/time/wait
