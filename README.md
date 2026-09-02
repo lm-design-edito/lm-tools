@@ -31,13 +31,46 @@ Coding conventions live in [CLAUDE.md](./CLAUDE.md) and in the root
 Ordered alphabetically, remaining work only — a component drops off the list once it
 is done.
 
-**La passe d'alignement est terminée, le tableau est vide.** Le composant
-`Disclaimer` existe toujours et s'utilise seul ; c'est son usage *imbriqué* dans
-`Video` et `Image` qui a été retiré. L'idée sera reprise ailleurs, dans `lm-link`.
+**La passe d'alignement est terminée** ; ce qui figure ci-dessous a été ouvert après
+elle. Le composant `Disclaimer` existe toujours et s'utilise seul ; c'est son usage
+*imbriqué* dans `Video` et `Image` qui a été retiré. L'idée sera reprise ailleurs,
+dans `lm-link`.
 
 | Composant | À faire |
 | --- | --- |
-| — | — |
+| `Video` | Dédoubler les quatre props de visibilité en variantes « à chaque fois » et « une seule fois » — voir ci-dessous. |
+
+### `Video` — props de visibilité, variantes répétée et unique
+
+Les quatre props pilotées par l'`IntersectionObserver` mélangent aujourd'hui les deux
+sémantiques, et pas de la même façon d'une prop à l'autre. Il en faut huit, une paire
+par comportement :
+
+| À chaque franchissement | Une seule fois |
+| --- | --- |
+| `autoPlayWhenVisible` | `autoPlayOnceVisible` |
+| `autoPauseWhenHidden` | `autoPauseOnceHidden` |
+| `autoLoudWhenVisible` | `autoLoudOnceVisible` |
+| `autoMuteWhenHidden` | `autoMuteOnceHidden` |
+
+État actuel, dans `onIntersected` (`src/components/Video/index.tsx`) :
+
+- `autoPlayWhenVisible` se comporte en fait comme un `OnceVisible` : il est gardé par
+  `hasBeenAutoPlayed.current`.
+- `autoMuteWhenHidden` est gardé par ce même drapeau, qui passe à `true` sur *tout*
+  événement `play`, clic utilisateur compris — le mute à la sortie cesse donc d'opérer
+  dès la première lecture. C'est un bug, pas une sémantique `Once`.
+- `autoLoudWhenVisible` et `autoPauseWhenHidden` n'ont aucune garde : ils rejouent à
+  chaque franchissement.
+
+D'où, à l'implémentation : un drapeau par comportement plutôt que le
+`hasBeenAutoPlayed` unique et partagé, et un drapeau armé par le seul déclenchement
+automatique, jamais par une action de l'utilisateur. Mettre à jour au passage la
+`@remarks` des props, qui documente déjà « the first time » pour `autoLoudWhenVisible`
+alors que le code ne le fait pas.
+
+À vérifier aussi : la combinaison `autoPlay*` + `autoLoud*`. Le navigateur rejette un
+`play()` non muté hors geste utilisateur, et `forcePlay` avale l'erreur en la loggant.
 
 ## Reporté (à traiter plus tard, pas maintenant)
 
