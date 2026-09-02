@@ -9,7 +9,6 @@ import {
   useEffect
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
-import { formatDuration } from '../../agnostic/time/format-duration/index.js'
 import type { WithClassName } from '../utils/types.js'
 import {
   mergeClassNames,
@@ -30,6 +29,7 @@ import {
   forcePlay,
   forcePlaybackRate,
   forceVolume,
+  formatTime,
   getTimelineClickProgress,
   msToSeconds,
   secondsToMs
@@ -531,11 +531,11 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     <div className={timeControlsClss}>
       {/* Current time */}
       <span className={currentTimeClss}>
-        {formatDuration(currentTimeMs, 'mm:ss:ms')}
+        {formatTime(currentTimeMs, 'mm:ss:ms')}
       </span>
       {/* Total time */}
       <span className={totalTimeClss}>
-        {formatDuration(totalTimeMs, 'mm:ss:ms')}
+        {formatTime(totalTimeMs, 'mm:ss:ms')}
       </span>
       {/* Timeline */}
       <div
