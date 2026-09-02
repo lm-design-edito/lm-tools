@@ -32,8 +32,6 @@ import {
 } from './utils.js'
 import cssModule from './styles.module.css'
 
-// [WIP] current page id should be reflected in an attribute
-
 /**
  * Common properties shared by all block types.
  *
@@ -140,8 +138,11 @@ export type Props = WithClassName<{
  * - `--force-stick-blocks-both` — when `forceStickBlocks === 'both'`.
  *
  * ### Data attributes
- * - `data-current-page-pos` — zero-based index of the page currently in view,
- * updated on every page change reported by the internal {@link Paginator}.
+ * Both are updated on every page change reported by the internal
+ * {@link Paginator}.
+ * - `data-current-page-pos` — zero-based index of the page currently in view.
+ * - `data-current-page-id` — that page's {@link PropsPage.id}. Absent while the
+ * current page carries no id, since the id is optional.
  *
  * ### CSS custom properties
  * Exposed on the root element and updated on resize via the internal
@@ -229,6 +230,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   return <div
     className={rootClss}
     data-current-page-pos={currentPagePos}
+    data-current-page-id={pages?.[currentPagePos]?.id}
     style={{ ...customCssProps }}>
     <ResizeObserverComponent onResized={handleResize}>
       {/* Top bound detection */}
