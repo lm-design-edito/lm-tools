@@ -5,7 +5,6 @@ import {
   useEffect
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
-import { randomHash } from '../../agnostic/random/uuid/index.js'
 import {
   IntersectionObserverComponent,
   type Props as IOCompProps
@@ -19,8 +18,18 @@ import {
   type Props as RSOCompProps
 } from '../ResizeObserver/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { mergeClassNames } from '../utils/index.js'
+import {
+  mergeClassNames,
+  useChangeDispatch
+} from '../utils/index.js'
 import { scrllgngn as publicClassName } from '../public-classnames.js'
+import {
+  consolidateStickyBlocks,
+  lazyLoadedBlocks,
+  toScreenCssProps,
+  type ConsolidatedStickyBlock,
+  type ScreenRect
+} from './utils.js'
 import cssModule from './styles.module.css'
 
 // [WIP] current page id should be reflected in an attribute
@@ -101,10 +110,8 @@ export type PropsPage = {
  * - `'after'`  — forces blocks from pages after the current one.
  * - `'both'`   — forces blocks on both sides.
  * - `'none'`   — no forcing (default behaviour).
- * @property stateHandlers - Optional callbacks invoked in response to
- * component state changes.
- * @property stateHandlers.pageChanged - Called whenever the current page
- * changes. Receives the zero-based index of the current page and the
+ * @property onPageChanged - Called once the current page has changed, never on
+ * mount. Receives the zero-based index of the new current page and the
  * corresponding page definition, if available.
  * @property className - Optional additional class name(s) applied to the root
  * element.
@@ -114,14 +121,8 @@ export type Props = WithClassName<{
   thresholdOffsetPercent?: number
   stickyBlocksLazyLoadDistance?: number
   forceStickBlocks?: 'before' | 'after' | 'both' | 'none'
-  stateHandlers?: {
-    pageChanged?: (currentPagePos: number, pageData?: PropsPage) => void
-  }
+  onPageChanged?: (currentPagePos: number, pageData?: PropsPage) => void
 }>
-
-type BlockConsolidatedData = {
-  displayOnPages: number[]
-}
 
 /**
  * Scrollytelling engine component. Orchestrates layered sticky blocks (`back`
@@ -145,10 +146,15 @@ type BlockConsolidatedData = {
  * ### CSS custom properties
  * Exposed on the root element and updated on resize via the internal
  * {@link ResizeObserverComponent}:
- * - `--scrllgngn-screen-left` / `--PRIVATE-left` — left edge of the bounding rect (px).
- * - `--scrllgngn-screen-right` / `--PRIVATE-right` — right edge (px).
- * - `--scrllgngn-screen-width` / `--PRIVATE-width` — total width (px).
- * - `--scrllgngn-screen-height` / `--PRIVATE-height` — total height (px).
+ * - `--{prefix}-screen-left` / `--{prefix}-screen-left-raw` — left edge of the
+ * bounding rect.
+ * - `--{prefix}-screen-right` / `--{prefix}-screen-right-raw` — right edge.
+ * - `--{prefix}-screen-width` / `--{prefix}-screen-width-raw` — total width.
+ * - `--{prefix}-screen-height` / `--{prefix}-screen-height-raw` — total height.
+ *
+ * The same four measurements are also exposed as `--PRIVATE-left`, `-right`,
+ * `-width` and `-height` for the component's own stylesheet. They are internal:
+ * do not read or override them.
  *
  * ### Sticky block elements
  * Each lazy-loaded sticky block receives:
@@ -168,7 +174,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   thresholdOffsetPercent,
   stickyBlocksLazyLoadDistance = 2,
   forceStickBlocks,
-  stateHandlers,
+  onPageChanged,
   className
 }) => {
   // State
@@ -176,80 +182,26 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   const [contentVisible, setCntVis] = useState(false)
   const [bottomVisible, setBtmVis] = useState(false)
   const [currentPagePos, setCurrentPagePos] = useState<number>(0)
-  const [stickyBlocks, setStickyBlocks] = useState(new Map<string, PropsStickyBlock & BlockConsolidatedData>())
-  const [partialBoundingRect, setPartialBoundingRect] = useState<{
-    left: number
-    right: number
-    width: number
-    height: number
-  }>()
+  const [stickyBlocks, setStickyBlocks] = useState(new Map<string, ConsolidatedStickyBlock>())
+  const [partialBoundingRect, setPartialBoundingRect] = useState<ScreenRect>()
 
   // Sticky blocks calculations
   useEffect(() => {
-    const consolidatedBlocks = new Map<string, PropsBlock & BlockConsolidatedData>()
-    for (const page of pages ?? []) {
-      const pageIndex = pages?.indexOf(page) ?? -1
-      for (const block of page.blocks ?? []) {
-        const blockId = block.id ?? randomHash(12)
-        const found = consolidatedBlocks.get(blockId)
-        if (found !== undefined) consolidatedBlocks.set(blockId, {
-          ...found,
-          ...block,
-          displayOnPages: [
-            ...found.displayOnPages,
-            pageIndex
-          ]
-        })
-        else consolidatedBlocks.set(blockId, {
-          ...block,
-          displayOnPages: [pageIndex]
-        })
-      }
-    }
-    const consolidatedStickyBlocks = new Map(Array
-      .from(consolidatedBlocks)
-      .filter((e): e is [string, PropsStickyBlock & BlockConsolidatedData] => {
-        const block = e[1]
-        return block.depth === 'back'
-          || block.depth === 'front'
-      }))
-    setStickyBlocks(consolidatedStickyBlocks)
+    setStickyBlocks(consolidateStickyBlocks(pages))
   }, [pages])
 
-  const lazyLoadedBackBlocks = Array
-    .from(stickyBlocks)
-    .filter(([, block]) => block.depth === 'back'
-      && block.displayOnPages.some(dispPage => {
-        const absDiff = Math.abs(dispPage - currentPagePos)
-        return absDiff <= stickyBlocksLazyLoadDistance
-      })
-    ).map(([, block]) => block)
-    .sort((a, b) => {
-      return (a.zIndex ?? -Infinity) - (b.zIndex ?? -Infinity)
-    })
-
-  const lazyLoadedFrontBlocks = Array
-    .from(stickyBlocks)
-    .filter(([, block]) => block.depth === 'front'
-      && block.displayOnPages.some(dispPage => {
-        const absDiff = Math.abs(dispPage - currentPagePos)
-        return absDiff <= stickyBlocksLazyLoadDistance
-      })
-    ).map(([, block]) => block)
-    .sort((a, b) => {
-      return (a.zIndex ?? -Infinity) - (b.zIndex ?? -Infinity)
-    })
+  const lazyLoadedBackBlocks = lazyLoadedBlocks(stickyBlocks, 'back', currentPagePos, stickyBlocksLazyLoadDistance)
+  const lazyLoadedFrontBlocks = lazyLoadedBlocks(stickyBlocks, 'front', currentPagePos, stickyBlocksLazyLoadDistance)
 
   // Handlers
+  useChangeDispatch(currentPagePos, pagePos => onPageChanged?.(pagePos, pages?.[pagePos]))
   const handleTopBoundDetect: IOCompProps['onIntersected'] = e => setTopVis(e.ioEntry?.isIntersecting ?? false)
   const handleCntDetect: IOCompProps['onIntersected'] = e => setCntVis(e.ioEntry?.isIntersecting ?? false)
   const handleBtmBoundDetect: IOCompProps['onIntersected'] = e => setBtmVis(e.ioEntry?.isIntersecting ?? false)
-  const handlePagesChange: NonNullable<PaginatorProps['onPagesChanged']> = statePages => {
+  const handlePagesChanged: NonNullable<PaginatorProps['onPagesChanged']> = statePages => {
     const curPagePos = statePages.findIndex(page => page.position === 'curr')
     if (curPagePos === -1) return
-    if (curPagePos === currentPagePos) return
     setCurrentPagePos(curPagePos)
-    stateHandlers?.pageChanged?.(curPagePos, pages?.[curPagePos])
   }
   const handleResize: RSOCompProps['onResized'] = ({ boundingClientRect }) => {
     if (partialBoundingRect === undefined
@@ -273,26 +225,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     }),
     className
   )
-  // [WIP] the --PRIVATE-* props are only set once ResizeObserver has measured, so
-  // until then the blocks inherit whatever an ancestor component defined under the
-  // same names — they should be emitted unconditionally, with a fallback
-  const customCssProps: Record<string, string> = {}
-  if (partialBoundingRect?.left !== undefined) {
-    customCssProps[`--${publicClassName}-screen-left`] = `${partialBoundingRect.left}px`
-    customCssProps['--PRIVATE-left'] = `${partialBoundingRect.left}px`
-  }
-  if (partialBoundingRect?.right !== undefined) {
-    customCssProps[`--${publicClassName}-screen-right`] = `${partialBoundingRect.right}px`
-    customCssProps['--PRIVATE-right'] = `${partialBoundingRect.right}px`
-  }
-  if (partialBoundingRect?.width !== undefined) {
-    customCssProps[`--${publicClassName}-screen-width`] = `${partialBoundingRect.width}px`
-    customCssProps['--PRIVATE-width'] = `${partialBoundingRect.width}px`
-  }
-  if (partialBoundingRect?.height !== undefined) {
-    customCssProps[`--${publicClassName}-screen-height`] = `${partialBoundingRect.height}px`
-    customCssProps['--PRIVATE-height'] = `${partialBoundingRect.height}px`
-  }
+  const customCssProps = toScreenCssProps(publicClassName, partialBoundingRect)
   return <div
     className={rootClss}
     data-current-page-pos={currentPagePos}
@@ -340,7 +273,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
         <IntersectionObserverComponent onIntersected={handleCntDetect}>
           <Paginator
             thresholdOffsetPercent={thresholdOffsetPercent}
-            onPagesChanged={handlePagesChange}>
+            onPagesChanged={handlePagesChanged}>
             {pages?.map(page => {
               const scrollBlocks = page.blocks
                 ?.filter(b => b.depth === 'scroll' || b.depth === undefined) ?? []

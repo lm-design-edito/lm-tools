@@ -29,10 +29,14 @@ updated on every page change reported by the internal {@link Paginator}.
 ### CSS custom properties
 Exposed on the root element and updated on resize via the internal
 {@link ResizeObserverComponent}:
-- \`--scrllgngn-screen-left\` / \`--PRIVATE-left\` — left edge of the bounding rect (px).
-- \`--scrllgngn-screen-right\` / \`--PRIVATE-right\` — right edge (px).
-- \`--scrllgngn-screen-width\` / \`--PRIVATE-width\` — total width (px).
-- \`--scrllgngn-screen-height\` / \`--PRIVATE-height\` — total height (px).
+- \`--{prefix}-screen-left\` / \`--{prefix}-screen-left-raw\` — left edge of the bounding rect.
+- \`--{prefix}-screen-right\` / \`--{prefix}-screen-right-raw\` — right edge.
+- \`--{prefix}-screen-width\` / \`--{prefix}-screen-width-raw\` — total width.
+- \`--{prefix}-screen-height\` / \`--{prefix}-screen-height-raw\` — total height.
+
+The same four measurements are also exposed as \`--PRIVATE-left\`, \`-right\`,
+\`-width\` and \`-height\` for the component's own stylesheet. They are internal:
+do not read or override them.
 
 ### Sticky block elements
 Each lazy-loaded sticky block receives:
@@ -123,10 +127,8 @@ type PropsPage = {
  * - \`'after'\`  — forces blocks from pages after the current one.
  * - \`'both'\`   — forces blocks on both sides.
  * - \`'none'\`   — no forcing (default behaviour).
- * @property stateHandlers - Optional callbacks invoked in response to
- * component state changes.
- * @property stateHandlers.pageChanged - Called whenever the current page
- * changes. Receives the zero-based index of the current page and the
+ * @property onPageChanged - Called once the current page has changed, never on
+ * mount. Receives the zero-based index of the new current page and the
  * corresponding page definition, if available.
  * @property className - Optional additional class name(s) applied to the root
  * element.
@@ -136,17 +138,13 @@ export type Props = WithClassName<{
   thresholdOffsetPercent?: number
   stickyBlocksLazyLoadDistance?: number
   forceStickBlocks?: 'before' | 'after' | 'both' | 'none'
-  stateHandlers?: {
-    pageChanged?: (currentPagePos: number, pageData?: PropsPage) => void
-  }
+  onPageChanged?: (currentPagePos: number, pageData?: PropsPage) => void
 }>`
 
 const demoProps: ScrllgngnProps = {
   forceStickBlocks: 'none',
   thresholdOffsetPercent: 80,
-  stateHandlers: {
-    pageChanged: (pos, data) => console.log(pos, data)
-  },
+  onPageChanged: (pos, data) => console.log(pos, data),
   pages: [{
     id: 'premiere-page',
     blocks: [{
