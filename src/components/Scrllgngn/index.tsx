@@ -273,6 +273,9 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     }),
     className
   )
+  // [WIP] the --PRIVATE-* props are only set once ResizeObserver has measured, so
+  // until then the blocks inherit whatever an ancestor component defined under the
+  // same names — they should be emitted unconditionally, with a fallback
   const customCssProps: Record<string, string> = {}
   if (partialBoundingRect?.left !== undefined) {
     customCssProps[`--${publicClassName}-screen-left`] = `${partialBoundingRect.left}px`
