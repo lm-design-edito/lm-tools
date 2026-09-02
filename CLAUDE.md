@@ -56,6 +56,10 @@ reader.
 Consumed almost exclusively **under Preact**, though they typecheck against React
 types. When the two disagree, Preact wins.
 
+- A controlled field only snaps back if something re-renders — Preact restores it
+  from the diff where React restores it from the event — so a parent that rejects an
+  input without changing state leaves the typed characters on screen.
+
 ### Naming
 
 - Symbol is the folder name, suffixed with `Component` **only** to dodge a DOM global
