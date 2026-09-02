@@ -32,14 +32,32 @@ Ordered alphabetically, remaining work only — a component drops off the list o
 
 | Composant | À faire |
 | --- | --- |
-| JsonEditor | chantier séparé — mode contrôlé (aujourd'hui structurellement impossible : arbre de sous-éditeurs non contrôlés) et découpage du fichier (416 l., 8 sous-composants) ; `Props` exportés + `className` sur les sous-composants |
-| Scrllgngn | `[WIP]` current page id à exposer en attribut |
+| JsonEditor | découper le fichier (416 l., 8 sous-composants) selon `types.ts` / `utils.ts` / `index.tsx` ; exporter les `Props` des sous-composants et leur donner un `className`. Le mode contrôlé est un chantier distinct, voir « Reporté ». |
+| Scrllgngn | exposer l'id de la page courante en attribut. `data-current-page-pos` existe déjà (`index.tsx`), et `PropsPage` porte un `id?: string` : il manque `data-current-page-id` alimenté par `pages?.[currentPagePos]?.id`, plus sa ligne sous « Data attributes » dans le JSDoc. Marqué `[WIP]` en tête de `index.tsx`. |
+
+## À vérifier
+
+- **`Input`, `Select`, `Textarea` sous Preact.** Ces trois composants réassignaient
+  `target.value` juste après `onChange`, forçant le DOM à revenir à la valeur
+  contrôlée. Retiré comme redondant — React restaure les champs contrôlés lui-même —
+  mais jamais vérifié contre Preact, qui est la cible réelle. Si un champ contrôlé
+  dont le parent *rejette* la saisie garde les caractères tapés, c'est de là que ça
+  vient. Passer par `npm run demo:preact`.
+
+## Ménage
+
+- `src/components/_WIP_AudioQuote/index.tsx` et `src/components/_WIP_Icon/index.tsx`
+  sont **vides** (0 octet) depuis leur création, référencés nulle part — ni exports,
+  ni demo, ni roadmap. Soit ces deux composants sont à écrire, soit les dossiers sont
+  à supprimer. Trancher.
 
 ## Reporté (à traiter plus tard, pas maintenant)
 
 - Supprimer le motif `disclaimer` des props de `Video` et `Image` — décidé, à traiter dans un chantier à part. Ne pas l'aligner en attendant, il est destiné à disparaître.
 - Trancher le mode hybride mono-fichier pour `Gallery`, `Drawer`, `Theatre`, `Disclaimer` par rapport au split des autres.
-- `JsonEditor` en mode contrôlé.
+- **`JsonEditor` en mode contrôlé.** Aujourd'hui structurellement impossible : l'arbre
+  de sous-éditeurs est non contrôlé de bout en bout. C'est une réécriture du modèle
+  d'état, pas un alignement — à faire après le découpage du fichier.
 
 ## Coverage roadmap
 
