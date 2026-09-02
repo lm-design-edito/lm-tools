@@ -4,6 +4,17 @@
  */
 export type DurationUnit = 'ms' | 's' | 'm' | 'h' | 'd' | 'w' | 'M' | 'Y'
 
+/** Every token `formatDuration` substitutes in a template. */
+export type DurationToken =
+  | 'Y' | 'YY'
+  | 'M' | 'MM'
+  | 'w' | 'ww'
+  | 'd' | 'dd'
+  | 'h' | 'hh'
+  | 'm' | 'mm'
+  | 's' | 'ss'
+  | 'ms'
+
 /** Options for `getDurationParts`. */
 export type GetDurationPartsOptions = {
   /**
@@ -76,3 +87,21 @@ export type NamedDurationParts = {
 
 /** Every part of a duration, reachable both by unit token and by name. */
 export type DurationParts = DurationTokenParts & NamedDurationParts
+
+/** Options for `formatDuration`. */
+export type FormatDurationOptions = {
+  /**
+   * Truncates the duration to a whole number of the smallest unit the template
+   * uses. Defaults to `true` here, unlike {@link GetDurationPartsOptions} — a
+   * template asks to be displayed, and `0:01:59.60000000001` is not a display.
+   * Set it to `false` to keep the fraction.
+   */
+  floorSmallestUnit?: boolean
+  /**
+   * Months and years have no fixed length, so they are approximated. `true`
+   * (the default) uses 30-day months and 365-day years, matching what
+   * `Duration` itself computes. `false` uses the Gregorian mean year of
+   * 365.2425 days and a month of exactly a twelfth of it.
+   */
+  useApproximateMonthAndYear?: boolean
+}

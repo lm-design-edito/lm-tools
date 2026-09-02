@@ -124,6 +124,3 @@ export function getDurationParts (
     years: values.Y
   }
 }
-
-// [WIP] formatDuration, the string side, is still to write — same shape as
-// formatDate: an index.ts holding a template substitution over these parts.
