@@ -106,6 +106,47 @@ restent à réconcilier.**
   - [ ] agnostic/strings/normalize-indent -> pas nécessaire tout de suite, fonction à repenser
   - [ ] agnostic/strings/replace-all -> DEPRECATED
 
+## Fonctions à écrire — diff et messages de commit
+
+Esquisses destinées à `lm-cli`, qui n'a vocation qu'à orchestrer : la logique
+métier vit ici, la commande l'appelle.
+
+### Get diff from commit hash
+
+```ts
+export type GetDiffOptions = {
+  cwd?: string
+}
+
+// Pas certain de Array<string> mais c'est peut-être suffisant,
+// l'idée c'est d'avoir une liste descriptive des changements successifs sur un fichier (genre le contenu brut de git diff)
+export type Diff = Record<string, Array<string>>
+
+// Ou pas async si pas nécessaire
+export async function getDiffFrom (
+  commitHash: string,
+  options: GetDiffOptions = {}
+): Promise<Diff> {
+  const { cwd } = options
+  return {}
+}
+```
+
+### Generate commit message from diff
+
+```ts
+export type GenerateDiffDescriptionOptions = {
+  customPromptOrSomething?: string // juste une idée comme ça, sais pas si c'est pertinent
+  // Ptet c'est là qu'il faut dire "je veux plutôt un changelog, ou plutôt un message de commit"
+}
+
+export async function generateDiffDescription (
+  diff: Diff,
+  options: GenerateDiffDescriptionOptions = {}): Promise<string> {
+  return ''
+}
+```
+
 ## Divers
 
 - [ ] Repenser agnostic/optim/throttle-debounce ?
