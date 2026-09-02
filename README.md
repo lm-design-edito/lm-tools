@@ -28,26 +28,19 @@ Coding conventions live in [CLAUDE.md](./CLAUDE.md) and in the root
 
 ## Per-component to-do
 
-Ordered alphabetically, remaining work only — a component drops off the list once it is done. Items marked **bug** are behavioural defects found during the audit, to fix in the same commit as the component's alignment.
+Ordered alphabetically, remaining work only — a component drops off the list once it
+is done.
 
-La passe d'alignement est terminée — plus aucun composant en attente. Ce qui reste
-est listé sous « À vérifier », « Ménage » et « Reporté ».
+**La passe d'alignement est terminée, le tableau est vide.** Le composant
+`Disclaimer` existe toujours et s'utilise seul ; c'est son usage *imbriqué* dans
+`Video` et `Image` qui a été retiré. L'idée sera reprise ailleurs, dans `lm-link`.
 
 | Composant | À faire |
 | --- | --- |
 | — | — |
 
-## Ménage
-
-- `src/components/_WIP_AudioQuote/index.tsx` et `src/components/_WIP_Icon/index.tsx`
-  sont **vides** (0 octet) depuis leur création, référencés nulle part — ni exports,
-  ni demo, ni roadmap. Soit ces deux composants sont à écrire, soit les dossiers sont
-  à supprimer. Trancher.
-
 ## Reporté (à traiter plus tard, pas maintenant)
 
-- Supprimer le motif `disclaimer` des props de `Video` et `Image` — décidé, à traiter dans un chantier à part. Ne pas l'aligner en attendant, il est destiné à disparaître.
-- Trancher le mode hybride mono-fichier pour `Gallery`, `Drawer`, `Theatre`, `Disclaimer` par rapport au split des autres.
 - **`JsonEditor` en mode contrôlé.** Structurellement impossible aujourd'hui : chaque
   éditeur amorce son état depuis `defaultValue` au montage et ne le relit jamais.
   C'est une réécriture du modèle d'état pour que l'arbre lise chez un propriétaire
