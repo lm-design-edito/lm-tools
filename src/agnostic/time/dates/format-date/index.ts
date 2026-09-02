@@ -1,7 +1,10 @@
 import { getDateParts } from './parts.js'
 import type { DateTokenParts } from './types.js'
 
-const tokenRegexp = /\{\{(DD|D|dd|d|MM|M|MMMM|MMM|YYYY|YY|HH|H|hh|h|mm|m|ss|s|A|a|th|ms)\}\}/gv
+// Alternation is ordered, and the first branch that fits wins — so the longest
+// tokens come first. `MM` ahead of `MMMM` would only work by backtracking off the
+// closing braces, which is true but not something a reader should have to derive.
+const tokenRegexp = /\{\{(MMMM|YYYY|MMM|DD|dd|MM|YY|HH|hh|mm|ss|th|ms|D|d|M|H|h|m|s|A|a)\}\}/gv
 
 /**
  * Formats a `Date` into a string according to a custom template and locale.
