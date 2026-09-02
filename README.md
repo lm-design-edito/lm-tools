@@ -152,9 +152,6 @@ export async function generateDiffDescription (
 - [ ] `agnostic/time/duration/format-duration` — écrire `formatDuration`, le versant
   chaîne, sur le modèle de `formatDate` : un `index.ts` qui substitue des tokens
   `{{…}}` à partir de `getDurationParts`, déjà en place dans `parts.ts`.
-- [ ] `getDateParts` renvoie des `string` (des fragments déjà rendus, padding compris)
-  là où `getDurationParts` renvoie des `number`. Trancher et aligner les deux — la
-  préférence va aux `number`, le padding revenant alors au formatteur.
 - [ ] Repenser agnostic/optim/throttle-debounce ?
 - [ ] Repenser agnostic/strings/normalize-indent ?
 - [ ] Get rid of namespaces in hyper-json ?

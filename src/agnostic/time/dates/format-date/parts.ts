@@ -44,8 +44,9 @@ function dayOrdinalSuffix (day: number, locale: string): string {
  * @param date - The `Date` to break down.
  * @param locale - Optional locale code, falling back to `'en'` when the runtime
  * doesn't support it.
- * @returns The parts, each one reachable under its format token and under its
- * readable name.
+ * @returns The parts, each one reachable under its unit token and under its
+ * readable name. Quantities come out as numbers — `formatDate` is what pads
+ * them.
  * @see {@link DateParts}
  *
  * @remarks
@@ -56,6 +57,7 @@ function dayOrdinalSuffix (day: number, locale: string): string {
  * const parts = getDateParts(new Date(2026, 0, 1, 15, 5), 'fr')
  * parts.MMMM            // => 'janvier'
  * parts.fullMonthName   // => 'janvier', the same value
+ * parts.D               // => 1, the number — '01' is formatDate's business
  */
 export function getDateParts (date: Date, locale = 'en'): DateParts {
   const safeLocale = Intl.DateTimeFormat.supportedLocalesOf(locale).length === 0
@@ -64,34 +66,25 @@ export function getDateParts (date: Date, locale = 'en'): DateParts {
   const day = date.getDate()
   const dayOfWeek = date.getDay()
   const month = date.getMonth()
-  const year = date.getFullYear()
   const hours = date.getHours()
-  const twelveHours = hours % 12 === 0 ? 12 : hours % 12
   const isPM = hours >= 12
   const tokens: DateTokenParts = {
-    'D': `${day}`,
-    'DD': `${day}`.padStart(2, '0'),
+    'D': day,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     'd': weekdayNames(safeLocale, 'short')[dayOfWeek]!,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     'dd': weekdayNames(safeLocale, 'long')[dayOfWeek]!,
-    'M': `${month + 1}`,
-    'MM': `${month + 1}`.padStart(2, '0'),
+    'M': month + 1,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     'MMM': monthNames(safeLocale, 'short')[month]!,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     'MMMM': monthNames(safeLocale, 'long')[month]!,
-    'YY': `${year}`.slice(-2),
-    'YYYY': `${year}`,
-    'H': `${hours}`,
-    'HH': `${hours}`.padStart(2, '0'),
-    'h': `${twelveHours}`,
-    'hh': `${twelveHours}`.padStart(2, '0'),
-    'm': `${date.getMinutes()}`,
-    'mm': `${date.getMinutes()}`.padStart(2, '0'),
-    's': `${date.getSeconds()}`,
-    'ss': `${date.getSeconds()}`.padStart(2, '0'),
-    'ms': `${date.getMilliseconds()}`.padStart(3, '0'),
+    'YYYY': date.getFullYear(),
+    'H': hours,
+    'h': hours % 12 === 0 ? 12 : hours % 12,
+    'm': date.getMinutes(),
+    's': date.getSeconds(),
+    'ms': date.getMilliseconds(),
     'A': isPM ? 'PM' : 'AM',
     'a': isPM ? 'pm' : 'am',
     'th': dayOrdinalSuffix(day, safeLocale)
@@ -99,24 +92,17 @@ export function getDateParts (date: Date, locale = 'en'): DateParts {
   return {
     ...tokens,
     dayOfMonth: tokens.D,
-    paddedDayOfMonth: tokens.DD,
     shortWeekdayName: tokens.d,
     fullWeekdayName: tokens.dd,
     monthNumber: tokens.M,
-    paddedMonthNumber: tokens.MM,
     shortMonthName: tokens.MMM,
     fullMonthName: tokens.MMMM,
-    twoDigitYear: tokens.YY,
-    fourDigitYear: tokens.YYYY,
+    year: tokens.YYYY,
     hours24: tokens.H,
-    paddedHours24: tokens.HH,
     hours12: tokens.h,
-    paddedHours12: tokens.hh,
     minutes: tokens.m,
-    paddedMinutes: tokens.mm,
     seconds: tokens.s,
-    paddedSeconds: tokens.ss,
-    paddedMilliseconds: tokens.ms,
+    milliseconds: tokens.ms,
     upperCaseMeridiem: tokens.A,
     lowerCaseMeridiem: tokens.a,
     dayOrdinalSuffix: tokens.th
