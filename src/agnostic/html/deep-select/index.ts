@@ -1,5 +1,6 @@
 import * as Window from '../../misc/crossenv/window/index.js'
 import { deepGetProperty } from '../../objects/deep-get-property/index.js'
+import { isRecord } from '../../objects/is-record/index.js'
 
 /** Options for `deepSelect`. */
 type Options = {
@@ -10,9 +11,12 @@ type Options = {
 }
 
 const yieldToMain = async (windowLike: unknown): Promise<void> => {
-  const yild = deepGetProperty(windowLike, 'scheduler.yield')
+  const scheduler = deepGetProperty(windowLike, 'scheduler')
+  const yild = isRecord(scheduler) ? scheduler.yield : undefined
+  // `scheduler.yield` must run with `scheduler` as its `this` — a detached
+  // reference throws "Illegal invocation".
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  if (typeof yild === 'function') yild()
+  if (typeof yild === 'function') await yild.call(scheduler)
   else await new Promise(resolve => { setTimeout(resolve, 0) })
 }
 
