@@ -13,9 +13,7 @@ type Options = {
 const yieldToMain = async (windowLike: unknown): Promise<void> => {
   const scheduler = deepGetProperty(windowLike, 'scheduler')
   const yild = isRecord(scheduler) ? scheduler.yield : undefined
-  // `scheduler.yield` must run with `scheduler` as its `this` — a detached
-  // reference throws "Illegal invocation".
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  // `scheduler.yield` must run with `scheduler` as its `this` — a detached reference throws "Illegal invocation".
   if (typeof yild === 'function') await yild.call(scheduler)
   else await new Promise(resolve => { setTimeout(resolve, 0) })
 }
