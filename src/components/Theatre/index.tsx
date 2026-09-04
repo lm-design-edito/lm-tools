@@ -29,9 +29,16 @@ import cssModule from './styles.module.css'
  * open counts as a toggle.
  * @property exitOnBgClick - When `true`, clicking the stage background — and
  * not its content — counts as a toggle.
- * @property onToggleClicked - Called whenever a toggle is requested: the open
- * or close button, the `Escape` key, or the stage background. Fires before the
- * theatre reacts, with the state as it was.
+ * @property onOpenButtonClicked - Called when the open button is clicked, before
+ * the theatre reacts, with the state as it was.
+ * @property onCloseButtonClicked - Called when the close button is clicked,
+ * before the theatre reacts, with the state as it was.
+ * @property onBackgroundClicked - Called when the stage background is clicked
+ * (only while `exitOnBgClick` is `true`), before the theatre reacts, with the
+ * state as it was.
+ * @property onEscapePressed - Called when `Escape` is pressed while the stage is
+ * open (only while `exitOnEscape` is `true`), before the theatre reacts, with
+ * the state as it was.
  * @property onIsOnChanged - Called after the theatre mode changed, with the new
  * value.
  * @property className - Optional additional class name(s) applied to the root element.
@@ -45,7 +52,10 @@ export type Props = PropsWithChildren<WithClassName<{
   defaultIsOn?: boolean
   exitOnEscape?: boolean
   exitOnBgClick?: boolean
-  onToggleClicked?: (isOn: boolean) => void
+  onOpenButtonClicked?: (isOn: boolean) => void
+  onCloseButtonClicked?: (isOn: boolean) => void
+  onBackgroundClicked?: (isOn: boolean) => void
+  onEscapePressed?: (isOn: boolean) => void
   onIsOnChanged?: (isOn: boolean) => void
 }>>
 
@@ -70,8 +80,8 @@ export type Props = PropsWithChildren<WithClassName<{
  * @remarks
  * - In controlled mode (`isOn` defined), the state is fully driven by the
  *   parent and internal state is never updated.
- * - `onToggleClicked` fires in both modes, for all four toggle sources — a
- *   controlled parent needs it to know a toggle was requested at all.
+ * - The four toggle-source handlers fire in both modes — a controlled parent
+ *   needs them to know a toggle was requested at all.
  * - `onIsOnChanged` fires in both modes too, and never on mount.
  */
 export const Theatre: FunctionComponent<Props> = ({
@@ -81,7 +91,10 @@ export const Theatre: FunctionComponent<Props> = ({
   defaultIsOn = false,
   exitOnEscape,
   exitOnBgClick,
-  onToggleClicked,
+  onOpenButtonClicked,
+  onCloseButtonClicked,
+  onBackgroundClicked,
+  onEscapePressed,
   onIsOnChanged,
   children,
   className
@@ -97,15 +110,21 @@ export const Theatre: FunctionComponent<Props> = ({
 
   // User action handlers
   const requestToggle = (targetIsOn: boolean): void => {
-    onToggleClicked?.(isOn)
     if (isControlled) return
     setInternalIsOn(targetIsOn)
   }
-  const handleOpenBtnClick: MouseEventHandler<HTMLDivElement> = () => requestToggle(true)
-  const handleCloseBtnClick: MouseEventHandler<HTMLDivElement> = () => requestToggle(false)
+  const handleOpenButtonClick: MouseEventHandler<HTMLDivElement> = () => {
+    onOpenButtonClicked?.(isOn)
+    requestToggle(true)
+  }
+  const handleCloseButtonClick: MouseEventHandler<HTMLDivElement> = () => {
+    onCloseButtonClicked?.(isOn)
+    requestToggle(false)
+  }
   const handleStageBgClick: MouseEventHandler<HTMLDivElement> = e => {
     if (exitOnBgClick !== true) return
     if (e.target !== stageRef.current) return
+    onBackgroundClicked?.(isOn)
     requestToggle(false)
   }
 
@@ -114,11 +133,12 @@ export const Theatre: FunctionComponent<Props> = ({
     if (exitOnEscape !== true || !isOn) return
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key !== 'Escape') return
+      onEscapePressed?.(isOn)
       requestToggle(false)
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [exitOnEscape, isOn, isControlled])
+  }, [exitOnEscape, isOn, isControlled, onEscapePressed])
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
@@ -139,12 +159,12 @@ export const Theatre: FunctionComponent<Props> = ({
     </div>
     <div
       className={closeBtnClss}
-      onClick={handleCloseBtnClick}>
+      onClick={handleCloseButtonClick}>
       {closeBtnContent}
     </div>
     <div
       className={openBtnClss}
-      onClick={handleOpenBtnClick}>
+      onClick={handleOpenButtonClick}>
       {openBtnContent}
     </div>
   </div>

@@ -47,9 +47,14 @@ const tsxDetails = `/**
  * open counts as a toggle.
  * @property exitOnBgClick - When \`true\`, clicking the stage background — and
  * not its content — counts as a toggle.
- * @property onToggleClicked - Called whenever a toggle is requested: the open
- * or close button, the \`Escape\` key, or the stage background. Fires before the
- * theatre reacts, with the state as it was.
+ * @property onOpenButtonClicked - Called when the open button is clicked, before
+ * the theatre reacts, with the state as it was.
+ * @property onCloseButtonClicked - Called when the close button is clicked,
+ * before the theatre reacts, with the state as it was.
+ * @property onBackgroundClicked - Called when the stage background is clicked
+ * (only while \`exitOnBgClick\` is \`true\`), before the theatre reacts.
+ * @property onEscapePressed - Called when \`Escape\` is pressed (only while
+ * \`exitOnEscape\` is \`true\`), before the theatre reacts.
  * @property onIsOnChanged - Called after the theatre mode changed, with the new
  * value.
  * @property className - Optional additional class name(s) applied to the root element.
@@ -63,7 +68,10 @@ export type Props = PropsWithChildren<WithClassName<{
   defaultIsOn?: boolean
   exitOnEscape?: boolean
   exitOnBgClick?: boolean
-  onToggleClicked?: (isOn: boolean) => void
+  onOpenButtonClicked?: (isOn: boolean) => void
+  onCloseButtonClicked?: (isOn: boolean) => void
+  onBackgroundClicked?: (isOn: boolean) => void
+  onEscapePressed?: (isOn: boolean) => void
   onIsOnChanged?: (isOn: boolean) => void
 }>>`
 
@@ -129,7 +137,10 @@ export const TheatreDemo: FunctionComponent = () => {
     closeBtnContent: <button>Fermer le théâtre</button>,
     exitOnEscape: true,
     exitOnBgClick: true,
-    onToggleClicked: prevIsOn => { setIsTheatreOn(!prevIsOn) },
+    onOpenButtonClicked: () => { setIsTheatreOn(true) },
+    onCloseButtonClicked: () => { setIsTheatreOn(false) },
+    onBackgroundClicked: () => { setIsTheatreOn(false) },
+    onEscapePressed: () => { setIsTheatreOn(false) },
     // eslint-disable-next-line no-console
     onIsOnChanged: isOn => { console.log('Theatre toggled. Is on:', isOn) }
   }
