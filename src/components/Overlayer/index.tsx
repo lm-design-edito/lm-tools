@@ -13,7 +13,7 @@ import cssModule from './styles.module.css'
 /**
  * Describes a single overlay positioned over the base content.
  *
- * @property content - React node rendered inside the overlay element.
+ * @property children - React node rendered inside the overlay element.
  * If falsy, the overlay is not rendered.
  * @property xPercent - Horizontal position of the overlay anchor as a percentage
  * of the root element's width. Defaults to `0`.
@@ -27,7 +27,7 @@ import cssModule from './styles.module.css'
  * - `number` — arbitrary percentage offset (e.g. `25` produces `-25%`).
  */
 type Overlay = {
-  content?: ReactNode
+  children?: ReactNode
   xPercent?: number
   yPercent?: number
   justify?: 'left' | 'center' | 'right' | number
@@ -37,7 +37,7 @@ type Overlay = {
  * Props for the {@link Overlayer} component.
  *
  * @property overlays - Array of {@link Overlay} descriptors rendered on top of
- * the base content. Overlays with falsy `content` are skipped.
+ * the base content. Overlays with falsy `children` are skipped.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Content rendered in the base layer, below all overlays.
  */
@@ -52,7 +52,7 @@ export type Props = PropsWithChildren<WithClassName<{
  *
  * ### Child elements
  * - `__base` — wrapping `<div>` that contains `children`.
- * - `__overlay` — one `<div>` per entry in `overlays` (falsy `content` entries
+ * - `__overlay` — one `<div>` per entry in `overlays` (falsy `children` entries
  * are omitted).
  *
  * ### CSS custom properties on each overlay element
@@ -78,7 +78,7 @@ export const Overlayer: FunctionComponent<Props> = ({
   return <div className={rootClss}>
     <div className={baseClss}>{children}</div>
     {overlays?.map(({
-      content,
+      children: overlayChildren,
       xPercent = 0,
       yPercent = 0,
       justify
@@ -95,12 +95,12 @@ export const Overlayer: FunctionComponent<Props> = ({
         '--PRIVATE-top': `${yPercent}%`,
         '--PRIVATE-translate-x': computedTranslateX
       }
-      if (isFalsy(content)) return null
+      if (isFalsy(overlayChildren)) return null
       return <div
         key={overlayPos}
         className={overlayClss}
         style={overlayCustomProps}>
-        {content}
+        {overlayChildren}
       </div>
     })}
   </div>

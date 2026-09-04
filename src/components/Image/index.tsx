@@ -4,10 +4,6 @@ import {
   useMemo
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
-import {
-  Theatre,
-  type Props as TheatreProps
-} from '../Theatre/index.js'
 import { mergeClassNames } from '../utils/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { image as publicClassName } from '../public-classnames.js'
@@ -40,17 +36,15 @@ type SourceData = {
  * - a single srcSet string,
  * - an array of srcSet strings,
  * - an array of {@link SourceData} objects for full `<source>` control.
- * @property theatre - Props forwarded to the internal {@link Theatre} component.
  * @property className - Optional additional class name(s) applied to the root element.
  */
 export type Props = WithClassName<{
   sources?: string | string[] | SourceData[]
-  theatre?: TheatreProps
 }> & ImgHTMLAttributes<HTMLImageElement>
 
 /**
  * Image component. Wraps a native `<img>` (or `<picture>`) element with
- * optional responsive sources and an optional theatre mode.
+ * optional responsive sources.
  *
  * ### CSS elements
  * - `picture` — wrapping `<picture>` element, always rendered. Contains the
@@ -63,7 +57,6 @@ export type Props = WithClassName<{
  */
 export const Image: FunctionComponent<Props> = ({
   sources,
-  theatre,
   className,
   ...intrinsicImgAttributes
 }) => {
@@ -100,15 +93,7 @@ export const Image: FunctionComponent<Props> = ({
       {...intrinsicImgAttributes} />
   </picture>
 
-  const theatricalContent = theatre !== undefined
-    ? <Theatre
-        defaultIsOn={false}
-        {...theatre}>
-        {pictureContent}
-      </Theatre>
-    : pictureContent
-
   return <figure className={rootClss}>
-    {theatricalContent}
+    {pictureContent}
   </figure>
 }
