@@ -38,8 +38,26 @@ dans `lm-link`.
 
 | Composant | À faire |
 | --- | --- |
+| `Scrllgngn` | `trackScroll` — contexte de scroll par bloc. Conception en cours (voir ci-dessous). |
 | `Subtitles` | **Prochain lot.** Reprise de fond — sortir le parseur, réparer quatre défaillances silencieuses. Voir ci-dessous. |
 | `Video` | Dédoubler les quatre props de visibilité en variantes « à chaque fois » et « une seule fois » — voir ci-dessous. |
+
+### `Scrllgngn` — `trackScroll` & contexte de scroll par bloc
+
+Reprise du `trackScroll` de l'ancien `lm-link` (voir `le-monde/new-app` pour référence).
+Principe retenu : `trackScroll?: boolean` par bloc ; un handler unique au niveau
+`Scrllgngn` reçoit `Record<blockId, Context>` pour les blocs de la page courante, où
+`Context = { displayZone, currentPage, indexOfCurrentPage, currentPageProgression,
+displayZoneProgression }` (progressions 0–1, relatives à la ligne de seuil
+`thresholdOffsetPercent`). Décisions ouvertes et détail dans `le-monde/SESSION.md`.
+
+Différés, à traiter avec ou après `trackScroll` :
+
+- `stickyBlocksViewportHeight` / `stickyBlocksOffsetTop` (présents dans l'ancien) — à
+  reconsidérer.
+- Exposer le contexte sur le DOM des wrappers de blocs : variables CSS
+  (`--context-progression`, `--context-page-progression`, …) et attributs `data-*`,
+  comme l'ancien, pour du scrollytelling piloté en CSS pur.
 
 ### `Subtitles` — reprise de fond
 
