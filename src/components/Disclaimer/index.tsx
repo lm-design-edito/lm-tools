@@ -16,10 +16,11 @@ import cssModule from './styles.module.css'
 /**
  * Props for the {@link Disclaimer} component.
  *
- * @property children - Content displayed inside the disclaimer panel.
+ * @property children - The content the disclaimer gates, rendered below the panel.
+ * @property undisclosedContent - Content displayed inside the disclaimer panel,
+ * until it is dismissed.
  * @property togglerContent - Content rendered inside the dismiss toggler.
  * When omitted, the toggler is not rendered.
- * @property sensitiveContent - The content the disclaimer gates, rendered below the panel.
  * @property isOn - Controlled visibility state. When defined, the component
  * behaves as a controlled component and internal state is never updated.
  * @property defaultIsOn - Initial visibility state in uncontrolled mode.
@@ -31,8 +32,8 @@ import cssModule from './styles.module.css'
  * @property className - Optional additional class name(s) applied to the root element.
  */
 export type Props = PropsWithChildren<WithClassName<{
+  undisclosedContent?: ReactNode
   togglerContent?: ReactNode
-  sensitiveContent?: ReactNode
   isOn?: boolean
   defaultIsOn?: boolean
   onDismissClicked?: (isOn: boolean) => void
@@ -48,9 +49,9 @@ export type Props = PropsWithChildren<WithClassName<{
  *
  * ### CSS elements
  * - `panel`
- * - `content` — wraps `children`.
+ * - `content` — wraps `undisclosedContent`.
  * - `toggler`
- * - `sensitive` — wraps `sensitiveContent`.
+ * - `sensitive` — wraps `children`.
  *
  * @param props - Component properties.
  * @see {@link Props}
@@ -65,8 +66,8 @@ export type Props = PropsWithChildren<WithClassName<{
  */
 export const Disclaimer: FunctionComponent<Props> = ({
   children,
+  undisclosedContent,
   togglerContent,
-  sensitiveContent,
   isOn: isOnProp,
   defaultIsOn = true,
   onDismissClicked,
@@ -100,8 +101,8 @@ export const Disclaimer: FunctionComponent<Props> = ({
   const sensitiveClss = c('sensitive')
   return <div className={rootClss}>
     <div className={panelClss}>
-      {children !== undefined && <div className={contentClss}>
-        {children}
+      {undisclosedContent !== undefined && <div className={contentClss}>
+        {undisclosedContent}
       </div>}
       {togglerContent !== undefined && <div
         className={togglerClss}
@@ -110,7 +111,7 @@ export const Disclaimer: FunctionComponent<Props> = ({
       </div>}
     </div>
     <div className={sensitiveClss}>
-      {sensitiveContent}
+      {children}
     </div>
   </div>
 }
