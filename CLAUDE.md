@@ -10,6 +10,12 @@ Formatting is enforced by `eslint-config-love` (see `eslint.config.js`). Run
 Commit scope is the directory relevant to the change, without the `src/` prefix
 (e.g. `components/BeforeAfter`, `agnostic/html/deep-select`, `node/images`).
 
+## Demo
+
+The per-component demo app under `demo/` is **on pause**. Don't spend effort keeping
+it in sync with component changes — touch it only when a change stops it from
+compiling (`npx tsc --project demo/src/tsconfig.json --noEmit`).
+
 ## Module layout
 
 - A utility is a folder whose entry point is `index.ts`. Folder name kebab-case,
