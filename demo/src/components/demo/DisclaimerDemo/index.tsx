@@ -29,10 +29,11 @@ const tsxDetails = `
 /**
  * Props for the Disclaimer component.
  *
- * @property children - Content displayed inside the disclaimer panel.
+ * @property children - The content the disclaimer gates, rendered below the panel.
+ * @property undisclosedContent - Content displayed inside the disclaimer panel,
+ * until it is dismissed.
  * @property togglerContent - Content rendered inside the dismiss toggler.
  * If not provided, the toggler is not rendered.
- * @property sensitiveContent - The content the disclaimer gates, rendered below the panel.
  * @property isOn - Controls the visibility state. When defined, the component
  * behaves as a controlled component.
  * @property defaultIsOn - Default visibility state for uncontrolled mode.
@@ -43,8 +44,8 @@ const tsxDetails = `
  * @property className - Optional additional class name(s) applied to the root element.
  */
 export type Props = PropsWithChildren<WithClassName<{
+  undisclosedContent?: ReactNode
   togglerContent?: ReactNode
-  sensitiveContent?: ReactNode
   isOn?: boolean
   defaultIsOn?: boolean
   onDismissClicked?: (isOn: boolean) => void
@@ -91,9 +92,9 @@ export const demoStyles = `
 
 /* Demo props */
 const demoProps: DisclaimerProps = {
-  children: 'Are you sure you want to see this?',
+  undisclosedContent: 'Are you sure you want to see this?',
   togglerContent: <button>Show the content</button>,
-  sensitiveContent: <div style={{
+  children: <div style={{
     height: 400,
     backgroundColor: 'red'
   }}>Disclosed content</div>
