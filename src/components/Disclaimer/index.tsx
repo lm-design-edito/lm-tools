@@ -16,9 +16,10 @@ import cssModule from './styles.module.css'
 /**
  * Props for the {@link Disclaimer} component.
  *
- * @property content - Content displayed inside the disclaimer panel.
+ * @property children - Content displayed inside the disclaimer panel.
  * @property togglerContent - Content rendered inside the dismiss toggler.
  * When omitted, the toggler is not rendered.
+ * @property sensitiveContent - The content the disclaimer gates, rendered below the panel.
  * @property isOn - Controlled visibility state. When defined, the component
  * behaves as a controlled component and internal state is never updated.
  * @property defaultIsOn - Initial visibility state in uncontrolled mode.
@@ -28,11 +29,10 @@ import cssModule from './styles.module.css'
  * @property onIsOnChanged - Called after the visibility state changed, with the
  * new value.
  * @property className - Optional additional class name(s) applied to the root element.
- * @property children - The content the disclaimer gates, rendered below the panel.
  */
 export type Props = PropsWithChildren<WithClassName<{
-  content?: ReactNode
   togglerContent?: ReactNode
+  sensitiveContent?: ReactNode
   isOn?: boolean
   defaultIsOn?: boolean
   onDismissClicked?: (isOn: boolean) => void
@@ -48,9 +48,9 @@ export type Props = PropsWithChildren<WithClassName<{
  *
  * ### CSS elements
  * - `panel`
- * - `content`
+ * - `content` — wraps `children`.
  * - `toggler`
- * - `sensitive` — wraps `children`.
+ * - `sensitive` — wraps `sensitiveContent`.
  *
  * @param props - Component properties.
  * @see {@link Props}
@@ -64,13 +64,13 @@ export type Props = PropsWithChildren<WithClassName<{
  * - `onIsOnChanged` fires in both modes too, and never on mount.
  */
 export const Disclaimer: FunctionComponent<Props> = ({
-  content,
+  children,
   togglerContent,
+  sensitiveContent,
   isOn: isOnProp,
   defaultIsOn = true,
   onDismissClicked,
   onIsOnChanged,
-  children,
   className
 }) => {
   // State
@@ -100,8 +100,8 @@ export const Disclaimer: FunctionComponent<Props> = ({
   const sensitiveClss = c('sensitive')
   return <div className={rootClss}>
     <div className={panelClss}>
-      {content !== undefined && <div className={contentClss}>
-        {content}
+      {children !== undefined && <div className={contentClss}>
+        {children}
       </div>}
       {togglerContent !== undefined && <div
         className={togglerClss}
@@ -110,7 +110,7 @@ export const Disclaimer: FunctionComponent<Props> = ({
       </div>}
     </div>
     <div className={sensitiveClss}>
-      {children}
+      {sensitiveContent}
     </div>
   </div>
 }
