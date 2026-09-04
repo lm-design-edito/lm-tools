@@ -197,6 +197,18 @@ function progressIn (scroll: number, [from, to]: [number, number]): number {
 }
 
 /**
+ * The element's outer scroll progress on each axis — `0` when it is about to
+ * enter the viewport, `1` once it has fully left it.
+ */
+export function getScrollProgress (scrollState: ScrollState): { x: number, y: number } {
+  const { global: { win, scroll }, local } = scrollState
+  return {
+    x: progressIn(scroll.x, outerRange(local.offsetX, local.width, win.width)),
+    y: progressIn(scroll.y, outerRange(local.offsetY, local.height, win.height))
+  }
+}
+
+/**
  * Builds the CSS custom properties exposed on a {@link ScrollListener} root.
  *
  * Measurements are lengths and come with a `-raw` twin carrying the plain number

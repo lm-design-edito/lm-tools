@@ -111,6 +111,8 @@ export type PropsPage = {
  * @property onPageChanged - Called once the current page has changed, never on
  * mount. Receives the zero-based index of the new current page and the
  * corresponding page definition, if available.
+ * @property onContentVisibilityChanged - Called after the scrolling content
+ * area entered or left the viewport, with the new value. Never on mount.
  * @property className - Optional additional class name(s) applied to the root
  * element.
  */
@@ -120,6 +122,7 @@ export type Props = WithClassName<{
   stickyBlocksLazyLoadDistance?: number
   forceStickBlocks?: 'before' | 'after' | 'both' | 'none'
   onPageChanged?: (currentPagePos: number, pageData?: PropsPage) => void
+  onContentVisibilityChanged?: (isVisible: boolean) => void
 }>
 
 /**
@@ -176,6 +179,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   stickyBlocksLazyLoadDistance = 2,
   forceStickBlocks,
   onPageChanged,
+  onContentVisibilityChanged,
   className
 }) => {
   // State
@@ -196,6 +200,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
 
   // Handlers
   useChangeDispatch(currentPagePos, pagePos => onPageChanged?.(pagePos, pages?.[pagePos]))
+  useChangeDispatch(contentVisible, onContentVisibilityChanged)
   const handleTopBoundDetect: IOCompProps['onIntersected'] = e => setTopVis(e.ioEntry?.isIntersecting ?? false)
   const handleCntDetect: IOCompProps['onIntersected'] = e => setCntVis(e.ioEntry?.isIntersecting ?? false)
   const handleBtmBoundDetect: IOCompProps['onIntersected'] = e => setBtmVis(e.ioEntry?.isIntersecting ?? false)

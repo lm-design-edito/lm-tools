@@ -24,6 +24,8 @@ const clippedModifierDurationMs = 3000
  * clipboard content is resolved, with the container's raw HTML.
  * @property onClipped - Called once content has been written to the clipboard.
  * Not called when the write fails.
+ * @property onCopyFailed - Called when the clipboard write throws, with the
+ * error. When set, the error is no longer logged to the console.
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Content rendered inside the copyable container.
  */
@@ -34,6 +36,7 @@ export type Props = PropsWithChildren<WithClassName<{
     rawContent: string | undefined
   ) => void
   onClipped?: (content: string) => void
+  onCopyFailed?: (error: unknown) => void
 }>>
 
 /**
@@ -52,15 +55,17 @@ export type Props = PropsWithChildren<WithClassName<{
  * @returns A copy-enabled content container.
  *
  * @remarks
- * A failed clipboard write is logged and leaves the component untouched:
- * neither `onClipped` nor the `clipped` modifier fires.
+ * A failed clipboard write fires `onCopyFailed` (or is logged when that prop is
+ * unset) and leaves the component untouched: neither `onClipped` nor the
+ * `clipped` modifier fires.
  */
 export const Clippable: FunctionComponent<Props> = ({
   className,
   children,
   toClip,
   onCopyClicked,
-  onClipped
+  onClipped,
+  onCopyFailed
 }) => {
   // State & refs
   const [hasBeenRecentlyClipped, setHasBeenRecentlyClipped] = useState(false)
@@ -85,8 +90,9 @@ export const Clippable: FunctionComponent<Props> = ({
         })
       ])
     } catch (err) {
+      if (onCopyFailed !== undefined) onCopyFailed(err)
       // eslint-disable-next-line no-console
-      console.error(err)
+      else console.error(err)
       return
     }
     onClipped?.(html)

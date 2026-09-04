@@ -19,6 +19,7 @@ import {
 } from '../utils/index.js'
 import { scrollListener as publicClassName } from '../public-classnames.js'
 import {
+  getScrollProgress,
   subscribe,
   toScrollCssProps,
   unsubscribe,
@@ -37,6 +38,11 @@ import cssModule from './styles.module.css'
  * changed. Receives `undefined` until the first measurement lands.
  * @property onVisibilityChanged - Called on every intersection change, with
  * `true` when the component intersects the viewport.
+ * @property onScrollProgressChanged - Called after the element's vertical outer
+ * scroll progress changed: `0` when it is about to enter the viewport, `1` once
+ * it has fully left it. Never on mount.
+ * @property onScrollDirectionChanged - Called after the document scroll
+ * direction changed, with `'up'` or `'down'`. Never on mount.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React nodes rendered inside the scroll listener container.
  */
@@ -45,6 +51,8 @@ export type Props = PropsWithChildren<WithClassName<{
   stopOnHidden?: boolean
   onScrollStateChanged?: (scrollState?: ScrollState) => void
   onVisibilityChanged?: (isVisible: boolean) => void
+  onScrollProgressChanged?: (progress: number) => void
+  onScrollDirectionChanged?: (direction: 'up' | 'down') => void
 }>>
 
 /**
@@ -90,16 +98,42 @@ export const ScrollListener: FunctionComponent<Props> = ({
   stopOnHidden,
   onScrollStateChanged,
   onVisibilityChanged,
+  onScrollProgressChanged,
+  onScrollDirectionChanged,
   className,
   children
 }) => {
   // State & refs
   const [subscriberId] = useState(() => randomHash(6))
   const [scrollState, setScrollState] = useState<ScrollState>()
+  const [scrollDirection, setScrollDirection] = useState<'up' | 'down' | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
+  const previousScrollYRef = useRef<number | null>(null)
+
+  const scrollProgress = scrollState === undefined
+    ? undefined
+    : getScrollProgress(scrollState).y
 
   // State dispatch
   useChangeDispatch(scrollState, onScrollStateChanged)
+  useChangeDispatch(
+    scrollProgress,
+    progress => { if (progress !== undefined) onScrollProgressChanged?.(progress) }
+  )
+  useChangeDispatch(
+    scrollDirection,
+    direction => { if (direction !== null) onScrollDirectionChanged?.(direction) }
+  )
+
+  // Fx. dep. `scrollState` - derive the document scroll direction
+  useEffect(() => {
+    if (scrollState === undefined) return
+    const y = scrollState.global.scroll.y
+    const previous = previousScrollYRef.current
+    previousScrollYRef.current = y
+    if (previous === null || y === previous) return
+    setScrollDirection(y > previous ? 'down' : 'up')
+  }, [scrollState])
 
   // Fx. no dep. - track from mount, unless waiting for the component to show up.
   // The cleanup runs whichever way the subscription was opened.

@@ -2,6 +2,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
   Children,
   type FunctionComponent
 } from 'react'
@@ -52,6 +53,11 @@ import {
  * with the new value.
  * @property onStepChanged - Called after the forwarded step changed, with the
  * new value.
+ * @property onLooped - Called when the step wraps around (either direction),
+ * only while `loop` is `true`.
+ * @property onReachedFirstStep - Called when the forwarded step becomes `0`.
+ * @property onReachedLastStep - Called when the forwarded step becomes the last
+ * one.
  */
 export type Props = Omit<ControlledProps, 'isPlaying' | 'tempo'> & {
   defaultStep?: number
@@ -67,6 +73,9 @@ export type Props = Omit<ControlledProps, 'isPlaying' | 'tempo'> & {
   onIntersected?: IOCompProps['onIntersected']
   onIsPlayingChanged?: (isPlaying: boolean) => void
   onStepChanged?: (step: number) => void
+  onLooped?: () => void
+  onReachedFirstStep?: () => void
+  onReachedLastStep?: () => void
 }
 
 /**
@@ -108,6 +117,9 @@ export const Sequencer: FunctionComponent<Props> = ({
   onIntersected,
   onIsPlayingChanged,
   onStepChanged,
+  onLooped,
+  onReachedFirstStep,
+  onReachedLastStep,
   ...controlledProps
 }) => {
   // State
@@ -143,6 +155,19 @@ export const Sequencer: FunctionComponent<Props> = ({
   // State dispatch
   useChangeDispatch(actualPlay, onIsPlayingChanged)
   useChangeDispatch(forwardedStep, onStepChanged)
+
+  // Fx. dep. `forwardedStep` - loop / boundary events
+  const previousStepsRef = useRef<{ forwarded: number, actual: number } | null>(null)
+  useEffect(() => {
+    if (stepsCount <= 0) return
+    const previous = previousStepsRef.current
+    previousStepsRef.current = { forwarded: forwardedStep, actual: actualStep }
+    if (previous === null) return
+    const lapChanged = Math.floor(actualStep / stepsCount) !== Math.floor(previous.actual / stepsCount)
+    if (loop === true && lapChanged) onLooped?.()
+    if (forwardedStep === 0 && previous.forwarded !== 0) onReachedFirstStep?.()
+    if (forwardedStep === stepsCount - 1 && previous.forwarded !== stepsCount - 1) onReachedLastStep?.()
+  }, [forwardedStep, actualStep, stepsCount, loop])
 
   // Action handlers
   const handleIntersection = useCallback<NonNullable<IOCompProps['onIntersected']>>(({ ioEntry, observer }) => {

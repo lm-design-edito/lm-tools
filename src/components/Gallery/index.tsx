@@ -57,6 +57,10 @@ function resolvePadding (
  * before the gallery reacts, with the active index as it was and the target index.
  * @property onActiveSlotChanged - Called after the active slot changed, with
  * the new index.
+ * @property onCanGoLeftChanged - Called after the ability to scroll further left
+ * changed, with the new value. Never on mount.
+ * @property onCanGoRightChanged - Called after the ability to scroll further
+ * right changed, with the new value. Never on mount.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Elements rendered as gallery slots. Each child is wrapped in a slot container.
  */
@@ -74,6 +78,8 @@ export type Props = PropsWithChildren<WithClassName<{
   onNextClicked?: (activePos: number) => void
   onPaginationClicked?: (activePos: number, targetPos: number) => void
   onActiveSlotChanged?: (activePos: number) => void
+  onCanGoLeftChanged?: (canGoLeft: boolean) => void
+  onCanGoRightChanged?: (canGoRight: boolean) => void
 }>>
 
 /**
@@ -103,6 +109,8 @@ export const Gallery: FunctionComponent<Props> = ({
   onNextClicked,
   onPaginationClicked,
   onActiveSlotChanged,
+  onCanGoLeftChanged,
+  onCanGoRightChanged,
   children,
   className
 }) => {
@@ -116,6 +124,8 @@ export const Gallery: FunctionComponent<Props> = ({
 
   // State dispatch
   useChangeDispatch(activeIndex, onActiveSlotChanged)
+  useChangeDispatch(canGoLeft, onCanGoLeftChanged)
+  useChangeDispatch(canGoRight, onCanGoRightChanged)
 
   // User actions handlers
   const handlePrevClick = (): void => {

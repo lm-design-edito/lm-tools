@@ -32,6 +32,8 @@ import cssModule from './styles.module.css'
  * drawer reacts, with the open state as it was.
  * @property onIsOpenedChanged - Called after the open state changed, with the
  * new value.
+ * @property onContentResized - Called after the measured content size changed,
+ * with the new width and height in pixels. Never on mount.
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Drawer content.
  */
@@ -43,6 +45,7 @@ export type Props = PropsWithChildren<WithClassName<{
   onOpenerClicked?: (isOpened: boolean) => void
   onCloserClicked?: (isOpened: boolean) => void
   onIsOpenedChanged?: (isOpened: boolean) => void
+  onContentResized?: (dimensions: { width: number, height: number }) => void
 }>>
 
 /**
@@ -88,6 +91,7 @@ export const Drawer: FunctionComponent<Props> = ({
   onOpenerClicked,
   onCloserClicked,
   onIsOpenedChanged,
+  onContentResized,
   className,
   children
 }) => {
@@ -102,6 +106,11 @@ export const Drawer: FunctionComponent<Props> = ({
 
   // State dispatch
   useChangeDispatch(isOpened, onIsOpenedChanged)
+  useChangeDispatch(
+    contentDimensions,
+    dimensions => { if (dimensions !== undefined) onContentResized?.(dimensions) },
+    (a, b) => a?.width === b?.width && a?.height === b?.height
+  )
 
   // User action handlers
   const handleOpenerClick = (): void => {
