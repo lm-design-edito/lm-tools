@@ -4,17 +4,13 @@ import {
   type Props as ImageProps
 } from '~/components/Image/index.js'
 import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
-import { demoStyles as theatreDemoStyles } from '../TheatreDemo/index.js' 
-import {
-  image as publicClassName,
-  theatre as theatrePublicClassName
-} from '~/components/public-classnames.js'
+import { image as publicClassName } from '~/components/public-classnames.js'
 
 const name = 'Image'
 
 const description = `
 Image component. Wraps a native \`<img>\` (or \`<picture>\`) element with
-optional responsive sources and an optional theatre mode.
+optional responsive sources.
 
 
 ### Child elements
@@ -55,12 +51,10 @@ type SourceData = {
  * - a single srcSet string,
  * - an array of srcSet strings,
  * - an array of {@link SourceData} objects for full \`<source>\` control.
- * @property theatre - Props forwarded to the internal {@link Theatre} component.
  * @property className - Optional additional class name(s) applied to the root element.
  */
 export type Props = WithClassName<{
   sources?: string | string[] | SourceData[]
-  theatre?: TheatreProps
 }> & ImgHTMLAttributes<HTMLImageElement>`
 
 
@@ -76,27 +70,11 @@ const demoStyles = `
   max-height: 100%;
   object-fit: contain;
 }
-  
-.${publicClassName} {
-  ${theatreDemoStyles.split('\n').join('\n  ')}
-}
-
-  
-.${publicClassName} .${theatrePublicClassName}__open-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-}
   `
 
 const demoProps: ImageProps = {
   src: 'https://assets-decodeurs.lemonde.fr/redacweb/2602-campus-engagement/campus-engagement-ep01-1.jpg',
-  alt: 'Image demo',
-  theatre: {
-    openBtnContent: <button>Ouvrir le théâtre</button>,
-    closeBtnContent: <button>Fermer le théâtre</button>,
-    defaultIsOn: false
-  }
+  alt: 'Image demo'
 }
 
 export const ImageDemo: FunctionComponent = () => {

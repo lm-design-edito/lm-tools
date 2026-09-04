@@ -14,7 +14,7 @@ percentage coordinates and a justify alignment.
 
 ### Child elements
 - \`__base\` — wrapping \`<div>\` that contains \`children\`.
-- \`__overlay\` — one \`<div>\` per entry in \`overlays\` (falsy \`content\` entries
+- \`__overlay\` — one \`<div>\` per entry in \`overlays\` (falsy \`children\` entries
 are omitted).
 
 ### CSS custom properties on each overlay element
@@ -34,7 +34,7 @@ const tsxDetails = `
 /**
  * Describes a single overlay positioned over the base content.
  *
- * @property content - React node rendered inside the overlay element.
+ * @property children - React node rendered inside the overlay element.
  * If falsy, the overlay is not rendered.
  * @property xPercent - Horizontal position of the overlay anchor as a percentage
  * of the root element's width. Defaults to \`0\`.
@@ -48,7 +48,7 @@ const tsxDetails = `
  * - \`number\` — arbitrary percentage offset (e.g. \`25\` produces \`-25%\`).
  */
 type Overlay = {
-  content?: ReactNode
+  children?: ReactNode
   xPercent?: number
   yPercent?: number
   justify?: 'left' | 'center' | 'right' | number
@@ -58,7 +58,7 @@ type Overlay = {
  * Props for the {@link Overlayer} component.
  *
  * @property overlays - Array of {@link Overlay} descriptors rendered on top of
- * the base content. Overlays with falsy \`content\` are skipped.
+ * the base content. Overlays with falsy \`children\` are skipped.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Content rendered in the base layer, below all overlays.
  */
@@ -86,17 +86,17 @@ const demoProps: OverlayerProps = {
     backgroundColor: 'coral'
   }} />,
   overlays: [{
-    content: 'Simple centered label',
+    children: 'Simple centered label',
     xPercent: 50,
     yPercent: 50,
     justify: 'right'
   }, {
-    content: <div>Div in the corner</div>,
+    children: <div>Div in the corner</div>,
     xPercent: 10,
     yPercent: 90,
     justify: 100
   }, {
-    content: <div>Div in the corner</div>,
+    children: <div>Div in the corner</div>,
     xPercent: 10,
     yPercent: 90,
     justify: 0
