@@ -45,10 +45,11 @@ export type Props = PropsWithChildren<WithClassName<{
  * as a ratio between `0` and `1`. Handles both mouse and touch input, telling a
  * click apart from a drag.
  *
- * The active ratio is exposed as:
- * - CSS custom properties `--lm-before-after-ratio` and
- * `--lm-before-after-ratio-percent`,
- * - a `data-ratio` attribute on the root element.
+ * The divider's position is exposed on the root element as the unitless custom
+ * property `--lm-before-after-ratio`. There is no percentage twin and no `data-`
+ * attribute: a percentage is `calc(var(--lm-before-after-ratio) * 100%)` away, and
+ * the ratio moves with every pointer event, which is what a custom property is for
+ * and what an attribute is not.
  *
  * ### CSS modifiers
  * - `horizontal` — applied when `mode` is `'horizontal'`.
@@ -139,10 +140,8 @@ export const ControlledBeforeAfter: FunctionComponent<Props> = ({
     horizontal: mode === 'horizontal',
     vertical: mode === 'vertical'
   }), className)
-  const roundedRatio = round(clampedRatio, 4)
   const customProps: Record<string, string> = {
-    '--lm-before-after-ratio': `${roundedRatio}`,
-    '--lm-before-after-ratio-percent': `${round(clampedRatio * 100, 2)}%`
+    '--lm-before-after-ratio': `${round(clampedRatio, 4)}`
   }
   return <div
     ref={rootRef}
@@ -153,8 +152,7 @@ export const ControlledBeforeAfter: FunctionComponent<Props> = ({
     onTouchStart={handlePointerDown}
     onTouchMove={handleTouchMove}
     onTouchEnd={handleTouchEnd}
-    style={{ ...customProps }}
-    data-ratio={roundedRatio}>
+    style={{ ...customProps }}>
     <div className={c('before')}>{before}</div>
     <div className={c('after')}>{after}</div>
     <div className={c('separator')} />
