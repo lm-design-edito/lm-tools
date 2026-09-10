@@ -69,7 +69,6 @@ export type Props = PropsWithChildren<WithClassName<{
  * Absent until the first measurement lands.
  *
  * ### Data attributes on the root element
- * - `data-content-width`, `data-content-height` — the measured content size.
  * Absent until the first measurement lands.
  *
  * @param props - Component properties.
@@ -137,14 +136,9 @@ export const Drawer: FunctionComponent<Props> = ({
   const openerClss = c('opener')
   const closerClss = c('closer')
   const contentClss = c('content')
-  let dataAttributes: Record<string, string> = {}
   let customCssProps: Record<string, string> = {}
   if (contentDimensions !== undefined) {
     const { width, height } = contentDimensions
-    dataAttributes = {
-      'data-content-width': `${width}`,
-      'data-content-height': `${height}`
-    }
     customCssProps = {
       '--lm-drawer-content-width': `${width}px`,
       '--lm-drawer-content-width-raw': `${width}`,
@@ -154,7 +148,6 @@ export const Drawer: FunctionComponent<Props> = ({
   }
   return <div
     className={rootClss}
-    {...dataAttributes}
     style={{ ...customCssProps }}>
     <div className={openerClss} onClick={handleOpenerClick}>{openerContent}</div>
     <div className={closerClss} onClick={handleCloserClick}>{closerContent}</div>
