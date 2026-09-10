@@ -31,12 +31,14 @@ export type Props = PropsWithChildren<WithClassName<{
 
 /**
  * Component that observes its own size changes and exposes the measured content
- * rect on its root element as custom properties, absent until the first
- * measurement lands.
+ * rect on its root element. Both sets stay absent until the first measurement
+ * lands.
  *
- * The same eight measurements used to be mirrored in `data-` attributes. They are
- * not any more: a rect is continuous, and rewriting eight attributes on every
- * resize frame costs more than setting the properties and floods the inspector.
+ * ### Data attributes
+ * `data-x`, `data-y`, `data-top`, `data-left`, `data-bottom`, `data-right`,
+ * `data-width` and `data-height` — the content rect, as plain numbers. They carry
+ * what a custom property cannot reach: `content: attr(data-width)`, and attribute
+ * selectors.
  *
  * ### CSS custom properties
  * The same eight measurements, each exposed twice: `--lm-resize-observer-width`
@@ -83,9 +85,20 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
 
   // Data attributes, CSS custom props & Rendering
   const contentRect = roEntry?.entry.contentRect
+  let dataAttributes: Record<string, string> = {}
   let cssCustomProps: Record<string, string> = {}
   if (contentRect !== undefined) {
     const { x, y, top, left, bottom, right, width, height } = contentRect
+    dataAttributes = {
+      'data-x': `${x}`,
+      'data-y': `${y}`,
+      'data-top': `${top}`,
+      'data-left': `${left}`,
+      'data-bottom': `${bottom}`,
+      'data-right': `${right}`,
+      'data-width': `${width}`,
+      'data-height': `${height}`
+    }
     cssCustomProps = {
       '--lm-resize-observer-x': `${x}px`,
       '--lm-resize-observer-x-raw': `${x}`,
@@ -108,6 +121,7 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(), className)
   return <div
+    {...dataAttributes}
     className={rootClss}
     ref={rootRef}
     style={{ ...cssCustomProps }}>

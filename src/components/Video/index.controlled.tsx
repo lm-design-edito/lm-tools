@@ -176,7 +176,11 @@ export type Props = PropsWithChildren<WithClassName<{
  * - `data-fullscreen-off` — present (empty string) when not in fullscreen.
  * - `data-loud` — present (empty string) when unmuted.
  * - `data-muted` — present (empty string) when muted.
+ * - `data-volume` — current volume as a `0–1` float.
+ * - `data-volume-percent` — current volume as a `0–100` float.
  * - `data-playback-rate` — current playback rate (e.g. `1`, `1.5`).
+ * - `data-current-time-ms` — current time in milliseconds, fixed to 2 decimals.
+ * - `data-current-time-ratio` — current / total ratio, fixed to 8 decimals.
  * - `data-total-time-ms` — total duration in milliseconds.
  *
  * ### CSS custom properties on the root element
@@ -346,9 +350,6 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   // Guarded: the duration is unknown until the metadata lands, and an unguarded
   // division would expose the string 'NaN' on every render until then.
   const currentTimeRatio = totalTime > 0 ? currentTime / totalTime : 0
-  // Only what moves in steps lands in an attribute. Volume and the playhead are
-  // continuous — they belong in the custom properties below, which cost far less
-  // than an attribute write several times a second.
   const rootAttributes = {
     'data-play-on': isPlaying ? '' : undefined,
     'data-play-off': !isPlaying ? '' : undefined,
@@ -357,7 +358,11 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     'data-fullscreen-off': !isFullscreen ? '' : undefined,
     'data-loud': isLoud ? '' : undefined,
     'data-muted': !isLoud ? '' : undefined,
+    'data-volume': volume.toFixed(8),
+    'data-volume-percent': volumePercent,
     'data-playback-rate': playbackRate,
+    'data-current-time-ms': currentTimeMs.toFixed(2),
+    'data-current-time-ratio': currentTimeRatio.toFixed(8),
     'data-total-time-ms': totalTimeMs
   }
 
