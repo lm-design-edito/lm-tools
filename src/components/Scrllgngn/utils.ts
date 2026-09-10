@@ -102,10 +102,16 @@ export function lazyLoadedBlocks (
  * never inherit the same names from an ancestor component. `initial` leaves them
  * behaving exactly as an unset variable would, without opening the hole.
  *
+ * The public set describes the component's own box and nothing else. The private
+ * one is narrowed to what the fixed layers may actually occupy — the component's
+ * box **intersected** with the visible zone — so a viewport offset pushes them off
+ * whatever covers that edge without the stylesheet doing arithmetic.
+ *
  * @param rect - The measured bounding rect, absent until the first resize lands.
+ * @param zone - The measured visible zone, absent until the probe reports.
  * @returns The custom properties, keyed by their full name.
  */
-export function toScreenCssProps (rect?: ScreenRect): Record<string, string> {
+export function toScreenCssProps (rect?: ScreenRect, zone?: VisibleZoneRect): Record<string, string> {
   const publicProps: Record<string, string> = rect === undefined
     ? {}
     : {
@@ -118,12 +124,27 @@ export function toScreenCssProps (rect?: ScreenRect): Record<string, string> {
         '--lm-scrllgngn-screen-height': `${rect.height}px`,
         '--lm-scrllgngn-screen-height-raw': `${rect.height}`
       }
+  const inZone = toZoneClampedRect(rect, zone)
   return {
     ...publicProps,
-    '--PRIVATE-left': toPrivateLength(rect?.left),
-    '--PRIVATE-right': toPrivateLength(rect?.right),
-    '--PRIVATE-width': toPrivateLength(rect?.width),
+    '--PRIVATE-left': toPrivateLength(inZone?.left),
+    '--PRIVATE-right': toPrivateLength(inZone?.right),
+    '--PRIVATE-width': toPrivateLength(inZone?.width),
     '--PRIVATE-height': toPrivateLength(rect?.height)
+  }
+}
+
+/** The component's box, cut down to the horizontal span of the visible zone. */
+function toZoneClampedRect (rect?: ScreenRect, zone?: VisibleZoneRect): ScreenRect | undefined {
+  if (rect === undefined) return undefined
+  if (zone === undefined) return rect
+  const left = Math.max(rect.left, zone.left)
+  const right = Math.min(rect.right, window.innerWidth - zone.right)
+  return {
+    left,
+    right,
+    width: Math.max(right - left, 0),
+    height: rect.height
   }
 }
 
@@ -231,16 +252,15 @@ export function contiguousRunContaining (zone: number[], page: number): number[]
  *
  * @param pageElements - Every page slot, indexed by position.
  * @param pagePositions - The positions worth measuring.
- * @param thresholdOffsetPercent - The same offset the internal `Paginator` uses,
- * as a percentage of the viewport height.
+ * @param thresholdY - The threshold line, in pixels from the viewport top. See
+ * {@link toThresholdY}.
  * @returns The metrics of each measurable page, keyed by position.
  */
 export function measurePages (
   pageElements: HTMLElement[],
   pagePositions: Iterable<number>,
-  thresholdOffsetPercent?: number
+  thresholdY: number
 ): Map<number, PageScrollMetrics> {
-  const thresholdY = window.innerHeight * (thresholdOffsetPercent ?? 0) / 100
   const measured = new Map<number, PageScrollMetrics>()
   for (const pagePos of pagePositions) {
     const element = pageElements[pagePos]
@@ -390,4 +410,135 @@ export function scrollKey (pagePos: number, blockPos: number): string {
  */
 export function scrollBlocksOf (page: PropsPage): PropsBlock[] {
   return page.blocks?.filter(block => block.depth === 'scroll' || block.depth === undefined) ?? []
+}
+
+/* * * * * * * * * * * * * * * * *
+ *
+ * Visible zone
+ *
+ * * * * * * * * * * * * * * * * */
+
+/** How much of each viewport edge is covered by something else, in pixels. */
+export type VisibleZoneRect = {
+  top: number
+  right: number
+  bottom: number
+  left: number
+  width: number
+  height: number
+}
+
+/** A length as authored: a bare number means pixels, a string is CSS's problem. */
+export type ViewportOffset = number | string
+
+/** The four edges, as authored on the component. */
+export type ViewportOffsets = {
+  top?: ViewportOffset
+  right?: ViewportOffset
+  bottom?: ViewportOffset
+  left?: ViewportOffset
+}
+
+function toCssLength (offset?: ViewportOffset): string {
+  if (offset === undefined) return '0px'
+  return typeof offset === 'number' ? `${offset}px` : offset
+}
+
+/**
+ * Builds the custom properties carrying the visible zone's insets.
+ *
+ * They are emitted whatever the props hold, `0px` standing in for an edge left
+ * unset: the probe and the fixed layers position themselves against them, and an
+ * absent name would let an enclosing component's value inherit through.
+ *
+ * @param offsets - The edges as authored.
+ * @returns The custom properties, keyed by their full name.
+ */
+export function toViewportOffsetCssProps (offsets: ViewportOffsets): Record<string, string> {
+  const top = toCssLength(offsets.top)
+  const right = toCssLength(offsets.right)
+  const bottom = toCssLength(offsets.bottom)
+  const left = toCssLength(offsets.left)
+  return {
+    '--lm-scrllgngn-viewport-offset-top': top,
+    '--lm-scrllgngn-viewport-offset-right': right,
+    '--lm-scrllgngn-viewport-offset-bottom': bottom,
+    '--lm-scrllgngn-viewport-offset-left': left,
+    '--PRIVATE-viewport-offset-top': top,
+    '--PRIVATE-viewport-offset-right': right,
+    '--PRIVATE-viewport-offset-bottom': bottom,
+    '--PRIVATE-viewport-offset-left': left
+  }
+}
+
+/**
+ * Reads the visible zone off the probe element.
+ *
+ * The probe is fixed and inset by the four offsets, so its rect *is* the zone —
+ * which is how a `var()`, a `clamp()` or a breakpoint-dependent length reaches
+ * JavaScript without anyone parsing a CSS length.
+ *
+ * @param probeRect - The probe's bounding rect.
+ * @returns The zone, as insets from each viewport edge plus its own size.
+ */
+export function toVisibleZoneRect (probeRect: DOMRect): VisibleZoneRect {
+  return {
+    top: probeRect.top,
+    right: window.innerWidth - probeRect.right,
+    bottom: window.innerHeight - probeRect.bottom,
+    left: probeRect.left,
+    width: probeRect.width,
+    height: probeRect.height
+  }
+}
+
+/**
+ * Shrinks an {@link IntersectionObserver} root down to the visible zone.
+ *
+ * @param zone - The measured zone, absent until the probe reports.
+ * @returns A `rootMargin`, or `undefined` to leave the observer on the full
+ * viewport.
+ */
+export function toVisibleZoneRootMargin (zone?: VisibleZoneRect): string | undefined {
+  if (zone === undefined) return undefined
+  return `${-zone.top}px ${-zone.right}px ${-zone.bottom}px ${-zone.left}px`
+}
+
+/**
+ * Places the threshold line, in pixels from the viewport top.
+ *
+ * `thresholdOffsetPercent` reads as a percentage **of the visible zone**, not of
+ * the viewport: a threshold at 50% has to sit halfway down what the reader can
+ * actually see, or it lands under whatever covers the top of the screen.
+ *
+ * @param zone - The measured zone, absent until the probe reports.
+ * @param thresholdOffsetPercent - The offset as authored.
+ * @returns The line's distance from the viewport top.
+ */
+export function toThresholdY (zone?: VisibleZoneRect, thresholdOffsetPercent?: number): number {
+  const percent = thresholdOffsetPercent ?? 0
+  if (zone === undefined) return window.innerHeight * percent / 100
+  return zone.top + zone.height * percent / 100
+}
+
+/**
+ * Restates the threshold as the percentage of the **viewport** an
+ * {@link IntersectionObserver} needs, since that is the only frame `rootMargin`
+ * knows.
+ *
+ * With no offsets set the zone spans the viewport and the number comes back
+ * unchanged, so nothing moves for a component that never asked for any of this.
+ *
+ * @param zone - The measured zone, absent until the probe reports.
+ * @param thresholdOffsetPercent - The offset as authored.
+ * @returns The equivalent viewport percentage, to hand to the internal `Paginator`.
+ */
+export function toPaginatorThresholdPercent (
+  zone?: VisibleZoneRect,
+  thresholdOffsetPercent?: number
+): number | undefined {
+  if (zone === undefined) return thresholdOffsetPercent
+  const viewportHeight = window.innerHeight
+  if (viewportHeight === 0) return thresholdOffsetPercent
+  return toThresholdY(zone, thresholdOffsetPercent) / viewportHeight * 100
 }

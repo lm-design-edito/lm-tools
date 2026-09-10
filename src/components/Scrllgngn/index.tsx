@@ -40,14 +40,21 @@ import {
   scrollBlocksOf,
   scrollKey,
   stickyKey,
+  toPaginatorThresholdPercent,
   toScreenCssProps,
+  toThresholdY,
   toTrackedBlockContext,
   toTrackedBlockCssProps,
   toTrackedBlockDataAttributes,
+  toViewportOffsetCssProps,
+  toVisibleZoneRect,
+  toVisibleZoneRootMargin,
   type ConsolidatedStickyBlock,
   type ScreenRect,
   type TrackedBlock,
-  type TrackedBlockContext
+  type TrackedBlockContext,
+  type ViewportOffset,
+  type VisibleZoneRect
 } from './utils.js'
 import cssModule from './styles.module.css'
 
@@ -120,9 +127,17 @@ export type PropsPage = {
  *
  * @property pages - Ordered list of pages that compose the scrollytelling
  * sequence. Each page may contain any mix of {@link PropsBlock} variants.
- * @property thresholdOffsetPercent - Forwarded to the internal
- * {@link Paginator}. Defines the viewport offset percentage used to determine
- * which page is considered current.
+ * @property thresholdOffsetPercent - Where the threshold line sits, as a
+ * percentage of the **visible zone** — not of the viewport, so a threshold stays
+ * put under a sticky nav. It decides which page counts as current, and anchors
+ * every progression handed to a tracked block.
+ * @property viewportOffsetTop - How much of the top of the screen is covered by
+ * something else — a sticky nav, say — and should be kept out of the visible zone.
+ * A number means pixels; a string is any CSS length, `var()` and `clamp()`
+ * included, so the value can follow a breakpoint without JavaScript.
+ * @property viewportOffsetRight - Same, on the right edge.
+ * @property viewportOffsetBottom - Same, on the bottom edge.
+ * @property viewportOffsetLeft - Same, on the left edge.
  * @property stickyBlocksLazyLoadDistance - Number of pages around the current
  * page within which sticky blocks are mounted. Blocks outside this window are
  * unmounted to save resources. Defaults to `2`.
@@ -143,6 +158,10 @@ export type PropsPage = {
 export type Props = WithClassName<{
   pages?: PropsPage[]
   thresholdOffsetPercent?: number
+  viewportOffsetTop?: ViewportOffset
+  viewportOffsetRight?: ViewportOffset
+  viewportOffsetBottom?: ViewportOffset
+  viewportOffsetLeft?: ViewportOffset
   stickyBlocksLazyLoadDistance?: number
   forceStickBlocks?: 'before' | 'after' | 'both' | 'none'
   onPageChanged?: (currentPagePos: number, pageData?: PropsPage) => void
@@ -184,6 +203,16 @@ export type Props = WithClassName<{
  * `-width` and `-height` for the component's own stylesheet. They are internal:
  * do not read or override them.
  *
+ * ### Visible zone
+ * Set any of the `viewportOffset*` props and the component stops treating the whole
+ * screen as available: the fixed layers are inset by those edges, the top / content
+ * / bottom detection observes the reduced box, and `thresholdOffsetPercent` reads as
+ * a percentage of it. With none of them set, everything behaves exactly as before.
+ *
+ * The four edges are echoed as `--lm-scrllgngn-viewport-offset-top`, `-right`,
+ * `-bottom` and `-left`, carrying the length as authored — pixels for a number, the
+ * string untouched otherwise.
+ *
  * ### Sticky block elements
  * Each lazy-loaded sticky block receives:
  * - `--active` modifier when the block's page range includes the current page.
@@ -215,11 +244,17 @@ export type Props = WithClassName<{
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A div wrapping the full scrollytelling structure: top-bound sentinel,
- * back-blocks layer, front-blocks layer, paginated scrolling content, and
- * bottom-bound sentinel.
+ * @returns A div wrapping the full scrollytelling structure: visible zone probe,
+ * top-bound sentinel, back-blocks layer, front-blocks layer, paginated scrolling
+ * content, and bottom-bound sentinel.
  *
  * @remarks
+ * A `viewportOffset*` given as a CSS length is resolved by CSS, not parsed: a hidden
+ * probe is inset by the four of them and observed, so `var()`, `clamp()` and
+ * breakpoint-dependent values all work, and any restyling that changes them is
+ * picked up as a resize. The one case that slips through is a change that moves the
+ * zone without altering its size — swapping a top offset for an equal bottom one.
+ *
  * Tracking costs nothing until a block asks for it: with no `onScrolled` anywhere,
  * the component never joins the shared scroll listener. Once it does, each frame
  * measures only the pages the displayed tracked blocks span, not the whole sequence.
@@ -227,6 +262,10 @@ export type Props = WithClassName<{
 export const Scrllgngn: FunctionComponent<Props> = ({
   pages,
   thresholdOffsetPercent,
+  viewportOffsetTop,
+  viewportOffsetRight,
+  viewportOffsetBottom,
+  viewportOffsetLeft,
   stickyBlocksLazyLoadDistance = 2,
   forceStickBlocks,
   onPageChanged,
@@ -240,6 +279,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   const [currentPagePos, setCurrentPagePos] = useState<number>(0)
   const [stickyBlocks, setStickyBlocks] = useState(new Map<string, ConsolidatedStickyBlock>())
   const [partialBoundingRect, setPartialBoundingRect] = useState<ScreenRect>()
+  const [visibleZone, setVisibleZone] = useState<VisibleZoneRect>()
 
   // Scroll tracking. Everything the per-frame pass reads lives in a ref: it is
   // registered once with the shared scroll listener, and writes straight to the DOM
@@ -251,6 +291,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   const trackedWrappersRef = useRef(new Map<string, HTMLElement>())
   const lastContextsRef = useRef(new Map<string, TrackedBlockContext>())
   const currentPagePosRef = useRef(currentPagePos)
+  const visibleZoneRef = useRef(visibleZone)
 
   // Sticky blocks calculations
   useEffect(() => {
@@ -289,6 +330,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   useEffect(() => {
     trackedBlocksRef.current = trackedBlocks
     currentPagePosRef.current = currentPagePos
+    visibleZoneRef.current = visibleZone
   })
 
   // The per-frame pass: measure only the pages the displayed tracked blocks span,
@@ -316,7 +358,8 @@ export const Scrllgngn: FunctionComponent<Props> = ({
       pagesToMeasure.add(page)
       for (const pagePos of block.displayZone) pagesToMeasure.add(pagePos)
     }
-    const metrics = measurePages(pageElementsRef.current, pagesToMeasure, thresholdOffsetPercent)
+    const thresholdY = toThresholdY(visibleZoneRef.current, thresholdOffsetPercent)
+    const metrics = measurePages(pageElementsRef.current, pagesToMeasure, thresholdY)
     for (const [key, block, page] of pending) {
       const context = toTrackedBlockContext(block.displayZone, page, metrics)
       const lastContext = lastContexts.get(key)
@@ -371,6 +414,9 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     if (element === null) trackedWrappersRef.current.delete(key)
     else trackedWrappersRef.current.set(key, element)
   }
+  const handleProbeResized: RSOCompProps['onResized'] = ({ boundingClientRect }) => {
+    setVisibleZone(toVisibleZoneRect(boundingClientRect))
+  }
   const handleResize: RSOCompProps['onResized'] = ({ boundingClientRect }) => {
     if (partialBoundingRect === undefined
       || boundingClientRect.left !== partialBoundingRect.left
@@ -393,17 +439,35 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     }),
     className
   )
-  const customCssProps = toScreenCssProps(partialBoundingRect)
+  const customCssProps = {
+    ...toScreenCssProps(partialBoundingRect, visibleZone),
+    ...toViewportOffsetCssProps({
+      top: viewportOffsetTop,
+      right: viewportOffsetRight,
+      bottom: viewportOffsetBottom,
+      left: viewportOffsetLeft
+    })
+  }
+  const visibleZoneRootMargin = toVisibleZoneRootMargin(visibleZone)
   return <div
     ref={rootRef}
     className={rootClss}
     data-current-page-pos={currentPagePos}
     data-current-page-id={pages?.[currentPagePos]?.id}
     style={{ ...customCssProps }}>
+    {/* Visible zone probe. Fixed and inset by the four offsets, so its own box is
+    the zone — CSS resolves the lengths, the observer reports them back in pixels,
+    and any restyling that changes them shows up as a resize. */}
+    <ResizeObserverComponent
+      className={c('viewport-probe')}
+      onResized={handleProbeResized} />
+
     <ResizeObserverComponent onResized={handleResize}>
       {/* Top bound detection */}
       <div className={c('top-bound')}>
-        <IntersectionObserverComponent onIntersected={handleTopBoundDetect} />
+        <IntersectionObserverComponent
+          rootMargin={visibleZoneRootMargin}
+          onIntersected={handleTopBoundDetect} />
       </div>
 
       {/* Back blocks */}
@@ -444,9 +508,11 @@ export const Scrllgngn: FunctionComponent<Props> = ({
 
       {/* Scrolling content */}
       <div className={c('scrolling-content')}>
-        <IntersectionObserverComponent onIntersected={handleCntDetect}>
+        <IntersectionObserverComponent
+          rootMargin={visibleZoneRootMargin}
+          onIntersected={handleCntDetect}>
           <Paginator
-            thresholdOffsetPercent={thresholdOffsetPercent}
+            thresholdOffsetPercent={toPaginatorThresholdPercent(visibleZone, thresholdOffsetPercent)}
             onPagesChanged={handlePagesChanged}
             onPageElementsChanged={handlePageElementsChanged}>
             {pages?.map((page, pagePos) => {
@@ -463,7 +529,9 @@ export const Scrllgngn: FunctionComponent<Props> = ({
 
       {/* Bottom bound detection */}
       <div className={c('bottom-bound')}>
-        <IntersectionObserverComponent onIntersected={handleBtmBoundDetect} />
+        <IntersectionObserverComponent
+          rootMargin={visibleZoneRootMargin}
+          onIntersected={handleBtmBoundDetect} />
       </div>
     </ResizeObserverComponent>
   </div>
