@@ -1,6 +1,5 @@
 import {
   type FunctionComponent,
-  type PropsWithChildren,
   useEffect,
   useRef,
   useState
@@ -48,9 +47,8 @@ import cssModule from './styles.module.css'
  * @property onLoadFailed - Called with an `Error` when the fetch fails, the response
  * is not ok, or the parse throws.
  * @property className - Optional additional class name(s) applied to the root element.
- * @property children - Rendered inside the root element, after the subtitle groups.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithClassName<{
   cues?: SrtCue[]
   srtFileContent?: string
   src?: string
@@ -60,7 +58,7 @@ export type Props = PropsWithChildren<WithClassName<{
   onLoaded?: (subs: string) => void
   onParsed?: (subs: SrtCue[]) => void
   onLoadFailed?: (error: Error) => void
-}>>
+}>
 
 /**
  * Subtitle synchronization component. Takes an SRT source — parsed cues, a raw
@@ -81,8 +79,8 @@ export type Props = PropsWithChildren<WithClassName<{
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A root `<div>` holding the subtitle groups followed by `children`, or one
- * holding `children` alone while there is no timecode or no cue.
+ * @returns A root `<div>` holding the subtitle groups, empty while there is no
+ * timecode or no cue.
  *
  * @remarks
  * Uncontrolled only. The cues are state, fed by whichever source is set: there is no
@@ -104,8 +102,7 @@ export const Subtitles: FunctionComponent<Props> = ({
   className,
   onLoaded,
   onParsed,
-  onLoadFailed,
-  children
+  onLoadFailed
 }) => {
   // State
   const [isLoading, setIsLoading] = useState(false)
@@ -195,6 +192,5 @@ export const Subtitles: FunctionComponent<Props> = ({
         })}
       </div>
     })}
-    {children}
   </div>
 }
