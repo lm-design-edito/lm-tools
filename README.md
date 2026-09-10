@@ -40,14 +40,6 @@ dans `lm-link`.
 
 ## Reporté (à traiter plus tard, pas maintenant)
 
-- **`Video` — une lecture refusée laisse les contrôles dans le faux.** `forcePlay`
-  (`components/Video/utils.ts`) avale le rejet de `play()` en le loggant, et
-  l'appelant fait `void forcePlay(...)`. Quand le navigateur refuse une lecture non
-  mutée hors geste utilisateur, aucun événement `pause` ne part : l'élément reste en
-  pause pendant que l'état `play` de `Video` le croit lancé. Le cas est documenté en
-  `@remarks` sur `Video`, mais pas traité — le corriger demande de remonter l'échec
-  au propriétaire de l'état, donc un handler de plus (`onPlayFailed` ?), à décider.
-
 - **`Scrllgngn` — pas d'interrupteur pour le scrollytelling CSS pur.** Le tracking
   s'active à la seule présence de `onScrolled`, donc un bloc qui ne voudrait que les
   variables CSS et les `data-*`, sans handler, doit déclarer un handler vide. Rouvrir
