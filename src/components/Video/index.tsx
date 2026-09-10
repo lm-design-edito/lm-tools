@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { IntersectionObserverComponent, type Props as IntersectionObserverComponentProps } from '../IntersectionObserver/index.js'
+import type { WithViewportObservation } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import { videoWrapper as publicClassName } from '../public-classnames.js'
 import {
@@ -37,6 +38,13 @@ import {
  * @property autoMuteWhenHidden - When `true`, mutes every time the component leaves
  * the viewport.
  * @property autoMuteOnceHidden - Same, but only the first time it does.
+ * @property threshold - How much of the component has to be in view before it
+ * counts as visible, forwarded to the internal {@link IntersectionObserver}. `0.3`
+ * to start on a third of it; omitted, a single pixel is enough.
+ * @property root - The observer's root. Defaults to the viewport.
+ * @property rootMargin - Grows or shrinks that root before measuring.
+ * @property onVisibilityChanged - Called on every crossing with the new value,
+ * whether or not an `auto…` behaviour is bound to it. Never on mount.
  * @property currentTimeMs - When provided, hands ownership of the current time
  * (in milliseconds) to the parent, which is then responsible for updating it —
  * typically to scrub the video from scroll position. A controlled time implies a
@@ -48,7 +56,7 @@ import {
  * @property children - React children rendered inside the `<video>` element itself
  * (e.g. fallback content).
  */
-export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mute' | 'playbackRate'> & {
+export type Props = WithViewportObservation<Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mute' | 'playbackRate'>> & {
   autoPlayWhenVisible?: boolean
   autoPlayOnceVisible?: boolean
   autoPauseWhenHidden?: boolean
@@ -93,6 +101,10 @@ export const Video: FunctionComponent<Props> = ({
   autoMuteOnceHidden,
   autoLoudWhenVisible,
   autoLoudOnceVisible,
+  threshold,
+  root,
+  rootMargin,
+  onVisibilityChanged,
   wrapperClassName,
   onPlayButtonClicked,
   onPauseButtonClicked,
@@ -125,7 +137,8 @@ export const Video: FunctionComponent<Props> = ({
   // of those call sites.
   const isTimeControlled = controlledProps.currentTimeMs !== undefined
 
-  const needsObserve = useMemo(() => autoLoudWhenVisible === true
+  const needsObserve = useMemo(() => onVisibilityChanged !== undefined
+    || autoLoudWhenVisible === true
     || autoLoudOnceVisible === true
     || autoMuteWhenHidden === true
     || autoMuteOnceHidden === true
@@ -140,7 +153,8 @@ export const Video: FunctionComponent<Props> = ({
     autoPlayWhenVisible,
     autoPlayOnceVisible,
     autoPauseWhenHidden,
-    autoPauseOnceHidden
+    autoPauseOnceHidden,
+    onVisibilityChanged
   ])
 
   // Intrisic event handlers
@@ -215,6 +229,7 @@ export const Video: FunctionComponent<Props> = ({
   const onIntersected = useCallback<NonNullable<IntersectionObserverComponentProps['onIntersected']>>(({ ioEntry }) => {
     if (ioEntry === undefined) return
     const { isIntersecting } = ioEntry
+    onVisibilityChanged?.(isIntersecting)
     if (isIntersecting) {
       if (shouldRunAutoBehaviour(autoPlayWhenVisible, autoPlayOnceVisible, hasAutoPlayedOnce.current)) {
         hasAutoPlayedOnce.current = true
@@ -242,7 +257,8 @@ export const Video: FunctionComponent<Props> = ({
     autoMuteWhenHidden,
     autoMuteOnceHidden,
     autoLoudWhenVisible,
-    autoLoudOnceVisible
+    autoLoudOnceVisible,
+    onVisibilityChanged
   ])
 
   // `autoPlay` is forwarded to the element, but the play state is owned here, so
@@ -278,7 +294,11 @@ export const Video: FunctionComponent<Props> = ({
 
   return <div className={rootClss}>
     {needsObserve
-      ? <IntersectionObserverComponent onIntersected={onIntersected}>
+      ? <IntersectionObserverComponent
+        threshold={threshold}
+        root={root}
+        rootMargin={rootMargin}
+        onIntersected={onIntersected}>
         {videoContent}
       </IntersectionObserverComponent>
       : videoContent}

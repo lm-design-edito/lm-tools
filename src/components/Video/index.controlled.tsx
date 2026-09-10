@@ -106,6 +106,8 @@ type TrackData = {
  * seeks to the target right after, unless the time is controlled.
  * @property onIsPlayingChanged - Called once the playback state has changed.
  * @property onIsFullscreenChanged - Called once the fullscreen state has changed.
+ * @property onIsEndedChanged - Called after playback reached the end, and again
+ * once it left it — a seek back or a new play. Never on mount.
  * @property onIsLoudChanged - Called once the mute state has changed (`true` = unmuted).
  * @property onVolumeChanged - Called once the volume has changed (`0` to `1`).
  * @property onPlaybackRateChanged - Called once the playback rate has changed.
@@ -146,6 +148,7 @@ export type Props = PropsWithChildren<WithClassName<{
   onIsPlayingChanged?: (isPlaying: boolean) => void
   onIsFullscreenChanged?: (isFullscreen: boolean) => void
   onIsLoudChanged?: (isLoud: boolean) => void
+  onIsEndedChanged?: (isEnded: boolean) => void
   onVolumeChanged?: (volume: number) => void
   onPlaybackRateChanged?: (playbackRate: number) => void
   onCurrentTimeMsChanged?: (currentTimeMs: number) => void
@@ -163,10 +166,12 @@ export type Props = PropsWithChildren<WithClassName<{
  * - `--play-on` / `--play-off` — reflects current playback state.
  * - `--fullscreen-on` / `--fullscreen-off` — reflects fullscreen state.
  * - `--loud` / `--muted` — reflects mute state.
+ * - `--ended` — playback reached the end and has not left it.
  *
  * ### Data attributes on the root element
  * - `data-play-on` — present (empty string) when playing.
  * - `data-play-off` — present (empty string) when paused.
+ * - `data-ended` — present (empty string) once playback reached the end.
  * - `data-fullscreen-on` — present (empty string) when in fullscreen.
  * - `data-fullscreen-off` — present (empty string) when not in fullscreen.
  * - `data-loud` — present (empty string) when unmuted.
@@ -214,6 +219,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   onIsPlayingChanged,
   onIsFullscreenChanged,
   onIsLoudChanged,
+  onIsEndedChanged,
   onVolumeChanged,
   onPlaybackRateChanged,
   onCurrentTimeMsChanged,
@@ -228,6 +234,12 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   const totalTimeMs = useMemo(() => secondsToMs(totalTime), [totalTime])
 
   const [internalCurrentTimeMs, setInternalCurrentTimeMs] = useState(0)
+
+  // Unlike play, mute and fullscreen, this one isn't a prop: nothing can *set* a
+  // media to ended, it is something the element reports. So it is read from the
+  // element, and the two events that turn it on and off are joined by a sync on
+  // every time update, which covers a seek away from the end.
+  const [isEnded, setIsEnded] = useState(false)
 
   const isTimeControlled = givenCurrentTimeMs !== undefined
 
@@ -259,8 +271,19 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     const video = e.currentTarget
     const newTimeMs = secondsToMs(video.currentTime)
     setInternalCurrentTimeMs(newTimeMs)
+    setIsEnded(video.ended)
     if (intrinsicVideoAttributes.onTimeUpdate !== undefined) intrinsicVideoAttributes.onTimeUpdate(e)
   }, [intrinsicVideoAttributes.onTimeUpdate])
+
+  const handleEndedEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
+    setIsEnded(true)
+    intrinsicVideoAttributes.onEnded?.(e)
+  }, [intrinsicVideoAttributes.onEnded])
+
+  const handlePlayEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
+    setIsEnded(false)
+    intrinsicVideoAttributes.onPlay?.(e)
+  }, [intrinsicVideoAttributes.onPlay])
 
   // Custom action handlers
   const handlePlayButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
@@ -311,6 +334,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   const rootClss = mergeClassNames(c(null, {
     'play-on': isPlaying,
     'play-off': !isPlaying,
+    ended: isEnded,
     'fullscreen-on': isFullscreen,
     'fullscreen-off': !isFullscreen,
     'loud': isLoud,
@@ -323,6 +347,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   const rootAttributes = {
     'data-play-on': isPlaying ? '' : undefined,
     'data-play-off': !isPlaying ? '' : undefined,
+    'data-ended': isEnded ? '' : undefined,
     'data-fullscreen-on': isFullscreen ? '' : undefined,
     'data-fullscreen-off': !isFullscreen ? '' : undefined,
     'data-loud': isLoud ? '' : undefined,
@@ -443,6 +468,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   useChangeDispatch(isPlaying, onIsPlayingChanged)
   useChangeDispatch(isFullscreen, onIsFullscreenChanged)
   useChangeDispatch(isLoud, onIsLoudChanged)
+  useChangeDispatch(isEnded, onIsEndedChanged)
   useChangeDispatch(volume, onVolumeChanged)
   useChangeDispatch(playbackRate, onPlaybackRateChanged)
 
@@ -457,7 +483,9 @@ export const ControlledVideo: FunctionComponent<Props> = ({
       {...intrinsicVideoAttributes}
       autoPlay={isTimeControlled ? false : intrinsicVideoAttributes.autoPlay}
       onLoadedMetadata={handleMetadataLoadEvent}
-      onTimeUpdate={handleOnTimeUpdateEvent}>
+      onTimeUpdate={handleOnTimeUpdateEvent}
+      onEnded={handleEndedEvent}
+      onPlay={handlePlayEvent}>
       {/* Sources */}
       {parsedSources.map((source, index) => typeof source === 'string'
         ? <source
@@ -546,6 +574,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     {/* Subtitles */}
     {subtitles !== undefined && <Subtitles
       {...subtitles}
-      timecodeMs={currentTimeMs} />}
+      timecodeMs={currentTimeMs}
+      isEnded={isEnded} />}
   </figure>
 }
