@@ -79,6 +79,16 @@ export type Props = WithViewportObservation<Omit<ControlledProps, 'play' | 'full
  * subtitles.
  *
  * @remarks
+ * **Audio-only media belongs here too**, carried by the same `<video>` element.
+ * Everything this component drives — play, mute, volume, rate, time, `ended` — is
+ * `HTMLMediaElement`, shared with `<audio>`; only fullscreen is video's own. And an
+ * `<audio>` tag can't be autoplayed: the muted-autoplay exemption browsers grant is
+ * for video, so an `<audio>` waits for a user gesture whatever its muted state.
+ * `autoPlayWhenVisible` on an audio file therefore needs `muted` and `playsInline`
+ * on a `<video>`, which is what this is. The one thing lost is the assistive-tech
+ * label: a screen reader announces a video player. Worth a `tag` prop the day that
+ * matters more than autoplay — not before.
+ *
  * Each viewport-driven behaviour comes in two flavours: `…When…` fires on every
  * crossing, `…Once…` only on the first one. A `…Once…` flag is armed by its own
  * automatic trigger and by nothing else — pressing play does not spend the one
