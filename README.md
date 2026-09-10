@@ -38,80 +38,8 @@ dans `lm-link`.
 
 | Composant | À faire |
 | --- | --- |
-| `Scrllgngn` | `trackScroll` — contexte de scroll par bloc. Conception en cours (voir ci-dessous). |
 | `Subtitles` | **Prochain lot.** Reprise de fond — sortir le parseur, réparer quatre défaillances silencieuses. Voir ci-dessous. |
 | `Video` | Dédoubler les quatre props de visibilité en variantes « à chaque fois » et « une seule fois » — voir ci-dessous. |
-
-### `Scrllgngn` — `onScrolled` & contexte de scroll par bloc
-
-Reprise du `trackScroll` de l'ancien `lm-link` (voir `le-monde/new-app` pour référence),
-conception arrêtée, implémentation à faire.
-
-**Un handler par bloc, pas un handler global.** Chaque bloc accepte `onScrolled`, appelé
-avec son propre contexte. Pas de `Record<blockId, Context>` au niveau `Scrllgngn` : un
-consommateur n'aurait plus qu'à refiltrer un payload global, et côté lm-link chaque bloc
-peut viser son propre événement (`onScrolled='dispatch:mon-bloc'`). Le tracking est
-activé par la seule présence de `onScrolled`.
-
-**Le contexte**, plat pour se projeter tel quel en variables CSS :
-
-```ts
-export type TrackedBlockContext = {
-  currentPage: number
-  currentPageProgression: number
-  displayZone: number[]
-  indexOfCurrentPageInDisplayZone: number
-  displayZoneProgression: number
-  contiguousDisplayZone: number[]
-  indexOfCurrentPageInContiguousDisplayZone: number
-  contiguousDisplayZoneProgression: number
-}
-```
-
-- `displayZone` = toutes les pages où l'`id` du bloc apparaît ; `contiguousDisplayZone` =
-  la suite contiguë contenant la page courante. On expose les deux plutôt que d'arbitrer.
-  Sur `[2, 3, 5]`, `displayZoneProgression` va de 0 à ~0,66 sur 2–3, rien n'est dispatché
-  page 4 (le bloc n'est pas affiché), puis reprend à 0,66 page 5 — discontinuité inhérente
-  à une zone non contiguë.
-- Progressions : `Σ clamp(seuil − page.top, 0, page.height) / Σ page.height` sur les pages
-  de la zone. Pondération **au pixel**, pas à la page.
-- Le seuil est `thresholdOffsetPercent%` de `window.innerHeight` — le viewport, comme le
-  `rootMargin` du `Paginator`. Calculer par rapport à la boîte du `Scrllgngn` ferait
-  diverger « page courante » et « progression 0/1 » dès qu'il n'occupe pas tout l'écran.
-- Même logique de zone pour tous les blocs quelle que soit leur `depth`. Un bloc sans `id`
-  a pour zone sa seule page, et ses trois progressions sont donc égales.
-- Pas de `width` / `height` : c'est le métier de `ResizeObserver` et `ScrollListener`.
-
-**Mesure.** Pas de `ScrollListener` monté par page (un div de plus par page dans le
-`Paginator`, et des variables CSS recalculées pour rien) : `Scrllgngn` s'abonne via
-`subscribe` / `unsubscribe` de `ScrollListener/utils.ts`, déjà exportés — un seul couple
-de listeners `scroll` / `resize` pour toute la page, une passe coalescée par
-`requestAnimationFrame`, document mesuré une fois. Le callback itère les pages et compare
-en profondeur avant d'appeler chaque `onScrolled`.
-
-**Prérequis `Paginator`** : il n'expose ni ses pages ni son `pagesRef`. Lui ajouter une
-prop qui remonte ses éléments de page. Un `querySelectorAll('[data-page]')` depuis
-`Scrllgngn` marcherait mais le ferait dépendre d'un détail d'implémentation du voisin.
-
-**Prérequis DOM** : les scroll blocks sont rendus bruts (`{scrollBlocks.map(b =>
-b.children)}`), sans wrapper, là où les sticky ont le leur. Leur ajouter un wrapper
-`c('scroll-block')` — à **tous**, pas seulement aux blocs trackés, pour que le DOM ne soit
-pas à géométrie variable.
-
-**Dispatch de sortie** : recalculer pour l'union du set traqué courant et de celui de la
-frame précédente. Les progressions étant clampées 0–1, un bloc quitté par le bas sort
-naturellement à 1 et par le haut à 0 — pas de logique de direction à écrire.
-
-**Exposition DOM** (remplace le point différé d'avant) : variables CSS sur la racine et
-sur les wrappers de blocs trackés, `data-*` pour les seules valeurs discrètes. Voir la
-règle de nommage dans `CLAUDE.md`.
-
-Différé, à traiter avec ou après :
-
-- **Un trou connu, à assumer en `[WIP]` dans le code** : le tracking étant activé par la
-  seule présence de `onScrolled`, un bloc qui ne voudrait que les variables CSS et les
-  `data-*`, sans handler, n'a pas d'interrupteur. Rouvrir un booléen si le besoin se
-  présente.
 
 ### `Subtitles` — reprise de fond
 
@@ -241,6 +169,11 @@ alors que le code ne le fait pas.
 `play()` non muté hors geste utilisateur, et `forcePlay` avale l'erreur en la loggant.
 
 ## Reporté (à traiter plus tard, pas maintenant)
+
+- **`Scrllgngn` — pas d'interrupteur pour le scrollytelling CSS pur.** Le tracking
+  s'active à la seule présence de `onScrolled`, donc un bloc qui ne voudrait que les
+  variables CSS et les `data-*`, sans handler, doit déclarer un handler vide. Rouvrir
+  un booléen si le cas se présente. Marqué `[WIP]` sur `PropsCommonBlock`.
 
 - **Passer toute la lib à la règle « `data-*` = valeurs discrètes ».** La règle est
   posée dans `CLAUDE.md`, mais plusieurs composants exposent aujourd'hui du continu en
