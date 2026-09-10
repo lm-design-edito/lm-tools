@@ -51,6 +51,10 @@ type DirectionState = 'forwards' | 'backwards' | null
  * trigger it again.
  * @property onPagesChanged - Called after any page's {@link PageState} changed,
  * with a flat array of every page's state, ordered by position.
+ * @property onPageElementsChanged - Called with the page slot elements, in order,
+ * whenever the observed set changes. Unlike the other handlers it *does* fire on
+ * mount: the elements don't exist before it, so their appearance is the change.
+ * Lets a parent measure the pages without reaching into this component's DOM.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Each direct child is treated as an individual page slot.
  */
@@ -58,6 +62,7 @@ export type Props = PropsWithChildren<WithClassName<{
   thresholdOffsetPercent?: number
   onDirectionChanged?: (direction: DirectionState) => void
   onPagesChanged?: (pages: PageState[]) => void
+  onPageElementsChanged?: (pageElements: HTMLElement[]) => void
 }>>
 
 /**
@@ -87,6 +92,7 @@ export const Paginator: FunctionComponent<Props> = ({
   thresholdOffsetPercent,
   onDirectionChanged,
   onPagesChanged,
+  onPageElementsChanged,
   className,
   children
 }) => {
@@ -130,6 +136,7 @@ export const Paginator: FunctionComponent<Props> = ({
   useEffect(() => {
     if (pagesRef.current === null) return
     const pages = Array.from(pagesRef.current.children)
+    onPageElementsChanged?.(pages.filter(page => page instanceof HTMLElement))
     const observerRootMargin = `-${thresholdOffsetPercent ?? 0}%`
       + ' 0px'
       + ` -${100 - (thresholdOffsetPercent ?? 0)}%`
