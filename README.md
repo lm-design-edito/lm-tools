@@ -26,35 +26,40 @@ Coding conventions live in [CLAUDE.md](./CLAUDE.md) and in the root
 
 # Roadmap
 
-## Per-component to-do
+## Où en est la bibliothèque
 
-Ordered alphabetically, remaining work only — a component drops off the list once it
-is done.
+**Rien en attente sur les composants.** La passe d'alignement, la reprise de
+`Subtitles`, celle de `Video` et le chantier `Scrllgngn` sont faits ; les états
+internes remontent tous en modifieurs de classe racine.
 
-**La passe d'alignement est terminée** ; ce qui figure ci-dessous a été ouvert après
-elle. Le composant `Disclaimer` existe toujours et s'utilise seul ; c'est son usage
-*imbriqué* dans `Video` et `Image` qui a été retiré. L'idée sera reprise ailleurs,
-dans `lm-link`.
+lm-tools n'est pas le sujet principal pour l'instant : l'attention va à la première
+publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là —
+**lm-cli doit rapatrier sa logique métier dans `agnostic/` et `node/`**, en ne
+gardant que la coquille CLI chez lui. C'est le prochain vrai chantier de ce dépôt,
+et il n'ouvrira qu'une fois lm-link publié.
 
-*Rien en attente pour l'instant.*
+## En sommeil
 
-## Reporté (à traiter plus tard, pas maintenant)
+Aucun des trois n'a d'importance à court terme. Ils sont ici pour ne pas être
+redécouverts par surprise, pas pour être traités.
+
+- **La démo est en pause, et le reste.** Ne pas y passer de temps ; n'y toucher que
+  si un changement l'empêche de compiler. Une chose à savoir le jour où elle
+  reprendra : `BeforeAfterDemo` lit `--{prefix}-ratio-percent` en six endroits, une
+  propriété supprimée parce qu'un ratio n'a pas de jumeau — remplacer par
+  `calc(var(--lm-before-after-ratio) * 100%)`. Elle compile, elle s'affiche de
+  travers.
 
 - **`Scrllgngn` — pas d'interrupteur pour le scrollytelling CSS pur.** Le tracking
   s'active à la seule présence de `onScrolled`, donc un bloc qui ne voudrait que les
-  variables CSS et les `data-*`, sans handler, doit déclarer un handler vide. Rouvrir
-  un booléen si le cas se présente. Marqué `[WIP]` sur `PropsCommonBlock`.
-
-- **La démo lit une custom property retirée.** `BeforeAfterDemo` utilise
-  `--{prefix}-ratio-percent` en six endroits, supprimée parce qu'un ratio n'a pas de
-  jumeau : remplacer par `calc(var(--lm-before-after-ratio) * 100%)`. Elle compile
-  toujours — ce sont des chaînes de CSS — mais elle s'affiche de travers. Rien
-  d'autre : les `data-` attributes, eux, sont tous restés.
+  variables CSS et les `data-*`, sans handler, doit en déclarer un vide. Rouvrir un
+  booléen si le cas se présente un jour. Marqué `[WIP]` sur `PropsCommonBlock`.
 
 - **`JsonEditor` en mode contrôlé.** Structurellement impossible aujourd'hui : chaque
   éditeur amorce son état depuis `defaultValue` au montage et ne le relit jamais.
-  C'est une réécriture du modèle d'état pour que l'arbre lise chez un propriétaire
-  unique, pas un alignement. La limite est documentée en `@remarks` sur `JsonEditor`.
+  C'est une réécriture du modèle d'état, pas un alignement — et sa racine restera
+  sans modifieurs jusque-là, pour ne pas figer une API sur une structure qu'on sait
+  devoir changer. La limite est documentée en `@remarks` sur `JsonEditor`.
 
 ## Coverage roadmap
 
