@@ -1,10 +1,13 @@
 import {
   type PropsWithChildren,
   type FunctionComponent,
-  useState,
-  useEffect
+  useCallback,
+  useEffect,
+  useRef,
+  useState
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
+import { randomHash } from '../../agnostic/random/uuid/index.js'
 import {
   IntersectionObserverComponent,
   type Props as IOCompProps
@@ -17,6 +20,10 @@ import {
   ResizeObserverComponent,
   type Props as RSOCompProps
 } from '../ResizeObserver/index.js'
+import {
+  subscribe,
+  unsubscribe
+} from '../ScrollListener/utils.js'
 import type { WithClassName } from '../utils/types.js'
 import {
   mergeClassNames,
@@ -24,11 +31,23 @@ import {
 } from '../utils/index.js'
 import { scrllgngn as publicClassName } from '../public-classnames.js'
 import {
+  blockDisplayZones,
   consolidateStickyBlocks,
+  contextsAreEqual,
   lazyLoadedBlocks,
+  measurePages,
+  sameDiscretePart,
+  scrollBlocksOf,
+  scrollKey,
+  stickyKey,
   toScreenCssProps,
+  toTrackedBlockContext,
+  toTrackedBlockCssProps,
+  toTrackedBlockDataAttributes,
   type ConsolidatedStickyBlock,
-  type ScreenRect
+  type ScreenRect,
+  type TrackedBlock,
+  type TrackedBlockContext
 } from './utils.js'
 import cssModule from './styles.module.css'
 
@@ -38,12 +57,17 @@ import cssModule from './styles.module.css'
  * @property id - Optional stable identifier for the block. Used to consolidate
  * blocks with the same id across multiple pages into a single sticky block
  * displayed across those pages.
- * @property trackScroll - Whether scroll tracking is enabled for this block.
+ * @property onScrolled - Called with this block's {@link TrackedBlockContext} on
+ * every frame the scroll moved it, while it is displayed. Declaring it is what
+ * turns tracking on for the block — nothing is measured for a block without it.
  * @property children - Content rendered inside the block.
  */
 export type PropsCommonBlock = PropsWithChildren<{
   id?: string
-  trackScroll?: boolean
+  // [WIP] `onScrolled` doubles as the tracking switch, so a block that only wants
+  // the custom properties and `data-` attributes, without a handler, has no way to
+  // ask for them. Reopen a boolean here if that case ever shows up.
+  onScrolled?: (context: TrackedBlockContext) => void
 }>
 
 /**
@@ -167,11 +191,38 @@ export type Props = WithClassName<{
  * - An inline `z-index` derived from the block's position in the sorted stack
  * (overridden by {@link PropsStickyBlock.zIndex} if provided).
  *
+ * ### Scroll block elements
+ * Each scroll block sits in its own wrapper, whatever it does — a block that isn't
+ * tracked still gets one, so the DOM keeps the same shape either way.
+ *
+ * ### Tracked block elements
+ * A block declaring {@link PropsCommonBlock.onScrolled} also carries its
+ * {@link TrackedBlockContext} on its wrapper, for scrollytelling driven in CSS
+ * alone. Written straight to the element on the frames they change, so they never
+ * re-render the sequence.
+ *
+ * Progressions, as unitless `0`–`1` ratios:
+ * - `--lm-scrllgngn-block-current-page-progression-ratio`
+ * - `--lm-scrllgngn-block-display-zone-progression-ratio`
+ * - `--lm-scrllgngn-block-contiguous-display-zone-progression-ratio`
+ *
+ * Position, which only moves with the page:
+ * - `data-current-page`
+ * - `data-display-zone` — comma-separated page positions.
+ * - `data-index-of-current-page-in-display-zone`
+ * - `data-contiguous-display-zone`
+ * - `data-index-of-current-page-in-contiguous-display-zone`
+ *
  * @param props - Component properties.
  * @see {@link Props}
  * @returns A div wrapping the full scrollytelling structure: top-bound sentinel,
  * back-blocks layer, front-blocks layer, paginated scrolling content, and
  * bottom-bound sentinel.
+ *
+ * @remarks
+ * Tracking costs nothing until a block asks for it: with no `onScrolled` anywhere,
+ * the component never joins the shared scroll listener. Once it does, each frame
+ * measures only the pages the displayed tracked blocks span, not the whole sequence.
  */
 export const Scrllgngn: FunctionComponent<Props> = ({
   pages,
@@ -190,6 +241,17 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   const [stickyBlocks, setStickyBlocks] = useState(new Map<string, ConsolidatedStickyBlock>())
   const [partialBoundingRect, setPartialBoundingRect] = useState<ScreenRect>()
 
+  // Scroll tracking. Everything the per-frame pass reads lives in a ref: it is
+  // registered once with the shared scroll listener, and writes straight to the DOM
+  // rather than through state, which would re-render the whole sequence per frame.
+  const rootRef = useRef<HTMLDivElement>(null)
+  const subscriptionIdRef = useRef(randomHash(8))
+  const pageElementsRef = useRef<HTMLElement[]>([])
+  const trackedBlocksRef = useRef(new Map<string, TrackedBlock>())
+  const trackedWrappersRef = useRef(new Map<string, HTMLElement>())
+  const lastContextsRef = useRef(new Map<string, TrackedBlockContext>())
+  const currentPagePosRef = useRef(currentPagePos)
+
   // Sticky blocks calculations
   useEffect(() => {
     setStickyBlocks(consolidateStickyBlocks(pages))
@@ -197,6 +259,97 @@ export const Scrllgngn: FunctionComponent<Props> = ({
 
   const lazyLoadedBackBlocks = lazyLoadedBlocks(stickyBlocks, 'back', currentPagePos, stickyBlocksLazyLoadDistance)
   const lazyLoadedFrontBlocks = lazyLoadedBlocks(stickyBlocks, 'front', currentPagePos, stickyBlocksLazyLoadDistance)
+
+  // Tracked blocks, keyed the same way their wrappers are
+  const displayZones = blockDisplayZones(pages)
+  const trackedBlocks = new Map<string, TrackedBlock>()
+  for (const [blockId, block] of stickyBlocks) {
+    if (block.onScrolled === undefined) continue
+    trackedBlocks.set(stickyKey(blockId), {
+      displayZone: block.id === undefined
+        ? block.displayOnPages
+        : displayZones.get(block.id) ?? block.displayOnPages,
+      onScrolled: block.onScrolled
+    })
+  }
+  pages?.forEach((page, pagePos) => {
+    scrollBlocksOf(page).forEach((block, blockPos) => {
+      if (block.onScrolled === undefined) return
+      trackedBlocks.set(scrollKey(pagePos, blockPos), {
+        displayZone: block.id === undefined
+          ? [pagePos]
+          : displayZones.get(block.id) ?? [pagePos],
+        onScrolled: block.onScrolled
+      })
+    })
+  })
+  const hasTrackedBlocks = trackedBlocks.size > 0
+
+  // Fx. no dep. - Keep what the per-frame pass reads in sync with the last render
+  useEffect(() => {
+    trackedBlocksRef.current = trackedBlocks
+    currentPagePosRef.current = currentPagePos
+  })
+
+  // The per-frame pass: measure only the pages the displayed tracked blocks span,
+  // then hand each block its context — once, and only when something moved.
+  const handleScrolled = useCallback((): void => {
+    const trackedBlocks = trackedBlocksRef.current
+    const lastContexts = lastContextsRef.current
+    const currentPage = currentPagePosRef.current
+    const pending: Array<[string, TrackedBlock, number]> = []
+    for (const [key, block] of trackedBlocks) {
+      if (block.displayZone.includes(currentPage)) pending.push([key, block, currentPage])
+    }
+    // A block that just left the current page gets one last pass, on the page it was
+    // on: its progressions are clamped, so it lands on the edge it crossed instead of
+    // freezing part-way.
+    for (const [key, lastContext] of lastContexts) {
+      const block = trackedBlocks.get(key)
+      if (block === undefined) { lastContexts.delete(key); continue }
+      if (block.displayZone.includes(currentPage)) continue
+      pending.push([key, block, lastContext.currentPage])
+    }
+    if (pending.length === 0) return
+    const pagesToMeasure = new Set<number>()
+    for (const [, block, page] of pending) {
+      pagesToMeasure.add(page)
+      for (const pagePos of block.displayZone) pagesToMeasure.add(pagePos)
+    }
+    const metrics = measurePages(pageElementsRef.current, pagesToMeasure, thresholdOffsetPercent)
+    for (const [key, block, page] of pending) {
+      const context = toTrackedBlockContext(block.displayZone, page, metrics)
+      const lastContext = lastContexts.get(key)
+      if (contextsAreEqual(context, lastContext)) continue
+      const wrapper = trackedWrappersRef.current.get(key)
+      if (wrapper !== undefined) {
+        for (const [name, value] of Object.entries(toTrackedBlockCssProps(context))) {
+          wrapper.style.setProperty(name, value)
+        }
+        // Discrete values only move with the page, so they don't need a write per frame
+        if (!sameDiscretePart(context, lastContext)) {
+          for (const [name, value] of Object.entries(toTrackedBlockDataAttributes(context))) {
+            wrapper.setAttribute(name, value)
+          }
+        }
+      }
+      block.onScrolled(context)
+      if (page === currentPage) lastContexts.set(key, context)
+      else lastContexts.delete(key)
+    }
+  }, [thresholdOffsetPercent])
+
+  // Fx. dep. hasTrackedBlocks, handleScrolled - Join the shared scroll listener, and
+  // only then: no tracked block, no measurement pass at all.
+  useEffect(() => {
+    if (!hasTrackedBlocks) return
+    const subscriptionId = subscriptionIdRef.current
+    subscribe(subscriptionId, {
+      rootRef,
+      onScrollStateChange: handleScrolled
+    })
+    return () => unsubscribe(subscriptionId)
+  }, [hasTrackedBlocks, handleScrolled])
 
   // Handlers
   useChangeDispatch(currentPagePos, pagePos => onPageChanged?.(pagePos, pages?.[pagePos]))
@@ -208,6 +361,15 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     const curPagePos = statePages.findIndex(page => page.position === 'curr')
     if (curPagePos === -1) return
     setCurrentPagePos(curPagePos)
+  }
+  const handlePageElementsChanged: NonNullable<PaginatorProps['onPageElementsChanged']> = elements => {
+    pageElementsRef.current = elements
+  }
+  // Registers a block wrapper under the key its context is tracked by. Blocks come
+  // and go with lazy loading, so the map is kept clean on unmount rather than grown.
+  const registerWrapper = (key: string) => (element: HTMLElement | null): void => {
+    if (element === null) trackedWrappersRef.current.delete(key)
+    else trackedWrappersRef.current.set(key, element)
   }
   const handleResize: RSOCompProps['onResized'] = ({ boundingClientRect }) => {
     if (partialBoundingRect === undefined
@@ -233,6 +395,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   )
   const customCssProps = toScreenCssProps(partialBoundingRect)
   return <div
+    ref={rootRef}
     className={rootClss}
     data-current-page-pos={currentPagePos}
     data-current-page-id={pages?.[currentPagePos]?.id}
@@ -245,13 +408,15 @@ export const Scrllgngn: FunctionComponent<Props> = ({
 
       {/* Back blocks */}
       <div className={c('back-blocks')}>
-        {lazyLoadedBackBlocks.map((block, blockPos) => {
+        {lazyLoadedBackBlocks.map(([blockId, block], blockPos) => {
           const isActive = block.displayOnPages.includes(currentPagePos)
           const blockClss = c('back-block', {
             active: isActive,
             'lazy-loaded': !isActive
           })
           return <div
+            key={blockId}
+            ref={registerWrapper(stickyKey(blockId))}
             className={blockClss}
             style={{ zIndex: blockPos }}>
             {block.children}
@@ -261,13 +426,15 @@ export const Scrllgngn: FunctionComponent<Props> = ({
 
       {/* Front blocks */}
       <div className={c('front-blocks')}>
-        {lazyLoadedFrontBlocks.map((block, blockPos) => {
+        {lazyLoadedFrontBlocks.map(([blockId, block], blockPos) => {
           const isActive = block.displayOnPages.includes(currentPagePos)
           const blockClss = c('front-block', {
             active: isActive,
             'lazy-loaded': !isActive
           })
           return <div
+            key={blockId}
+            ref={registerWrapper(stickyKey(blockId))}
             className={blockClss}
             style={{ zIndex: blockPos }}>
             {block.children}
@@ -280,12 +447,15 @@ export const Scrllgngn: FunctionComponent<Props> = ({
         <IntersectionObserverComponent onIntersected={handleCntDetect}>
           <Paginator
             thresholdOffsetPercent={thresholdOffsetPercent}
-            onPagesChanged={handlePagesChanged}>
-            {pages?.map(page => {
-              const scrollBlocks = page.blocks
-                ?.filter(b => b.depth === 'scroll' || b.depth === undefined) ?? []
-              // eslint-disable-next-line @typescript-eslint/promise-function-async
-              return <>{scrollBlocks.map(b => b.children)}</>
+            onPagesChanged={handlePagesChanged}
+            onPageElementsChanged={handlePageElementsChanged}>
+            {pages?.map((page, pagePos) => {
+              return <>{scrollBlocksOf(page).map((block, blockPos) => <div
+                key={blockPos}
+                ref={registerWrapper(scrollKey(pagePos, blockPos))}
+                className={c('scroll-block')}>
+                {block.children}
+              </div>)}</>
             })}
           </Paginator>
         </IntersectionObserverComponent>
