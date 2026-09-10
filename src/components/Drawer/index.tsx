@@ -58,6 +58,8 @@ export type Props = PropsWithChildren<WithClassName<{
  * - `opened` — the drawer is open.
  * - `closed` — the drawer is closed.
  *
+ * - `--measured` — the content has been measured, so the properties below are set.
+ *
  * ### CSS elements
  * - `opener`
  * - `closer`
@@ -132,7 +134,8 @@ export const Drawer: FunctionComponent<Props> = ({
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null, {
     'opened': isOpened,
-    'closed': !isOpened
+    'closed': !isOpened,
+    measured: contentDimensions !== undefined
   }), className)
   const openerClss = c('opener')
   const closerClss = c('closer')

@@ -34,6 +34,9 @@ export type Props = PropsWithChildren<WithClassName<{
  * rect on its root element. Both sets stay absent until the first measurement
  * lands.
  *
+ * ### Root element modifiers
+ * - `--measured` — a first measurement landed, so the sets below are populated.
+ *
  * ### Data attributes
  * `data-x`, `data-y`, `data-top`, `data-left`, `data-bottom`, `data-right`,
  * `data-width` and `data-height` — the content rect, as plain numbers. They carry
@@ -119,7 +122,7 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
     }
   }
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(), className)
+  const rootClss = mergeClassNames(c(null, { measured: contentRect !== undefined }), className)
   return <div
     {...dataAttributes}
     className={rootClss}

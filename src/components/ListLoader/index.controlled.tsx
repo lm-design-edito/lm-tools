@@ -74,6 +74,9 @@ export type Props<T> = WithClassName<ViewportObserverOptions & {
  * - in place of each page missing between two loaded pages,
  * - after the last loaded page, unless it is already `lastPagePos`.
  *
+ * ### Root element modifiers
+ * - `--loading` — at least one page is being fetched.
+ *
  * ### CSS elements
  * - `item` — wraps each rendered item. Carries `data-page`.
  * - `load` — a load button. Rendered empty, so its label belongs in CSS.
@@ -153,7 +156,7 @@ export const ControlledListLoader = <T,>({
     .filter(pagePos => inBoundsPages.includes(pagePos))
     .sort((a, b) => a - b)
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(), className)
+  const rootClss = mergeClassNames(c(null, { loading: sortedLoadingPages.length > 0 }), className)
 
   const renderLoadButton = (pagePos: number, kind: LoadButtonKind): JSX.Element => {
     const button = <button

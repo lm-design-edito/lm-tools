@@ -67,6 +67,11 @@ export type Props = PropsWithChildren<WithClassName<WithViewportObservation<{
  * properties on its root element, so scroll-driven styling needs no JavaScript
  * of its own.
  *
+ * ### Root element modifiers
+ * - `--measured` — a first measurement landed, so the properties below are set.
+ * - `--scrolling-up` / `--scrolling-down` — the document's last known direction.
+ *   Neither is present before the first scroll.
+ *
  * ### CSS custom properties on the root element
  * Each measurement comes as a `px` length under its bare name, and as a `-raw`
  * twin holding the plain number:
@@ -166,7 +171,14 @@ export const ScrollListener: FunctionComponent<Props> = ({
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(), className)
+  const rootClss = mergeClassNames(
+    c(null, {
+      measured: scrollState !== undefined,
+      'scrolling-up': scrollDirection === 'up',
+      'scrolling-down': scrollDirection === 'down'
+    }),
+    className
+  )
   const customProps = scrollState === undefined
     ? {}
     : toScrollCssProps(scrollState)

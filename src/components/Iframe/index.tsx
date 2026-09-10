@@ -59,6 +59,10 @@ export type Props = WithClassName<{
  * The parent component updates the iframe height via React state and `style`
  * prop (no direct DOM mutation).
  *
+ * ### Root element modifiers
+ * - `--auto-height` — the component is listening for a height from inside the frame.
+ * - `--measured` — one has arrived, and the frame is sized to it.
+ *
  * @param props - Component properties.
  * @see {@link Props}
  */
@@ -101,7 +105,13 @@ export const Iframe: FunctionComponent<Props> = ({
   }, [style, autoHeight, height])
 
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(), className)
+  const rootClss = mergeClassNames(
+    c(null, {
+      'auto-height': autoHeight,
+      measured: height !== null
+    }),
+    className
+  )
   const html = useMemo(() => {
     const autoHeightScript = autoHeight
       ? innerAutoHeightNotifier(innerMessageType)

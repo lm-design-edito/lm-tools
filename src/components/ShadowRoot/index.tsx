@@ -41,6 +41,10 @@ export type Props = PropsWithChildren<WithClassName<{
  * Component that creates a Shadow Root on its host element and renders
  * its children inside that Shadow Root using a React portal.
  *
+ * ### Root element modifiers
+ * - `--attached` — the shadow root exists and the children are rendered into it.
+ * Absent on the first render, before the host element is in the document.
+ *
  * @param props - Component properties
  * @see {@link Props}
  * @returns A host `div` element that owns the created Shadow Root.
@@ -77,7 +81,7 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(), className)
+  const rootClss = mergeClassNames(c(null, { attached: shadowRoot !== null }), className)
   return <div
     ref={hostRef}
     className={rootClss}>

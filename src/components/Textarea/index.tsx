@@ -42,6 +42,10 @@ export type Props = TextareaHTMLAttributes<HTMLTextAreaElement> & WithClassName<
  * A stable auto-generated `id` is created on mount and used to associate the
  * rendered label through the `htmlFor` attribute.
  *
+ * ### Root element modifiers
+ * - `--controlled` — the value comes from the parent, not from inside.
+ * - `--empty` / `--filled` — whether the current value is the empty string.
+ *
  * ### CSS elements
  * - `label`
  * - `error`
@@ -90,7 +94,14 @@ export const Textarea: FunctionComponent<Props> = ({
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(), className)
+  const rootClss = mergeClassNames(
+    c(null, {
+      controlled: isControlled,
+      empty: currentValue === '',
+      filled: currentValue !== ''
+    }),
+    className
+  )
   return <>
     {isNotFalsy(label) && <label className={c('label')} htmlFor={id}>{label}</label>}
     <textarea
