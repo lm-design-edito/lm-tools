@@ -12,6 +12,7 @@ import {
   type Props as IOCompProps,
   IntersectionObserverComponent
 } from '../IntersectionObserver/index.js'
+import type { ViewportObserverOptions } from '../utils/types.js'
 import { useChangeDispatch } from '../utils/index.js'
 import {
   type Props as ControlledProps,
@@ -46,6 +47,13 @@ import {
  * component enters the viewport. No-op when `play` is controlled.
  * @property pauseOnHidden - When `true`, pauses internal playback when the
  * component leaves the viewport. No-op when `play` is controlled.
+ * @property threshold - How much of the component has to be in view before it
+ * counts as visible, forwarded to the internal {@link IntersectionObserver}.
+ * @property root - The observer's root. Defaults to the viewport.
+ * @property rootMargin - Grows or shrinks that root before measuring.
+ * @property onVisibilityChanged - Called on every crossing with the new value.
+ * `onIntersected` is the raw form of the same event, carrying the entry and the
+ * observer; this one carries the answer.
  * @property onIntersected - Forwarded verbatim to the internal
  * {@link IntersectionObserverComponent}, and called on every intersection
  * change whichever mode the sequencer runs in.
@@ -59,7 +67,7 @@ import {
  * @property onReachedLastStep - Called when the forwarded step becomes the last
  * one.
  */
-export type Props = Omit<ControlledProps, 'isPlaying' | 'tempo'> & {
+export type Props = ViewportObserverOptions & Omit<ControlledProps, 'isPlaying' | 'tempo'> & {
   defaultStep?: number
   tempo?: number
   play?: boolean
@@ -71,6 +79,7 @@ export type Props = Omit<ControlledProps, 'isPlaying' | 'tempo'> & {
   playOnVisible?: boolean
   pauseOnHidden?: boolean
   onIntersected?: IOCompProps['onIntersected']
+  onVisibilityChanged?: (isVisible: boolean) => void
   onIsPlayingChanged?: (isPlaying: boolean) => void
   onStepChanged?: (step: number) => void
   onLooped?: () => void
@@ -115,6 +124,10 @@ export const Sequencer: FunctionComponent<Props> = ({
   playOnVisible,
   pauseOnHidden,
   onIntersected,
+  onVisibilityChanged,
+  threshold,
+  root,
+  rootMargin,
   onIsPlayingChanged,
   onStepChanged,
   onLooped,
@@ -172,8 +185,11 @@ export const Sequencer: FunctionComponent<Props> = ({
   // Action handlers
   const handleIntersection = useCallback<NonNullable<IOCompProps['onIntersected']>>(({ ioEntry, observer }) => {
     onIntersected?.({ ioEntry, observer })
-    if (play === true || step !== undefined) return
     const { isIntersecting } = ioEntry ?? {}
+    if (isIntersecting !== undefined) onVisibilityChanged?.(isIntersecting)
+    // Both handlers fire whatever the mode: a controlled sequencer still wants to
+    // hear about the viewport, it just doesn't let it drive the step.
+    if (play === true || step !== undefined) return
     if (isIntersecting === true) {
       if (resetOnVisible === true) setInternalStep(0)
       if (playOnVisible === true) setInternalPlay(true)
@@ -193,6 +209,9 @@ export const Sequencer: FunctionComponent<Props> = ({
 
   // Rendering
   return <IntersectionObserverComponent
+    threshold={threshold}
+    root={root}
+    rootMargin={rootMargin}
     onIntersected={handleIntersection}>
     <ControlledSequencer
       {...controlledProps}

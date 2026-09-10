@@ -1,7 +1,10 @@
 import type { JSX, ReactNode } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { IntersectionObserverComponent } from '../IntersectionObserver/index.js'
-import type { WithClassName } from '../utils/types.js'
+import type {
+  ViewportObserverOptions,
+  WithClassName
+} from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import { listLoader as publicClassName } from '../public-classnames.js'
 import { rangeBetween } from './utils.js'
@@ -36,9 +39,14 @@ type LoadButtonKind = 'prev' | 'next' | 'gap'
  * @property autoLoadPrevWhenVisible - Wraps the leading load button in an
  * {@link IntersectionObserverComponent} and fires `onLoadPageClicked` when it enters the viewport.
  * @property autoLoadNextWhenVisible - Same, for the trailing load button.
+ * @property threshold - How much of a load button has to be in view before it
+ * counts as visible, forwarded to each observer.
+ * @property root - Their root. Defaults to the viewport.
+ * @property rootMargin - Grows or shrinks that root before measuring — the way to
+ * start loading a page before its button actually shows.
  * @property className - Additional class name(s) applied to the root element.
  */
-export type Props<T> = WithClassName<{
+export type Props<T> = WithClassName<ViewportObserverOptions & {
   pages: number[]
   firstPagePos: number
   lastPagePos: number
@@ -98,7 +106,10 @@ export const ControlledListLoader = <T,>({
   loadingPages,
   onLoadPageClicked,
   autoLoadPrevWhenVisible,
-  autoLoadNextWhenVisible
+  autoLoadNextWhenVisible,
+  threshold,
+  root,
+  rootMargin
 }: Props<T>): ReactNode => {
   const inBoundsPages = pages.filter(pagePos => pagePos >= firstPagePos && pagePos <= lastPagePos)
 
@@ -156,6 +167,9 @@ export const ControlledListLoader = <T,>({
     return <IntersectionObserverComponent
       className={c('load-observer', kind)}
       key={`load/${pagePos}`}
+      threshold={threshold}
+      root={root}
+      rootMargin={rootMargin}
       onIntersected={({ ioEntry }) => {
         if (ioEntry?.isIntersecting !== true) return
         onLoadPageClicked?.(pagePos)

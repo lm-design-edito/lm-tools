@@ -12,7 +12,10 @@ import {
   IntersectionObserverComponent,
   type Props as IOProps
 } from '../IntersectionObserver/index.js'
-import type { WithClassName } from '../utils/types.js'
+import type {
+  WithClassName,
+  WithViewportObservation
+} from '../utils/types.js'
 import {
   mergeClassNames,
   useChangeDispatch
@@ -43,17 +46,21 @@ import cssModule from './styles.module.css'
  * it has fully left it. Never on mount.
  * @property onScrollDirectionChanged - Called after the document scroll
  * direction changed, with `'up'` or `'down'`. Never on mount.
+ * @property threshold - How much of the component has to be in view before it
+ * counts as visible, forwarded to the internal {@link IntersectionObserver}.
+ * @property root - The observer's root. Defaults to the viewport.
+ * @property rootMargin - Grows or shrinks that root before measuring.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React nodes rendered inside the scroll listener container.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = PropsWithChildren<WithClassName<WithViewportObservation<{
   startOnVisible?: boolean
   stopOnHidden?: boolean
   onScrollStateChanged?: (scrollState?: ScrollState) => void
   onVisibilityChanged?: (isVisible: boolean) => void
   onScrollProgressChanged?: (progress: number) => void
   onScrollDirectionChanged?: (direction: 'up' | 'down') => void
-}>>
+}>>>
 
 /**
  * Exposes scroll metrics — both the document's and its own — as CSS custom
@@ -96,6 +103,9 @@ export type Props = PropsWithChildren<WithClassName<{
 export const ScrollListener: FunctionComponent<Props> = ({
   startOnVisible,
   stopOnHidden,
+  threshold,
+  root,
+  rootMargin,
   onScrollStateChanged,
   onVisibilityChanged,
   onScrollProgressChanged,
@@ -164,7 +174,11 @@ export const ScrollListener: FunctionComponent<Props> = ({
     className={rootClss}
     ref={rootRef}
     style={{ ...customProps }}>
-    <IntersectionObserverComponent onIntersected={handleIntersection}>
+    <IntersectionObserverComponent
+      threshold={threshold}
+      root={root}
+      rootMargin={rootMargin}
+      onIntersected={handleIntersection}>
       {children}
     </IntersectionObserverComponent>
   </div>

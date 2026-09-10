@@ -94,6 +94,9 @@ export const ListLoader = <T,>({
   dropPagesFurtherThan,
   autoLoadPrevWhenVisible,
   autoLoadNextWhenVisible,
+  threshold,
+  root,
+  rootMargin,
   firstPagePos,
   lastPagePos,
   fetch,
@@ -236,5 +239,8 @@ export const ListLoader = <T,>({
     loadingPages={Array.from(loadingPages)}
     onLoadPageClicked={handleLoadClick}
     autoLoadPrevWhenVisible={autoLoadPrevWhenVisible}
-    autoLoadNextWhenVisible={autoLoadNextWhenVisible} />
+    autoLoadNextWhenVisible={autoLoadNextWhenVisible}
+    threshold={threshold}
+    root={root}
+    rootMargin={rootMargin} />
 }
