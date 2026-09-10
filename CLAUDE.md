@@ -99,6 +99,17 @@ so in the JSDoc.
 ### Rendering
 
 - Root class is `c()`; `c(null, { … })` only when modifiers follow.
+- **The root class carries a modifier for every state the component holds.** A
+  consumer styles from the outside, with no access to the state — so anything the
+  component knows about itself and that could change how it looks has to surface
+  as a modifier: open / closed, loading / loaded / failed, empty / filled,
+  controlled / uncontrolled, measured or not, which way it is scrolling. A component
+  with internal state and a bare `c()` root is the thing to look for.
+  - Name the state, not its negation, unless both sides are styled — `--clipped`
+    alone, but `--play-on` / `--play-off` together, because a player styles the two.
+  - A value that isn't a state doesn't belong here: a ratio, a size, a timecode go
+    to a custom property and a `data-` attribute. A modifier answers yes or no, or
+    names one case out of a few.
 - Type as `FunctionComponent<Props>`, don't annotate the arrow's return. A generic
   component can't use it: type it as a generic arrow returning `ReactNode`.
 - The stylesheet is `styles.module.css`.
