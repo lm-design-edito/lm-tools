@@ -75,7 +75,9 @@ type TrackData = {
  * @property loudBtnContent - React content for the "loud" (unmute) button.
  * @property muteBtnContent - React content for the mute button.
  * @property fullscreenBtnContent - React content for the fullscreen button.
- * @property play - External control of play state (true = play, false = pause).
+ * @property play - Whether the media should be playing. A **request**, not a
+ * setting: a browser holds a veto over playback — an unmuted media outside a user
+ * gesture is refused — so this prop asks, and `onIsPlayingChanged` answers.
  * @property fullscreen - External control of fullscreen mode.
  * @property volume - External control of volume (0 to 1).
  * @property mute - External control of mute (true = muted).
@@ -104,7 +106,10 @@ type TrackData = {
  * @property onTimelineClicked - Called when the timeline is clicked, before the
  * component reacts, with the target and current times (in seconds). The component
  * seeks to the target right after, unless the time is controlled.
- * @property onIsPlayingChanged - Called once the playback state has changed.
+ * @property onIsPlayingChanged - Called with what the **element** is doing, not
+ * with what `play` asked for. It is how a refused play surfaces, that being the one
+ * case where nothing else does: the promise rejects, no event fires, and without
+ * this a parent would go on believing a media that never started. Never on mount.
  * @property onIsFullscreenChanged - Called once the fullscreen state has changed.
  * @property onIsEndedChanged - Called after playback reached the end, and again
  * once it left it — a seek back or a new play. Never on mount.
@@ -247,6 +252,11 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   // every time update, which covers a seek away from the end.
   const [isEnded, setIsEnded] = useState(false)
 
+  // What the element is actually doing, as opposed to what `play` asked for. The
+  // two part ways whenever a browser refuses a play, which it does without firing
+  // anything — see `forcePlay`.
+  const [isElementPlaying, setIsElementPlaying] = useState(false)
+
   const isTimeControlled = givenCurrentTimeMs !== undefined
 
   // The parent owns the time as soon as it provides one, so that is what gets
@@ -283,13 +293,20 @@ export const ControlledVideo: FunctionComponent<Props> = ({
 
   const handleEndedEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     setIsEnded(true)
+    setIsElementPlaying(false)
     intrinsicVideoAttributes.onEnded?.(e)
   }, [intrinsicVideoAttributes.onEnded])
 
   const handlePlayEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     setIsEnded(false)
+    setIsElementPlaying(true)
     intrinsicVideoAttributes.onPlay?.(e)
   }, [intrinsicVideoAttributes.onPlay])
+
+  const handlePauseEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
+    setIsElementPlaying(false)
+    intrinsicVideoAttributes.onPause?.(e)
+  }, [intrinsicVideoAttributes.onPause])
 
   // Custom action handlers
   const handlePlayButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
@@ -439,11 +456,17 @@ export const ControlledVideo: FunctionComponent<Props> = ({
       void forcePause(videoRef.current)
       return
     }
-    if (play === true) {
-      void forcePlay(videoRef.current)
-    } else {
+    if (play !== true) {
       void forcePause(videoRef.current)
+      return
     }
+    let isCurrent = true
+    void forcePlay(videoRef.current).then(isNowPlaying => {
+      // A refused play fires nothing, so without this the component would go on
+      // believing a media that never started.
+      if (isCurrent && !isNowPlaying) setIsElementPlaying(false)
+    })
+    return () => { isCurrent = false }
   }, [play, isTimeControlled])
 
   useEffect(() => {
@@ -477,7 +500,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
 
   // State handlers
   useChangeDispatch(currentTimeMs, onCurrentTimeMsChanged)
-  useChangeDispatch(isPlaying, onIsPlayingChanged)
+  useChangeDispatch(isElementPlaying, onIsPlayingChanged)
   useChangeDispatch(isFullscreen, onIsFullscreenChanged)
   useChangeDispatch(isLoud, onIsLoudChanged)
   useChangeDispatch(isEnded, onIsEndedChanged)
@@ -497,7 +520,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
       onLoadedMetadata={handleMetadataLoadEvent}
       onTimeUpdate={handleOnTimeUpdateEvent}
       onEnded={handleEndedEvent}
-      onPlay={handlePlayEvent}>
+      onPlay={handlePlayEvent}
+      onPause={handlePauseEvent}>
       {/* Sources */}
       {parsedSources.map((source, index) => typeof source === 'string'
         ? <source

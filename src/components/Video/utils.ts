@@ -32,6 +32,17 @@ export const forceVolume = (
   video.volume = volume
 }
 
+/**
+ * Asks the element to play, and reports what came of it.
+ *
+ * A browser may refuse — an unmuted media outside a user gesture, typically — and
+ * it refuses **silently**: the promise rejects and no event fires, so this is the
+ * only moment the outcome can be known. Hence the return value, and hence no
+ * logging: a refusal is not an anomaly to print, it is an answer to hand back.
+ *
+ * @param video - The element, or `null` before it mounts.
+ * @returns Whether it is playing now.
+ */
 export const forcePlay = async (
   video: HTMLVideoElement | null
 ): Promise<boolean> => {
@@ -39,12 +50,10 @@ export const forcePlay = async (
   if (!video.paused) return true
   try {
     await video.play()
-    return video.paused
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(e)
+  } catch (err) {
+    // The refusal itself is the information, and it is in `video.paused` below.
   }
-  return false
+  return !video.paused
 }
 
 export const forcePause = (

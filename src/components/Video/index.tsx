@@ -96,9 +96,11 @@ export type Props = WithViewportObservation<Omit<ControlledProps, 'play' | 'full
  * behaviour is the same as setting the `…When…` one alone.
  *
  * Browsers refuse an unmuted `play()` outside a user gesture, so pairing an
- * `autoLoud…` with an `autoPlay…` will usually have the playback rejected: the
- * element stays paused while the controls believe otherwise. Autoplay muted, and
- * leave unmuting to the reader.
+ * `autoLoud…` with an `autoPlay…` will usually have the playback rejected. The
+ * refusal is caught rather than ignored — the element is read back once the attempt
+ * settles, and the play state follows what it says — so the controls stay truthful.
+ * The media still won't play, though: autoplay muted, and leave unmuting to the
+ * reader.
  */
 
 export const Video: FunctionComponent<Props> = ({
@@ -177,6 +179,15 @@ export const Video: FunctionComponent<Props> = ({
     setPlay(false)
     controlledProps.onPause?.(e)
   }, [controlledProps.onPause])
+
+  // The element's own account of whether it is playing. It covers what the `play`
+  // and `pause` events do, plus the one case they can't: a play the browser refused,
+  // which fires nothing at all. Without it the controls would stay on `--play-on`
+  // over a media that never started.
+  const handleIsPlayingChanged = useCallback((isPlaying: boolean) => {
+    setPlay(isPlaying)
+    controlledProps.onIsPlayingChanged?.(isPlaying)
+  }, [controlledProps.onIsPlayingChanged])
 
   const handleOnVolumeChangeEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
     setMute(e.currentTarget.muted)
@@ -290,6 +301,7 @@ export const Video: FunctionComponent<Props> = ({
     fullscreen={fullscreen}
     onPlay={handleOnPlayEvent}
     onPause={handleOnPauseEvent}
+    onIsPlayingChanged={handleIsPlayingChanged}
     onVolumeChange={handleOnVolumeChangeEvent}
     onRateChange={handleOnRateChangeEvent}
     onLoadedMetadata={handleOnLoadedMetadataEvent}
