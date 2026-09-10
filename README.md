@@ -53,11 +53,11 @@ dans `lm-link`.
   variables CSS et les `data-*`, sans handler, doit déclarer un handler vide. Rouvrir
   un booléen si le cas se présente. Marqué `[WIP]` sur `PropsCommonBlock`.
 
-- **La démo référence des noms retirés par la passe « `data-*` discrets ».** Elle
-  compile toujours — ce sont des chaînes de CSS — mais elle s'affichera de travers.
-  `BeforeAfterDemo` lit `--{prefix}-ratio-percent` en six endroits : remplacer par
-  `calc(var(--lm-before-after-ratio) * 100%)`. `DrawerDemo` documente
-  `data-content-width` / `-content-height`, qui n'existent plus. Rien d'autre.
+- **La démo lit une custom property retirée.** `BeforeAfterDemo` utilise
+  `--{prefix}-ratio-percent` en six endroits, supprimée parce qu'un ratio n'a pas de
+  jumeau : remplacer par `calc(var(--lm-before-after-ratio) * 100%)`. Elle compile
+  toujours — ce sont des chaînes de CSS — mais elle s'affiche de travers. Rien
+  d'autre : les `data-` attributes, eux, sont tous restés.
 
 - **`JsonEditor` en mode contrôlé.** Structurellement impossible aujourd'hui : chaque
   éditeur amorce son état depuis `defaultValue` au montage et ne le relit jamais.
