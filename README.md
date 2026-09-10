@@ -53,21 +53,11 @@ dans `lm-link`.
   variables CSS et les `data-*`, sans handler, doit déclarer un handler vide. Rouvrir
   un booléen si le cas se présente. Marqué `[WIP]` sur `PropsCommonBlock`.
 
-- **Passer toute la lib à la règle « `data-*` = valeurs discrètes ».** La règle est
-  posée dans `CLAUDE.md`, mais plusieurs composants exposent aujourd'hui du continu en
-  attribut. À reprendre d'un bloc, pas au fil de l'eau, parce que chaque retrait est un
-  changement d'API publique :
-  - `Video/index.controlled.tsx` — `data-volume`, `data-volume-percent`,
-    `data-current-time-ms`, `data-current-time-ratio`. Les pires : réécrits à chaque
-    `timeupdate`, et `-volume-percent` double un ratio que `calc()` sait convertir.
-  - `ResizeObserver/index.tsx` — `data-x` / `-y` / `-top` / `-left` / `-bottom` /
-    `-right` / `-width` / `-height`.
-  - `Drawer/index.tsx` — `data-content-width` / `-content-height`.
-  - `BeforeAfter/index.controlled.tsx` — `data-ratio`, déjà arrondi : cas limite, à
-    garder si l'arrondi suffit à contenir la churn.
-  Les booléens de `Video`, `data-current-page-pos` / `-id` de `Scrllgngn`,
-  `data-active` / `-slot` de `Gallery`, `data-step` / `-tempo` de `Sequencer` et
-  `data-loading-pages` de `ListLoader` sont déjà conformes.
+- **La démo référence des noms retirés par la passe « `data-*` discrets ».** Elle
+  compile toujours — ce sont des chaînes de CSS — mais elle s'affichera de travers.
+  `BeforeAfterDemo` lit `--{prefix}-ratio-percent` en six endroits : remplacer par
+  `calc(var(--lm-before-after-ratio) * 100%)`. `DrawerDemo` documente
+  `data-content-width` / `-content-height`, qui n'existent plus. Rien d'autre.
 
 - **`JsonEditor` en mode contrôlé.** Structurellement impossible aujourd'hui : chaque
   éditeur amorce son état depuis `defaultValue` au montage et ne le relit jamais.
