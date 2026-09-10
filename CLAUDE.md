@@ -107,9 +107,21 @@ so in the JSDoc.
   prefix. They are the component's public API: a consumer greps for the exact
   string, and it must exist in the source they read. Same reason the JSDoc lists
   them literally.
-- A length carries its `px` under the bare name and the plain number under a `-raw`
-  twin, for `calc()`. Ratios are unitless and have no twin. Never name a variable
-  after a unit it doesn't carry.
+- **A twin exists only when the conversion isn't expressible in CSS.** A length
+  carries its `px` under the bare name and the plain number under a `-raw` twin,
+  because `100px` can't be turned back into `100` in a stylesheet. A unitless value
+  needs no twin: `calc(var(--r) * 100%)`, `* 1turn`, `* 1px` cover every unit in one
+  multiplication. So no `-percent`, no `-deg`, no `-px` variant of a ratio.
+- **Every unitless 0–1 value ends in `-ratio`** — `-scrolled-y-ratio`,
+  `-progression-ratio` — even when the stem already reads as a ratio. The suffix is
+  mechanical on purpose: it removes the case-by-case call about whether the name is
+  self-describing, and it keeps a ratio from being mistaken for the length that often
+  shares its stem (`--lm-scroll-listener-scroll-y` is px, `-window-scrolled-y-ratio`
+  is not). Never name a variable after a unit it doesn't carry.
+- **`data-` attributes carry discrete values only** — a page index, an id, a state
+  name — never a continuous one. Continuous values change every frame, and a custom
+  property is the cheap way to write those; an attribute write per frame costs more
+  and floods the inspector. Continuous → custom property, discrete → both if useful.
 - An object holding only custom properties needs an explicit `Record<string, string>`
   annotation — `style` rejects a literal that shares no property with `CSSProperties`.
 - When every value comes from the same measurement, guard once on that measurement
