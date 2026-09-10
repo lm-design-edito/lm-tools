@@ -108,8 +108,6 @@ règle de nommage dans `CLAUDE.md`.
 
 Différé, à traiter avec ou après :
 
-- `stickyBlocksViewportHeight` / `stickyBlocksOffsetTop` (présents dans l'ancien) — à
-  reconsidérer.
 - **Un trou connu, à assumer en `[WIP]` dans le code** : le tracking étant activé par la
   seule présence de `onScrolled`, un bloc qui ne voudrait que les variables CSS et les
   `data-*`, sans handler, n'a pas d'interrupteur. Rouvrir un booléen si le besoin se
