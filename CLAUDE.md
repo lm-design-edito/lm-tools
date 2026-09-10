@@ -118,10 +118,12 @@ so in the JSDoc.
   self-describing, and it keeps a ratio from being mistaken for the length that often
   shares its stem (`--lm-scroll-listener-scroll-y` is px, `-window-scrolled-y-ratio`
   is not). Never name a variable after a unit it doesn't carry.
-- **`data-` attributes carry discrete values only** — a page index, an id, a state
-  name — never a continuous one. Continuous values change every frame, and a custom
-  property is the cheap way to write those; an attribute write per frame costs more
-  and floods the inspector. Continuous → custom property, discrete → both if useful.
+- **A `data-` attribute and a custom property are not alternatives**, and the same
+  value belongs in both whenever both are reachable. A custom property feeds
+  `calc()` and any property that takes a value; an attribute feeds
+  `content: attr(data-width)` and attribute selectors, which no custom property can
+  do. So duplication between the two is never a reason to drop either — the question
+  is only whether a stylesheet can reach the value that way at all.
 - An object holding only custom properties needs an explicit `Record<string, string>`
   annotation — `style` rejects a literal that shares no property with `CSSProperties`.
 - When every value comes from the same measurement, guard once on that measurement
