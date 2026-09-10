@@ -542,3 +542,17 @@ export function toPaginatorThresholdPercent (
   if (viewportHeight === 0) return thresholdOffsetPercent
   return toThresholdY(zone, thresholdOffsetPercent) / viewportHeight * 100
 }
+
+/** How often the visible zone is re-read while the component is on screen, in ms. */
+export const visibleZonePollInterval = 100
+
+/** Whether two zones hold the same six measurements. */
+export function visibleZonesAreEqual (a?: VisibleZoneRect, b?: VisibleZoneRect): boolean {
+  if (a === undefined || b === undefined) return a === b
+  return a.top === b.top
+    && a.right === b.right
+    && a.bottom === b.bottom
+    && a.left === b.left
+    && a.width === b.width
+    && a.height === b.height
+}

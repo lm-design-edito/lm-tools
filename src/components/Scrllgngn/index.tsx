@@ -49,6 +49,8 @@ import {
   toViewportOffsetCssProps,
   toVisibleZoneRect,
   toVisibleZoneRootMargin,
+  visibleZonePollInterval,
+  visibleZonesAreEqual,
   type ConsolidatedStickyBlock,
   type ScreenRect,
   type TrackedBlock,
@@ -252,8 +254,10 @@ export type Props = WithClassName<{
  * A `viewportOffset*` given as a CSS length is resolved by CSS, not parsed: a hidden
  * probe is inset by the four of them and observed, so `var()`, `clamp()` and
  * breakpoint-dependent values all work, and any restyling that changes them is
- * picked up as a resize. The one case that slips through is a change that moves the
- * zone without altering its size — swapping a top offset for an equal bottom one.
+ * picked up as a resize. A change that moves the zone without altering its size —
+ * a top offset traded for an equal bottom one — is caught instead by a re-read every
+ * 100ms, which runs only while the component is on screen and only reaches state
+ * when the zone really moved.
  *
  * Tracking costs nothing until a block asks for it: with no `onScrolled` anywhere,
  * the component never joins the shared scroll listener. Once it does, each frame
@@ -292,6 +296,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   const lastContextsRef = useRef(new Map<string, TrackedBlockContext>())
   const currentPagePosRef = useRef(currentPagePos)
   const visibleZoneRef = useRef(visibleZone)
+  const probeRef = useRef<Element | null>(null)
 
   // Sticky blocks calculations
   useEffect(() => {
@@ -332,6 +337,15 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     currentPagePosRef.current = currentPagePos
     visibleZoneRef.current = visibleZone
   })
+
+  // Re-reads the probe, and only disturbs the render if the zone actually moved.
+  const readVisibleZone = useCallback((): void => {
+    const probe = probeRef.current
+    if (probe === null) return
+    const zone = toVisibleZoneRect(probe.getBoundingClientRect())
+    if (visibleZonesAreEqual(zone, visibleZoneRef.current)) return
+    setVisibleZone(zone)
+  }, [])
 
   // The per-frame pass: measure only the pages the displayed tracked blocks span,
   // then hand each block its context — once, and only when something moved.
@@ -394,6 +408,17 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     return () => unsubscribe(subscriptionId)
   }, [hasTrackedBlocks, handleScrolled])
 
+  // Fx. dep. isOnScreen, readVisibleZone - Catch what the probe's ResizeObserver
+  // cannot: a restyle that moves the visible zone without resizing it, say a top
+  // offset traded for an equal bottom one. Only runs while the component is on
+  // screen, and only touches state when the zone actually moved.
+  const isOnScreen = topVisible || contentVisible || bottomVisible
+  useEffect(() => {
+    if (!isOnScreen) return
+    const interval = window.setInterval(readVisibleZone, visibleZonePollInterval)
+    return () => window.clearInterval(interval)
+  }, [isOnScreen, readVisibleZone])
+
   // Handlers
   useChangeDispatch(currentPagePos, pagePos => onPageChanged?.(pagePos, pages?.[pagePos]))
   useChangeDispatch(contentVisible, onContentVisibilityChanged)
@@ -414,7 +439,8 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     if (element === null) trackedWrappersRef.current.delete(key)
     else trackedWrappersRef.current.set(key, element)
   }
-  const handleProbeResized: RSOCompProps['onResized'] = ({ boundingClientRect }) => {
+  const handleProbeResized: RSOCompProps['onResized'] = ({ entry, boundingClientRect }) => {
+    probeRef.current = entry.target
     setVisibleZone(toVisibleZoneRect(boundingClientRect))
   }
   const handleResize: RSOCompProps['onResized'] = ({ boundingClientRect }) => {
