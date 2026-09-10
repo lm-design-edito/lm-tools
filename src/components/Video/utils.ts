@@ -183,3 +183,25 @@ export const getTimelineClickProgress = (
   const position = event.clientX - timelineRect.left
   return Math.min(1, Math.max(0, position / timelineRect.width))
 }
+
+/**
+ * Whether a viewport-driven behaviour should run on this crossing.
+ *
+ * Each behaviour comes in two flavours: `…When…` on every crossing, `…Once…` on the
+ * first one only. Setting both is the same as setting `…When…` alone.
+ *
+ * @param whenCrossed - The `…When…` prop.
+ * @param onceOnly - The `…Once…` prop.
+ * @param hasFired - Whether this behaviour's own automatic trigger already ran. It
+ * tracks that behaviour and nothing else: a user pressing play must not spend an
+ * automatic mute the component still owed.
+ * @returns Whether to apply it now.
+ */
+export const shouldRunAutoBehaviour = (
+  whenCrossed: boolean | undefined,
+  onceOnly: boolean | undefined,
+  hasFired: boolean
+): boolean => {
+  if (whenCrossed === true) return true
+  return onceOnly === true && !hasFired
+}

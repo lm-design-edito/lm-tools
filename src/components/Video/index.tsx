@@ -12,7 +12,8 @@ import { IntersectionObserverComponent, type Props as IntersectionObserverCompon
 import { mergeClassNames } from '../utils/index.js'
 import { videoWrapper as publicClassName } from '../public-classnames.js'
 import {
-  muteAttributeWorkaround
+  muteAttributeWorkaround,
+  shouldRunAutoBehaviour
 } from './utils.js'
 import cssModule from './styles.module.css'
 import {
@@ -24,14 +25,18 @@ import {
  * Props for the {@link Video} component.
  *
  * Extends all ControlledVideo props except play, mute, fullscreen, volume, playbackRate, and their associated event handlers
- * @property autoPlayWhenVisible - When `true`, triggers playback the first time the
- * component intersects the viewport.
- * @property autoPauseWhenHidden - When `true`, pauses playback whenever the component
- * leaves the viewport.
- * @property autoLoudWhenVisible - When `true`, unmutes the video the first time the
- * component intersects the viewport.
- * @property autoMuteWhenHidden - When `true`, mutes the video whenever the component
- * leaves the viewport.
+ * @property autoPlayWhenVisible - When `true`, starts playback every time the
+ * component enters the viewport.
+ * @property autoPlayOnceVisible - Same, but only the first time it does.
+ * @property autoPauseWhenHidden - When `true`, pauses playback every time the
+ * component leaves the viewport.
+ * @property autoPauseOnceHidden - Same, but only the first time it does.
+ * @property autoLoudWhenVisible - When `true`, unmutes every time the component
+ * enters the viewport.
+ * @property autoLoudOnceVisible - Same, but only the first time it does.
+ * @property autoMuteWhenHidden - When `true`, mutes every time the component leaves
+ * the viewport.
+ * @property autoMuteOnceHidden - Same, but only the first time it does.
  * @property currentTimeMs - When provided, hands ownership of the current time
  * (in milliseconds) to the parent, which is then responsible for updating it —
  * typically to scrub the video from scroll position. A controlled time implies a
@@ -45,9 +50,13 @@ import {
  */
 export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mute' | 'playbackRate'> & {
   autoPlayWhenVisible?: boolean
+  autoPlayOnceVisible?: boolean
   autoPauseWhenHidden?: boolean
+  autoPauseOnceHidden?: boolean
   autoLoudWhenVisible?: boolean
+  autoLoudOnceVisible?: boolean
   autoMuteWhenHidden?: boolean
+  autoMuteOnceHidden?: boolean
   wrapperClassName?: string
 }
 
@@ -60,14 +69,30 @@ export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mu
  * @see {@link Props}
  * @returns A `<figure>` element containing the video, its controls and optional
  * subtitles.
+ *
+ * @remarks
+ * Each viewport-driven behaviour comes in two flavours: `…When…` fires on every
+ * crossing, `…Once…` only on the first one. A `…Once…` flag is armed by its own
+ * automatic trigger and by nothing else — pressing play does not spend the one
+ * automatic play the component still owed. Setting both flavours of the same
+ * behaviour is the same as setting the `…When…` one alone.
+ *
+ * Browsers refuse an unmuted `play()` outside a user gesture, so pairing an
+ * `autoLoud…` with an `autoPlay…` will usually have the playback rejected: the
+ * element stays paused while the controls believe otherwise. Autoplay muted, and
+ * leave unmuting to the reader.
  */
 
 export const Video: FunctionComponent<Props> = ({
   loop,
   autoPlayWhenVisible,
+  autoPlayOnceVisible,
   autoPauseWhenHidden,
+  autoPauseOnceHidden,
   autoMuteWhenHidden,
+  autoMuteOnceHidden,
   autoLoudWhenVisible,
+  autoLoudOnceVisible,
   wrapperClassName,
   onPlayButtonClicked,
   onPauseButtonClicked,
@@ -85,7 +110,14 @@ export const Video: FunctionComponent<Props> = ({
   const [playbackRate, setPlaybackRate] = useState(1)
   const [fullscreen, setFullscreen] = useState(false)
 
-  const hasBeenAutoPlayed = useRef(false)
+  // One flag per `…Once…` behaviour, and each is armed by that behaviour's own
+  // automatic trigger. A single shared flag conflated four questions, and being set
+  // on any `play` event — a user click included — meant the first press cancelled
+  // behaviours that had nothing to do with playback.
+  const hasAutoPlayedOnce = useRef(false)
+  const hasAutoPausedOnce = useRef(false)
+  const hasAutoLoudedOnce = useRef(false)
+  const hasAutoMutedOnce = useRef(false)
 
   // Several paths below ask for playback — the play button, autoPlayWhenVisible,
   // autoPlay itself. None of them may win over a parent-owned time, so the
@@ -94,20 +126,27 @@ export const Video: FunctionComponent<Props> = ({
   const isTimeControlled = controlledProps.currentTimeMs !== undefined
 
   const needsObserve = useMemo(() => autoLoudWhenVisible === true
+    || autoLoudOnceVisible === true
     || autoMuteWhenHidden === true
+    || autoMuteOnceHidden === true
     || autoPlayWhenVisible === true
-    || autoPauseWhenHidden === true, [
+    || autoPlayOnceVisible === true
+    || autoPauseWhenHidden === true
+    || autoPauseOnceHidden === true, [
     autoLoudWhenVisible,
+    autoLoudOnceVisible,
     autoMuteWhenHidden,
+    autoMuteOnceHidden,
     autoPlayWhenVisible,
-    autoPauseWhenHidden
+    autoPlayOnceVisible,
+    autoPauseWhenHidden,
+    autoPauseOnceHidden
   ])
 
   // Intrisic event handlers
   const handleOnPlayEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
     controlledProps.onPlay?.(e)
     setPlay(true)
-    hasBeenAutoPlayed.current = true
   }, [controlledProps.onPlay])
 
   const handleOnPauseEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
@@ -176,25 +215,40 @@ export const Video: FunctionComponent<Props> = ({
   const onIntersected = useCallback<NonNullable<IntersectionObserverComponentProps['onIntersected']>>(({ ioEntry }) => {
     if (ioEntry === undefined) return
     const { isIntersecting } = ioEntry
-    if (autoPauseWhenHidden === true && !isIntersecting) setPlay(false)
-    if (autoLoudWhenVisible === true && isIntersecting) setMute(false)
-    if (autoPlayWhenVisible === true
-      && !hasBeenAutoPlayed.current
-      && isIntersecting) setPlay(true)
-    if (autoMuteWhenHidden === true
-      && !hasBeenAutoPlayed.current
-      && !isIntersecting) setMute(true)
+    if (isIntersecting) {
+      if (shouldRunAutoBehaviour(autoPlayWhenVisible, autoPlayOnceVisible, hasAutoPlayedOnce.current)) {
+        hasAutoPlayedOnce.current = true
+        setPlay(true)
+      }
+      if (shouldRunAutoBehaviour(autoLoudWhenVisible, autoLoudOnceVisible, hasAutoLoudedOnce.current)) {
+        hasAutoLoudedOnce.current = true
+        setMute(false)
+      }
+      return
+    }
+    if (shouldRunAutoBehaviour(autoPauseWhenHidden, autoPauseOnceHidden, hasAutoPausedOnce.current)) {
+      hasAutoPausedOnce.current = true
+      setPlay(false)
+    }
+    if (shouldRunAutoBehaviour(autoMuteWhenHidden, autoMuteOnceHidden, hasAutoMutedOnce.current)) {
+      hasAutoMutedOnce.current = true
+      setMute(true)
+    }
   }, [
     autoPlayWhenVisible,
+    autoPlayOnceVisible,
     autoPauseWhenHidden,
+    autoPauseOnceHidden,
     autoMuteWhenHidden,
-    autoLoudWhenVisible
+    autoMuteOnceHidden,
+    autoLoudWhenVisible,
+    autoLoudOnceVisible
   ])
 
   // `autoPlay` is forwarded to the element, but the play state is owned here, so
   // it has to be seeded once on mount for the controls to agree with the element.
   useEffect(() => {
-    if (controlledProps.autoPlay === true && !hasBeenAutoPlayed.current) setPlay(true)
+    if (controlledProps.autoPlay === true) setPlay(true)
   }, [])
 
   // Render
