@@ -38,6 +38,22 @@ publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là
 gardant que la coquille CLI chez lui. C'est le prochain vrai chantier de ce dépôt,
 et il n'ouvrira qu'une fois lm-link publié.
 
+## À corriger
+
+- **`Paginator` — `rootMargin` non borné.** L'observateur est construit sur
+  `` `-${pct}%` `` et `` `-${100 - pct}%` `` (`components/Paginator/index.tsx:140`) :
+  un `pct` négatif produit `--0.06%`, un `pct` au-delà de 100 produit l'autre moitié
+  invalide, et l'`IntersectionObserver` **jette** — ce qui tue le montage du
+  composant, pas seulement l'observateur. Borner `pct` à 0–100. Repéré depuis la
+  démo de lm-link, où `Scrllgngn` lui passe un pourcentage recalculé qui part
+  négatif.
+
+- **`Paginator` — l'effet d'observation dépend de `children`.** Deps
+  `[thresholdOffsetPercent, children]`, or `Scrllgngn` reconstruit ses `children` à
+  chaque render : les observateurs sont détruits et recréés à chaque fois, une page
+  par observateur. Sur la démo de lm-link ça fait 62 observateurs par frame de
+  scroll.
+
 ## En sommeil
 
 Aucun des trois n'a d'importance à court terme. Ils sont ici pour ne pas être
