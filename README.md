@@ -38,6 +38,46 @@ publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là
 gardant que la coquille CLI chez lui. C'est le prochain vrai chantier de ce dépôt,
 et il n'ouvrira qu'une fois lm-link publié.
 
+## Formater un temps — un chantier en deux moitiés
+
+Le besoin vient de lm-link : la fiche `video` veut des horloges en `mm:ss`, et le lecteur
+les rend en `mm:ss:ms` — `formatTime(currentTimeMs, 'mm:ss:ms')`, écrit en dur dans le
+rendu de `ControlledVideo`. Aucune prop n'ouvre ce choix, et une feuille de style ne peut
+pas reformater un nœud de texte : lm-link rogne donc la boîte et coupe ce qui dépasse.
+C'est un pis-aller, et il est marqué comme tel là-bas.
+
+**La première moitié est un préalable, et elle est déjà écrite en commentaire** dans
+`components/Video/utils.ts` : `formatTime` substitue `h`, `m`, `s` et `f` **partout où ces
+lettres apparaissent**, donc `'mm min ss'` rend `'01 1in 01'`. Tant que c'est vrai, on ne
+peut pas publier ce format en prop — ce serait publier le bug. Le JSDoc dit déjà quoi
+faire : s'aligner sur `agnostic/time/dates/format-date`, qui délimite ses jetons en
+`{{…}}`. C'est le premier geste, et il est petit.
+
+**La seconde moitié a deux formes, et elles ne sont pas rivales.**
+
+*Une prop `timeFormat` sur `Video`* — un seul ajout, aucune marque nouvelle, l'article dit
+ce qu'il veut. Ça couvre le besoin d'aujourd'hui en entier.
+
+*Un composant `Duration` / `Time` qui rend un `<span>` par jeton*, chacun porteur de sa
+classe, pour qu'une feuille masque les morceaux qu'elle ne veut pas. Ce que ça ajoute par
+rapport à la prop : le choix devient **stylable**, donc conditionnel — les heures sur
+large, `mm:ss` sur mobile, sans qu'un article ait à le prévoir. Et il servirait ailleurs
+que dans `Video` : la démo de lm-link appelle déjà `formatDate` à la main pour composer les
+dates de `lm-article-meta`.
+
+Le détail qui fait tout, si on va jusque-là : **le séparateur appartient au jeton qui le
+suit**. Masquer `__ms` doit emporter son `:`, sinon on obtient `00:05:` — donc chaque
+morceau est un span qui contient son propre séparateur, et non une suite plate de jetons et
+de ponctuations.
+
+**Recommandation : la prop d'abord, le composant en réserve.** La prop n'est pas un
+détour — c'est la première moitié du composant, qui aurait de toute façon besoin du même
+formateur et du même vocabulaire de format. Le composant cesse d'être surdimensionné le
+jour où quelqu'un veut un temps qui dépend du contexte, ou le jour où `lm-article-meta`
+réclame le même traitement. Pas avant. À noter aussi, si on l'écrit : les horloges se
+re-rendent à chaque `timeupdate`, donc ce composant multiplie par six ce qui est diffé à
+chaque tick — négligeable, mais c'est la seule chose qui coûte quelque chose à l'exécution.
+
 ## `node/shells/@<vendor>` — un chantier à ouvrir
 
 Deux projets du workspace pilotent des CLI depuis du TypeScript, et refont chacun de son
