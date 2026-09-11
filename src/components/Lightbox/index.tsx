@@ -14,6 +14,7 @@ import {
 import { createPortal } from 'react-dom'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
+import { isNotNullish } from '../../agnostic/misc/is-nullish/index.js'
 import {
   mergeClassNames,
   useChangeDispatch
@@ -40,7 +41,8 @@ import cssModule from './styles.module.css'
  * one a click on this member opens; the others only matter when another member opens
  * them. Declaring none makes it a group of its own.
  * @property closeBtnContent - Content rendered inside the close button.
- * @property openBtnContent - Content rendered inside the open button.
+ * @property openBtnContent - Content rendered inside the open button. No content, no
+ * button: the lightbox is then opened by whatever the consumer wires up.
  * @property prevBtnContent - Content rendered inside the previous button, shown only
  * when the open group holds more than one member.
  * @property nextBtnContent - Content rendered inside the next button, same condition.
@@ -329,12 +331,17 @@ export const Lightbox: FunctionComponent<Props> = ({
         className={c('placeholder')}
         style={size === null ? undefined : { width: size.width, height: size.height }} />
       : children}
-    <button
+    {/* Only when there is something to show in it, and only while closed: an empty
+    button in every article's flow is a nuisance, and many lightboxes are opened by
+    clicking the content rather than a control. The close button is not treated the
+    same way — a lightbox with no way out is a trap, so it is always rendered, and
+    a stylesheet gives it a glyph when the consumer supplied none. */}
+    {!isOn && isNotNullish(openBtnContent) && <button
       type='button'
       className={c('open-btn')}
       onClick={handleOpenButtonClick}>
       {openBtnContent}
-    </button>
+    </button>}
     {overlay}
   </div>
 }
