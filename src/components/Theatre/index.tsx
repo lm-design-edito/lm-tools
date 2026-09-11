@@ -49,6 +49,8 @@ import cssModule from './styles.module.css'
  * @property defaultIsOn - Whether the stage starts open, in uncontrolled mode.
  * Ignored when `isOn` is provided. Defaults to `false`.
  * @property exitOnEscape - When `true`, pressing `Escape` closes the stage.
+ * @property navOnArrowKeys - When `true`, the left and right arrow keys move through
+ * the open group. Only has an effect on a group of more than one member.
  * @property exitOnBgClick - When `true`, clicking the stage background, and not its
  * content, closes it.
  * @property onOpenButtonClicked - Called when the open button is clicked, before the
@@ -60,6 +62,9 @@ import cssModule from './styles.module.css'
  * while `exitOnBgClick` is `true`), before the theatre reacts.
  * @property onEscapePressed - Called when `Escape` is pressed while the stage is open
  * (only while `exitOnEscape` is `true`), before the theatre reacts.
+ * @property onPrevArrowPressed - Called when the left arrow is pressed while the stage
+ * is open (only while `navOnArrowKeys` is `true`), before the theatre reacts.
+ * @property onNextArrowPressed - Same, for the right arrow.
  * @property onIsOnChanged - Called after this member's state changed, with the new
  * value.
  * @property className - Optional additional class name(s) applied to the root element.
@@ -76,12 +81,15 @@ export type Props = PropsWithChildren<WithClassName<{
   defaultIsOn?: boolean
   exitOnEscape?: boolean
   exitOnBgClick?: boolean
+  navOnArrowKeys?: boolean
   onOpenButtonClicked?: (isOn: boolean) => void
   onCloseButtonClicked?: (isOn: boolean) => void
   onPrevButtonClicked?: (isOn: boolean) => void
   onNextButtonClicked?: (isOn: boolean) => void
   onBackgroundClicked?: (isOn: boolean) => void
   onEscapePressed?: (isOn: boolean) => void
+  onPrevArrowPressed?: (isOn: boolean) => void
+  onNextArrowPressed?: (isOn: boolean) => void
   onIsOnChanged?: (isOn: boolean) => void
 }>>
 
@@ -106,6 +114,8 @@ export type Props = PropsWithChildren<WithClassName<{
  * stage portalled to the end of `document.body`.
  *
  * @remarks
+ * - **[WIP]** Moving a `<video>` keeps it playing on desktop browsers; iOS has been
+ *   known to pause on a DOM move. Not worth guarding against for now.
  * - **The content is moved, not copied.** A portal relocates the DOM node without
  *   changing the element's place in the React tree, so the instance is never
  *   unmounted: a playing video keeps playing, at its timecode, and lands back where it
@@ -136,12 +146,15 @@ export const Theatre: FunctionComponent<Props> = ({
   defaultIsOn = false,
   exitOnEscape,
   exitOnBgClick,
+  navOnArrowKeys,
   onOpenButtonClicked,
   onCloseButtonClicked,
   onPrevButtonClicked,
   onNextButtonClicked,
   onBackgroundClicked,
   onEscapePressed,
+  onPrevArrowPressed,
+  onNextArrowPressed,
   onIsOnChanged,
   children,
   className
@@ -239,6 +252,25 @@ export const Theatre: FunctionComponent<Props> = ({
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [exitOnEscape, isOn, requestClose, onEscapePressed])
+
+  // Fx. dep. navOnArrowKeys, isOn, siblingsCount, onPrevArrowPressed,
+  // onNextArrowPressed - The arrow keys walk the open group. Bound only while the
+  // stage is open and the group holds someone else, so the keys stay the page's the
+  // rest of the time.
+  useEffect(() => {
+    if (navOnArrowKeys !== true || !isOn || siblingsCount < 2) return
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'ArrowLeft') {
+        onPrevArrowPressed?.(isOn)
+        step(-1)
+      } else if (e.key === 'ArrowRight') {
+        onNextArrowPressed?.(isOn)
+        step(1)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [navOnArrowKeys, isOn, siblingsCount, onPrevArrowPressed, onNextArrowPressed])
 
   // Fx. dep. hasAppliedDefault, isControlled, defaultIsOn, ownGroup, id - An
   // uncontrolled theatre asked to start open says so once, and never again: the
