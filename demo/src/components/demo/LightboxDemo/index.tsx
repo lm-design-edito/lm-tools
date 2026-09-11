@@ -1,15 +1,15 @@
 import { useState, useEffect, type FunctionComponent } from 'react'
 import {
-  Theatre,
-  type Props as TheatreProps
-} from '~/components/Theatre/index.js'
+  Lightbox,
+  type Props as LightboxProps
+} from '~/components/Lightbox/index.js'
 import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
-import { theatre as publicClassName } from '~/components/public-classnames.js'
+import { lightbox as publicClassName } from '~/components/public-classnames.js'
 
-const name = 'Theatre'
+const name = 'Lightbox'
 
 const description = `
-Theatre mode component. Wraps content in a toggleable fullscreen-like "stage"
+Lightbox mode component. Wraps content in a toggleable fullscreen-like "stage"
 overlay. Supports both controlled and uncontrolled usage.
 
 When \`isOn\` is not provided the component manages its own open/closed state
@@ -17,16 +17,16 @@ internally. When \`isOn\` is provided it acts as the source of truth and the
 internal state is ignored.
 
 ### Root element modifiers
-The root \`<div>\` receives the public class name defined by \`theatre\` and the
+The root \`<div>\` receives the public class name defined by \`lightbox\` and the
 following BEM-style modifier classes:
-- \`--on\` — when theatre mode is active.
-- \`--off\` — when theatre mode is inactive.
+- \`--on\` — when lightbox mode is active.
+- \`--off\` — when lightbox mode is inactive.
 
 ### Child elements
 - \`__stage\` — container rendered inside the root that holds the duplicated
-\`children\` when theatre mode is active. Only mounted when \`isOn\` is \`true\`.
-- \`__open-btn\` — clickable element that activates theatre mode.
-- \`__close-btn\` — clickable element that deactivates theatre mode.
+\`children\` when lightbox mode is active. Only mounted when \`isOn\` is \`true\`.
+- \`__open-btn\` — clickable element that activates lightbox mode.
+- \`__close-btn\` — clickable element that deactivates lightbox mode.
 
 @param props - Component properties.
 @see {@link Props}
@@ -35,30 +35,30 @@ a stage overlay with the duplicated children (when active), and the open/close
 toggle buttons.`
 
 const tsxDetails = `/**
- * Props for the {@link Theatre} component.
+ * Props for the {@link Lightbox} component.
  *
  * @property closeBtnContent - Custom content rendered inside the close/exit button.
  * @property openBtnContent - Custom content rendered inside the open/enter button.
- * @property isOn - Controlled theatre mode state. When defined, the component
+ * @property isOn - Controlled lightbox mode state. When defined, the component
  * behaves as a controlled component and internal state is never updated.
- * @property defaultIsOn - Initial theatre mode state in uncontrolled mode.
+ * @property defaultIsOn - Initial lightbox mode state in uncontrolled mode.
  * Ignored when \`isOn\` is provided. Defaults to \`false\`.
  * @property exitOnEscape - When \`true\`, pressing \`Escape\` while the stage is
  * open counts as a toggle.
  * @property exitOnBgClick - When \`true\`, clicking the stage background — and
  * not its content — counts as a toggle.
  * @property onOpenButtonClicked - Called when the open button is clicked, before
- * the theatre reacts, with the state as it was.
+ * the lightbox reacts, with the state as it was.
  * @property onCloseButtonClicked - Called when the close button is clicked,
- * before the theatre reacts, with the state as it was.
+ * before the lightbox reacts, with the state as it was.
  * @property onBackgroundClicked - Called when the stage background is clicked
- * (only while \`exitOnBgClick\` is \`true\`), before the theatre reacts.
+ * (only while \`exitOnBgClick\` is \`true\`), before the lightbox reacts.
  * @property onEscapePressed - Called when \`Escape\` is pressed (only while
- * \`exitOnEscape\` is \`true\`), before the theatre reacts.
- * @property onIsOnChanged - Called after the theatre mode changed, with the new
+ * \`exitOnEscape\` is \`true\`), before the lightbox reacts.
+ * @property onIsOnChanged - Called after the lightbox mode changed, with the new
  * value.
  * @property className - Optional additional class name(s) applied to the root element.
- * @property children - Content rendered both in the default slot and, when theatre
+ * @property children - Content rendered both in the default slot and, when lightbox
  * mode is active, duplicated inside the stage element.
  */
 export type Props = PropsWithChildren<WithClassName<{
@@ -128,21 +128,21 @@ export const demoStyles = `
   pointer-events: auto;
 }`
 
-export const TheatreDemo: FunctionComponent = () => {
-  const [isTheatreOn, setIsTheatreOn] = useState<boolean | undefined>(false)
+export const LightboxDemo: FunctionComponent = () => {
+  const [isLightboxOn, setIsLightboxOn] = useState<boolean | undefined>(false)
 
-  const demoProps: TheatreProps = {
-    isOn: isTheatreOn,
+  const demoProps: LightboxProps = {
+    isOn: isLightboxOn,
     openBtnContent: <button>Ouvrir le théâtre</button>,
     closeBtnContent: <button>Fermer le théâtre</button>,
     exitOnEscape: true,
     exitOnBgClick: true,
-    onOpenButtonClicked: () => { setIsTheatreOn(true) },
-    onCloseButtonClicked: () => { setIsTheatreOn(false) },
-    onBackgroundClicked: () => { setIsTheatreOn(false) },
-    onEscapePressed: () => { setIsTheatreOn(false) },
+    onOpenButtonClicked: () => { setIsLightboxOn(true) },
+    onCloseButtonClicked: () => { setIsLightboxOn(false) },
+    onBackgroundClicked: () => { setIsLightboxOn(false) },
+    onEscapePressed: () => { setIsLightboxOn(false) },
     // eslint-disable-next-line no-console
-    onIsOnChanged: isOn => { console.log('Theatre toggled. Is on:', isOn) }
+    onIsOnChanged: isOn => { console.log('Lightbox toggled. Is on:', isOn) }
   }
 
   return <CompDisplayer
@@ -152,10 +152,10 @@ export const TheatreDemo: FunctionComponent = () => {
     demoProps={demoProps}
     tsxDetails={tsxDetails}>
     <span>isOn: </span>
-    <button onClick={() => setIsTheatreOn(undefined)}>{isTheatreOn === undefined ? <strong>undefined</strong> : 'undefined'}</button>
-    <button onClick={() => setIsTheatreOn(true)}>{isTheatreOn === true ? <strong>true</strong> : 'true'}</button>
-    <button onClick={() => setIsTheatreOn(false)}>{isTheatreOn === false ? <strong>false</strong> : 'false'}</button>
-    <Theatre
+    <button onClick={() => setIsLightboxOn(undefined)}>{isLightboxOn === undefined ? <strong>undefined</strong> : 'undefined'}</button>
+    <button onClick={() => setIsLightboxOn(true)}>{isLightboxOn === true ? <strong>true</strong> : 'true'}</button>
+    <button onClick={() => setIsLightboxOn(false)}>{isLightboxOn === false ? <strong>false</strong> : 'false'}</button>
+    <Lightbox
       {...demoProps}>
       <div style={{
         width: '300px',
@@ -168,6 +168,6 @@ export const TheatreDemo: FunctionComponent = () => {
       }}>
         Contenu à basculer en mode théâtre
       </div>
-    </Theatre>
+    </Lightbox>
   </CompDisplayer>
 }

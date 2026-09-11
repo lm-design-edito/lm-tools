@@ -1,5 +1,5 @@
 /**
- * The registry of theatre groups, shared by every {@link Theatre} on the page.
+ * The registry of lightbox groups, shared by every {@link Lightbox} on the page.
  *
  * Deliberately outside React. lm-link renders each component in its **own React
  * root** — `renderInTarget` calls `createRoot` per component — so two `<lm-image>`
@@ -11,24 +11,24 @@
  */
 
 /** What a member hands the store so the group can find and place it. */
-export type TheatreMember = {
+export type LightboxMember = {
   id: string
   groups: string[]
   /** The member's anchor in the page, for ordering. `null` before it mounts. */
   getElement: () => HTMLElement | null
 }
 
-export type TheatreState = {
-  /** The group currently on stage, `null` when nothing is open. */
+export type LightboxState = {
+  /** The group currently open, `null` when nothing is. */
   openGroup: string | null
-  /** The member currently on stage. */
+  /** The member currently shown. */
   openMemberId: string | null
 }
 
-const members = new Map<string, TheatreMember>()
+const members = new Map<string, LightboxMember>()
 const listeners = new Set<() => void>()
 
-let state: TheatreState = {
+let state: LightboxState = {
   openGroup: null,
   openMemberId: null
 }
@@ -37,7 +37,7 @@ function emit (): void {
   for (const listener of listeners) listener()
 }
 
-function setState (next: TheatreState): void {
+function setState (next: LightboxState): void {
   if (next.openGroup === state.openGroup
     && next.openMemberId === state.openMemberId) return
   state = next
@@ -49,7 +49,7 @@ export function subscribe (listener: () => void): () => void {
   return () => { listeners.delete(listener) }
 }
 
-export function getState (): TheatreState {
+export function getState (): LightboxState {
   return state
 }
 
@@ -58,14 +58,14 @@ export function soloGroupOf (id: string): string {
   return `solo:${id}`
 }
 
-export function register (member: TheatreMember): void {
+export function register (member: LightboxMember): void {
   members.set(member.id, member)
   emit()
 }
 
 export function unregister (id: string): void {
   members.delete(id)
-  // A member leaving while it is on stage would strand the group on nothing.
+  // A member leaving while it is the one shown would strand the group on nothing.
   if (state.openMemberId === id) setState({ openGroup: null, openMemberId: null })
   else emit()
 }
@@ -78,7 +78,7 @@ export function unregister (id: string): void {
  * guarantees the two match. Only runs when a group opens or navigates, over a
  * handful of members.
  */
-export function membersOf (group: string): TheatreMember[] {
+export function membersOf (group: string): LightboxMember[] {
   const found = [...members.values()].filter(member => member.groups.includes(group))
   return found.sort((a, b) => {
     const aElt = a.getElement()
@@ -91,18 +91,6 @@ export function membersOf (group: string): TheatreMember[] {
   })
 }
 
-/**
- * The member that renders the stage for a group — its first in document order.
- *
- * One stage per group, and it has to be rendered by *someone*: the roots are
- * separate, so there is no common parent to put it in. The first member is a stable
- * choice, unaffected by which member is on stage, so navigating doesn't tear the
- * stage down and build it again.
- */
-export function hostOf (group: string): string | null {
-  return membersOf(group)[0]?.id ?? null
-}
-
 export function open (group: string, memberId: string): void {
   setState({ openGroup: group, openMemberId: memberId })
 }
@@ -111,7 +99,7 @@ export function close (): void {
   setState({ openGroup: null, openMemberId: null })
 }
 
-/** Moves the stage by `offset` within the open group, clamped at both ends. */
+/** Moves to another member of the open group by `offset`, clamped at both ends. */
 export function step (offset: number): void {
   const { openGroup, openMemberId } = state
   if (openGroup === null || openMemberId === null) return

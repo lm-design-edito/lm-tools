@@ -26,7 +26,7 @@ import { SequencerDemo } from './components/demo/SequencerDemo/index.js'
 import { ShadowRootDemo } from './components/demo/ShadowRootDemo/index.js'
 import { SubtitlesDemo } from './components/demo/SubtitlesDemo/index.js'
 import { TextareaDemo } from './components/demo/TextareaDemo/index.js'
-import { TheatreDemo } from './components/demo/TheatreDemo/index.js'
+import { LightboxDemo } from './components/demo/LightboxDemo/index.js'
 import { UIModuleDemo } from './components/demo/UIModuleDemo/index.js'
 import { VideoDemo } from './components/demo/VideoDemo/index.js'
 
@@ -60,7 +60,7 @@ const components: Array<{
   { name: 'ShadowRoot', comp: <ShadowRootDemo /> },
   { name: 'Subtitles', comp: <SubtitlesDemo /> },
   { name: 'Textarea', comp: <TextareaDemo /> },
-  { name: 'Theatre', comp: <TheatreDemo /> },
+  { name: 'Lightbox', comp: <LightboxDemo /> },
   { name: 'UIModule', comp: <UIModuleDemo /> },
   { name: 'Video', comp: <VideoDemo /> }
 ]

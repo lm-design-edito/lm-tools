@@ -18,12 +18,12 @@ import {
   mergeClassNames,
   useChangeDispatch
 } from '../utils/index.js'
-import { theatre as publicClassName } from '../public-classnames.js'
+import { lightbox as publicClassName } from '../public-classnames.js'
 import {
-  close as closeStage,
+  close as closeLightbox,
   getState,
   membersOf,
-  open as openStage,
+  open as openLightbox,
   register,
   soloGroupOf,
   step,
@@ -33,10 +33,10 @@ import {
 import cssModule from './styles.module.css'
 
 /**
- * Props for the {@link Theatre} component.
+ * Props for the {@link Lightbox} component.
  *
- * @property group - The group(s) this theatre belongs to. Members of a group share
- * one stage and are navigable from it, in document order. The **first** group is the
+ * @property group - The group(s) this lightbox belongs to. Members of a group share
+ * one lightbox and are navigable from it, in document order. The **first** group is the
  * one a click on this member opens; the others only matter when another member opens
  * them. Declaring none makes it a group of its own.
  * @property closeBtnContent - Content rendered inside the close button.
@@ -46,30 +46,30 @@ import cssModule from './styles.module.css'
  * @property nextBtnContent - Content rendered inside the next button, same condition.
  * @property isOn - Controlled state. When defined, this member is driven by the
  * parent and the shared registry never opens or closes it.
- * @property defaultIsOn - Whether the stage starts open, in uncontrolled mode.
+ * @property defaultIsOn - Whether the lightbox starts open, in uncontrolled mode.
  * Ignored when `isOn` is provided. Defaults to `false`.
- * @property exitOnEscape - When `true`, pressing `Escape` closes the stage.
+ * @property exitOnEscape - When `true`, pressing `Escape` closes the lightbox.
  * @property navOnArrowKeys - When `true`, the left and right arrow keys move through
  * the open group. Only has an effect on a group of more than one member.
- * @property exitOnBgClick - When `true`, clicking the stage background, and not its
+ * @property exitOnBgClick - When `true`, clicking the backdrop, and not its
  * content, closes it.
  * @property onOpenButtonClicked - Called when the open button is clicked, before the
- * theatre reacts, with the state as it was.
+ * lightbox reacts, with the state as it was.
  * @property onCloseButtonClicked - Same, for the close button.
  * @property onPrevButtonClicked - Same, for the previous button.
  * @property onNextButtonClicked - Same, for the next button.
- * @property onBackgroundClicked - Called when the stage background is clicked (only
- * while `exitOnBgClick` is `true`), before the theatre reacts.
- * @property onEscapePressed - Called when `Escape` is pressed while the stage is open
- * (only while `exitOnEscape` is `true`), before the theatre reacts.
- * @property onPrevArrowPressed - Called when the left arrow is pressed while the stage
- * is open (only while `navOnArrowKeys` is `true`), before the theatre reacts.
+ * @property onBackgroundClicked - Called when the backdrop is clicked (only
+ * while `exitOnBgClick` is `true`), before the lightbox reacts.
+ * @property onEscapePressed - Called when `Escape` is pressed while the lightbox is open
+ * (only while `exitOnEscape` is `true`), before the lightbox reacts.
+ * @property onPrevArrowPressed - Called when the left arrow is pressed while the lightbox
+ * is open (only while `navOnArrowKeys` is `true`), before the lightbox reacts.
  * @property onNextArrowPressed - Same, for the right arrow.
  * @property onIsOnChanged - Called after this member's state changed, with the new
  * value.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - The content, rendered in place while closed and moved onto the
- * stage while open.
+ * inside the lightbox while open.
  */
 export type Props = PropsWithChildren<WithClassName<{
   group?: string | string[]
@@ -94,24 +94,24 @@ export type Props = PropsWithChildren<WithClassName<{
 }>>
 
 /**
- * Lightbox component. Holds content in place until opened, then moves it onto a stage
- * covering the page.
+ * Lightbox component. Holds content in place until opened, then moves it into an
+ * overlay covering the page.
  *
  * ### CSS modifiers
- * - `on` - this member is on stage.
+ * - `on` - this member is open.
  * - `off` - it is not.
  * - `grouped` - it belongs to a group it did not invent, so navigation is possible.
  *
  * ### CSS elements
  * - `placeholder` - holds the content's last measured size while it is away.
- * - `stage` - the overlay, portalled to `document.body`, mounted only while open.
- * - `stage-content` - wraps the moved content inside the stage.
+ * - `backdrop` - the overlay, portalled to `document.body`, mounted only while open.
+ * - `content` - wraps the moved content inside the lightbox.
  * - `open-btn`, `close-btn`, `prev-btn`, `next-btn`
  *
  * @param props - Component properties.
  * @see {@link Props}
  * @returns A root `<div>` holding the content or its placeholder, plus, while open, a
- * stage portalled to the end of `document.body`.
+ * lightbox portalled to the end of `document.body`.
  *
  * @remarks
  * - **[WIP]** Moving a `<video>` keeps it playing on desktop browsers; iOS has been
@@ -120,8 +120,8 @@ export type Props = PropsWithChildren<WithClassName<{
  *   changing the element's place in the React tree, so the instance is never
  *   unmounted: a playing video keeps playing, at its timecode, and lands back where it
  *   was on close. Rendering `children` twice would mount a second, fresh instance and
- *   leave the first one running behind the stage.
- * - **The stage is portalled to `document.body`.** A `position: fixed` stage left in
+ *   leave the first one running behind the lightbox.
+ * - **The lightbox is portalled to `document.body`.** A `position: fixed` overlay left in
  *   the article would be trapped by the first ancestor carrying a `transform`, a
  *   `filter` or a `contain`, which becomes its containing block.
  * - **A placeholder keeps the layout still.** Its size is the content's last measured
@@ -130,13 +130,13 @@ export type Props = PropsWithChildren<WithClassName<{
  * - **Groups are held outside React**, in `./store.ts`: a consumer may render each
  *   component in a root of its own, in which case members of a group share no tree
  *   and a context could not reach from one to the other.
- * - The stage is rendered by whichever member is on it, so navigating hands it over.
+ * - The lightbox is rendered by whichever member is on it, so navigating hands it over.
  *   None of the content is remounted in the process.
  * - This component ships **no appearance**: covering the page, the backdrop and the
  *   buttons are the consumer stylesheet's business. Without one, the content is moved
  *   to the end of the document and nothing looks like a lightbox.
  */
-export const Theatre: FunctionComponent<Props> = ({
+export const Lightbox: FunctionComponent<Props> = ({
   group,
   closeBtnContent,
   openBtnContent,
@@ -162,7 +162,7 @@ export const Theatre: FunctionComponent<Props> = ({
   // State & refs
   const id = useId()
   const rootRef = useRef<HTMLDivElement>(null)
-  const stageRef = useRef<HTMLDivElement>(null)
+  const backdropRef = useRef<HTMLDivElement>(null)
   const sizeRef = useRef<{ width: number, height: number } | null>(null)
   const [hasAppliedDefault, setHasAppliedDefault] = useState(false)
   const isControlled = isOnProp !== undefined
@@ -193,7 +193,7 @@ export const Theatre: FunctionComponent<Props> = ({
 
   // Keeps the last size the content had in place, so the placeholder can hold it once
   // the content is gone. Measured while closed only, on render rather than through a
-  // standing observer: the content of a theatre rarely resizes, and one observer per
+  // standing observer: the content of a lightbox rarely resizes, and one observer per
   // image on a page is a cost with no return.
   useLayoutEffect(() => {
     if (isOn) return
@@ -210,11 +210,11 @@ export const Theatre: FunctionComponent<Props> = ({
   // User action handlers
   const requestOpen = useCallback((): void => {
     if (isControlled) return
-    openStage(ownGroup, id)
+    openLightbox(ownGroup, id)
   }, [isControlled, ownGroup, id])
   const requestClose = useCallback((): void => {
     if (isControlled) return
-    closeStage()
+    closeLightbox()
   }, [isControlled])
 
   const handleOpenButtonClick: MouseEventHandler<HTMLButtonElement> = () => {
@@ -233,15 +233,16 @@ export const Theatre: FunctionComponent<Props> = ({
     onNextButtonClicked?.(isOn)
     step(1)
   }
-  const handleStageBgClick: MouseEventHandler<HTMLDivElement> = e => {
+  const handleBackdropClick: MouseEventHandler<HTMLDivElement> = e => {
     if (exitOnBgClick !== true) return
-    if (e.target !== stageRef.current) return
+    if (e.target !== backdropRef.current) return
     onBackgroundClicked?.(isOn)
     requestClose()
   }
 
   // Fx. dep. exitOnEscape, isOn, requestClose, onEscapePressed - Escape closes the
-  // stage. Listens only while open, so a page of closed theatres holds no listener.
+  // lightbox. Listens only while open, so a page of closed lightboxes holds no
+  // listener.
   useEffect(() => {
     if (exitOnEscape !== true || !isOn) return
     const handleKeyDown = (e: KeyboardEvent): void => {
@@ -255,7 +256,7 @@ export const Theatre: FunctionComponent<Props> = ({
 
   // Fx. dep. navOnArrowKeys, isOn, siblingsCount, onPrevArrowPressed,
   // onNextArrowPressed - The arrow keys walk the open group. Bound only while the
-  // stage is open and the group holds someone else, so the keys stay the page's the
+  // lightbox is open and the group holds someone else, so the keys stay the page's the
   // rest of the time.
   useEffect(() => {
     if (navOnArrowKeys !== true || !isOn || siblingsCount < 2) return
@@ -273,12 +274,12 @@ export const Theatre: FunctionComponent<Props> = ({
   }, [navOnArrowKeys, isOn, siblingsCount, onPrevArrowPressed, onNextArrowPressed])
 
   // Fx. dep. hasAppliedDefault, isControlled, defaultIsOn, ownGroup, id - An
-  // uncontrolled theatre asked to start open says so once, and never again: the
+  // uncontrolled lightbox asked to start open says so once, and never again: the
   // registry owns the state from then on.
   useEffect(() => {
     if (hasAppliedDefault || isControlled || !defaultIsOn) return
     setHasAppliedDefault(true)
-    openStage(ownGroup, id)
+    openLightbox(ownGroup, id)
   }, [hasAppliedDefault, isControlled, defaultIsOn, ownGroup, id])
 
   // Rendering
@@ -289,13 +290,13 @@ export const Theatre: FunctionComponent<Props> = ({
     grouped: isGrouped
   }), className)
   const size = sizeRef.current
-  const stage = isOn
+  const overlay = isOn
     ? createPortal(
       <div
-        className={c('stage')}
-        onClick={handleStageBgClick}
-        ref={stageRef}>
-        <div className={c('stage-content')}>{children}</div>
+        className={c('backdrop')}
+        onClick={handleBackdropClick}
+        ref={backdropRef}>
+        <div className={c('content')}>{children}</div>
         <button
           type='button'
           className={c('close-btn')}
@@ -334,6 +335,6 @@ export const Theatre: FunctionComponent<Props> = ({
       onClick={handleOpenButtonClick}>
       {openBtnContent}
     </button>
-    {stage}
+    {overlay}
   </div>
 }
