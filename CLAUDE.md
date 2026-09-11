@@ -112,7 +112,14 @@ so in the JSDoc.
     names one case out of a few.
 - Type as `FunctionComponent<Props>`, don't annotate the arrow's return. A generic
   component can't use it: type it as a generic arrow returning `ReactNode`.
-- The stylesheet is `styles.module.css`.
+- The stylesheet is `styles.module.css`, and it holds **only what the component's own
+  JavaScript needs to work** — the geometry it measures, the positioning it depends
+  on. Everything else, including what makes the component *look* like what it is, is
+  the consumer's business and belongs in their stylesheet. This is already the shape
+  of the library: 23 of the 26 stylesheets are empty, and the three that aren't
+  (`Scrllgngn`, `Gallery`, `Paginator`) are exactly those whose JS reads the geometry
+  — a measured probe, an observed snap, a fixed marker. `BeforeAfter` ships none and
+  needs a consumer sheet to clip anything at all; that is intended, not an oversight.
 - Public custom properties and `data-` attributes are **written out in full, one
   literal per line** — `'--lm-drawer-content-width'`, not a name built from the
   prefix. They are the component's public API: a consumer greps for the exact
