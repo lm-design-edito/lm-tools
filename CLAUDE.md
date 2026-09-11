@@ -142,6 +142,10 @@ so in the JSDoc.
 - `--PRIVATE-<name>` is what the component's own stylesheet reads — unprefixed,
   outside the API. Safe only because the component sets it itself, so **emit it
   unconditionally**: a gap lets an ancestor's value inherit through.
+- Point de vigilance, pas règle stricte : devant une **prop hors bornes**, préférer
+  corriger la valeur *et* avertir, plutôt que jeter ou corriger en silence. Jeter tue
+  le montage pour un simple réglage ; corriger sans rien dire déguise un bug de
+  l'appelant en problème d'affichage, qu'on ira chercher ailleurs.
 
 ## Tests
 
