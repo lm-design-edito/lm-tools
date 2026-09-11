@@ -122,6 +122,12 @@ type TrackData = {
  * fullscreen on its own — pressing Escape, typically — with the new state. This is
  * the signal a parent needs to update its `fullscreen` prop, and it is distinct
  * from `onIsFullscreenChanged`, which merely echoes that prop back once changed.
+ * @property timeFormat - How the two clocks are written, as a {@link formatTime}
+ * pattern. Tokens go in `{{…}}` and the rest is literal, so `'{{m}} min {{ss}}'` is a
+ * valid answer. Defaults to `'{{mm}}:{{ss}}:{{ms}}'` — milliseconds included, which is
+ * what a cutting room wants and almost never what an article does: `'{{mm}}:{{ss}}'` is
+ * the usual one. Frames (`{{frame}}`, `{{f}}`) are derived at 25 fps, not configurable
+ * here.
  * @property className - Additional CSS class for the root element.
  * @property children - React content inserted into the <video> tag (fallback, etc).
  *
@@ -142,6 +148,7 @@ export type Props = PropsWithChildren<WithClassName<{
   mute?: boolean
   playbackRate?: number
   currentTimeMs?: number
+  timeFormat?: string
   onPlayButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isPlaying: boolean, video: HTMLVideoElement | null) => void
   onPauseButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isPlaying: boolean, video: HTMLVideoElement | null) => void
   onLoudButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isLoud: boolean, video: HTMLVideoElement | null) => void
@@ -219,6 +226,10 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   volume = 1,
   playbackRate = 1,
   currentTimeMs: givenCurrentTimeMs,
+  // Milliseconds by default, which is what this component has always rendered — a
+  // default that changes under a consumer is a change nobody asked for. An article
+  // usually wants `'{{mm}}:{{ss}}'` and says so.
+  timeFormat = '{{mm}}:{{ss}}:{{ms}}',
   onPlayButtonClicked,
   onPauseButtonClicked,
   onLoudButtonClicked,
@@ -595,11 +606,11 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     <div className={timeControlsClss}>
       {/* Current time */}
       <span className={currentTimeClss}>
-        {formatTime(currentTimeMs, 'mm:ss:ms')}
+        {formatTime(currentTimeMs, timeFormat)}
       </span>
       {/* Total time */}
       <span className={totalTimeClss}>
-        {formatTime(totalTimeMs, 'mm:ss:ms')}
+        {formatTime(totalTimeMs, timeFormat)}
       </span>
       {/* Timeline */}
       <div
