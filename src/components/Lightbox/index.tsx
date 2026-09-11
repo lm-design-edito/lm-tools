@@ -11,7 +11,6 @@ import {
   type PropsWithChildren,
   type ReactNode
 } from 'react'
-import { createPortal } from 'react-dom'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { isNotNullish } from '../../agnostic/misc/is-nullish/index.js'
@@ -96,8 +95,8 @@ export type Props = PropsWithChildren<WithClassName<{
 }>>
 
 /**
- * Lightbox component. Holds content in place until opened, then moves it into an
- * overlay covering the page.
+ * Lightbox component. Holds content in a box that a stylesheet lifts over the page
+ * when opened.
  *
  * ### CSS modifiers
  * - `on` - this member is open.
@@ -105,35 +104,37 @@ export type Props = PropsWithChildren<WithClassName<{
  * - `grouped` - it belongs to a group it did not invent, so navigation is possible.
  *
  * ### CSS elements
- * - `placeholder` - holds the content's last measured size while it is away.
- * - `backdrop` - the overlay, portalled to `document.body`, mounted only while open.
- * - `content` - wraps the moved content inside the lightbox.
+ * - `placeholder` - holds the content's last measured size while it is out of flow.
+ * - `backdrop` - the box the content always lives in; a stylesheet takes it out of
+ *   flow and over the page while the root carries `--on`.
+ * - `content` - wraps the content inside the backdrop.
  * - `open-btn`, `close-btn`, `prev-btn`, `next-btn`
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A root `<div>` holding the content or its placeholder, plus, while open, a
- * lightbox portalled to the end of `document.body`.
+ * @returns A root `<div>` holding a placeholder, the backdrop the content lives in,
+ * and the controls.
  *
  * @remarks
- * - **[WIP]** Moving a `<video>` keeps it playing on desktop browsers; iOS has been
- *   known to pause on a DOM move. Not worth guarding against for now.
- * - **The content is moved, not copied.** A portal relocates the DOM node without
- *   changing the element's place in the React tree, so the instance is never
- *   unmounted: a playing video keeps playing, at its timecode, and lands back where it
- *   was on close. Rendering `children` twice would mount a second, fresh instance and
- *   leave the first one running behind the lightbox.
- * - **The lightbox is portalled to `document.body`.** A `position: fixed` overlay left in
- *   the article would be trapped by the first ancestor carrying a `transform`, a
- *   `filter` or a `contain`, which becomes its containing block.
+ * - **The content never moves.** It stays in the same box, at the same place in the
+ *   React tree, open or closed; only the box's positioning changes, and that is a
+ *   stylesheet's business. Nothing is unmounted, so a playing video keeps playing at
+ *   its timecode. Rendering `children` in two branches - one in place, one on a stage
+ *   - would mount a fresh instance on every flip, React reconciling by position.
+ * - **Nothing leaves the component's own subtree.** No portal, no `document.body`: a
+ *   component has no business writing outside the scope it was handed.
  * - **A placeholder keeps the layout still.** Its size is the content's last measured
- *   one, read while closed; without it the article would collapse around the hole the
- *   content leaves.
+ *   one, read while closed; without it the article would collapse around the hole left
+ *   once the backdrop goes out of flow.
+ * - **[WIP]** A `position: fixed` backdrop is trapped by the first ancestor carrying a
+ *   `transform`, a `filter` or a `contain`, which becomes its containing block. Inside
+ *   a slot, that ancestor is the consumer's own to avoid.
  * - **Groups are held outside React**, in `./store.ts`: a consumer may render each
  *   component in a root of its own, in which case members of a group share no tree
  *   and a context could not reach from one to the other.
- * - The lightbox is rendered by whichever member is on it, so navigating hands it over.
- *   None of the content is remounted in the process.
+ * - Every member holds its own backdrop; only the open one is lifted over the page.
+ *   Navigating a group therefore lowers one and lifts another, and neither one's
+ *   content is touched.
  * - This component ships **no appearance**: covering the page, the backdrop and the
  *   buttons are the consumer stylesheet's business. Without one, the content is moved
  *   to the end of the document and nothing looks like a lightbox.
@@ -292,13 +293,23 @@ export const Lightbox: FunctionComponent<Props> = ({
     grouped: isGrouped
   }), className)
   const size = sizeRef.current
-  const overlay = isOn
-    ? createPortal(
-      <div
-        className={c('backdrop')}
-        onClick={handleBackdropClick}
-        ref={backdropRef}>
-        <div className={c('content')}>{children}</div>
+  // Every child keeps its position in the tree whatever the state: the placeholder and
+  // the backdrop are always rendered, and the buttons come after the content rather
+  // than around it. React reconciles by position, so moving `children` from one branch
+  // to another would unmount and remount them - the very thing this component exists
+  // to avoid.
+  return <div
+    className={rootClss}
+    ref={rootRef}>
+    <div
+      className={c('placeholder')}
+      style={isOn && size !== null ? { width: size.width, height: size.height } : undefined} />
+    <div
+      className={c('backdrop')}
+      onClick={handleBackdropClick}
+      ref={backdropRef}>
+      <div className={c('content')}>{children}</div>
+      {isOn && <>
         <button
           type='button'
           className={c('close-btn')}
@@ -319,29 +330,18 @@ export const Lightbox: FunctionComponent<Props> = ({
             {nextBtnContent}
           </button>
         </>}
-      </div>,
-      document.body
-    )
-    : null
-  return <div
-    className={rootClss}
-    ref={rootRef}>
-    {isOn
-      ? <div
-        className={c('placeholder')}
-        style={size === null ? undefined : { width: size.width, height: size.height }} />
-      : children}
+      </>}
+    </div>
     {/* Only when there is something to show in it, and only while closed: an empty
     button in every article's flow is a nuisance, and many lightboxes are opened by
     clicking the content rather than a control. The close button is not treated the
-    same way — a lightbox with no way out is a trap, so it is always rendered, and
-    a stylesheet gives it a glyph when the consumer supplied none. */}
+    same way - a lightbox with no way out is a trap, so it is always rendered, and a
+    stylesheet gives it a glyph when the consumer supplied none. */}
     {!isOn && isNotNullish(openBtnContent) && <button
       type='button'
       className={c('open-btn')}
       onClick={handleOpenButtonClick}>
       {openBtnContent}
     </button>}
-    {overlay}
   </div>
 }
