@@ -111,8 +111,8 @@ export type Props = PropsWithChildren<WithClassName<{
  * - `grouped` - it belongs to a group it did not invent.
  * - `navigable` - that group holds someone else, so the previous and next controls
  *   have somewhere to go.
- * - `click-to-open` - the content itself opens the lightbox, so a stylesheet can say
- *   so with a cursor.
+ * - `open-on-click` - the content itself opens the lightbox, so a stylesheet can say
+ *   so with a cursor. Named after the prop it mirrors, as modifiers are.
  *
  * ### CSS elements
  * - `placeholder` - holds the content's last measured size while it is out of flow.
@@ -314,7 +314,7 @@ export const Lightbox: FunctionComponent<Props> = ({
     off: !isOn,
     grouped: isGrouped,
     navigable: siblingsCount > 1,
-    'click-to-open': openOnClick === true && !isOn
+    'open-on-click': openOnClick === true && !isOn
   }), className)
   const size = sizeRef.current
   // Nothing here is conditional. React reconciles by position, so a branch that
