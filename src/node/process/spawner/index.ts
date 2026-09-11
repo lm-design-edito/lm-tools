@@ -17,9 +17,34 @@ type Output = {
   err: unknown
 }
 
+/**
+ * How much a spawned command says about itself.
+ *
+ * Three levels rather than a boolean, because three are genuinely useful in a
+ * deployment script:
+ *
+ * - `'full'` — the label, the echoed command line, and the child's own output as it
+ *   streams. The default, and what to use for anything whose output is news: a build
+ *   log, an rsync diff.
+ * - `'command'` — the label and the echoed command line, without the child's output.
+ *   **The level for a probe** — `gcloud projects list`, `npm config get registry` —
+ *   whose `stdout` is parsed rather than read, and whose two hundred lines of table
+ *   would bury the narration around it. The echo stays: it is the audit trail, and
+ *   the last thing worth losing.
+ * - `'silent'` — nothing at all. Only for a call already narrated by whatever step
+ *   contains it.
+ *
+ * Nothing here is read from the environment on purpose. A deployment that can be run
+ * quietly is a deployment whose log you do not have when it breaks, so the choice is
+ * made per call, in the source, by whoever knows what that call prints.
+ */
+export type Verbosity = 'full' | 'command' | 'silent'
+
 type ThisOptions = {
   argsPrintFormat?: (args: string[]) => string[]
   throwOnError?: boolean
+  /** How much to print. Defaults to `'full'`. See {@link Verbosity}. */
+  verbosity?: Verbosity
 }
 
 /**
@@ -31,6 +56,7 @@ type ThisOptions = {
  *   before they are printed to the console (does not affect execution).
  * - `throwOnError`: If `true`, the function throws when the spawned process exits
  *   with a non-zero status instead of returning a failure outcome.
+ * - `verbosity`: How much to print — see {@link Verbosity}. Defaults to `'full'`.
  */
 export type Options = SpawnOptions & ThisOptions
 
@@ -43,6 +69,7 @@ export type Options = SpawnOptions & ThisOptions
  *   before they are printed to the console (does not affect execution).
  * - `throwOnError`: If `true`, the function throws when the spawned process exits
  *   with a non-zero status instead of returning a failure outcome.
+ * - `verbosity`: How much to print — see {@link Verbosity}. Defaults to `'full'`.
  */
 export type SyncOptions = SpawnSyncOptions & ThisOptions
 
@@ -68,12 +95,15 @@ export async function spawner (
   args: string[],
   options?: Options
 ): Promise<Outcome.Either<Output, Output>> {
+  const verbosity = options?.verbosity ?? 'full'
+  const printsCommand = verbosity !== 'silent'
+  const printsOutput = verbosity === 'full'
   return await new Promise<Outcome.Either<Output, Output>>((resolve, reject) => {
-    if (label !== null) console.log(`\n${styles.info(label)}\n`)
+    if (label !== null && printsCommand) console.log(`\n${styles.info(label)}\n`)
     const printableArgs = options?.argsPrintFormat !== undefined
       ? options.argsPrintFormat(args)
       : args
-    console.log(styles.light(`> ${command} ${printableArgs.join(' ')}\n`))
+    if (printsCommand) console.log(styles.light(`> ${command} ${printableArgs.join(' ')}\n`))
     const prcss = spawn(command, args, { stdio: 'pipe', ...options })
     let stdout = ''
     let stderr = ''
@@ -81,13 +111,15 @@ export async function spawner (
     prcss.stdout?.on('data', data => {
       const strData = unknownToString(data)
       stdout += strData
-      console.log(styles.light(strData.replace(ansiRegex(), '').trim()))
+      if (printsOutput) console.log(styles.light(strData.replace(ansiRegex(), '').trim()))
     })
     prcss.stderr?.on('data', data => {
       const strData = unknownToString(data)
       stderr += strData
-      console.log(styles.warning(strData.replace(ansiRegex(), '').trim()))
+      if (printsOutput) console.log(styles.warning(strData.replace(ansiRegex(), '').trim()))
     })
+    // An error is always printed, whatever the verbosity: a command that could not be
+    // spawned at all is never the noise the caller asked to be spared.
     prcss.on('error', e => {
       err = e
       console.log(styles.error(unknownToString(err).replace(ansiRegex(), '').trim()))
@@ -123,26 +155,30 @@ export function spawnerSync (
   args: string[],
   options?: SyncOptions
 ): Outcome.Either<Output, Output> {
-  if (label !== null) console.log(`\n${styles.info(label)}\n}`)
+  const verbosity = options?.verbosity ?? 'full'
+  const printsCommand = verbosity !== 'silent'
+  const printsOutput = verbosity === 'full'
+  if (label !== null && printsCommand) console.log(`\n${styles.info(label)}\n}`)
   const printableArgs = options?.argsPrintFormat !== undefined
     ? options.argsPrintFormat(args)
     : args
-  console.log(styles.light(`> ${command} ${printableArgs.join(' ')}\n`))
+  if (printsCommand) console.log(styles.light(`> ${command} ${printableArgs.join(' ')}\n`))
   const result = spawnSync(command, args, { stdio: 'pipe', encoding: 'utf8', ...options })
   const stderr = result.stderr.toString().trim()
   const stdout = result.stdout.toString().trim()
   const err = result.error
+  // Always printed, whatever the verbosity — see the async twin.
   if (err !== undefined) {
     console.log(styles.light(chalk.italic('err:\n')))
     console.log(styles.error(unknownToString(err).replace(ansiRegex(), '')))
     console.log('')
   }
-  if (stderr !== '') {
+  if (stderr !== '' && printsOutput) {
     console.log(styles.light(chalk.italic('stderr:\n')))
     console.log(styles.warning(stderr.replace(ansiRegex(), '')))
     console.log('')
   }
-  if (stdout !== '') {
+  if (stdout !== '' && printsOutput) {
     console.log(styles.light(chalk.italic('stdout:\n')))
     console.log(styles.light(stdout.replace(ansiRegex(), '')))
     console.log('')
