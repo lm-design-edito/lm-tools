@@ -44,9 +44,15 @@ et il n'ouvrira qu'une fois lm-link publié.
   `` `-${pct}%` `` et `` `-${100 - pct}%` `` (`components/Paginator/index.tsx:140`) :
   un `pct` négatif produit `--0.06%`, un `pct` au-delà de 100 produit l'autre moitié
   invalide, et l'`IntersectionObserver` **jette** — ce qui tue le montage du
-  composant, pas seulement l'observateur. Borner `pct` à 0–100. Repéré depuis la
-  démo de lm-link, où `Scrllgngn` lui passe un pourcentage recalculé qui part
-  négatif.
+  composant, pas seulement l'observateur. Repéré depuis la démo de lm-link, où
+  `Scrllgngn` lui passe un pourcentage recalculé qui part négatif.
+
+  **Borner à 0–100 *et* avertir.** Pas de clamp silencieux : c'est cette erreur qui
+  a permis de remonter au vrai bug — une sonde privée de son `position: fixed`. Un
+  clamp muet aurait donné une démo qui scrolle de travers sans un mot, et déguisé un
+  bug de structure en problème de layout. Une prop invalide est un bug de
+  l'appelant : le composant n'a ni à trancher à sa place en silence, ni à faire
+  tomber la page pour autant.
 
 - **`Paginator` — l'effet d'observation dépend de `children`.** Deps
   `[thresholdOffsetPercent, children]`, or `Scrllgngn` reconstruit ses `children` à
