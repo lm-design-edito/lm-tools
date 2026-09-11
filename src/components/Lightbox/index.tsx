@@ -13,7 +13,6 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { isNotNullish } from '../../agnostic/misc/is-nullish/index.js'
 import {
   mergeClassNames,
   useChangeDispatch
@@ -40,11 +39,12 @@ import cssModule from './styles.module.css'
  * one a click on this member opens; the others only matter when another member opens
  * them. Declaring none makes it a group of its own.
  * @property closeBtnContent - Content rendered inside the close button.
- * @property openBtnContent - Content rendered inside the open button. No content, no
- * button: the lightbox is then opened by whatever the consumer wires up.
- * @property prevBtnContent - Content rendered inside the previous button, shown only
- * when the open group holds more than one member.
- * @property nextBtnContent - Content rendered inside the next button, same condition.
+ * @property openBtnContent - Content rendered inside the open button. Left empty, the
+ * button is still rendered: a stylesheet hides an empty control with `:empty`, and the
+ * lightbox is then opened by whatever the consumer wires up.
+ * @property prevBtnContent - Content rendered inside the previous button. The button is
+ * always rendered; the root's `navigable` modifier says whether it has anywhere to go.
+ * @property nextBtnContent - Content rendered inside the next button, same.
  * @property isOn - Controlled state. When defined, this member is driven by the
  * parent and the shared registry never opens or closes it.
  * @property defaultIsOn - Whether the lightbox starts open, in uncontrolled mode.
@@ -101,7 +101,9 @@ export type Props = PropsWithChildren<WithClassName<{
  * ### CSS modifiers
  * - `on` - this member is open.
  * - `off` - it is not.
- * - `grouped` - it belongs to a group it did not invent, so navigation is possible.
+ * - `grouped` - it belongs to a group it did not invent.
+ * - `navigable` - that group holds someone else, so the previous and next controls
+ *   have somewhere to go.
  *
  * ### CSS elements
  * - `placeholder` - holds the content's last measured size while it is out of flow.
@@ -126,9 +128,13 @@ export type Props = PropsWithChildren<WithClassName<{
  * - **A placeholder keeps the layout still.** Its size is the content's last measured
  *   one, read while closed; without it the article would collapse around the hole left
  *   once the backdrop goes out of flow.
- * - **[WIP]** A `position: fixed` backdrop is trapped by the first ancestor carrying a
- *   `transform`, a `filter` or a `contain`, which becomes its containing block. Inside
- *   a slot, that ancestor is the consumer's own to avoid.
+ * - **A `position: fixed` backdrop is contained by the first ancestor carrying a
+ *   `transform`, a `filter` or a `contain`**, which becomes its containing block. That
+ *   is wanted, not suffered: where several articles are preloaded side by side and
+ *   slid through by a transformed container, containment is what keeps an offscreen
+ *   article's lightbox offscreen. The top layer - `<dialog>` with `showModal()`, or
+ *   the popover API - would do the opposite, being document-wide and above
+ *   everything, and paint over whichever article is being read.
  * - **Groups are held outside React**, in `./store.ts`: a consumer may render each
  *   component in a root of its own, in which case members of a group share no tree
  *   and a context could not reach from one to the other.
@@ -290,14 +296,16 @@ export const Lightbox: FunctionComponent<Props> = ({
   const rootClss = mergeClassNames(c(null, {
     on: isOn,
     off: !isOn,
-    grouped: isGrouped
+    grouped: isGrouped,
+    navigable: siblingsCount > 1
   }), className)
   const size = sizeRef.current
-  // Every child keeps its position in the tree whatever the state: the placeholder and
-  // the backdrop are always rendered, and the buttons come after the content rather
-  // than around it. React reconciles by position, so moving `children` from one branch
-  // to another would unmount and remount them - the very thing this component exists
-  // to avoid.
+  // Nothing here is conditional. React reconciles by position, so a branch that
+  // appears and disappears shifts what follows it - and moving `children` between two
+  // positions would unmount and remount them, the very thing this component exists to
+  // avoid. Which control is reachable, and when, is the stylesheet's business: the
+  // root carries a modifier per state, and `:empty` tells a control with no content
+  // from one that has some.
   return <div
     className={rootClss}
     ref={rootRef}>
@@ -309,39 +317,30 @@ export const Lightbox: FunctionComponent<Props> = ({
       onClick={handleBackdropClick}
       ref={backdropRef}>
       <div className={c('content')}>{children}</div>
-      {isOn && <>
-        <button
-          type='button'
-          className={c('close-btn')}
-          onClick={handleCloseButtonClick}>
-          {closeBtnContent}
-        </button>
-        {siblingsCount > 1 && <>
-          <button
-            type='button'
-            className={c('prev-btn')}
-            onClick={handlePrevButtonClick}>
-            {prevBtnContent}
-          </button>
-          <button
-            type='button'
-            className={c('next-btn')}
-            onClick={handleNextButtonClick}>
-            {nextBtnContent}
-          </button>
-        </>}
-      </>}
+      <button
+        type='button'
+        className={c('close-btn')}
+        onClick={handleCloseButtonClick}>
+        {closeBtnContent}
+      </button>
+      <button
+        type='button'
+        className={c('prev-btn')}
+        onClick={handlePrevButtonClick}>
+        {prevBtnContent}
+      </button>
+      <button
+        type='button'
+        className={c('next-btn')}
+        onClick={handleNextButtonClick}>
+        {nextBtnContent}
+      </button>
     </div>
-    {/* Only when there is something to show in it, and only while closed: an empty
-    button in every article's flow is a nuisance, and many lightboxes are opened by
-    clicking the content rather than a control. The close button is not treated the
-    same way - a lightbox with no way out is a trap, so it is always rendered, and a
-    stylesheet gives it a glyph when the consumer supplied none. */}
-    {!isOn && isNotNullish(openBtnContent) && <button
+    <button
       type='button'
       className={c('open-btn')}
       onClick={handleOpenButtonClick}>
       {openBtnContent}
-    </button>}
+    </button>
   </div>
 }
