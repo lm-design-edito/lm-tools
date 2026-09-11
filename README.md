@@ -38,6 +38,34 @@ publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là
 gardant que la coquille CLI chez lui. C'est le prochain vrai chantier de ce dépôt,
 et il n'ouvrira qu'une fois lm-link publié.
 
+## `node/shells/@<vendor>` — un chantier à ouvrir
+
+Deux projets du workspace pilotent des CLI depuis du TypeScript, et refont chacun de son
+côté les mêmes enveloppes : `lm-publisher-composer/scripts/` (`gcloud.ts`, 496 lignes,
+`atlas.ts`, 227) et `lm-link/scripts/deploy/`. Les deux consomment déjà `spawner`,
+`promptContinue` et `styles` d'ici, donc la couche basse est en place — ce qui manque est
+l'étage au-dessus, les commandes elles-mêmes.
+
+La forme proposée : un espace de noms par fournisseur, sous `node/shells/`.
+
+- **`@gcloud`** — les dix `ensureXxx` du composer (projet, bucket, compte de service,
+  rôle, dépôt d'artefacts, identifiants), plus le rsync, le `-j`, les `Cache-Control` et
+  les ACL du déploiement de lm-link.
+- **`@mongodb-atlas`** — l'`atlas.ts` du composer : organisation, projet, listes
+  d'accès, cluster, utilisateur, hostname.
+- **`@git`** et **`@npm`** — l'état de l'arbre, le commit courant, le commit jalon ; le
+  registre courant et la publication. Les deux repos en ont chacun leur version.
+
+Deux formes se dégagent déjà et valent d'être écrites avant les enveloppes elles-mêmes :
+**`ensure(label, probe, create)`**, la structure commune aux dix `ensureXxx` (lister,
+parser, trouver, créer sinon, logger), et un **runner d'étapes** où chaque étape déclare
+ce qu'elle laisse derrière elle en cas d'échec ultérieur — la version écrite dans
+`lm-link/scripts/deploy/steps.ts` sert de brouillon.
+
+Pas encore remonté par décision : on écrit d'abord chez l'appelant, on récolte quand un
+deuxième appelant existe. Voir « Le déploiement » dans le README de lm-link pour la liste
+complète des candidats.
+
 ## En sommeil
 
 Aucun des quatre n'a d'importance à court terme. Ils sont ici pour ne pas être
