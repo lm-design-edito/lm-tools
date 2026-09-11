@@ -120,33 +120,41 @@ export function msToSeconds (ms: number): number {
   return ms / 1000
 }
 
+/** The fields {@link formatTime} knows how to render. */
+export type TimeToken = 'hh' | 'mm' | 'ss' | 'ms' | 'frame' | 'h' | 'm' | 's' | 'f'
+
+// Alternation is ordered and the first branch that fits wins, so the longest tokens
+// come first — the same regexp shape, and the same reason, as
+// `agnostic/time/dates/format-date`.
+const timeTokenRegexp = /\{\{(frame|hh|mm|ss|ms|h|m|s|f)\}\}/gv
+
 /**
  * Renders a duration into a caller-defined pattern.
  *
- * The pattern is a free-form string in which the following tokens are replaced,
- * longest first, so that `mm` is consumed before `m`:
+ * Tokens are wrapped in `{{…}}` and everything outside them is literal, so a pattern
+ * may carry words: `'{{m}} min {{ss}}'` renders as `'1 min 05'`.
  *
- * - `hh`, `mm`, `ss` — hours, minutes and seconds, zero-padded to two digits.
- * - `ms` — the remaining milliseconds, zero-padded to three digits.
- * - `frame` — the remaining milliseconds expressed in frames, zero-padded to two
- *   digits.
- * - `h`, `m`, `s`, `f` — the same four values, unpadded.
+ * - `{{hh}}`, `{{mm}}`, `{{ss}}` — hours, minutes and seconds, zero-padded to two digits.
+ * - `{{ms}}` — the remaining milliseconds, zero-padded to three digits.
+ * - `{{frame}}` — those milliseconds expressed in frames, zero-padded to two digits.
+ * - `{{h}}`, `{{m}}`, `{{s}}`, `{{f}}` — the same four values, unpadded.
  *
  * @param ms - The duration, in milliseconds.
- * @param format - The pattern to fill, e.g. `'mm:ss:ms'`.
+ * @param format - The pattern to fill, e.g. `'{{mm}}:{{ss}}'`.
  * @param fps - Frame rate used to derive the `frame` and `f` tokens. Defaults to `25`.
- * @returns The formatted duration.
+ * @returns The formatted duration. An unknown token is left as written, braces
+ *   included, rather than silently blanked — a typo has to be visible.
  *
  * @remarks
- * Every field is a remainder of the one above it, never a total: at one hour and
- * a half, `mm` is `30`, not `90`. A pattern that omits `hh` therefore loses the
- * hours rather than folding them into the minutes.
+ * Every field is a remainder of the one above it, never a total: at one hour and a half,
+ * `{{mm}}` is `30`, not `90`. A pattern that omits `{{hh}}` therefore loses the hours
+ * rather than folding them into the minutes.
  *
- * Since `h`, `m`, `s` and `f` are tokens on their own, **every** occurrence of
- * those letters is substituted, wherever it sits: `'mm min ss'` renders as
- * `'01 1in 01'`. Separate the fields with punctuation. This is what
- * `agnostic/time/dates/format-date` avoids by delimiting its tokens with
- * `{{…}}` — worth aligning on the day this one is made public.
+ * **The delimiters are what make the pattern free-form.** Until they existed, `h`, `m`,
+ * `s` and `f` were tokens on their own and every occurrence of those letters was
+ * substituted wherever it sat — `'mm min ss'` rendered as `'01 1in 01'`, so a pattern
+ * could only ever separate its fields with punctuation. That is why the format could not
+ * be exposed as a prop: doing so would have published the trap.
  */
 export function formatTime (
   ms: number,
@@ -159,24 +167,27 @@ export function formatTime (
   const seconds = Math.floor(totalSeconds % 60)
   const frames = Math.floor(((ms % 1000) / 1000) * fps)
   const msRest = Math.floor(ms % 1000)
-  const tokens: Record<string, string | number> = {
+  // Typed by {@link TimeToken} so the table and the regexp above cannot fall out of step,
+  // then read through a widened view: the capture is a `string` as far as the compiler
+  // knows, and widening is what lets it be looked up without asserting it back.
+  const tokens: Record<TimeToken, string> = {
     hh: String(hours).padStart(2, '0'),
     mm: String(minutes).padStart(2, '0'),
     ss: String(seconds).padStart(2, '0'),
     frame: String(frames).padStart(2, '0'),
     ms: String(msRest).padStart(3, '0'),
-    h: hours,
-    m: minutes,
-    s: seconds,
-    f: frames
+    h: String(hours),
+    m: String(minutes),
+    s: String(seconds),
+    f: String(frames)
   }
-  return Object
-    .keys(tokens)
-    .sort((a, b) => b.length - a.length)
-    .reduce(
-      (acc, t) => acc.replace(new RegExp(t, 'gv'), String(tokens[t])),
-      format
-    )
+  const byName: Record<string, string> = tokens
+  // One pass, so a rendered value can never be re-read as a token by a later pass — the
+  // reason the old implementation had to sort its keys by length.
+  return format.replace(
+    timeTokenRegexp,
+    (whole: string, token: string) => byName[token] ?? whole
+  )
 }
 
 /**
