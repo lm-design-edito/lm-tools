@@ -32,6 +32,18 @@ type PageState = {
 type PagesState = Map<number, PageState>
 
 /**
+ * Brings `thresholdOffsetPercent` back into the 0–100 range `rootMargin` accepts.
+ *
+ * Outside it the margin comes out as `--20%`, which the `IntersectionObserver`
+ * constructor rejects by throwing — taking the whole component down with it over a
+ * single setting. A non-finite value falls back to `0` for the same reason.
+ */
+function toThresholdPercent (percent?: number): number {
+  if (percent === undefined || !Number.isFinite(percent)) return 0
+  return Math.min(100, Math.max(0, percent))
+}
+
+/**
  * Represents the scroll direction state of the paginator.
  * - `'forwards'` — the user is scrolling down.
  * - `'backwards'` — the user is scrolling up.
@@ -44,7 +56,9 @@ type DirectionState = 'forwards' | 'backwards' | null
  *
  * @property thresholdOffsetPercent - Optional percentage offset used to compute
  * the {@link IntersectionObserver} root margin. Determines how far into the viewport
- * a page must be before it is considered `'curr'`. Defaults to `0`.
+ * a page must be before it is considered `'curr'`. Defaults to `0`. Clamped to
+ * 0–100, with a `console.warn` naming the value received — outside that range the
+ * root margin is invalid and the observer would throw.
  *
  * @property onDirectionChanged - Called after the scroll direction changed, with
  * the new {@link DirectionState}. Repeated scrolls in the same direction do not
@@ -84,7 +98,10 @@ export type Props = PropsWithChildren<WithClassName<{
  *   when the direction actually changes, using an internal ref to avoid stale
  *   closure comparisons.
  * - Page visibility is tracked via a single {@link IntersectionObserver} instance
- *   that is recreated when `thresholdOffsetPercent` or `children` change.
+ *   that is recreated when `thresholdOffsetPercent` or the **number** of children
+ *   changes. Not on `children` itself: a parent building its child list inline hands
+ *   over a new array on every render, which would tear down and rebuild one observer
+ *   per page each time, for nothing.
  * - `currCount` on each {@link PageState} increments each time a page transitions
  *   into the `'curr'` position, making it useful as a re-entry counter.
  */
@@ -101,6 +118,23 @@ export const Paginator: FunctionComponent<Props> = ({
   const [directionState, setDirectionState] = useState<DirectionState>(null)
   const pagesRef = useRef<HTMLDivElement>(null)
   const directionRef = useRef<DirectionState>(null)
+  const childrenArr = Children.toArray(children)
+  const pagesCount = childrenArr.length
+  const thresholdPercent = toThresholdPercent(thresholdOffsetPercent)
+
+  // Fx. dep. thresholdOffsetPercent, thresholdPercent - Says it once per offending
+  // value rather than on every render. Clamping without a word would turn a caller's
+  // bug into a scrolling glitch, hunted for somewhere else entirely.
+  useEffect(() => {
+    if (thresholdOffsetPercent === undefined) return
+    if (thresholdPercent === thresholdOffsetPercent) return
+    // eslint-disable-next-line no-console
+    console.warn(
+      'Paginator: thresholdOffsetPercent must be a number between 0 and 100, received',
+      thresholdOffsetPercent,
+      `— clamped to ${thresholdPercent}.`
+    )
+  }, [thresholdOffsetPercent, thresholdPercent])
 
   // State dispatch
   useChangeDispatch(pagesState, pages => onPagesChanged?.(Array
@@ -132,14 +166,23 @@ export const Paginator: FunctionComponent<Props> = ({
     }
   }, [])
 
-  // Detect active pages with Intersection Observer
+  // Fx. dep. pagesCount - The page slots are this component's own divs, reused as
+  // long as their number holds, so the set only changes when the count does.
   useEffect(() => {
     if (pagesRef.current === null) return
     const pages = Array.from(pagesRef.current.children)
     onPageElementsChanged?.(pages.filter(page => page instanceof HTMLElement))
-    const observerRootMargin = `-${thresholdOffsetPercent ?? 0}%`
+  }, [pagesCount])
+
+  // Detect active pages with Intersection Observer
+  // Fx. dep. thresholdPercent, pagesCount - Same reasoning: rebuilding one observer
+  // per page on every render would cost a full measurement pass for an unchanged set.
+  useEffect(() => {
+    if (pagesRef.current === null) return
+    const pages = Array.from(pagesRef.current.children)
+    const observerRootMargin = `-${thresholdPercent}%`
       + ' 0px'
-      + ` -${100 - (thresholdOffsetPercent ?? 0)}%`
+      + ` -${100 - thresholdPercent}%`
       + ' 0px'
     const observer = new IntersectionObserver(entries => {
       setPagesState(prevState => {
@@ -168,7 +211,7 @@ export const Paginator: FunctionComponent<Props> = ({
       observer.observe(page)
     })
     return () => observer.disconnect()
-  }, [thresholdOffsetPercent, children])
+  }, [thresholdPercent, pagesCount])
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
@@ -180,7 +223,6 @@ export const Paginator: FunctionComponent<Props> = ({
     className
   )
   const pagesClss = c('pages')
-  const childrenArr = Children.toArray(children)
   return <div className={rootClss}>
     <div
       className={pagesClss}
