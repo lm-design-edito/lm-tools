@@ -54,6 +54,9 @@ import cssModule from './styles.module.css'
  * the open group. Only has an effect on a group of more than one member.
  * @property exitOnBgClick - When `true`, clicking the backdrop, and not its
  * content, closes it.
+ * @property openOnClick - When `true`, clicking the content opens the lightbox. An
+ * affordance layered on the open button, never a replacement for it: a click is
+ * mouse and touch only, and the button is what a keyboard reaches.
  * @property onOpenButtonClicked - Called when the open button is clicked, before the
  * lightbox reacts, with the state as it was.
  * @property onCloseButtonClicked - Same, for the close button.
@@ -61,6 +64,8 @@ import cssModule from './styles.module.css'
  * @property onNextButtonClicked - Same, for the next button.
  * @property onBackgroundClicked - Called when the backdrop is clicked (only
  * while `exitOnBgClick` is `true`), before the lightbox reacts.
+ * @property onContentClicked - Called when the content is clicked while closed (only
+ * while `openOnClick` is `true`), before the lightbox reacts.
  * @property onEscapePressed - Called when `Escape` is pressed while the lightbox is open
  * (only while `exitOnEscape` is `true`), before the lightbox reacts.
  * @property onPrevArrowPressed - Called when the left arrow is pressed while the lightbox
@@ -82,12 +87,14 @@ export type Props = PropsWithChildren<WithClassName<{
   defaultIsOn?: boolean
   exitOnEscape?: boolean
   exitOnBgClick?: boolean
+  openOnClick?: boolean
   navOnArrowKeys?: boolean
   onOpenButtonClicked?: (isOn: boolean) => void
   onCloseButtonClicked?: (isOn: boolean) => void
   onPrevButtonClicked?: (isOn: boolean) => void
   onNextButtonClicked?: (isOn: boolean) => void
   onBackgroundClicked?: (isOn: boolean) => void
+  onContentClicked?: (isOn: boolean) => void
   onEscapePressed?: (isOn: boolean) => void
   onPrevArrowPressed?: (isOn: boolean) => void
   onNextArrowPressed?: (isOn: boolean) => void
@@ -104,6 +111,8 @@ export type Props = PropsWithChildren<WithClassName<{
  * - `grouped` - it belongs to a group it did not invent.
  * - `navigable` - that group holds someone else, so the previous and next controls
  *   have somewhere to go.
+ * - `click-to-open` - the content itself opens the lightbox, so a stylesheet can say
+ *   so with a cursor.
  *
  * ### CSS elements
  * - `placeholder` - holds the content's last measured size while it is out of flow.
@@ -155,12 +164,14 @@ export const Lightbox: FunctionComponent<Props> = ({
   defaultIsOn = false,
   exitOnEscape,
   exitOnBgClick,
+  openOnClick,
   navOnArrowKeys,
   onOpenButtonClicked,
   onCloseButtonClicked,
   onPrevButtonClicked,
   onNextButtonClicked,
   onBackgroundClicked,
+  onContentClicked,
   onEscapePressed,
   onPrevArrowPressed,
   onNextArrowPressed,
@@ -242,6 +253,11 @@ export const Lightbox: FunctionComponent<Props> = ({
     onNextButtonClicked?.(isOn)
     step(1)
   }
+  const handleContentClick: MouseEventHandler<HTMLDivElement> = () => {
+    if (openOnClick !== true || isOn) return
+    onContentClicked?.(isOn)
+    requestOpen()
+  }
   const handleBackdropClick: MouseEventHandler<HTMLDivElement> = e => {
     if (exitOnBgClick !== true) return
     if (e.target !== backdropRef.current) return
@@ -297,7 +313,8 @@ export const Lightbox: FunctionComponent<Props> = ({
     on: isOn,
     off: !isOn,
     grouped: isGrouped,
-    navigable: siblingsCount > 1
+    navigable: siblingsCount > 1,
+    'click-to-open': openOnClick === true && !isOn
   }), className)
   const size = sizeRef.current
   // Nothing here is conditional. React reconciles by position, so a branch that
@@ -316,7 +333,11 @@ export const Lightbox: FunctionComponent<Props> = ({
       className={c('backdrop')}
       onClick={handleBackdropClick}
       ref={backdropRef}>
-      <div className={c('content')}>{children}</div>
+      <div
+        className={c('content')}
+        onClick={handleContentClick}>
+        {children}
+      </div>
       <button
         type='button'
         className={c('close-btn')}
