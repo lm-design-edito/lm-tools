@@ -40,8 +40,26 @@ et il n'ouvrira qu'une fois lm-link publié.
 
 ## En sommeil
 
-Aucun des trois n'a d'importance à court terme. Ils sont ici pour ne pas être
+Aucun des quatre n'a d'importance à court terme. Ils sont ici pour ne pas être
 redécouverts par surprise, pas pour être traités.
+
+- **`Disclaimer` n'a pas reçu la passe d'alignement**, sur deux points, et lm-link
+  contourne les deux aujourd'hui.
+
+  D'abord il **rend ses éléments sous condition** : `__toggler` n'existe que si
+  `togglerContent` est fourni, `__content` que si `undisclosedContent` l'est. `Lightbox`
+  fait l'inverse — ses quatre contrôles sont rendus en permanence, et c'est la feuille
+  qui décide lequel est atteignable, `:empty` distinguant le vide du rempli. La
+  conséquence est sévère : un disclaimer sans `togglerContent` est **indismissable**,
+  aucun élément n'existant à habiller.
+
+  Ensuite le toggler est une **`div` portant un `onClick`**, là où `Lightbox` rend de
+  vrais `<button type='button'>`. Sans `tabIndex`, sans rôle, sans gestion clavier :
+  l'avertissement ne se lève donc qu'à la souris ou au doigt.
+
+  lm-link s'en sort en glissant un `<button>` dans `togglerContent` — l'élément existe
+  donc toujours, le clic remonte au gestionnaire de lm-tools, et `Entrée` l'atteint. Le
+  jour où on revient ici, aligner sur `Lightbox` rendrait ce contournement inutile.
 
 - **La démo est en pause, et le reste.** Ne pas y passer de temps ; n'y toucher que
   si un changement l'empêche de compiler. Une chose à savoir le jour où elle
