@@ -95,6 +95,13 @@ export type Props = WithViewportObservation<Omit<ControlledProps, 'play' | 'full
  * automatic play the component still owed. Setting both flavours of the same
  * behaviour is the same as setting the `…When…` one alone.
  *
+ * **`loop` reaches the element untouched**, like every other native media attribute
+ * this component does not drive itself. It was once destructured out of the props and
+ * never forwarded, which silently dropped it — so if a native attribute ever stops
+ * arriving, look at the destructuring here before looking at the caller. One
+ * consequence worth knowing: a looping element never fires `ended`, so the `--ended`
+ * modifier and the `isEnded` it feeds to `Subtitles` simply never come.
+ *
  * Browsers refuse an unmuted `play()` outside a user gesture, so pairing an
  * `autoLoud…` with an `autoPlay…` will usually have the playback rejected. The
  * refusal is caught rather than ignored — the element is read back once the attempt
@@ -104,7 +111,6 @@ export type Props = WithViewportObservation<Omit<ControlledProps, 'play' | 'full
  */
 
 export const Video: FunctionComponent<Props> = ({
-  loop,
   autoPlayWhenVisible,
   autoPlayOnceVisible,
   autoPauseWhenHidden,
