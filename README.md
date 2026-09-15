@@ -110,6 +110,44 @@ span qui contient son propre séparateur, et non une suite plate de jetons et de
 ponctuations. À noter aussi : les horloges se re-rendent à chaque `timeupdate`, donc ce
 composant multiplie par six ce qui est diffé à chaque tick.
 
+## Les comportements `auto…` — une logique générique à trouver
+
+À rouvrir de zéro, en discussion, avant d'écrire quoi que ce soit. `Video` porte
+aujourd'hui **huit props** — `autoPlay`, `autoPause`, `autoMute`, `autoLoud`, chacune
+en `…WhenVisible` et `…OnceVisible` —, et la démo de lm-link a dû les présenter comme
+une grammaire (`auto` + verbe + quand) pour ne pas les décrire huit fois. Qu'une fiche
+ait eu besoin d'inventer une grammaire pour rendre une API lisible est le signe que
+l'API pourrait la porter elle-même.
+
+Ce qui est déjà en place et qui a fait ses preuves : `shouldRunAutoBehaviour` comme
+primitive commune, et **un drapeau `hasFired` par comportement** plutôt qu'un seul
+partagé — un drapeau unique confondait quatre questions, et être armé par n'importe
+quel `play` faisait que la première pression du lecteur annulait des comportements
+sans rapport.
+
+Les questions à trancher, dans l'ordre où elles se posent :
+
+- **Le déclencheur est un franchissement, pas un état.** C'est la racine du seul bug
+  ouvert de la famille : un `Once…` dont le crédit n'a pas été dépensé reste dû, mais
+  `When` comme `Once` attendent que l'écran soit *traversé* — une vidéo déjà visible
+  n'en produit aucun. Le cas se rencontre derrière une porte de lm-link : le lecteur
+  accepte, et rien ne démarre. Voir « Autoplay et disclaimer » dans le README de
+  lm-link, qui décrit deux sorties et n'en a pris aucune. Un comportement qui se
+  demanderait « suis-je visible ? » plutôt que « viens-je d'entrer ? » réglerait ça —
+  et changerait le sens de `When`.
+- **Huit props ou quatre ?** `…When…` et `…Once…` sont la même intention à deux
+  fréquences, et les poser ensemble revient déjà à ne poser que `…When…`. Une prop par
+  verbe, portant `'when' | 'once'`, dirait la même chose en moitié moins — au prix
+  d'une rupture sur une API publiée.
+- **Est-ce que ça appartient à `Video` ?** `WithViewportObservation` existe déjà comme
+  enveloppe. Un comportement piloté par le viewport n'a rien de propre à un média, et
+  `Scrllgngn` a son propre problème du même genre — son tracking s'active à la seule
+  présence de `onScrolled`, faute d'interrupteur.
+- **Et la direction compte**, ce que lm-link a découvert en écrivant la porte : les
+  quatre qui *lancent* quelque chose et les quatre qui en *arrêtent* un ne se traitent
+  pas pareil. Aujourd'hui c'est l'appelant qui le sait ; la bibliothèque pourrait le
+  dire.
+
 ## `node/shells/@<vendor>` — un chantier à ouvrir
 
 Deux projets du workspace pilotent des CLI depuis du TypeScript, et refont chacun de son
