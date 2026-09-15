@@ -71,6 +71,39 @@ describe('formatDuration', () => {
       expect(formatDuration(seconds(-90), '{{m}}:{{ss}}')).toBe('-1:-30')
     })
   })
+
+  describe('frames', () => {
+    it('counts the sub-second remainder in frames, at 25 fps by default', () => {
+      expect(formatDuration(3725240, '{{mm}}:{{ss}}.{{ff}}')).toBe('62:05.06')
+      expect(formatDuration(3725240, '{{mm}}:{{ss}}.{{f}}')).toBe('62:05.6')
+    })
+
+    it('counts in the frame rate it is given', () => {
+      expect(formatDuration(3725240, '{{ss}}.{{ff}}', { fps: 50 })).toBe('3725.12')
+    })
+
+    // A frame is reached once it has fully elapsed, so the 40th millisecond is
+    // where frame 1 starts at 25 fps — not the 39th.
+    it('truncates rather than rounds to the frame', () => {
+      expect(formatDuration(39, '{{s}}.{{ff}}')).toBe('0.00')
+      expect(formatDuration(40, '{{s}}.{{ff}}')).toBe('0.01')
+    })
+
+    // Frames are milliseconds in another base, so they pull the cascade down to
+    // milliseconds exactly as `{{ms}}` would — without needing `{{ms}}` written.
+    it('runs the cascade down to milliseconds without a ms token', () => {
+      expect(formatDuration(3725240, '{{ss}}')).toBe('3725')
+      expect(formatDuration(3725240, '{{ss}}.{{ff}}')).toBe('3725.06')
+    })
+
+    it('puts the whole duration on frames when it is the only token', () => {
+      expect(formatDuration(seconds(2), '{{f}}')).toBe('50')
+    })
+
+    it('signs a frame count like every other part', () => {
+      expect(formatDuration(-240, '{{s}}.{{f}}')).toBe('0.-6')
+    })
+  })
 })
 
 describe('getDurationParts', () => {

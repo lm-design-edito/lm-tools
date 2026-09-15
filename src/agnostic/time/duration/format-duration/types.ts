@@ -14,6 +14,7 @@ export type DurationToken =
   | 'm' | 'mm'
   | 's' | 'ss'
   | 'ms'
+  | 'f' | 'ff'
 
 /** Options for `getDurationParts`. */
 export type GetDurationPartsOptions = {
@@ -35,6 +36,16 @@ export type GetDurationPartsOptions = {
    * 365.2425 days and a month of exactly a twelfth of it.
    */
   useApproximateMonthAndYear?: boolean
+  /**
+   * Frame rate the `f` and `ff` tokens count in. Defaults to `25`.
+   *
+   * Frames are a *rendering* of the millisecond part, not a unit of their own —
+   * they never appear in {@link DurationParts}, and a template asking for them
+   * asks for milliseconds under another base. So `'{{ss}}.{{ff}}'` reads the
+   * sub-second remainder, while `'{{f}}'` alone puts the whole duration on
+   * frames, exactly as `'{{ms}}'` alone puts it on milliseconds.
+   */
+  fps?: number
 }
 
 /**
@@ -104,4 +115,14 @@ export type FormatDurationOptions = {
    * 365.2425 days and a month of exactly a twelfth of it.
    */
   useApproximateMonthAndYear?: boolean
+  /**
+   * Frame rate the `f` and `ff` tokens count in. Defaults to `25`.
+   *
+   * Frames are a *rendering* of the millisecond part, not a unit of their own —
+   * they never appear in {@link DurationParts}, and a template asking for them
+   * asks for milliseconds under another base. So `'{{ss}}.{{ff}}'` reads the
+   * sub-second remainder, while `'{{f}}'` alone puts the whole duration on
+   * frames, exactly as `'{{ms}}'` alone puts it on milliseconds.
+   */
+  fps?: number
 }
