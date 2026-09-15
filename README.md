@@ -38,22 +38,51 @@ publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là
 gardant que la coquille CLI chez lui. C'est le prochain vrai chantier de ce dépôt,
 et il n'ouvrira qu'une fois lm-link publié.
 
-## Formater un temps — la prop est faite, le composant reste en réserve
+## Formater un temps — une seule grammaire pour les dates et les durées
 
 Le besoin venait de lm-link : la fiche `video` veut des horloges en `mm:ss`, et le lecteur
 les rendait en `mm:ss:ms`, écrit en dur dans `ControlledVideo`.
 
-**Le préalable est levé.** `formatTime` substituait `h`, `m`, `s` et `f` **partout où ces
-lettres apparaissaient**, donc `'mm min ss'` rendait `'01 1in 01'` — un format ne pouvait
-séparer ses champs qu'avec de la ponctuation, et c'est pour ça qu'on ne pouvait pas
-l'exposer : le publier aurait publié le piège. Les jetons sont maintenant délimités en
-`{{…}}`, comme dans `agnostic/time/dates/format-date`, avec la même alternation ordonnée
-du plus long au plus court. Tout ce qui est hors délimiteurs est littéral, donc
-`'{{m}} min {{ss}}'` marche, et un jeton inconnu reste écrit tel quel plutôt que d'être
-blanchi — une faute de frappe doit se voir.
+**Le doublon est supprimé.** `Video` portait sa propre `formatTime` dans
+`components/Video/utils.ts`, qui réécrivait la cascade heures → minutes → secondes →
+millisecondes **en dur**, sans regarder le gabarit. Elle perdait donc tout ce que le
+gabarit ne nommait pas : une vidéo d'une heure et deux minutes affichée en `{{mm}}:{{ss}}`
+disait `02:05`. `agnostic/time/duration/format-duration` faisait déjà la bonne chose — et
+la faisait depuis le début. `Video` l'appelle maintenant, et `formatTime` n'existe plus.
 
-**C'est une rupture pour `formatTime`**, dont la grammaire change : `'mm:ss'` est
-désormais du texte littéral. Les deux seuls appels étaient internes et sont à jour.
+**Le gabarit décide du découpage**, et c'est la règle qui fait que rien ne se perd :
+`unitsInFormat` relève les unités que le gabarit nomme, `getDurationParts` ne découpe la
+durée que sur celles-là, chacune prenant sa part entière et passant le reste à la
+suivante. Les heures roulent donc à 168 quand la semaine est là et que le jour ne l'est
+pas — `'{{w}}w {{h}}h {{s}}s'` rend `2w 77h 1810s` — et `'{{mm}}:{{ss}}'` sur une heure de
+vidéo rend `62:05`. Le cas à une seule unité découle de la même règle : `'{{s}}s'` porte
+la durée entière.
+
+**La grammaire est commune à `formatDate` et `formatDuration`.** Qui a appris l'une
+connaît l'autre : jetons délimités par `{{…}}`, tout le reste littéral, alternation
+ordonnée du plus long au plus court, le jeton nu porte le nombre et le jeton doublé le
+même nombre padé sur deux chiffres, `ms` sur trois, et un jeton inconnu reste écrit tel
+quel — une faute de frappe doit se voir.
+
+**Aucun jeton ne dit plus deux choses selon la fonction.** Il en restait un : `d`/`dd`,
+qui rendaient un *nom de jour* côté date (`Thu`, `Thursday`) et un *nombre de jours* côté
+durée. C'était le seul endroit des deux fonctions où le même jeton changeait de nature, et
+le seul qui violait la règle « doublé = padé ». Les noms de jours sont donc passés en
+**`ddd`/`dddd`**, qui calquent les `MMM`/`MMMM` des mois déjà en place, et `d`/`dd` sont le
+numéro du jour des deux côtés. `D`/`DD` restent, inchangés : c'est la même valeur sous son
+ancienne orthographe, et rien de ce qui les utilisait ne bouge.
+
+Ce qui reste propre à chaque domaine ne se recoupe pas : la date a son méridien, son
+suffixe ordinal et son horloge 12 h (`h`/`hh`, contre `H`/`HH` pour la 24 h), la durée a
+ses semaines et ses images.
+
+**Les images ont suivi `formatTime` dans `formatDuration`**, en `{{f}}`/`{{ff}}` avec une
+option `fps` à 25 — `{{frame}}` a disparu, personne ne l'appelait et `f`/`ff` respecte la
+règle du doublement. Une image n'est pas une unité : c'est la part de millisecondes comptée
+dans une autre base, donc `f` et `ff` sont rangés **sous `ms`** dans la table des unités et
+demander une image fait descendre la cascade jusqu'aux millisecondes sans qu'on ait à
+écrire `{{ms}}`. La troncature est volontaire — une image n'est atteinte qu'une fois
+écoulée, donc 39 ms à 25 im/s sont l'image `0`.
 
 **La prop est là.** `timeFormat` sur `ControlledVideo`, donc sur `Video` par héritage,
 appliquée aux deux horloges. Le défaut reste `'{{mm}}:{{ss}}:{{ms}}'` — c'est ce que le
@@ -61,12 +90,6 @@ composant a toujours rendu, et un défaut qui change sous un consommateur est un
 que personne n'a demandé. Il est discutable : les millisecondes sont ce qu'une salle de
 montage veut et presque jamais ce qu'un article veut. À revoir le jour d'une version qui
 assume de bouger, pas dans un correctif.
-
-Ce que ça ne couvre pas, et qui attend une demande : `fps` n'est pas exposé, donc
-`{{frame}}` et `{{f}}` dérivent de 25 im/s ; et un format qui omet `{{hh}}` **perd** les
-heures au lieu de les replier dans les minutes — une vidéo d'une heure et deux minutes en
-`'{{mm}}:{{ss}}'` affiche `02:05`. C'est documenté sur la fonction, et c'est le genre de
-chose qu'une fiche de démo doit redire.
 
 ### Le composant à jetons, si le besoin revient
 
