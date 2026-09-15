@@ -103,6 +103,8 @@ type TrackData = {
  * the component reacts, with the target and current rates.
  * @property onFullscreenButtonClicked - Called when the fullscreen button is
  * clicked, before the component reacts, with the fullscreen state as it was.
+ * @property onSubtitlesButtonClicked - Called when the subtitles button is clicked,
+ * before the component reacts, with the subtitles state as it was.
  * @property onTimelineClicked - Called when the timeline is clicked, before the
  * component reacts, with the target and current times (in seconds). The component
  * seeks to the target right after, unless the time is controlled.
@@ -114,6 +116,8 @@ type TrackData = {
  * @property onIsEndedChanged - Called after playback reached the end, and again
  * once it left it — a seek back or a new play. Never on mount.
  * @property onIsLoudChanged - Called once the mute state has changed (`true` = unmuted).
+ * @property onIsSubtitlesOnChanged - Called once the subtitles have been shown or
+ * hidden. Never on mount.
  * @property onVolumeChanged - Called once the volume has changed (`0` to `1`).
  * @property onPlaybackRateChanged - Called once the playback rate has changed.
  * @property onCurrentTimeMsChanged - Called once the current time has changed, in
@@ -133,6 +137,13 @@ type TrackData = {
  * gets, each taking its whole part and handing the rest down. So `'{{mm}}:{{ss}}'` on
  * an hour-long video reads `62:05` rather than dropping the hour — nothing is ever
  * lost for not having been asked for.
+ * @property subtitlesBtnContent - Glyph for the subtitles button, like the five other
+ * button contents. The button renders only when `subtitles` is set: with no cues there
+ * is nothing to toggle, and unlike `Disclaimer`'s missing toggler this withholds no
+ * behaviour — a stylesheet has nothing it could do with it either.
+ * @property subtitlesOn - Whether the subtitles show. Controlled: the component never
+ * changes it, it reports a click through `onSubtitlesButtonClicked` and leaves the
+ * decision to the parent. `Video` holds it for you.
  * @property className - Additional CSS class for the root element.
  * @property children - React content inserted into the <video> tag (fallback, etc).
  *
@@ -147,7 +158,9 @@ export type Props = PropsWithChildren<WithClassName<{
   loudBtnContent?: React.ReactNode
   muteBtnContent?: React.ReactNode
   fullscreenBtnContent?: React.ReactNode
+  subtitlesBtnContent?: React.ReactNode
   play?: boolean
+  subtitlesOn?: boolean
   fullscreen?: boolean
   volume?: number
   mute?: boolean
@@ -161,10 +174,12 @@ export type Props = PropsWithChildren<WithClassName<{
   onVolumeRangeChanged?: (e: React.ChangeEvent<HTMLInputElement>, targetVolume: number, currentVolume: number, video: HTMLVideoElement | null) => void
   onRateRangeChanged?: (e: React.ChangeEvent<HTMLInputElement>, targetRate: number, currentRate: number, video: HTMLVideoElement | null) => void
   onFullscreenButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isFullscreen: boolean, video: HTMLVideoElement | null) => void
+  onSubtitlesButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isSubtitlesOn: boolean, video: HTMLVideoElement | null) => void
   onTimelineClicked?: (e: React.MouseEvent<HTMLDivElement>, targetTime: number, currentTime: number, video: HTMLVideoElement | null) => void
   onIsPlayingChanged?: (isPlaying: boolean) => void
   onIsFullscreenChanged?: (isFullscreen: boolean) => void
   onIsLoudChanged?: (isLoud: boolean) => void
+  onIsSubtitlesOnChanged?: (isSubtitlesOn: boolean) => void
   onIsEndedChanged?: (isEnded: boolean) => void
   onVolumeChanged?: (volume: number) => void
   onPlaybackRateChanged?: (playbackRate: number) => void
@@ -224,8 +239,12 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   loudBtnContent,
   muteBtnContent,
   fullscreenBtnContent,
+  subtitlesBtnContent,
   play,
   fullscreen,
+  // Les sous-titres sont montrés tant que personne n'a dit le contraire : un article qui
+  // en fournit veut qu'on les lise.
+  subtitlesOn = true,
   mute,
   muted,
   volume = 1,
@@ -242,10 +261,12 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   onVolumeRangeChanged,
   onRateRangeChanged,
   onFullscreenButtonClicked,
+  onSubtitlesButtonClicked,
   onTimelineClicked,
   onIsPlayingChanged,
   onIsFullscreenChanged,
   onIsLoudChanged,
+  onIsSubtitlesOnChanged,
   onIsEndedChanged,
   onVolumeChanged,
   onPlaybackRateChanged,
@@ -347,6 +368,10 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     onFullscreenButtonClicked?.(e, isFullscreen, videoRef.current)
   }, [onFullscreenButtonClicked, isFullscreen])
 
+  const handleSubtitlesButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    onSubtitlesButtonClicked?.(e, subtitlesOn, videoRef.current)
+  }, [onSubtitlesButtonClicked, subtitlesOn])
+
   const handleVolumeRangeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const targetVolume = Number(e.currentTarget.value) / 100
     onVolumeRangeChanged?.(e, targetVolume, volume, videoRef.current)
@@ -377,7 +402,12 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     'fullscreen-on': isFullscreen,
     'fullscreen-off': !isFullscreen,
     'loud': isLoud,
-    'muted': !isLoud
+    'muted': !isLoud,
+    // Rien des deux quand aucun sous-titre n'est fourni : l'absence n'est pas un état
+    // caché, c'est l'absence d'un état. Une feuille qui veut viser ce cas le reconnaît à
+    // ce qu'aucun des deux modifieurs n'est là.
+    'subtitles-on': subtitles !== undefined && subtitlesOn,
+    'subtitles-off': subtitles !== undefined && !subtitlesOn
   }), className)
 
   // Guarded: the duration is unknown until the metadata lands, and an unguarded
@@ -391,6 +421,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     'data-fullscreen-off': !isFullscreen ? '' : undefined,
     'data-loud': isLoud ? '' : undefined,
     'data-muted': !isLoud ? '' : undefined,
+    'data-subtitles-on': subtitles !== undefined && subtitlesOn ? '' : undefined,
+    'data-subtitles-off': subtitles !== undefined && !subtitlesOn ? '' : undefined,
     'data-volume': volume.toFixed(8),
     'data-volume-percent': volumePercent,
     'data-playback-rate': playbackRate,
@@ -443,6 +475,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   const muteBtnClss = c('mute-btn')
   const volumePcntClss = c('volume-percent')
   const fullscreenBtnClss = c('fullscreen-btn')
+  const subtitlesBtnClss = c('subtitles-btn')
   const volumeRangeClss = c('volume-range')
   const playbackRateRangeClss = c('playback-rate-range')
   const playbackRateClss = c('playback-rate')
@@ -519,6 +552,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   useChangeDispatch(isElementPlaying, onIsPlayingChanged)
   useChangeDispatch(isFullscreen, onIsFullscreenChanged)
   useChangeDispatch(isLoud, onIsLoudChanged)
+  useChangeDispatch(subtitlesOn, onIsSubtitlesOnChanged)
   useChangeDispatch(isEnded, onIsEndedChanged)
   useChangeDispatch(volume, onVolumeChanged)
   useChangeDispatch(playbackRate, onPlaybackRateChanged)
@@ -595,6 +629,15 @@ export const ControlledVideo: FunctionComponent<Props> = ({
       <button
         className={fullscreenBtnClss}
         onClick={handleFullscreenButtonClick}>{fullscreenBtnContent}</button>
+      {/* Subtitles */}
+      {/* La seule commande rendue sous condition, et la condition est l'absence de son
+      objet : sans `subtitles` il n'y a aucune réplique à montrer ou à cacher. C'est
+      l'inverse du `togglerContent` de `Disclaimer`, dont l'absence retire un
+      comportement — ici elle n'en retire aucun, et une feuille n'aurait rien à faire
+      d'un bouton qui ne commande rien. */}
+      {subtitles !== undefined && <button
+        className={subtitlesBtnClss}
+        onClick={handleSubtitlesButtonClick}>{subtitlesBtnContent}</button>}
       {/* Playback rate */}
       <input
         type='range'

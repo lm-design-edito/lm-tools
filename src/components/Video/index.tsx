@@ -52,11 +52,16 @@ import {
  * `autoPlay`, `autoPlayWhenVisible` and the play button have no effect for as
  * long as this prop is provided.
  * @property wrapperClassName - Optional additional class name(s) applied to the root wrapper element.
+ * @property defaultSubtitlesOn - Whether the subtitles start shown. `true` by default —
+ * an article that supplies cues means them to be read. The reader's button takes it from
+ * there, so this is a starting point and not a setting: `default…` and never `initial…`,
+ * as everywhere else here.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React children rendered inside the `<video>` element itself
  * (e.g. fallback content).
  */
-export type Props = WithViewportObservation<Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mute' | 'playbackRate'>> & {
+export type Props = WithViewportObservation<Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mute' | 'playbackRate' | 'subtitlesOn'>> & {
+  defaultSubtitlesOn?: boolean
   autoPlayWhenVisible?: boolean
   autoPlayOnceVisible?: boolean
   autoPauseWhenHidden?: boolean
@@ -111,6 +116,7 @@ export type Props = WithViewportObservation<Omit<ControlledProps, 'play' | 'full
  */
 
 export const Video: FunctionComponent<Props> = ({
+  defaultSubtitlesOn = true,
   autoPlayWhenVisible,
   autoPlayOnceVisible,
   autoPauseWhenHidden,
@@ -131,6 +137,7 @@ export const Video: FunctionComponent<Props> = ({
   onVolumeRangeChanged,
   onRateRangeChanged,
   onFullscreenButtonClicked,
+  onSubtitlesButtonClicked,
   ...controlledProps
 }) => {
   // State & refs
@@ -139,6 +146,7 @@ export const Video: FunctionComponent<Props> = ({
   const [mute, setMute] = useState(false)
   const [playbackRate, setPlaybackRate] = useState(1)
   const [fullscreen, setFullscreen] = useState(false)
+  const [subtitlesOn, setSubtitlesOn] = useState(defaultSubtitlesOn)
 
   // One flag per `…Once…` behaviour, and each is armed by that behaviour's own
   // automatic trigger. A single shared flag conflated four questions, and being set
@@ -251,6 +259,15 @@ export const Video: FunctionComponent<Props> = ({
     setFullscreen(!isFullscreen)
   }, [onFullscreenButtonClicked])
 
+  // Un seul bouton pour les deux sens, contrairement à lecture/pause et son/muet qui en
+  // ont un chacun : ceux-là existent en paire dans le DOM et la feuille en montre un,
+  // parce qu'ils portent deux glyphes opposés. Les sous-titres n'en portent qu'un, dont
+  // seul l'habillage change — inutile d'en rendre deux pour n'en montrer jamais qu'un.
+  const handleSubtitlesButtonClick = useCallback<NonNullable<Props['onSubtitlesButtonClicked']>>((e, isSubtitlesOn, video) => {
+    onSubtitlesButtonClicked?.(e, isSubtitlesOn, video)
+    setSubtitlesOn(!isSubtitlesOn)
+  }, [onSubtitlesButtonClicked])
+
   // Intersection Observer
 
   const onIntersected = useCallback<NonNullable<IntersectionObserverComponentProps['onIntersected']>>(({ ioEntry }) => {
@@ -305,6 +322,7 @@ export const Video: FunctionComponent<Props> = ({
     mute={mute}
     playbackRate={playbackRate}
     fullscreen={fullscreen}
+    subtitlesOn={subtitlesOn}
     onPlay={handleOnPlayEvent}
     onPause={handleOnPauseEvent}
     onIsPlayingChanged={handleIsPlayingChanged}
@@ -318,7 +336,8 @@ export const Video: FunctionComponent<Props> = ({
     onMuteButtonClicked={handleMuteButtonClick}
     onVolumeRangeChanged={handleVolumeRangeChange}
     onRateRangeChanged={handleRateRangeChange}
-    onFullscreenButtonClicked={handleFullscreenButtonClick} />
+    onFullscreenButtonClicked={handleFullscreenButtonClick}
+    onSubtitlesButtonClicked={handleSubtitlesButtonClick} />
 
   return <div className={rootClss}>
     {needsObserve
