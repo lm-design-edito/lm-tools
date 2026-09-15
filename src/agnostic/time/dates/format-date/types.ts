@@ -2,6 +2,7 @@
 export type DateToken =
   | 'D' | 'DD'
   | 'd' | 'dd'
+  | 'ddd' | 'dddd'
   | 'M' | 'MM' | 'MMM' | 'MMMM'
   | 'YY' | 'YYYY'
   | 'H' | 'HH'
@@ -17,17 +18,17 @@ export type DateToken =
  *
  * Quantities are **numbers** — a day of month is `1`, not `'01'`. Padding and
  * truncation are rendering concerns and belong to `formatDate`, which is why the
- * `DD`, `MM`, `YY`, `HH`, `hh`, `mm` and `ss` tokens have no entry here: they
- * render the same quantity as their unpadded twin. The parts that are localised
- * text rather than a quantity stay strings.
+ * `d`, `dd`, `DD`, `MM`, `YY`, `HH`, `hh`, `mm` and `ss` tokens have no entry
+ * here: they render the same quantity as the bare token they double. The parts
+ * that are localised text rather than a quantity stay strings.
  */
 export type DateTokenParts = {
-  /** Day of month, 1–31. */
+  /** Day of month, 1–31. Rendered by `D`, `DD`, `d` and `dd` alike. */
   D: number
   /** Short weekday name, localised. */
-  d: string
+  ddd: string
   /** Full weekday name, localised. */
-  dd: string
+  dddd: string
   /** Month number, 1–12 — January is `1`, not `0`. */
   M: number
   /** Short month name, localised. */
@@ -64,9 +65,9 @@ export type DateTokenParts = {
 export type NamedDateParts = {
   /** {@link DateTokenParts.D} */
   dayOfMonth: number
-  /** {@link DateTokenParts.d} */
+  /** {@link DateTokenParts.ddd} */
   shortWeekdayName: string
-  /** {@link DateTokenParts.dd} */
+  /** {@link DateTokenParts.dddd} */
   fullWeekdayName: string
   /** {@link DateTokenParts.M} */
   monthNumber: number

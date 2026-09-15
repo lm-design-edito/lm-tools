@@ -67,12 +67,27 @@ describe('formatDate', () => {
 
   describe('locales', () => {
     it('names the weekday and the month in English by default', () => {
-      expect(formatDate(thursdayAfternoon, '{{dd}} {{d}} {{MMMM}} {{MMM}}'))
+      expect(formatDate(thursdayAfternoon, '{{dddd}} {{ddd}} {{MMMM}} {{MMM}}'))
         .toBe('Thursday Thu January Jan')
     })
 
     it('names them in the requested locale', () => {
-      expect(formatDate(thursdayAfternoon, '{{dd}} {{MMMM}}', 'fr')).toBe('jeudi janvier')
+      expect(formatDate(thursdayAfternoon, '{{dddd}} {{MMMM}}', 'fr')).toBe('jeudi janvier')
+    })
+  })
+
+  describe('day of month', () => {
+    it('reads the day number under d as well as under D', () => {
+      expect(formatDate(thursdayAfternoon, '{{d}} {{D}}')).toBe('1 1')
+      expect(formatDate(thursdayAfternoon, '{{dd}} {{DD}}')).toBe('01 01')
+    })
+
+    // The whole point of moving the weekday names to `ddd`/`dddd`: `{{d}}` and
+    // `{{dd}}` now read as a number here and in `formatDuration` alike, and the
+    // doubled form is the padded twin of the bare one everywhere.
+    it('does not let the shorter spellings swallow the weekday names', () => {
+      expect(formatDate(thursdayAfternoon, '{{ddd}}')).toBe('Thu')
+      expect(formatDate(thursdayAfternoon, '{{dddd}}')).toBe('Thursday')
     })
   })
 
@@ -125,8 +140,8 @@ describe('getDateParts', () => {
       const parts = getDateParts(thursdayAfternoon)
       expect(parts).toMatchObject({
         dayOfMonth: parts.D,
-        shortWeekdayName: parts.d,
-        fullWeekdayName: parts.dd,
+        shortWeekdayName: parts.ddd,
+        fullWeekdayName: parts.dddd,
         monthNumber: parts.M,
         shortMonthName: parts.MMM,
         fullMonthName: parts.MMMM,
@@ -158,8 +173,8 @@ describe('getDateParts', () => {
   describe('locales', () => {
     it('localises the weekday and month names', () => {
       expect(getDateParts(thursdayAfternoon, 'fr')).toMatchObject({
-        d: 'jeu.',
-        dd: 'jeudi',
+        ddd: 'jeu.',
+        dddd: 'jeudi',
         MMM: 'janv.',
         MMMM: 'janvier'
       })
@@ -167,7 +182,7 @@ describe('getDateParts', () => {
 
     it('falls back to English on a locale the runtime does not support', () => {
       expect(getDateParts(thursdayAfternoon, 'xx')).toMatchObject({
-        dd: 'Thursday',
+        dddd: 'Thursday',
         MMMM: 'January',
         th: 'st'
       })

@@ -7,7 +7,7 @@ import type {
 // Alternation is ordered, and the first branch that fits wins — so the longest
 // tokens come first. `MM` ahead of `MMMM` would only work by backtracking off the
 // closing braces, which is true but not something a reader should have to derive.
-const tokenRegexp = /\{\{(MMMM|YYYY|MMM|DD|dd|MM|YY|HH|hh|mm|ss|th|ms|D|d|M|H|h|m|s|A|a)\}\}/gv
+const tokenRegexp = /\{\{(MMMM|YYYY|dddd|MMM|ddd|DD|dd|MM|YY|HH|hh|mm|ss|th|ms|D|d|M|H|h|m|s|A|a)\}\}/gv
 
 function pad (value: number, length: number): string {
   return `${value}`.padStart(length, '0')
@@ -21,8 +21,10 @@ function pad (value: number, length: number): string {
 const renderers: Record<DateToken, (parts: DateParts) => string> = {
   'D': parts => `${parts.D}`,
   'DD': parts => pad(parts.D, 2),
-  'd': parts => parts.d,
-  'dd': parts => parts.dd,
+  'd': parts => `${parts.D}`,
+  'dd': parts => pad(parts.D, 2),
+  'ddd': parts => parts.ddd,
+  'dddd': parts => parts.dddd,
   'M': parts => `${parts.M}`,
   'MM': parts => pad(parts.M, 2),
   'MMM': parts => parts.MMM,
@@ -49,10 +51,10 @@ const renderers: Record<DateToken, (parts: DateParts) => string> = {
  * Supported tokens (placeholders must be wrapped in `{{...}}`):
  *
  * **Day**
- * - `D` : Day of month (1–31)
- * - `DD` : Day of month, padded (01–31)
- * - `d` : Short weekday name (Mon, Tue, ...)
- * - `dd` : Full weekday name (Monday, Tuesday, ...)
+ * - `D` / `d` : Day of month (1–31)
+ * - `DD` / `dd` : Day of month, padded (01–31)
+ * - `ddd` : Short weekday name (Mon, Tue, ...)
+ * - `dddd` : Full weekday name (Monday, Tuesday, ...)
  *
  * **Month**
  * - `M` : Month number (1–12)
@@ -90,6 +92,21 @@ const renderers: Record<DateToken, (parts: DateParts) => string> = {
  * @returns Formatted date string. An unknown token is left untouched, braces
  * included.
  * @see {@link getDateParts} to reach the same parts as plain values, unpadded.
+ * @see {@link formatDuration} — the same template grammar, for a length of time
+ * rather than a point in it.
+ *
+ * @remarks
+ * This function and `formatDuration` share one grammar, so a reader who has learnt
+ * either knows the other: tokens are delimited by `{{…}}` and everything outside
+ * them is literal; the bare token is the plain number and the doubled one is that
+ * same number padded to two digits; `ms` is padded to three; and an unknown token
+ * is left as written rather than blanked, so a typo shows.
+ *
+ * No token means two different kinds of thing across the two. What differs is only
+ * what each domain has to offer: a date has a meridiem, an ordinal suffix and a
+ * 12-hour clock (`h`/`hh`, against `H`/`HH` for the 24-hour one), while a duration
+ * has weeks and frames. The weekday names are `ddd`/`dddd`, mirroring `MMM`/`MMMM`
+ * — `d`/`dd` are the day number, as they are in a duration.
  *
  * @example
  * formatDate(new Date(2026, 0, 1, 15, 5), '{{YYYY}}-{{MM}}-{{DD}} {{hh}}:{{mm}} {{A}}')

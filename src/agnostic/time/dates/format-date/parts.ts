@@ -71,9 +71,9 @@ export function getDateParts (date: Date, locale = 'en'): DateParts {
   const tokens: DateTokenParts = {
     'D': day,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    'd': weekdayNames(safeLocale, 'short')[dayOfWeek]!,
+    'ddd': weekdayNames(safeLocale, 'short')[dayOfWeek]!,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    'dd': weekdayNames(safeLocale, 'long')[dayOfWeek]!,
+    'dddd': weekdayNames(safeLocale, 'long')[dayOfWeek]!,
     'M': month + 1,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     'MMM': monthNames(safeLocale, 'short')[month]!,
@@ -92,8 +92,8 @@ export function getDateParts (date: Date, locale = 'en'): DateParts {
   return {
     ...tokens,
     dayOfMonth: tokens.D,
-    shortWeekdayName: tokens.d,
-    fullWeekdayName: tokens.dd,
+    shortWeekdayName: tokens.ddd,
+    fullWeekdayName: tokens.dddd,
     monthNumber: tokens.M,
     shortMonthName: tokens.MMM,
     fullMonthName: tokens.MMMM,
