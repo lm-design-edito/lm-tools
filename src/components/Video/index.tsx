@@ -47,6 +47,10 @@ import {
  * stopped video, since a playing element would advance a value it does not own:
  * `autoPlay`, `autoPlayWhenVisible` and the play button have no effect for as
  * long as this prop is provided.
+ * @property togglePlayOnClick - When `true`, a click on the picture plays or pauses it.
+ * A **second** way to reach what the play and pause buttons already do, never the only
+ * one: the element takes no focus stop, so the keyboard keeps using the buttons. The
+ * controls painted over the picture are not part of the surface.
  * @property defaultSubtitlesOn - Whether the subtitles start shown. `true` by default —
  * an article that supplies cues means them to be read. The reader's button takes it from
  * there, so this is a starting point and not a setting: `default…` and never `initial…`,
@@ -126,6 +130,7 @@ export const Video: FunctionComponent<Props> = ({
   root,
   rootMargin,
   onVisibilityChanged,
+  onVideoClicked,
   onPlayButtonClicked,
   onPauseButtonClicked,
   onLoudButtonClicked,
@@ -231,6 +236,14 @@ export const Video: FunctionComponent<Props> = ({
     onPauseButtonClicked?.(e, isPlaying, video)
     setPlay(false)
   }, [onPauseButtonClicked])
+
+  // The picture toggles, where the two buttons each say one thing. It is the same gesture
+  // as pressing one of them — a consumer tracking whether the reader has taken over
+  // playback has to count this one too, since it is the same decision made elsewhere.
+  const handleVideoClick = useCallback<NonNullable<Props['onVideoClicked']>>((e, isPlaying, video) => {
+    onVideoClicked?.(e, isPlaying, video)
+    setPlay(!isPlaying)
+  }, [onVideoClicked])
 
   const handleLoudButtonClick = useCallback<NonNullable<Props['onLoudButtonClicked']>>((e, isLoud, video) => {
     onLoudButtonClicked?.(e, isLoud, video)
@@ -343,6 +356,7 @@ export const Video: FunctionComponent<Props> = ({
     onRateChange={handleOnRateChangeEvent}
     onLoadedMetadata={handleOnLoadedMetadataEvent}
     onFullscreenChange={handleFullscreenChange}
+    onVideoClicked={handleVideoClick}
     onPlayButtonClicked={handlePlayButtonClick}
     onPauseButtonClicked={handlePauseButtonClick}
     onLoudButtonClicked={handleLoudButtonClick}

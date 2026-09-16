@@ -33,7 +33,11 @@ import {
   forceVolume,
   getTimelineClickProgress,
   msToSeconds,
-  secondsToMs
+  parseSources,
+  parseTracks,
+  secondsToMs,
+  type SourceData,
+  type TrackData
 } from './utils.js'
 
 /**
@@ -42,29 +46,6 @@ import {
  * @property src - URL of the video file.
  * @property type - MIME type of the source (e.g. `'video/mp4'`).
  */
-type SourceData = {
-  src?: string
-  type?: string
-}
-
-/**
- * Describes a single text track (subtitles, captions, chapters, etc.).
- *
- * @property src - URL of the track file.
- * @property kind - Track type, maps directly to the `<track>` `kind` attribute.
- * @property srclang - Language of the track content (e.g. `'fr'`, `'en'`).
- * @property label - Human-readable label shown in the browser's track selector.
- * @property default - When `true`, marks this track as the default selection.
- */
-type TrackData = {
-  src?: string
-  kind?: 'subtitles' | 'captions' | 'descriptions' | 'chapters' | 'metadata'
-  srclang?: string
-  label?: string
-  default?: boolean
-}
-
-
 /**
  * Props for the ControlledVideo component.
  *
@@ -155,6 +136,7 @@ export type Props = PropsWithChildren<WithClassName<{
   // uncontrolled `Video` above it, which observes that element rather than wrapping it
   // in a box of its own — see `useIntersectionObserver`.
   rootRef?: Ref<HTMLElement>
+  togglePlayOnClick?: boolean
   sources?: string | string[] | SourceData[]
   tracks?: string | string[] | TrackData[]
   subtitles?: SubsProps
@@ -181,6 +163,7 @@ export type Props = PropsWithChildren<WithClassName<{
   onFullscreenButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isFullscreen: boolean, video: HTMLVideoElement | null) => void
   onSubtitlesButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isSubtitlesOn: boolean, video: HTMLVideoElement | null) => void
   onTimelineClicked?: (e: React.MouseEvent<HTMLDivElement>, targetTime: number, currentTime: number, video: HTMLVideoElement | null) => void
+  onVideoClicked?: (e: React.MouseEvent<HTMLVideoElement>, isPlaying: boolean, video: HTMLVideoElement | null) => void
   onIsPlayingChanged?: (isPlaying: boolean) => void
   onIsFullscreenChanged?: (isFullscreen: boolean) => void
   onIsLoudChanged?: (isLoud: boolean) => void
@@ -268,6 +251,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   onFullscreenButtonClicked,
   onSubtitlesButtonClicked,
   onTimelineClicked,
+  onVideoClicked,
+  togglePlayOnClick,
   onIsPlayingChanged,
   onIsFullscreenChanged,
   onIsLoudChanged,
@@ -357,6 +342,20 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     onPlayButtonClicked?.(e, wasPlaying, videoRef.current)
   }, [onPlayButtonClicked])
 
+  // The picture as a play/pause surface. It reports and nothing more, like every other
+  // control here: the uncontrolled layer above owns the play state.
+  //
+  // The listener sits on the element and not on the `<figure>`, so the controls painted
+  // over it are not part of the surface — a click on pause would otherwise toggle twice
+  // and cancel itself. No `role` and no `tabIndex` either: this is a **second** way to
+  // do what the play button already does, and giving it a focus stop would put the same
+  // action twice in the tab order.
+  const handleVideoClick = useCallback((e: React.MouseEvent<HTMLVideoElement>) => {
+    if (togglePlayOnClick !== true) return
+    const wasPlaying = videoRef.current?.paused === false
+    onVideoClicked?.(e, wasPlaying, videoRef.current)
+  }, [togglePlayOnClick, onVideoClicked])
+
   const handlePauseButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     const wasPlaying = videoRef.current?.paused === false
     onPauseButtonClicked?.(e, wasPlaying, videoRef.current)
@@ -413,7 +412,11 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     // caché, c'est l'absence d'un état. Une feuille qui veut viser ce cas le reconnaît à
     // ce qu'aucun des deux modifieurs n'est là.
     'subtitles-on': subtitles !== undefined && subtitlesOn,
-    'subtitles-off': subtitles !== undefined && !subtitlesOn
+    'subtitles-off': subtitles !== undefined && !subtitlesOn,
+    // A capability rather than a state, and it is here for the same reason the lightbox
+    // carries `--open-on-click`: a surface that answers a click has to be able to say so
+    // with a cursor.
+    'toggle-play-on-click': togglePlayOnClick === true
   }), className)
 
   // Guarded: the duration is unknown until the metadata lands, and an unguarded
@@ -434,7 +437,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     'data-playback-rate': playbackRate,
     'data-current-time-ms': currentTimeMs.toFixed(2),
     'data-current-time-ratio': currentTimeRatio.toFixed(8),
-    'data-total-time-ms': totalTimeMs
+    'data-total-time-ms': totalTimeMs,
+    'data-toggle-play-on-click': togglePlayOnClick === true ? '' : undefined
   }
 
   const rootStyles: Record<string, string> = {
@@ -447,31 +451,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     '--lm-video-playback-rate': `${playbackRate}`
   }
 
-  const parsedSources = useMemo(() => {
-    if (sources === undefined) return []
-    if (typeof sources === 'string') return [{ src: sources }]
-    if (Array.isArray(sources)) {
-      if (sources.length === 0) return []
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element sampled just above; array is expected to be homogeneous
-      if (typeof sources[0] === 'string') return (sources as string[]).map(src => ({ src }))
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element was checked not to be a string just above; array is expected to be homogeneous
-      return sources as SourceData[]
-    }
-    return []
-  }, [sources])
-
-  const parsedTracks = useMemo(() => {
-    if (tracks === undefined) return []
-    if (typeof tracks === 'string') return [{ src: tracks }]
-    if (Array.isArray(tracks)) {
-      if (tracks.length === 0) return []
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element sampled just above; array is expected to be homogeneous
-      if (typeof tracks[0] === 'string') return (tracks as string[]).map(src => ({ src }))
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element was checked not to be a string just above; array is expected to be homogeneous
-      return tracks as TrackData[]
-    }
-    return []
-  }, [tracks])
+  const parsedSources = useMemo(() => parseSources(sources), [sources])
+  const parsedTracks = useMemo(() => parseTracks(tracks), [tracks])
 
   const videoClss = c('video')
   const videoControlsClss = c('video-controls')
@@ -574,6 +555,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
       className={videoClss}
       {...intrinsicVideoAttributes}
       autoPlay={isTimeControlled ? false : intrinsicVideoAttributes.autoPlay}
+      onClick={handleVideoClick}
       onLoadedMetadata={handleMetadataLoadEvent}
       onTimeUpdate={handleOnTimeUpdateEvent}
       onEnded={handleEndedEvent}
