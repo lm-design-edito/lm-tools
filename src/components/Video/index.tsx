@@ -7,16 +7,12 @@ import {
   useRef,
   useState
 } from 'react'
-import { clss } from '../../agnostic/css/clss/index.js'
-import { IntersectionObserverComponent, type Props as IntersectionObserverComponentProps } from '../IntersectionObserver/index.js'
+import { type Props as IntersectionObserverComponentProps, useIntersectionObserver } from '../IntersectionObserver/index.js'
 import type { WithViewportObservation } from '../utils/types.js'
-import { mergeClassNames } from '../utils/index.js'
-import { videoWrapper as publicClassName } from '../public-classnames.js'
 import {
   muteAttributeWorkaround,
   shouldRunAutoBehaviour
 } from './utils.js'
-import cssModule from './styles.module.css'
 import {
   ControlledVideo,
   type Props as ControlledProps
@@ -51,7 +47,6 @@ import {
  * stopped video, since a playing element would advance a value it does not own:
  * `autoPlay`, `autoPlayWhenVisible` and the play button have no effect for as
  * long as this prop is provided.
- * @property wrapperClassName - Optional additional class name(s) applied to the root wrapper element.
  * @property defaultSubtitlesOn - Whether the subtitles start shown. `true` by default —
  * an article that supplies cues means them to be read. The reader's button takes it from
  * there, so this is a starting point and not a setting: `default…` and never `initial…`,
@@ -60,7 +55,10 @@ import {
  * @property children - React children rendered inside the `<video>` element itself
  * (e.g. fallback content).
  */
-export type Props = WithViewportObservation<Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mute' | 'playbackRate' | 'subtitlesOn'>> & {
+// `rootRef` is omitted along with the controlled state: this component sets it, to
+// observe the `<figure>` it renders. A consumer handing in its own would take the
+// observer's target away.
+export type Props = WithViewportObservation<Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mute' | 'playbackRate' | 'subtitlesOn' | 'rootRef'>> & {
   defaultSubtitlesOn?: boolean
   autoPlayWhenVisible?: boolean
   autoPlayOnceVisible?: boolean
@@ -70,7 +68,6 @@ export type Props = WithViewportObservation<Omit<ControlledProps, 'play' | 'full
   autoLoudOnceVisible?: boolean
   autoMuteWhenHidden?: boolean
   autoMuteOnceHidden?: boolean
-  wrapperClassName?: string
 }
 
 /**
@@ -129,7 +126,6 @@ export const Video: FunctionComponent<Props> = ({
   root,
   rootMargin,
   onVisibilityChanged,
-  wrapperClassName,
   onPlayButtonClicked,
   onPauseButtonClicked,
   onLoudButtonClicked,
@@ -162,6 +158,8 @@ export const Video: FunctionComponent<Props> = ({
   // invariant is applied where the state is forwarded rather than guarded at each
   // of those call sites.
   const isTimeControlled = controlledProps.currentTimeMs !== undefined
+
+  const rootRef = useRef<HTMLElement>(null)
 
   const needsObserve = useMemo(() => onVisibilityChanged !== undefined
     || autoLoudWhenVisible === true
@@ -311,12 +309,27 @@ export const Video: FunctionComponent<Props> = ({
     if (controlledProps.autoPlay === true) setPlay(true)
   }, [])
 
-  // Render
-  const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(), wrapperClassName)
+  // The observer watches the `<figure>` itself. `needsObserve` says whether anything
+  // asked for it — a hook cannot be skipped, so the condition is passed in rather than
+  // wrapped around the call, and no `IntersectionObserver` is created without a reason
+  // to create one.
+  useIntersectionObserver(
+    rootRef,
+    { threshold, root, rootMargin },
+    onIntersected,
+    needsObserve
+  )
 
-  const videoContent = <ControlledVideo
+  // Render
+  //
+  // **The `<figure>` is the root, and there is nothing above it.** The observer runs on
+  // that element rather than on a box built to hold it: a wrapper would take the outer
+  // position — the one a consumer lays out — and leave `className` naming an inner
+  // element, which is the wrong way round. So no wrapper, and no second class-name prop
+  // to reach past it.
+  return <ControlledVideo
     {...controlledProps}
+    rootRef={rootRef}
     play={play && !isTimeControlled}
     volume={volume}
     mute={mute}
@@ -338,16 +351,4 @@ export const Video: FunctionComponent<Props> = ({
     onRateRangeChanged={handleRateRangeChange}
     onFullscreenButtonClicked={handleFullscreenButtonClick}
     onSubtitlesButtonClicked={handleSubtitlesButtonClick} />
-
-  return <div className={rootClss}>
-    {needsObserve
-      ? <IntersectionObserverComponent
-        threshold={threshold}
-        root={root}
-        rootMargin={rootMargin}
-        onIntersected={onIntersected}>
-        {videoContent}
-      </IntersectionObserverComponent>
-      : videoContent}
-  </div>
 }

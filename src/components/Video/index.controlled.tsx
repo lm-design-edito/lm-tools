@@ -1,6 +1,7 @@
 import {
   type FunctionComponent,
   type PropsWithChildren,
+  type Ref,
   type VideoHTMLAttributes,
   useMemo,
   useRef,
@@ -150,6 +151,10 @@ type TrackData = {
  * Also inherits all standard HTML props for a <video> element.
  */
 export type Props = PropsWithChildren<WithClassName<{
+  // The `<figure>` handed back to whoever renders this component. It exists for the
+  // uncontrolled `Video` above it, which observes that element rather than wrapping it
+  // in a box of its own — see `useIntersectionObserver`.
+  rootRef?: Ref<HTMLElement>
   sources?: string | string[] | SourceData[]
   tracks?: string | string[] | TrackData[]
   subtitles?: SubsProps
@@ -274,6 +279,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   onFullscreenChange,
   children,
   className,
+  rootRef,
   ...intrinsicVideoAttributes
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -558,6 +564,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   useChangeDispatch(playbackRate, onPlaybackRateChanged)
 
   return <figure
+    ref={rootRef}
     className={rootClss}
     style={rootStyles}
     {...rootAttributes}>
