@@ -55,45 +55,55 @@ export type ParsedInstruction = {
  * them would confound four questions, which is a mistake this library has made once.
  * @property run - Does the thing. Receives the verb's argument, when it takes one.
  */
-export type ActionSpec = {
+export type ActionSpec<D extends string = string> = {
   kind: 'start' | 'stop'
-  domain: string
+  domain: D
   run: (arg?: string) => void
 }
 
-/** A component's whole vocabulary. @see {@link ActionSpec} */
-export type ActionTable<A extends string> = Record<A, ActionSpec>
+/**
+ * A component's whole vocabulary.
+ *
+ * @template A - Its verbs.
+ * @template D - Its domains, when it has a type for them. Naming them is what makes a
+ * typo in `domain` — or in the matching `surrender` call — a compile error rather than
+ * a behaviour that silently never fires.
+ *
+ * @see {@link ActionSpec}
+ */
+export type ActionTable<A extends string, D extends string = string> = Record<A, ActionSpec<D>>
 
 /**
  * Everything that decides **when** a component counts as visible.
  *
- * Grouped in a record rather than spread over the props, because they are one subject:
- * `threshold` and `rootMargin` say from what point it is visible, the two delays say for
- * how long it has to have been. A component's own props stay about the component.
+ * Flat and prefixed rather than grouped in a record: a record reads well in a type and
+ * badly at a call site, where it costs a pair of braces to set one value. The shared
+ * `visibility` prefix does the grouping that a record would have done, and it does it
+ * in the autocomplete list too.
  *
- * @property threshold - How much of the element must be on screen. `0.3` asks for a
- * third; omitted, a pixel is enough.
- * @property root - The box visibility is measured against. Defaults to the viewport,
- * which is the only one a static structure could name.
- * @property rootMargin - Grows or shrinks that box before measuring, in
+ * @property visibilityThreshold - How much of the element must be on screen. `0.3` asks
+ * for a third; omitted, a pixel is enough.
+ * @property visibilityRoot - The box visibility is measured against. Defaults to the
+ * viewport, which is the only one a static structure could name.
+ * @property visibilityRootMargin - Grows or shrinks that box before measuring, in
  * `IntersectionObserver` syntax.
- * @property visibleAfterMs - How long it must stay visible to count as visible. This is
- * a debounce on the state and not a delay on the action: a component crossed while
- * scrolling fast never counts as seen, so nothing runs and no `once` credit is spent.
- * @property hiddenAfterMs - The same, on the way out.
+ * @property visibilityOnAfterMs - How long it must stay visible to count as visible.
+ * This is a debounce on the state and not a delay on the action: a component crossed
+ * while scrolling fast never counts as seen, so nothing runs and no `once` credit is
+ * spent.
+ * @property visibilityOffAfterMs - The same, on the way out.
  */
 export type VisibilityOptions = {
-  threshold?: number | number[]
-  root?: HTMLElement
-  rootMargin?: string
-  visibleAfterMs?: number
-  hiddenAfterMs?: number
+  visibilityThreshold?: number | number[]
+  visibilityRoot?: HTMLElement
+  visibilityRootMargin?: string
+  visibilityOnAfterMs?: number
+  visibilityOffAfterMs?: number
 }
 
 /**
  * The visibility surface of a component: when it counts as seen, and what that does.
  *
- * @property visibility - When it counts as seen. @see {@link VisibilityOptions}
  * @property whenVisible - Instructions run each time it becomes visible.
  * @property whenHidden - The same, on the way out.
  * @property onVisibilityChanged - Fired on the **settled** state, delays included: a
@@ -102,8 +112,7 @@ export type VisibilityOptions = {
  *
  * @template Action - The component's vocabulary.
  */
-export type ViewportBehaviours<Action extends string> = {
-  visibility?: VisibilityOptions
+export type ViewportBehaviours<Action extends string> = VisibilityOptions & {
   whenVisible?: Instruction<Action> | Array<Instruction<Action>>
   whenHidden?: Instruction<Action> | Array<Instruction<Action>>
   onVisibilityChanged?: (isVisible: boolean) => void

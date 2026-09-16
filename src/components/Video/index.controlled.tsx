@@ -2,6 +2,7 @@ import {
   type FunctionComponent,
   type PropsWithChildren,
   type Ref,
+  type RefObject,
   type VideoHTMLAttributes,
   useMemo,
   useRef,
@@ -135,6 +136,10 @@ export type Props = PropsWithChildren<WithClassName<{
   // uncontrolled `Video` above it, which observes that element rather than wrapping it
   // in a box of its own — see `useIntersectionObserver`.
   rootRef?: Ref<HTMLElement>
+  // The `<video>` itself, for a caller that has to reach it outside of a handler —
+  // seeking on a viewport instruction, typically, which happens at no one's click. Given
+  // one, this component uses it instead of its own rather than merging the two.
+  videoRef?: RefObject<HTMLVideoElement | null>
   togglePlayOnClick?: boolean
   sources?: string | string[] | SourceData[]
   tracks?: string | string[] | TrackData[]
@@ -264,9 +269,11 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   children,
   className,
   rootRef,
+  videoRef: givenVideoRef,
   ...intrinsicVideoAttributes
 }) => {
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const ownVideoRef = useRef<HTMLVideoElement>(null)
+  const videoRef = givenVideoRef ?? ownVideoRef
 
   const [totalTime, setTotalTime] = useState(0)
   const totalTimeMs = useMemo(() => secondsToMs(totalTime), [totalTime])

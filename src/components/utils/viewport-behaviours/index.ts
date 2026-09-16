@@ -43,11 +43,11 @@ export function useVisibilityState (
   enabled = true
 ): boolean | undefined {
   const {
-    threshold,
-    root,
-    rootMargin,
-    visibleAfterMs,
-    hiddenAfterMs
+    visibilityThreshold: threshold,
+    visibilityRoot: root,
+    visibilityRootMargin: rootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
   } = options
   const ioEntry = useIntersectionObserver(
     targetRef,
@@ -60,7 +60,7 @@ export function useVisibilityState (
 
   useEffect(() => {
     if (reported === undefined) return
-    const delay = reported ? visibleAfterMs : hiddenAfterMs
+    const delay = reported ? visibilityOnAfterMs : visibilityOffAfterMs
     if (delay === undefined || delay <= 0) {
       setSettled(reported)
       return
@@ -69,7 +69,7 @@ export function useVisibilityState (
     // The cancellation *is* the debounce: a value that flips back before its timer
     // fires is never committed, so the short crossing leaves no trace.
     return () => window.clearTimeout(timeout)
-  }, [reported, visibleAfterMs, hiddenAfterMs])
+  }, [reported, visibilityOnAfterMs, visibilityOffAfterMs])
 
   return settled
 }
@@ -112,7 +112,6 @@ export function useViewportBehaviours <A extends string> (
   suspended = false
 ): ViewportBehavioursResult {
   const {
-    visibility,
     whenVisible,
     whenHidden,
     onVisibilityChanged
@@ -141,7 +140,7 @@ export function useViewportBehaviours <A extends string> (
     || whenHidden !== undefined
     || onVisibilityChanged !== undefined
 
-  const isVisible = useVisibilityState(targetRef, visibility, needsObserve)
+  const isVisible = useVisibilityState(targetRef, props, needsObserve)
 
   // Reported on the **settled** state, delays included: a consumer watching visibility
   // and a consumer running instructions have to be told the same story.

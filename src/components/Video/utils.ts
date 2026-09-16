@@ -172,11 +172,28 @@ export const getTimelineClickProgress = (
  * automatic mute the component still owed.
  * @returns Whether to apply it now.
  */
-export const shouldRunAutoBehaviour = (
-  whenCrossed: boolean | undefined,
-  onceOnly: boolean | undefined,
-  hasFired: boolean
-): boolean => {
-  if (whenCrossed === true) return true
-  return onceOnly === true && !hasFired
+/**
+ * Seeks the element, in milliseconds, counting from the end when asked negatively.
+ *
+ * **A negative target counts back from the duration**, so `-1` is the last reachable
+ * timecode. It is `-1` and not `-0` because `-0 === 0` in JavaScript, which would make
+ * the end of a video indistinguishable from its start.
+ *
+ * Nothing happens before the metadata lands: the duration is `NaN` until then, and a
+ * seek computed against it would land anywhere. An instruction asking for the end of a
+ * video whose length is still unknown is simply not yet answerable.
+ *
+ * @param video - The element, or `null` before it mounts.
+ * @param targetMs - Where to go. Negative counts from the end.
+ */
+export const forceJumpTo = (
+  video: HTMLVideoElement | null,
+  targetMs: number
+): void => {
+  if (video === null) return
+  const durationMs = secondsToMs(video.duration)
+  if (!Number.isFinite(durationMs)) return
+  const absolute = targetMs < 0 ? durationMs + targetMs : targetMs
+  // eslint-disable-next-line no-param-reassign
+  video.currentTime = msToSeconds(Math.min(Math.max(absolute, 0), durationMs))
 }

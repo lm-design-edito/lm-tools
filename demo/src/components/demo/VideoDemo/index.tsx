@@ -183,10 +183,8 @@ const sub = (x: number, amountPercent: number, min: number) => Math.max(min, (x 
 
 
 const VideoControlledDemo: FunctionComponent = ({
-  autoPlayWhenVisible,
-  autoPauseWhenHidden,
-  autoLoudWhenVisible,
-  autoMuteWhenHidden,
+  whenVisible,
+  whenHidden,
   ...demoProps
 }: VideoProps) => {
   const [play, setPlay] = useState(false)
@@ -372,10 +370,8 @@ export const VideoDemo: FunctionComponent = () => {
     controls: true,
     muted: true,
     // autoPlay: true,
-    autoPlayWhenVisible: true,
-    autoPauseWhenHidden: true,
-    autoMuteWhenHidden: true,
-    // autoLoudWhenVisible: true,
+    whenVisible: ['play'],
+    whenHidden: ['pause', 'mute'],
     loop: true,
     currentTimeMs,
     onLoadedMetadata: (e) => {
