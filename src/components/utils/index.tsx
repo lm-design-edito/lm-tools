@@ -46,3 +46,42 @@ export function useChangeDispatch <T> (
     onChange?.(value)
   }, [value])
 }
+
+/**
+ * The three forms a `<source>` list is written in, reduced to the one a render uses.
+ *
+ * A bare string is a single source, an array of strings is several, an array of records
+ * is taken as given. **The array is read as homogeneous** — the first element decides for
+ * all of them —, which is what someone writing one by hand means anyway, and the only
+ * reading a static hyper-json array could support.
+ *
+ * `stringKey` is the whole reason this is shared rather than written twice. The parsing
+ * is identical for `Video` and `Image`, but **the shorthand does not name the same
+ * attribute**: a `<source>` inside a `<video>` carries `src`, one inside a `<picture>`
+ * carries `srcSet`. The two record shapes stay apart for the same reason — the picture
+ * source also takes `media` and `sizes`, which a video source has no use for, and neither
+ * element accepts the other's key. One element, one shape; only the reading is common.
+ *
+ * @template T - The record shape the caller's element accepts.
+ * @param given - What the consumer wrote.
+ * @param stringKey - Where a bare string goes.
+ * @returns The list as records, empty when there is nothing to render.
+ */
+export function parseSourceList <T extends Record<string, unknown>> (
+  given: string | string[] | T[] | undefined,
+  stringKey: keyof T & string
+): T[] {
+  const fromString = (value: string): T => {
+    const single: Record<string, string> = { [stringKey]: value }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a one-key record is the narrowest `T` a bare string can describe; every other field is optional by contract
+    return single as T
+  }
+  if (given === undefined) return []
+  if (typeof given === 'string') return [fromString(given)]
+  if (!Array.isArray(given)) return []
+  if (given.length === 0) return []
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element sampled just above; array is read as homogeneous
+  if (typeof given[0] === 'string') return (given as string[]).map(fromString)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element was checked not to be a string just above; array is read as homogeneous
+  return given as T[]
+}
