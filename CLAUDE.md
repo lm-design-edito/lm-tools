@@ -18,14 +18,32 @@ compiling (`npx tsc --project demo/src/tsconfig.json --noEmit`).
 
 ## Module layout
 
-- A utility is a folder whose entry point is `index.ts`. Folder name kebab-case,
-  exported symbol its camelCase form.
-- When `index.ts` grows, split into siblings: `types.ts` (exported types, the
-  domain vocabulary), `utils.ts` (constants, tables, internal helpers), and an
-  `index.ts` left with only the public entry function.
-- **No convenience re-exports** from `index.ts` — each symbol is imported from the
-  file that owns it. Components are the exception: their `Props` stays exported
-  from `index.tsx`, which is where consumers look for it.
+**A module is a folder, not a file.** Prefer `<something>/index.ts` to
+`<something>.ts`, every time. The count says it is already the rule — 261 `index.ts`,
+30 `index.tsx`, and a handful of outliers (`public-classnames.ts`, `store.ts`,
+`cssColorsMap.ts`, which is not even kebab-case) that are debts rather than
+precedents. Folder name kebab-case, exported symbol its camelCase form.
+
+**Two filenames are public, and only two.** The publish step generates the package's
+`exports` map by globbing `**/index.js` and `**/types.js` — nothing else gets an entry,
+so nothing else can be imported from outside, whatever it holds. A symbol a consumer
+must reach therefore lives in one of those two files. This has already cost a
+publication: `isInstruction` was written in a `utils.ts`, and lm-link could not import
+it.
+
+- **`index.ts`** — the public entry. Functions, hooks, components.
+- **`types.ts`** — exported types and the constants that are vocabulary: a verb list, a
+  modifier set. A `as const` array rather than a bare union whenever something outside
+  will need the values at runtime, since a type has nothing to hand a validator.
+
+**`utils.ts` and `data.ts` are tolerated, sparingly.** Only when the content is
+genuinely minimal, and only when the sibling `index.ts` is its **single** consumer — they
+are a way of keeping an entry point readable, not a third public surface. The moment two
+folders want the same helper, it moves to a folder of its own.
+
+**No convenience re-exports** from `index.ts` — each symbol is imported from the file
+that owns it, `types.js` included. Components are the exception: their `Props` stays
+exported from `index.tsx`, which is where consumers look for it.
 
 ## JSDoc
 

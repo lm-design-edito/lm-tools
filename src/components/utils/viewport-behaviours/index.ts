@@ -249,13 +249,3 @@ function dedupe (list: string[]): Array<ReturnType<typeof parseInstruction>> {
   }
   return [...byVerb.values()]
 }
-
-export type {
-  ActionSpec,
-  ActionTable,
-  Instruction,
-  Modifier,
-  ParsedInstruction,
-  ViewportBehaviours,
-  VisibilityOptions
-} from './types.js'

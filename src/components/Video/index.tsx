@@ -6,11 +6,11 @@ import {
   useRef,
   useState
 } from 'react'
-import {
-  useViewportBehaviours,
-  type ActionTable,
-  type ViewportBehaviours
-} from '../utils/viewport-behaviours/index.js'
+import { useViewportBehaviours } from '../utils/viewport-behaviours/index.js'
+import type {
+  ActionTable,
+  ViewportBehaviours
+} from '../utils/viewport-behaviours/types.js'
 import {
   forceJumpTo,
   muteAttributeWorkaround
