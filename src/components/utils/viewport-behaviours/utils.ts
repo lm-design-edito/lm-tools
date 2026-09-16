@@ -61,36 +61,3 @@ export function toInstructionList <A extends string> (
   if (Array.isArray(given)) return given
   return [given]
 }
-
-/**
- * Whether a string is an instruction this vocabulary answers to.
- *
- * **Exported for the consumers that receive their props as text.** lm-link reads an
- * article's XML, where nothing is typed, and has to reject `'jump-to:banana'` before it
- * reaches a component. Written on its side, the rule would exist twice and drift in
- * silence — a verb added here would be rejected there for no visible reason.
- *
- * Returns a plain boolean rather than a type predicate, and that is not an oversight: a
- * verb taking an argument is written `'jump-to:500'`, which is not a member of the verb
- * list this checks against. Narrowing to `Instruction<A>` would therefore claim more than
- * the list can support, and the caller that needs the narrow type is better off asserting
- * it once, where it can say why.
- *
- * @param value - What the consumer wrote.
- * @param verbs - The vocabulary, bare — `VIDEO_VERBS` and its like.
- * @param withArgument - Those of them that take one, and what a valid one looks like. A
- * verb given an argument it does not take, or denied one it needs, fails either way:
- * both are a consumer meaning something the component cannot do.
- */
-export function isInstruction (
-  value: unknown,
-  verbs: readonly string[],
-  withArgument: Readonly<Partial<Record<string, (arg: string) => boolean>>> = {}
-): boolean {
-  if (typeof value !== 'string') return false
-  const { verb, arg } = parseInstruction(value)
-  if (!verbs.includes(verb)) return false
-  const validate = withArgument[verb]
-  if (validate === undefined) return arg === undefined
-  return arg !== undefined && validate(arg)
-}
