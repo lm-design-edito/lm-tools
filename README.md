@@ -295,6 +295,38 @@ Ce qui reste ouvert tient en deux lignes :
   présence de `onScrolled`, faute d'interrupteur. À regarder quand son tour viendra ;
   `onVisibilityChanged` est peut-être déjà la réponse.
 
+## `Video` — deux idées à instruire sur la tête de lecture
+
+Notées telles quelles, à reprendre en discussion : ni l'une ni l'autre n'est conçue.
+
+**Des bornes de lecture.** Délimiter une portion de la vidéo hors de laquelle on ne peut
+pas lire — la tête de lecture ne va pas avant la borne basse, ne dépasse pas la borne
+haute. `timelineBounds` est le nom de travail et il est à trouver : ce qu'on borne n'est
+pas la timeline, qui est un contrôle, mais la lecture elle-même. Quelque chose comme
+`playableFromMs` / `playableToMs`, ou une paire dans un seul jeton.
+
+Ce que la chose touche, et qui est le vrai travail :
+
+- **`jump-start` et `jump-end` changent de sens**, ou devraient : aller « au début » d'une
+  vidéo bornée veut dire la borne basse, pas `0`. Et `jump-to:-1`, qui compte depuis la
+  fin, compterait depuis la borne haute. Tout le vocabulaire de saut est concerné.
+- **La timeline aussi**, en tant que contrôle : un clic hors bornes, et ce qu'elle affiche
+  — la portion jouable, ou toute la vidéo avec ses bords morts.
+- **La fin de lecture** arrive à la borne haute, donc `.lm-video--ended` et l'événement
+  qui va avec, sans que le média soit terminé. Et `loop` reboucle sur la borne basse.
+
+**Un timecode de départ.** Initialiser la vidéo ailleurs qu'à `0`. **Le nom devrait être
+`defaultCurrentTimeMs`** : `defaultSubtitlesOn` est déjà le précédent pour une valeur de
+départ non contrôlée, et le préfixe `default…` face à `currentTimeMs` dit exactement ce
+que React dit avec `defaultValue` face à `value` — une valeur initiale contre une valeur
+possédée.
+
+C'est précisément ce que `currentTimeMs` ne sait pas faire : le renseigner donne le temps
+au parent et **implique une vidéo arrêtée**, puisqu'un élément qui joue avancerait une
+valeur qu'il ne possède pas. Ici on veut l'inverse — poser le point de départ, puis rendre
+la main. Les deux ensemble n'ont pas de sens, et c'est probablement une erreur à signaler
+plutôt qu'une précédence à trancher.
+
 ## `node/shells/@<vendor>` — un chantier à ouvrir
 
 Deux projets du workspace pilotent des CLI depuis du TypeScript, et refont chacun de son
