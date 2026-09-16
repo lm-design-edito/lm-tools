@@ -4,7 +4,10 @@ import {
   useMemo
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
-import { mergeClassNames } from '../utils/index.js'
+import {
+  mergeClassNames,
+  parseSourceList
+} from '../utils/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { image as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
@@ -16,6 +19,12 @@ import cssModule from './styles.module.css'
  * @property type - MIME type hint for the source (e.g. `'image/webp'`).
  * @property media - Media condition under which this source is selected (e.g. `'(max-width: 768px)'`).
  * @property sizes - Sizes attribute forwarded to the `<source>` element.
+ *
+ * **A picture source is not a video source.** `Video` keeps a shape of its own: a
+ * `<source>` inside a `<video>` carries `src` and nothing else useful, where this one
+ * carries `srcSet`, `media` and `sizes`, and neither element accepts the other's
+ * attributes. What the two do share is how a list of them is read — see
+ * `parseSourceList` in `components/utils`, whose `stringKey` is exactly that difference.
  */
 type SourceData = {
   srcSet?: string
@@ -61,18 +70,10 @@ export const Image: FunctionComponent<Props> = ({
   ...intrinsicImgAttributes
 }) => {
   // State
-  const parsedSources = useMemo(() => {
-    if (sources === undefined) return []
-    if (typeof sources === 'string') return [{ srcSet: sources }]
-    if (Array.isArray(sources)) {
-      if (sources.length === 0) return []
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element sampled just above; array is expected to be homogeneous
-      if (typeof sources[0] === 'string') return (sources as string[]).map(srcSet => ({ srcSet }))
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element was checked not to be a string just above; array is expected to be homogeneous
-      return sources as SourceData[]
-    }
-    return []
-  }, [sources])
+  const parsedSources = useMemo(
+    () => parseSourceList<SourceData>(sources, 'srcSet'),
+    [sources]
+  )
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
@@ -83,10 +84,10 @@ export const Image: FunctionComponent<Props> = ({
   const pictureContent = <picture className={pictureClss}>
     {parsedSources.map((source, index) => <source
       key={index}
-      srcSet={typeof source === 'string' ? source : source.srcSet}
-      type={typeof source === 'string' ? undefined : source.type}
-      media={typeof source === 'string' ? undefined : source.media}
-      sizes={typeof source === 'string' ? undefined : source.sizes} />
+      srcSet={source.srcSet}
+      type={source.type}
+      media={source.media}
+      sizes={source.sizes} />
     )}
     <img
       className={imgClss}

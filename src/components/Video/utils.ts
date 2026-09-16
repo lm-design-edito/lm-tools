@@ -1,9 +1,14 @@
 /**
- * The two list shapes `<video>` accepts as children, as records.
+ * The two list shapes a `<video>` accepts as children, as records.
  *
  * They live here and not next to the component because nothing about them is React:
- * they describe a `<source>` and a `<track>` element, and `parseSources` below is a
- * pure function of a prop.
+ * they describe a `<source>` and a `<track>` element.
+ *
+ * **A video source is not a picture source**, which is why `Image` keeps a shape of its
+ * own rather than sharing this one: a `<source>` inside a `<video>` carries `src`, one
+ * inside a `<picture>` carries `srcSet`, `media` and `sizes`, and neither element accepts
+ * the other's attributes. What the two do share is how a list of them is read — see
+ * `parseSourceList` in `components/utils`.
  */
 export type SourceData = {
   src?: string
@@ -16,41 +21,6 @@ export type TrackData = {
   srclang?: string
   label?: string
   default?: boolean
-}
-
-/**
- * The three forms a media list is written in, reduced to the one the render uses.
- *
- * A bare string is a single item, an array of strings is several, an array of records
- * is taken as given. **The array is read as homogeneous** — the first element decides
- * for all of them —, which is what someone writing one by hand means anyway, and the
- * only reading a static hyper-json array could support.
- */
-export const parseSources = (
-  sources: string | string[] | SourceData[] | undefined
-): SourceData[] => {
-  if (sources === undefined) return []
-  if (typeof sources === 'string') return [{ src: sources }]
-  if (!Array.isArray(sources)) return []
-  if (sources.length === 0) return []
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element sampled just above; array is expected to be homogeneous
-  if (typeof sources[0] === 'string') return (sources as string[]).map(src => ({ src }))
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element was checked not to be a string just above; array is expected to be homogeneous
-  return sources as SourceData[]
-}
-
-/** The same, for `<track>`. See {@link parseSources}. */
-export const parseTracks = (
-  tracks: string | string[] | TrackData[] | undefined
-): TrackData[] => {
-  if (tracks === undefined) return []
-  if (typeof tracks === 'string') return [{ src: tracks }]
-  if (!Array.isArray(tracks)) return []
-  if (tracks.length === 0) return []
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element sampled just above; array is expected to be homogeneous
-  if (typeof tracks[0] === 'string') return (tracks as string[]).map(src => ({ src }))
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element was checked not to be a string just above; array is expected to be homogeneous
-  return tracks as TrackData[]
 }
 
 /* Video element triggers */

@@ -14,6 +14,7 @@ import { formatDuration } from '../../agnostic/time/duration/format-duration/ind
 import type { WithClassName } from '../utils/types.js'
 import {
   mergeClassNames,
+  parseSourceList,
   useChangeDispatch
 } from '../utils/index.js'
 import cssModule from './styles.module.css'
@@ -33,8 +34,6 @@ import {
   forceVolume,
   getTimelineClickProgress,
   msToSeconds,
-  parseSources,
-  parseTracks,
   secondsToMs,
   type SourceData,
   type TrackData
@@ -451,8 +450,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     '--lm-video-playback-rate': `${playbackRate}`
   }
 
-  const parsedSources = useMemo(() => parseSources(sources), [sources])
-  const parsedTracks = useMemo(() => parseTracks(tracks), [tracks])
+  const parsedSources = useMemo(() => parseSourceList<SourceData>(sources, 'src'), [sources])
+  const parsedTracks = useMemo(() => parseSourceList<TrackData>(tracks, 'src'), [tracks])
 
   const videoClss = c('video')
   const videoControlsClss = c('video-controls')
@@ -562,27 +561,19 @@ export const ControlledVideo: FunctionComponent<Props> = ({
       onPlay={handlePlayEvent}
       onPause={handlePauseEvent}>
       {/* Sources */}
-      {parsedSources.map((source, index) => typeof source === 'string'
-        ? <source
-          key={index}
-          src={source} />
-        : <source
-          key={index}
-          src={source.src}
-          type={source.type} />
+      {parsedSources.map((source, index) => <source
+        key={index}
+        src={source.src}
+        type={source.type} />
       )}
       {/* Tracks */}
-      {parsedTracks.map((track, index) => typeof track === 'string'
-        ? <track
-          key={index}
-          src={track} />
-        : <track
-          key={index}
-          src={track.src}
-          kind={track.kind}
-          srcLang={track.srclang}
-          label={track.label}
-          default={track.default} />
+      {parsedTracks.map((track, index) => <track
+        key={index}
+        src={track.src}
+        kind={track.kind}
+        srcLang={track.srclang}
+        label={track.label}
+        default={track.default} />
       )}
       {/* Children */}
       { children }
