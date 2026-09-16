@@ -125,6 +125,76 @@ partagé — un drapeau unique confondait quatre questions, et être armé par n
 quel `play` faisait que la première pression du lecteur annulait des comportements
 sans rapport.
 
+### Ce qui est décidé
+
+La discussion a eu lieu et le contrat générique est arrêté. Il reste à écrire.
+
+**Deux props, pas huit** — `whenVisible` et `whenHidden` —, chacune prenant une
+instruction ou une liste d'instructions. Le composant publie un **vocabulaire de verbes**
+qui lui est propre ; la couche générique ne connaît que des chaînes. Et ce sont des
+chaînes obligatoirement : lm-link est le consommateur principal et ses props viennent d'un
+XML statique, qu'une fonction ou un objet ne traverse pas.
+
+```ts
+export type Instruction<A extends string> = A | `once:${A}`
+
+export type ViewportBehaviours<Action extends string> = {
+  whenVisible?: Instruction<Action> | Array<Instruction<Action>>
+  whenHidden?: Instruction<Action> | Array<Instruction<Action>>
+  visibleAfterMs?: number
+  hiddenAfterMs?: number
+}
+```
+
+**Le déclencheur devient un état.** La visibilité est tenue en état et les instructions
+tirent sur la transition d'une condition **dérivée** — `isVisible && !suspended` — et non
+sur le franchissement de l'écran. Une porte qui s'ouvre sur une vidéo déjà visible fait
+passer cette condition de `false` à `true` : le bug d'en dessous disparaît sans cas
+particulier.
+
+**Les deux délais sont un debounce sur l'état**, pas un report de l'action.
+`visibleAfterMs` veut dire « doit rester visible ce temps-là pour compter comme visible » :
+une vidéo croisée en scrollant vite ne compte jamais comme vue, donc rien ne tire et aucun
+crédit `once` n'est dépensé. Un délai posé sur l'action aurait demandé de l'annuler.
+
+**Chaque composant publie une table**, et ses deux champs répondent chacun à une des
+questions restées ouvertes ci-dessous : `domain` pour la main du lecteur — toucher
+lecture/pause éteint le domaine `playback` et laisse `sound` intact —, `kind` pour la
+porte, qui suspend ce qui *lance* et jamais ce qui *calme*.
+
+```ts
+const videoActions: ActionTable<VideoAction> = {
+  play: { kind: 'start', domain: 'playback', run: () => setPlay(true) },
+  mute: { kind: 'stop', domain: 'sound', run: () => setMute(true) }
+}
+```
+
+Quatre règles à ne pas réinventer : le crédit `once` est **par couple (action,
+déclencheur)** et vit le temps du montage ; dans une même liste, **la forme nue l'emporte
+sur la forme `once:`** — c'est la règle « déclarer les deux revient à ne déclarer que
+`When…` », devenue une déduplication ; et **l'ordre de la liste est l'ordre d'exécution**.
+
+### Les verbes à arguments — la question ouverte du deux-points
+
+Le vocabulaire de chaque composant reste à passer en revue, et une forme est déjà
+attendue : **`jump-to:542`**, qui porte la vidéo à 542 ms. Une valeur négative compte
+**depuis la fin** — `jump-to:-1` est le dernier timecode possible, et c'est `-1` et non
+`-0` parce que `-0 === 0` en JavaScript et collisionnerait avec le début. `jump-start` et
+`jump-end` en sont les raccourcis, pour `jump-to:0` et `jump-to:-1`.
+
+**Ça coûte l'énumérabilité, qui était l'argument du deux-points.** Le préfixe `once:` avait
+été choisi parce qu'il gardait l'ensemble fini : TypeScript autocomplète, lm-link valide
+par un `those_(...)`, et la fiche rend un multi-select qui énumère. Un argument libre casse
+les trois — TypeScript ne fera plus que valider une forme (`` `jump-to:${number}` ``), la
+validation demande un petit parseur, et le champ de la fiche devient mixte : choisir un
+verbe, puis taper sa valeur.
+
+Et le deux-points porterait alors **deux grammaires** : modifieur à gauche dans
+`once:play`, argument à droite dans `jump-to:542`. `once:jump-to:542` reste analysable — on
+coupe au premier deux-points, on regarde si le morceau de gauche est un modifieur connu —
+mais c'est une règle à écrire. Une autre ponctuation pour l'argument (`jump-to=542`) les
+séparerait ; à trancher avec la revue des verbes.
+
 Les questions à trancher, dans l'ordre où elles se posent :
 
 - **Le déclencheur est un franchissement, pas un état.** C'est la racine du seul bug
