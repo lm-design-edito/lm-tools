@@ -5,7 +5,8 @@ import {
   useCallback,
   type JSX,
   type PropsWithChildren,
-  type FunctionComponent
+  type FunctionComponent,
+  type RefObject
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../utils/index.js'
@@ -58,30 +59,34 @@ export type Props = PropsWithChildren<WithClassName<{
 } & ObserverOptions>>
 
 /**
- * Component that observes its root element using the IntersectionObserver API
- * and notifies consumers about visibility changes.
+ * Observes an element a caller already renders, rather than one wrapped in a div of
+ * our own.
  *
- * @param props - Component properties.
- * @see {@link Props}
+ * This is the whole of the behaviour; {@link IntersectionObserverComponent} is this
+ * hook plus a div to hang it on. Reach for the hook when the element to watch is
+ * already in the tree — a component's own root, typically — and for the component
+ * when there is nothing to watch yet and a box has to be created.
  *
- * @returns A div element wrapping `children`, observed for intersection changes.
+ * @param targetRef - The element to observe. Nothing happens until it is attached.
+ * @param options - See {@link ObserverOptions}.
+ * @param onIntersected - Called on every intersection change.
+ * @param enabled - `false` skips the observer entirely, for a caller whose need for
+ * it depends on its own props. A hook cannot be called conditionally; this is how
+ * the condition is expressed.
+ *
+ * @returns The latest {@link IntersectionObserverEntry}, or `null` before the first.
  *
  * @remarks
  * - Automatically creates and disconnects the {@link IntersectionObserver} instance.
  * - Re-observes the element shortly after mount to handle late layout changes.
- * - Adds an `is-intersecting` modifier class when the element is intersecting.
  */
-export const IntersectionObserverComponent: FunctionComponent<Props> = ({
-  onIntersected,
-  root,
-  rootMargin,
-  threshold,
-  className,
-  children
-}): JSX.Element => {
-  // Refs, handlers and effects
+export function useIntersectionObserver (
+  targetRef: RefObject<Element | null>,
+  { root, rootMargin, threshold }: ObserverOptions,
+  onIntersected?: Props['onIntersected'],
+  enabled = true
+): IOE | null {
   const [ioEntry, setIoEntry] = useState<IOE | null>(null)
-  const rootRef = useRef<HTMLDivElement>(null)
   const observerRef = useRef<IO | null>(null)
 
   const observation = useCallback((entries: IOE[], observer: IO): void => {
@@ -92,34 +97,70 @@ export const IntersectionObserverComponent: FunctionComponent<Props> = ({
   }, [onIntersected])
 
   const forceObservation = useCallback((): void => {
-    const rootEl = rootRef.current
+    const targetEl = targetRef.current
     const observer = observerRef.current
-    if (rootEl === null || observer === null) return
-    observer.unobserve(rootEl)
-    observer.observe(rootEl)
-  }, [])
+    if (targetEl === null || observer === null) return
+    observer.unobserve(targetEl)
+    observer.observe(targetEl)
+  }, [targetRef])
 
   useEffect(() => {
-    const rootEl = rootRef.current
-    if (rootEl === null) {
+    if (!enabled) return
+    const targetEl = targetRef.current
+    if (targetEl === null) {
       // eslint-disable-next-line no-console
-      console.warn('rootRef.current should not be null')
+      console.warn('targetRef.current should not be null')
       return
     }
     const observer = new IntersectionObserver(observation, { root, rootMargin, threshold })
     observerRef.current = observer
-    observer.observe(rootEl)
+    observer.observe(targetEl)
     return () => observer.disconnect()
-  }, [root, rootMargin, threshold, observation])
+  }, [enabled, targetRef, root, rootMargin, threshold, observation])
 
   useEffect(() => {
+    if (!enabled) return
     const timeout1 = window.setTimeout(forceObservation, 100)
     const timeout2 = window.setTimeout(forceObservation, 500)
     return () => {
       window.clearTimeout(timeout1)
       window.clearTimeout(timeout2)
     }
-  }, [forceObservation])
+  }, [enabled, forceObservation])
+
+  return ioEntry
+}
+
+/**
+ * Component that observes its root element using the IntersectionObserver API
+ * and notifies consumers about visibility changes.
+ *
+ * A div and {@link useIntersectionObserver}, and nothing else. A component that
+ * already renders the element it wants watched should use the hook and keep its own
+ * root, rather than gain a wrapper it has no other use for.
+ *
+ * @param props - Component properties.
+ * @see {@link Props}
+ *
+ * @returns A div element wrapping `children`, observed for intersection changes.
+ *
+ * @remarks
+ * - Adds an `is-intersecting` modifier class when the element is intersecting.
+ */
+export const IntersectionObserverComponent: FunctionComponent<Props> = ({
+  onIntersected,
+  root,
+  rootMargin,
+  threshold,
+  className,
+  children
+}): JSX.Element => {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const ioEntry = useIntersectionObserver(
+    rootRef,
+    { root, rootMargin, threshold },
+    onIntersected
+  )
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
