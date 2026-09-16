@@ -136,7 +136,8 @@ chaînes obligatoirement : lm-link est le consommateur principal et ses props vi
 XML statique, qu'une fonction ou un objet ne traverse pas.
 
 ```ts
-export type Instruction<A extends string> = A | `${A}:once`
+export type Modifier = 'once' | 'force'
+export type Instruction<A extends string> = A | `${A}:${Modifier}` | `${A}:${Modifier}:${Modifier}`
 
 export type ViewportBehaviours<Action extends string> = {
   whenVisible?: Instruction<Action> | Array<Instruction<Action>>
@@ -173,6 +174,56 @@ Quatre règles à ne pas réinventer : le crédit `once` est **par couple (actio
 déclencheur)** et vit le temps du montage ; dans une même liste, **la forme nue l'emporte
 sur la forme suffixée** — c'est la règle « déclarer les deux revient à ne déclarer que
 `When…` », devenue une déduplication ; et **l'ordre de la liste est l'ordre d'exécution**.
+
+### La main du lecteur, et le `:force` qui passe outre
+
+**Par défaut, une instruction cède au lecteur.** Dès qu'il touche un contrôle, les
+instructions du **domaine** correspondant cessent de tirer, pour la durée du montage.
+Mettre en pause à la main n'empêche pas la coupure du son à la sortie de l'écran : c'est
+tout l'objet du champ `domain` de la table, et c'est une erreur déjà commise et corrigée
+une fois — un drapeau unique confondait quatre questions.
+
+Ce défaut a été discuté dans les deux sens, et voici pourquoi il tombe de ce côté-là. Le
+contre-argument est sérieux : `whenVisible={['play']}` ne dit pas qu'il peut ne pas tirer,
+et une mécanique invisible est une mécanique qu'on subit au lieu de la déboguer. Mais
+**l'asymétrie des échecs tranche.** Ne pas redémarrer tout seul est une déception ;
+redémarrer contre un lecteur qui vient de mettre en pause est une hostilité, et il la
+subira à chaque passage devant le composant. Et un défaut qu'il faudrait écrire sur
+presque chaque instruction n'en est pas un.
+
+**Le prix est donc payé par la documentation, pas par la syntaxe.** La fiche d'un
+composant doit dire que ses instructions cèdent — l'article qui copie un exemple ne le
+devinera pas de l'exemple lui-même.
+
+**`:force` passe outre**, et c'est l'unique échappatoire :
+
+```tsx
+<Video whenVisible={['play:force']} whenHidden={['pause']} />
+```
+
+**Mais `:force` ne passe jamais la porte.** Il ignore la *reddition*, jamais la
+*suspension* d'une capacité comme le disclaimer de lm-link. Les deux se ressemblent et
+n'ont rien à voir : une porte parle d'un consentement **pas encore donné**, une reddition
+d'une intention **déjà exprimée**. Un article qui pourrait forcer le passage d'un
+avertissement le viderait de son objet.
+
+**La reddition éteint le domaine entier, `start` et `stop`.** Elle diffère là aussi de la
+porte, qui ne suspend que ce qui lance. La raison est un cas d'usage concret : on appuie
+sur play sur une citation sonore, puis on continue à lire l'article en écoutant. Une pause
+automatique à la sortie de l'écran serait hostile, alors que derrière une porte elle
+serait juste.
+
+**Ce qui compte comme une prise de main est une décision du composant**, pas de la couche
+générique. lm-link a déjà tranché pour la vidéo, et le jugement est bon : les boutons
+lecture, pause, son, coupure et le curseur de volume comptent ; **la timeline, la vitesse
+et le plein écran ne comptent pas** — chercher un passage ou passer en grand n'est pas
+décider de la lecture. Le composant appelle `surrender(domain)` depuis les handlers
+concernés, et la liste se documente chez lui.
+
+**Les modifieurs forment un ensemble, pas une séquence.** `'play:once:force'` et
+`'play:force:once'` sont la même instruction. L'analyse en découle : on retire les segments
+de fin tant que ce sont des modifieurs connus, et tout ce qui reste est le verbe — quelle
+que soit sa forme interne, argument compris.
 
 ### Les verbes à arguments — la question ouverte du deux-points
 
