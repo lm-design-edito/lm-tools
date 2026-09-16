@@ -110,24 +110,23 @@ span qui contient son propre séparateur, et non une suite plate de jetons et de
 ponctuations. À noter aussi : les horloges se re-rendent à chaque `timeupdate`, donc ce
 composant multiplie par six ce qui est diffé à chaque tick.
 
-## Les comportements `auto…` — une logique générique à trouver
+## Les comportements de visibilité — écrit, et `Video` y est passé
 
-À rouvrir de zéro, en discussion, avant d'écrire quoi que ce soit. `Video` porte
-aujourd'hui **huit props** — `autoPlay`, `autoPause`, `autoMute`, `autoLoud`, chacune
-en `…WhenVisible` et `…OnceVisible` —, et la démo de lm-link a dû les présenter comme
-une grammaire (`auto` + verbe + quand) pour ne pas les décrire huit fois. Qu'une fiche
-ait eu besoin d'inventer une grammaire pour rendre une API lisible est le signe que
-l'API pourrait la porter elle-même.
+`Video` portait **huit props** — `autoPlay`, `autoPause`, `autoMute`, `autoLoud`, chacune
+en `…WhenVisible` et `…OnceVisible` —, et la démo de lm-link avait dû les présenter comme
+une grammaire (`auto` + verbe + quand) pour ne pas les décrire huit fois. Qu'une fiche ait
+eu besoin d'inventer une grammaire pour rendre une API lisible était le signe que l'API
+pouvait la porter elle-même : c'est ce qui a été fait.
 
-Ce qui est déjà en place et qui a fait ses preuves : `shouldRunAutoBehaviour` comme
-primitive commune, et **un drapeau `hasFired` par comportement** plutôt qu'un seul
-partagé — un drapeau unique confondait quatre questions, et être armé par n'importe
-quel `play` faisait que la première pression du lecteur annulait des comportements
-sans rapport.
+La couche générique vit dans `components/utils/viewport-behaviours/` et `Video` la
+consomme. **Ce qui reste, et c'est tout ce qui reste : `Sequencer` et `ScrollListener`
+gardent leurs vocabulaires divergents** — `playOnVisible`, `resetOnHidden`,
+`startOnVisible` — et sont à convertir. Trois grammaires pour la même idée, c'était le
+point de départ ; il en reste deux de trop.
+
+Ce qui suit est le contrat tel qu'il est écrit, et pourquoi il tombe de ce côté-là.
 
 ### Ce qui est décidé
-
-La discussion a eu lieu et le contrat générique est arrêté. Il reste à écrire.
 
 **Deux props, pas huit** — `whenVisible` et `whenHidden` —, chacune prenant une
 instruction ou une liste d'instructions. Le composant publie un **vocabulaire de verbes**
@@ -139,13 +138,18 @@ XML statique, qu'une fonction ou un objet ne traverse pas.
 export type Modifier = 'once' | 'force'
 export type Instruction<A extends string> = A | `${A}:${Modifier}` | `${A}:${Modifier}:${Modifier}`
 
-export type ViewportBehaviours<Action extends string> = {
+export type ViewportBehaviours<Action extends string> = VisibilityOptions & {
   whenVisible?: Instruction<Action> | Array<Instruction<Action>>
   whenHidden?: Instruction<Action> | Array<Instruction<Action>>
-  visibleAfterMs?: number
-  hiddenAfterMs?: number
+  onVisibilityChanged?: (isVisible: boolean) => void
 }
 ```
+
+Les réglages du *quand* sont à part, dans `VisibilityOptions`, et **à plat sous un préfixe
+commun** plutôt que groupés dans un record : `visibilityThreshold`, `visibilityRoot`,
+`visibilityRootMargin`, `visibilityOnAfterMs`, `visibilityOffAfterMs`. Un record se lit
+bien dans un type et mal à l'appel, où il coûte une paire d'accolades pour poser une
+valeur ; le préfixe groupe aussi bien, et dans la liste d'autocomplétion en plus.
 
 **Le déclencheur devient un état.** La visibilité est tenue en état et les instructions
 tirent sur la transition d'une condition **dérivée** — `isVisible && !suspended` — et non
@@ -154,7 +158,8 @@ passer cette condition de `false` à `true` : le bug d'en dessous disparaît san
 particulier.
 
 **Les deux délais sont un debounce sur l'état**, pas un report de l'action.
-`visibleAfterMs` veut dire « doit rester visible ce temps-là pour compter comme visible » :
+`visibilityOnAfterMs` veut dire « doit rester visible ce temps-là pour compter comme
+visible » :
 une vidéo croisée en scrollant vite ne compte jamais comme vue, donc rien ne tire et aucun
 crédit `once` n'est dépensé. Un délai posé sur l'action aurait demandé de l'annuler.
 
@@ -225,10 +230,10 @@ concernés, et la liste se documente chez lui.
 de fin tant que ce sont des modifieurs connus, et tout ce qui reste est le verbe — quelle
 que soit sa forme interne, argument compris.
 
-### Les verbes à arguments — la question ouverte du deux-points
+### Les verbes à arguments, et le deux-points
 
-Le vocabulaire de chaque composant reste à passer en revue, et une forme est déjà
-attendue : **`jump-to:542`**, qui porte la vidéo à 542 ms. Une valeur négative compte
+Le deux-points porte les deux : l'argument d'un verbe et les modifieurs. **`jump-to:542`**
+porte la vidéo à 542 ms. Une valeur négative compte
 **depuis la fin** — `jump-to:-1` est le dernier timecode possible, et c'est `-1` et non
 `-0` parce que `-0 === 0` en JavaScript et collisionnerait avec le début. `jump-start` et
 `jump-end` en sont les raccourcis, pour `jump-to:0` et `jump-to:-1`.
@@ -238,16 +243,23 @@ qui fait tenir les deux ensemble sans grammaire à deux étages : le vocabulaire
 composant porte ses propres formes, et la couche générique n'ajoute qu'un segment final.
 
 ```ts
+export const VIDEO_VERBS = ['play', 'pause', 'loud', 'mute', 'jump-to', 'jump-start', 'jump-end'] as const
+export type VideoVerb = typeof VIDEO_VERBS[number]
+
 export type VideoAction =
-  | 'play' | 'pause' | 'loud' | 'mute'
-  | 'jump-start' | 'jump-end'
+  | Exclude<VideoVerb, 'jump-to'>
   | `jump-to:${number}`
 
 // Instruction<VideoAction> contient donc « jump-to:500:once » sans rien de plus à écrire.
 ```
 
-Une seule règle d'analyse en découle : **on retire le `:once` final s'il est là, et tout ce
-qui reste est le verbe**, quelle que soit sa forme interne. Le verbe est toujours le
+**Le vocabulaire est un tableau `as const`, pas une union nue**, et c'est ce qui a coûté le
+plus à trouver : lm-link valide à l'exécution ce qu'un article a écrit, et un type n'a rien
+à donner à un validateur. `VIDEO_VERBS` et `VIDEO_VERB_ARGUMENTS` sont donc des **valeurs**
+exportées, et les types s'en déduisent — jamais l'inverse.
+
+Une seule règle d'analyse en découle : **on retire les segments de fin tant que ce sont des
+modifieurs connus, et tout ce qui reste est le verbe**, quelle que soit sa forme interne. Le verbe est toujours le
 premier segment, ce qui rend les listes lisibles et triables — `['play', 'play:once']` se
 groupe à l'œil là où un préfixe les aurait séparés. C'est aussi la convention des
 modifieurs d'événement de Vue (`@click.once`) et de Svelte (`on:click|once`), qui est
@@ -267,28 +279,21 @@ ne fait plus que valider une forme, la validation demande un petit parseur, et l
 la fiche devient mixte : choisir un verbe, puis taper sa valeur. C'est du travail à compter
 dans le chantier, pas un obstacle.
 
-Les questions à trancher, dans l'ordre où elles se posent :
+Les quatre questions que cette section portait ouvertes sont tranchées, et chacune l'est
+dans le code : le déclencheur est **un état** et non un franchissement, ce qui ferme le bug
+de la porte qui s'ouvre sur une vidéo déjà visible ; il reste **deux props** et non huit ;
+la logique **n'appartient pas à `Video`** mais à `viewport-behaviours/`, qui ne connaît que
+des chaînes ; et **la direction compte**, portée par le `kind` de la table plutôt que laissée à
+l'appelant.
 
-- **Le déclencheur est un franchissement, pas un état.** C'est la racine du seul bug
-  ouvert de la famille : un `Once…` dont le crédit n'a pas été dépensé reste dû, mais
-  `When` comme `Once` attendent que l'écran soit *traversé* — une vidéo déjà visible
-  n'en produit aucun. Le cas se rencontre derrière une porte de lm-link : le lecteur
-  accepte, et rien ne démarre. Voir « Autoplay et disclaimer » dans le README de
-  lm-link, qui décrit deux sorties et n'en a pris aucune. Un comportement qui se
-  demanderait « suis-je visible ? » plutôt que « viens-je d'entrer ? » réglerait ça —
-  et changerait le sens de `When`.
-- **Huit props ou quatre ?** `…When…` et `…Once…` sont la même intention à deux
-  fréquences, et les poser ensemble revient déjà à ne poser que `…When…`. Une prop par
-  verbe, portant `'when' | 'once'`, dirait la même chose en moitié moins — au prix
-  d'une rupture sur une API publiée.
-- **Est-ce que ça appartient à `Video` ?** `WithViewportObservation` existe déjà comme
-  enveloppe. Un comportement piloté par le viewport n'a rien de propre à un média, et
-  `Scrllgngn` a son propre problème du même genre — son tracking s'active à la seule
-  présence de `onScrolled`, faute d'interrupteur.
-- **Et la direction compte**, ce que lm-link a découvert en écrivant la porte : les
-  quatre qui *lancent* quelque chose et les quatre qui en *arrêtent* un ne se traitent
-  pas pareil. Aujourd'hui c'est l'appelant qui le sait ; la bibliothèque pourrait le
-  dire.
+Ce qui reste ouvert tient en deux lignes :
+
+- **`Sequencer` et `ScrollListener` sont à convertir.** Ils gardent `playOnVisible`,
+  `resetOnHidden` et `startOnVisible`, et ce sont les deux dernières grammaires
+  divergentes.
+- **`Scrllgngn` a un problème voisin, pas le même** — son tracking s'active à la seule
+  présence de `onScrolled`, faute d'interrupteur. À regarder quand son tour viendra ;
+  `onVisibilityChanged` est peut-être déjà la réponse.
 
 ## `node/shells/@<vendor>` — un chantier à ouvrir
 
