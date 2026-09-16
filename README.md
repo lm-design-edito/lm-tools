@@ -288,9 +288,13 @@ l'appelant.
 
 Ce qui reste ouvert tient en deux lignes :
 
-- **`Sequencer` et `ScrollListener` sont à convertir.** Ils gardent `playOnVisible`,
-  `resetOnHidden` et `startOnVisible`, et ce sont les deux dernières grammaires
-  divergentes.
+- **`Sequencer` a été réécrit et attend ses comportements de visibilité.** Ses quatre
+  props — `playOnVisible`, `pauseOnHidden`, `resetOnVisible`, `resetOnHidden` — et son
+  `IntersectionObserver` sont partis avec la réécriture : il ne sait plus rien du viewport,
+  exprès, et c'est `viewport-behaviours` qui doit le lui rendre. Le vocabulaire à décider
+  ressemble à `play`, `pause`, `reset`, et peut-être `next`, `prev`, `go-to:<n>`.
+  **Pas de reddition à gérer** : le composant n'a aucun contrôle à toucher.
+- **`ScrollListener` garde `startOnVisible`**, et c'est la dernière grammaire divergente.
 - **`Scrllgngn` a un problème voisin, pas le même** — son tracking s'active à la seule
   présence de `onScrolled`, faute d'interrupteur. À regarder quand son tour viendra ;
   `onVisibilityChanged` est peut-être déjà la réponse.
