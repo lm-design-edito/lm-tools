@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- TransformedColor<C> can't be narrowed from a generic type param at compile time; every assertion here is guarded by an isX(...) runtime check immediately prior */
-/* eslint-disable max-lines */
 import { absoluteModulo } from '../../numbers/absolute-modulo/index.js'
 import { tidy } from '../tidy/index.js'
 import type {

@@ -46,6 +46,11 @@ export default [
       'arrow-body-style': 'off',
       complexity: 'off',
       curly: 'off',
+      // Un fichier long n'est pas un défaut en soi, et le seuil ne sait pas distinguer
+      // quatre cents lignes de logique d'un composant richement commenté. Déporter du
+      // code pour satisfaire un compteur produit des modules qui n'existent que pour
+      // ça — voir « Module layout » dans CLAUDE.md.
+      'max-lines': 'off',
       'operator-assignment': 'off',
       'operator-linebreak': [
         'error',

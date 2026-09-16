@@ -41,6 +41,14 @@ genuinely minimal, and only when the sibling `index.ts` is its **single** consum
 are a way of keeping an entry point readable, not a third public surface. The moment two
 folders want the same helper, it moves to a folder of its own.
 
+**A file's length is never a reason to split it.** `max-lines` is off, alongside
+`complexity` and `max-params`: a threshold cannot tell four hundred lines of tangled
+logic from a component that is richly commented, and this repo comments richly on
+purpose. A move to a sibling file has to earn itself on its own — the code is shared by
+two consumers, or it belongs to a different subject than the file it sits in. « The
+entry point was getting long » is not one of those, and a module born of it exists only
+to hold what was evicted.
+
 **No convenience re-exports** from `index.ts` — each symbol is imported from the file
 that owns it, `types.js` included. Components are the exception: their `Props` stays
 exported from `index.tsx`, which is where consumers look for it.
