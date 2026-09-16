@@ -327,6 +327,13 @@ valeur qu'il ne possède pas. Ici on veut l'inverse — poser le point de dépar
 la main. Les deux ensemble n'ont pas de sens, et c'est probablement une erreur à signaler
 plutôt qu'une précédence à trancher.
 
+**Et la prop ne descend pas dans les sous-titres.** `Subtitles` ne connaît qu'un
+`timecodeMs`, que le lecteur lui pousse à chaque image : c'est une position courante, pas
+un départ, et la notion de départ n'a donc rien à y faire. Une vidéo qui démarre à 4 000 ms
+pousse `4000` à sa première image, et les sous-titres sont au bon endroit sans rien avoir
+demandé. Le `subtitles` d'une vidéo ne doit pas exposer de `defaultCurrentTimeMs` — c'est
+le départ du lecteur qui pilote le leur, et il n'y a qu'une tête de lecture.
+
 ## `node/shells/@<vendor>` — un chantier à ouvrir
 
 Deux projets du workspace pilotent des CLI depuis du TypeScript, et refont chacun de son
