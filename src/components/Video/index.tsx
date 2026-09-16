@@ -29,6 +29,13 @@ import {
  * Props for the {@link Video} component.
  *
  * Extends all ControlledVideo props except play, mute, fullscreen, volume, playbackRate, and their associated event handlers
+ * @property behavioursSuspended - Holds back the instructions that **start** something,
+ * and lets through those that stop it. For a consumer withholding the video behind
+ * something — a warning to accept, typically: a video kept back that plays anyway is not
+ * withheld, it is merely hard to see. What was held back is replayed the moment this
+ * goes false, so lifting the veil on an already-visible video does what was asked, which
+ * a crossing-based trigger could never do. `':force'` does not override it: it speaks of
+ * consent not yet given, where a surrender speaks of an intention already expressed.
  * @property visibilityThreshold - How much of the video has to be on screen to count as
  * seen. See {@link VisibilityOptions} for this and the four that follow it.
  * @property whenVisible - What to do each time it becomes visible.
@@ -58,7 +65,10 @@ import {
 // handing in its own would take the observer's target away.
 export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mute' | 'playbackRate' | 'subtitlesOn' | 'rootRef' | 'videoRef'>
   & ViewportBehaviours<VideoAction>
-  & { defaultSubtitlesOn?: boolean }
+  & {
+    defaultSubtitlesOn?: boolean
+    behavioursSuspended?: boolean
+  }
 
 /**
  * Full-featured video player component. Wraps a native `<video>` element with
@@ -111,6 +121,7 @@ export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mu
 
 export const Video: FunctionComponent<Props> = ({
   defaultSubtitlesOn = true,
+  behavioursSuspended,
   visibilityThreshold,
   visibilityRoot,
   visibilityRootMargin,
@@ -186,7 +197,8 @@ export const Video: FunctionComponent<Props> = ({
       whenHidden,
       onVisibilityChanged
     },
-    actions
+    actions,
+    behavioursSuspended === true
   )
 
   // Narrowed back to this component's own domains. The generic layer takes a `string`,
