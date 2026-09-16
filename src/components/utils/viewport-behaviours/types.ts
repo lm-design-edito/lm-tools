@@ -1,5 +1,3 @@
-import type { WithViewportObservation } from '../types.js'
-
 /**
  * The stop conditions an instruction can carry, written as suffixes.
  *
@@ -67,24 +65,46 @@ export type ActionSpec = {
 export type ActionTable<A extends string> = Record<A, ActionSpec>
 
 /**
- * The visibility surface of a component: when it counts as seen, and what that does.
+ * Everything that decides **when** a component counts as visible.
  *
- * Three families, answering three different questions. `threshold` and `rootMargin`
- * say **from what point** it is visible; the two delays say **for how long** it has to
- * have been; the two lists say **what happens then**.
+ * Grouped in a record rather than spread over the props, because they are one subject:
+ * `threshold` and `rootMargin` say from what point it is visible, the two delays say for
+ * how long it has to have been. A component's own props stay about the component.
  *
- * @property whenVisible - Instructions run each time the component becomes visible.
- * @property whenHidden - The same, on the way out.
- * @property visibleAfterMs - How long it must stay visible to count as visible. This
- * is a debounce on the state and not a delay on the action: a component crossed while
+ * @property threshold - How much of the element must be on screen. `0.3` asks for a
+ * third; omitted, a pixel is enough.
+ * @property root - The box visibility is measured against. Defaults to the viewport,
+ * which is the only one a static structure could name.
+ * @property rootMargin - Grows or shrinks that box before measuring, in
+ * `IntersectionObserver` syntax.
+ * @property visibleAfterMs - How long it must stay visible to count as visible. This is
+ * a debounce on the state and not a delay on the action: a component crossed while
  * scrolling fast never counts as seen, so nothing runs and no `once` credit is spent.
  * @property hiddenAfterMs - The same, on the way out.
+ */
+export type VisibilityOptions = {
+  threshold?: number | number[]
+  root?: HTMLElement
+  rootMargin?: string
+  visibleAfterMs?: number
+  hiddenAfterMs?: number
+}
+
+/**
+ * The visibility surface of a component: when it counts as seen, and what that does.
+ *
+ * @property visibility - When it counts as seen. @see {@link VisibilityOptions}
+ * @property whenVisible - Instructions run each time it becomes visible.
+ * @property whenHidden - The same, on the way out.
+ * @property onVisibilityChanged - Fired on the **settled** state, delays included: a
+ * consumer watching visibility and a consumer running instructions are told the same
+ * story.
  *
  * @template Action - The component's vocabulary.
  */
-export type ViewportBehaviours<Action extends string> = WithViewportObservation<{
+export type ViewportBehaviours<Action extends string> = {
+  visibility?: VisibilityOptions
   whenVisible?: Instruction<Action> | Array<Instruction<Action>>
   whenHidden?: Instruction<Action> | Array<Instruction<Action>>
-  visibleAfterMs?: number
-  hiddenAfterMs?: number
-}>
+  onVisibilityChanged?: (isVisible: boolean) => void
+}

@@ -10,7 +10,8 @@ import { useChangeDispatch } from '../index.js'
 import type {
   ActionSpec,
   ActionTable,
-  ViewportBehaviours
+  ViewportBehaviours,
+  VisibilityOptions
 } from './types.js'
 import {
   parseInstruction,
@@ -38,13 +39,7 @@ import {
  */
 export function useVisibilityState (
   targetRef: RefObject<Element | null>,
-  options: {
-    threshold?: number | number[]
-    root?: HTMLElement
-    rootMargin?: string
-    visibleAfterMs?: number
-    hiddenAfterMs?: number
-  },
+  options: VisibilityOptions = {},
   enabled = true
 ): boolean | undefined {
   const {
@@ -117,6 +112,7 @@ export function useViewportBehaviours <A extends string> (
   suspended = false
 ): ViewportBehavioursResult {
   const {
+    visibility,
     whenVisible,
     whenHidden,
     onVisibilityChanged
@@ -145,7 +141,7 @@ export function useViewportBehaviours <A extends string> (
     || whenHidden !== undefined
     || onVisibilityChanged !== undefined
 
-  const isVisible = useVisibilityState(targetRef, props, needsObserve)
+  const isVisible = useVisibilityState(targetRef, visibility, needsObserve)
 
   // Reported on the **settled** state, delays included: a consumer watching visibility
   // and a consumer running instructions have to be told the same story.
@@ -224,5 +220,6 @@ export type {
   Instruction,
   Modifier,
   ParsedInstruction,
-  ViewportBehaviours
+  ViewportBehaviours,
+  VisibilityOptions
 } from './types.js'
