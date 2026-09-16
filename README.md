@@ -136,7 +136,7 @@ chaînes obligatoirement : lm-link est le consommateur principal et ses props vi
 XML statique, qu'une fonction ou un objet ne traverse pas.
 
 ```ts
-export type Instruction<A extends string> = A | `once:${A}`
+export type Instruction<A extends string> = A | `${A}:once`
 
 export type ViewportBehaviours<Action extends string> = {
   whenVisible?: Instruction<Action> | Array<Instruction<Action>>
@@ -171,7 +171,7 @@ const videoActions: ActionTable<VideoAction> = {
 
 Quatre règles à ne pas réinventer : le crédit `once` est **par couple (action,
 déclencheur)** et vit le temps du montage ; dans une même liste, **la forme nue l'emporte
-sur la forme `once:`** — c'est la règle « déclarer les deux revient à ne déclarer que
+sur la forme suffixée** — c'est la règle « déclarer les deux revient à ne déclarer que
 `When…` », devenue une déduplication ; et **l'ordre de la liste est l'ordre d'exécution**.
 
 ### Les verbes à arguments — la question ouverte du deux-points
@@ -182,18 +182,39 @@ attendue : **`jump-to:542`**, qui porte la vidéo à 542 ms. Une valeur négativ
 `-0` parce que `-0 === 0` en JavaScript et collisionnerait avec le début. `jump-start` et
 `jump-end` en sont les raccourcis, pour `jump-to:0` et `jump-to:-1`.
 
-**Ça coûte l'énumérabilité, qui était l'argument du deux-points.** Le préfixe `once:` avait
-été choisi parce qu'il gardait l'ensemble fini : TypeScript autocomplète, lm-link valide
-par un `those_(...)`, et la fiche rend un multi-select qui énumère. Un argument libre casse
-les trois — TypeScript ne fera plus que valider une forme (`` `jump-to:${number}` ``), la
-validation demande un petit parseur, et le champ de la fiche devient mixte : choisir un
-verbe, puis taper sa valeur.
+**L'argument appartient au verbe, et `once` est un suffixe uniforme par-dessus.** C'est ce
+qui fait tenir les deux ensemble sans grammaire à deux étages : le vocabulaire d'un
+composant porte ses propres formes, et la couche générique n'ajoute qu'un segment final.
 
-Et le deux-points porterait alors **deux grammaires** : modifieur à gauche dans
-`once:play`, argument à droite dans `jump-to:542`. `once:jump-to:542` reste analysable — on
-coupe au premier deux-points, on regarde si le morceau de gauche est un modifieur connu —
-mais c'est une règle à écrire. Une autre ponctuation pour l'argument (`jump-to=542`) les
-séparerait ; à trancher avec la revue des verbes.
+```ts
+export type VideoAction =
+  | 'play' | 'pause' | 'loud' | 'mute'
+  | 'jump-start' | 'jump-end'
+  | `jump-to:${number}`
+
+// Instruction<VideoAction> contient donc « jump-to:500:once » sans rien de plus à écrire.
+```
+
+Une seule règle d'analyse en découle : **on retire le `:once` final s'il est là, et tout ce
+qui reste est le verbe**, quelle que soit sa forme interne. Le verbe est toujours le
+premier segment, ce qui rend les listes lisibles et triables — `['play', 'play:once']` se
+groupe à l'œil là où un préfixe les aurait séparés. C'est aussi la convention des
+modifieurs d'événement de Vue (`@click.once`) et de Svelte (`on:click|once`), qui est
+exactement le même objet.
+
+**Le prix à payer : un verbe ne peut pas prendre `once` comme valeur littérale
+d'argument.** Le segment final est toujours lu comme le modifieur. La règle est gratuite
+tant que les arguments sont des nombres ; le jour où un verbe prend du texte libre, la
+sortie est de séparer les deux ponctuations — `:` pour l'argument, `.` pour les modifieurs,
+soit `jump-to:500.once` —, ce qui lèverait l'ambiguïté et composerait si un second
+modifieur apparaissait.
+
+**Ce qui reste perdu, c'est l'énumérabilité.** Le deux-points avait été choisi parce qu'il
+gardait l'ensemble fini : TypeScript autocomplète, lm-link valide par un `those_(...)`, et
+la fiche rend un multi-select qui énumère. Un argument libre casse les trois — TypeScript
+ne fait plus que valider une forme, la validation demande un petit parseur, et le champ de
+la fiche devient mixte : choisir un verbe, puis taper sa valeur. C'est du travail à compter
+dans le chantier, pas un obstacle.
 
 Les questions à trancher, dans l'ordre où elles se posent :
 
