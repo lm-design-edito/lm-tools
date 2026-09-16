@@ -9,10 +9,7 @@ import {
 import { demoStyles as subsDemoStyles } from '../SubtitlesDemo/index.js'
 import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
 
-import {
-  video as publicClassName,
-  videoWrapper as wrapperPublicClassName
-} from '~/components/public-classnames.js'
+import { video as publicClassName } from '~/components/public-classnames.js'
 import { ControlledVideo } from '~/components/Video/index.controlled.js'
 import { secondsToMs } from '~/components/Video/utils.js'
 
@@ -190,7 +187,6 @@ const VideoControlledDemo: FunctionComponent = ({
   autoPauseWhenHidden,
   autoLoudWhenVisible,
   autoMuteWhenHidden,
-  wrapperClassName,
   ...demoProps
 }: VideoProps) => {
   const [play, setPlay] = useState(false)
