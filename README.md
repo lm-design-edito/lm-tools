@@ -118,11 +118,10 @@ une grammaire (`auto` + verbe + quand) pour ne pas les décrire huit fois. Qu'un
 eu besoin d'inventer une grammaire pour rendre une API lisible était le signe que l'API
 pouvait la porter elle-même : c'est ce qui a été fait.
 
-La couche générique vit dans `components/utils/viewport-behaviours/` et `Video` la
-consomme. **Ce qui reste, et c'est tout ce qui reste : `Sequencer` et `ScrollListener`
-gardent leurs vocabulaires divergents** — `playOnVisible`, `resetOnHidden`,
-`startOnVisible` — et sont à convertir. Trois grammaires pour la même idée, c'était le
-point de départ ; il en reste deux de trop.
+La couche générique vit dans `components/utils/viewport-behaviours/` ; `Video` et
+`Sequencer` la consomment. **Ce qui reste, et c'est tout ce qui reste : `ScrollListener`
+garde `startOnVisible`**, et c'est la dernière grammaire divergente. Trois grammaires pour
+la même idée, c'était le point de départ ; il en reste une de trop.
 
 Ce qui suit est le contrat tel qu'il est écrit, et pourquoi il tombe de ce côté-là.
 
@@ -288,12 +287,25 @@ l'appelant.
 
 Ce qui reste ouvert tient en deux lignes :
 
-- **`Sequencer` a été réécrit et attend ses comportements de visibilité.** Ses quatre
-  props — `playOnVisible`, `pauseOnHidden`, `resetOnVisible`, `resetOnHidden` — et son
-  `IntersectionObserver` sont partis avec la réécriture : il ne sait plus rien du viewport,
-  exprès, et c'est `viewport-behaviours` qui doit le lui rendre. Le vocabulaire à décider
-  ressemble à `play`, `pause`, `reset`, et peut-être `next`, `prev`, `go-to:<n>`.
-  **Pas de reddition à gérer** : le composant n'a aucun contrôle à toucher.
+- **`Sequencer` y est passé.** Six verbes, dans la famille de `Video` mot pour mot :
+  `play`, `pause`, `jump-to:<n>`, `jump-start`, `jump-end`, `jump-by:<n>`. Un saut nomme
+  une **position**, jamais un step actif, et un négatif compte depuis la fin comme chez
+  `Video` — `jump-by:-1` recule donc d'un pas quand `jump-to:-1` va au dernier, ce qui est
+  le prix d'une seule famille plutôt que d'un `next` / `prev` à côté. Pas de `reset` :
+  l'ancien `resetOnVisible` **est** `jump-start`. Pas de `stop` non plus —
+  `['pause', 'jump-start']` compose, et l'ordre de la liste est l'ordre d'exécution.
+  **Pas de reddition à gérer** : aucun contrôle à toucher, donc `:force` n'a rien à
+  outrepasser et le domaine unique `playback` est une formalité. Le composant a récupéré
+  `defaultPlay` au passage — sans état de lecture interne, `play` et `pause` n'avaient
+  rien à écrire.
+- **La fin de la séquence a changé de définition au passage**, et c'est une correction :
+  `ended` arrive quand le compteur **quitte** le dernier pas, pas quand il y arrive. Le
+  dernier pas a droit à son temps comme les autres, donc le compteur court d'un cran
+  au-delà pendant que la position s'y clampe — tout reste dérivé, rien n'est mémorisé.
+  `onReachedLastStep` est l'arrivée, `onIsEndedChanged` le départ, et sur une séquence qui
+  joue ils sont séparés d'un temps. Une séquence simplement arrêtée sur le dernier pas
+  n'est donc pas finie, et un consommateur qui pilote `step` le dit en nommant la position
+  d'après la dernière.
 - **`ScrollListener` garde `startOnVisible`**, et c'est la dernière grammaire divergente.
 - **`Scrllgngn` a un problème voisin, pas le même** — son tracking s'active à la seule
   présence de `onScrolled`, faute d'interrupteur. À regarder quand son tour viendra ;
