@@ -2,6 +2,7 @@ import {
   type PropsWithChildren,
   type FunctionComponent,
   type MouseEvent,
+  type ReactNode,
   useRef,
   useState
 } from 'react'
@@ -20,6 +21,15 @@ const clippedModifierDurationMs = 3000
  * @property toClip - Content written to the clipboard. When omitted, the
  * content container's `innerHTML` is used. A function may be provided to
  * transform that current content before it is written.
+ * @property copyBtnContent - What the copy button shows at rest. Left out, the button
+ * renders empty and a stylesheet fills it — `:empty::before` — which is how every
+ * control in this library takes its default look without the component deciding on a
+ * word or a glyph.
+ * @property clippedBtnContent - What it shows during the three seconds after a
+ * successful write. Left out, the button is empty in that state too, and the same
+ * stylesheet hook applies. It does **not** fall back to `copyBtnContent`: the two states
+ * say different things, and an article that names one without the other means the other
+ * to come from the stylesheet.
  * @property onCopyClicked - Called when the copy button is clicked, before the
  * clipboard content is resolved, with the container's raw HTML.
  * @property onClipped - Called once content has been written to the clipboard.
@@ -31,6 +41,8 @@ const clippedModifierDurationMs = 3000
  */
 export type Props = PropsWithChildren<WithClassName<{
   toClip?: string | ((curr: string | undefined) => string | undefined)
+  copyBtnContent?: ReactNode
+  clippedBtnContent?: ReactNode
   onCopyClicked?: (
     e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>,
     rawContent: string | undefined
@@ -63,6 +75,8 @@ export const Clippable: FunctionComponent<Props> = ({
   className,
   children,
   toClip,
+  copyBtnContent,
+  clippedBtnContent,
   onCopyClicked,
   onClipped,
   onCopyFailed
@@ -115,7 +129,9 @@ export const Clippable: FunctionComponent<Props> = ({
     <button
       type='button'
       className={copyClss}
-      onClick={e => { void handleCopyClick(e) }} />
+      onClick={e => { void handleCopyClick(e) }}>
+      {hasBeenRecentlyClipped ? clippedBtnContent : copyBtnContent}
+    </button>
     <div
       ref={contentRef}
       className={contentClss}>
