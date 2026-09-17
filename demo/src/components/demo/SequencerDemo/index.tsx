@@ -40,7 +40,20 @@ one, not about what happened since mount.
 A child says which steps it answers to with \`data-steps="2, 6"\`, and falls back to its
 own position among the element children. Written on the child rather than gathered in a
 prop: a parallel array and a children list derive from one another, and inserting a
-child in the middle would mean reindexing the array.`
+child in the middle would mean reindexing the array.
+
+### Viewport behaviours
+\`whenVisible\` and \`whenHidden\` take a verb or a list of them, each optionally
+suffixed by \`:once\` and \`:force\`. Six verbs, \`Video\`'s family word for word:
+\`play\`, \`pause\`, \`jump-to:<n>\`, \`jump-start\`, \`jump-end\`, \`jump-by:<n>\`.
+A jump names a **position**, never an active step, and a negative one counts from the
+end — \`jump-to:-1\` is the last position where \`jump-by:-1\` steps back one. The order
+of a list is the order of execution, so \`['pause', 'jump-start']\` is the old
+\`pauseOnHidden\` and \`resetOnHidden\` in one line.
+
+The end is the counter **leaving** the last step, not arriving on it — the last step is
+owed its beat like every other one. \`onReachedLastStep\` is the arrival,
+\`onIsEndedChanged\` the departure, and on a playing sequence they are one beat apart.`
 
 const tsxDetails = `
 export type Props = PropsWithChildren<WithClassName<{
@@ -49,6 +62,7 @@ export type Props = PropsWithChildren<WithClassName<{
   step?: number
   defaultStep?: number
   play?: boolean
+  defaultPlay?: boolean
   tempo?: number
   loop?: boolean
   onStepChanged?: (step: number, activeStep: number) => void
@@ -57,7 +71,9 @@ export type Props = PropsWithChildren<WithClassName<{
   onLooped?: () => void
   onReachedFirstStep?: () => void
   onReachedLastStep?: () => void
-}>>`
+}>>
+  & ViewportBehaviours<SequencerAction>
+  & { behavioursSuspended?: boolean }`
 
 const demoStyles = `
 .${publicClassName} {
@@ -96,8 +112,11 @@ const childStyle = {
 // Sixteen children, one step each, plus a `stepMap` so the demo shows the two numbers
 // being different: the first three positions play steps 4, 9 and 2 before the sequence
 // carries on at position 3. The last child declares `data-steps`, so it lights up twice.
+// Driven by instructions rather than by `play`, which is the point of the two props:
+// scrolling past it stops it and rewinds it, coming back starts it over.
 const demoProps: SequencerProps = {
-  play: true,
+  whenVisible: 'play',
+  whenHidden: ['pause', 'jump-start'],
   loop: true,
   tempo: 120,
   stepMap: [4, 9, 2],
