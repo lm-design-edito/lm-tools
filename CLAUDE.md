@@ -175,6 +175,14 @@ so in the JSDoc.
 - `--PRIVATE-<name>` is what the component's own stylesheet reads — unprefixed,
   outside the API. Safe only because the component sets it itself, so **emit it
   unconditionally**: a gap lets an ancestor's value inherit through.
+  - **A conversion of public props is not private.** `Overlayer` turns `xPercent` and
+    `justify` into a percentage and a shift: three numbers an article wrote, given back
+    in the form a stylesheet can use. That belongs in the public API under the full
+    `--lm-<component>-<name>` spelling, and the positioning it feeds belongs to the
+    consumer — a component that measures nothing has nothing to put in its own
+    stylesheet. `Scrllgngn` is the other side of the line: its viewport geometry is
+    measured per frame and means nothing outside its own mechanism, so it stays
+    `--PRIVATE-`.
 - Point de vigilance, pas règle stricte : devant une **prop hors bornes**, préférer
   corriger la valeur *et* avertir, plutôt que jeter ou corriger en silence. Jeter tue
   le montage pour un simple réglage ; corriger sans rien dire déguise un bug de
