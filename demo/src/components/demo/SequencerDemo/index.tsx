@@ -42,6 +42,11 @@ own position among the element children. Written on the child rather than gather
 prop: a parallel array and a children list derive from one another, and inserting a
 child in the middle would mean reindexing the array.
 
+A child marked \`data-last-step\` ends the sequence, and what follows still takes part —
+through \`data-steps\` alone. That is what lets the steps be written in reading order and
+the children belonging to several of them at once come **after**, instead of having their
+position counted as a step nobody wanted. \`totalSteps\` still wins over the mark.
+
 ### Viewport behaviours
 \`whenVisible\` and \`whenHidden\` take a verb or a list of them, each optionally
 suffixed by \`:once\` and \`:force\`. Six verbs, \`Video\`'s family word for word:
@@ -138,7 +143,11 @@ const demoProps: SequencerProps = {
     <div style={childStyle}>15</div>,
     <div
       style={childStyle}
-      data-steps='0, 15'>16</div>
+      data-last-step>16</div>,
+    // Ends up after the mark: it is not a step of its own, it belongs to the two it names.
+    <div
+      style={childStyle}
+      data-steps='0, 15'>•</div>
   ]
 }
 
