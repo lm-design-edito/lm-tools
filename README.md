@@ -306,6 +306,14 @@ Ce qui reste ouvert tient en deux lignes :
   joue ils sont séparés d'un temps. Une séquence simplement arrêtée sur le dernier pas
   n'est donc pas finie, et un consommateur qui pilote `step` le dit en nommant la position
   d'après la dernière.
+- **`data-last-step` dit où la séquence s'arrête**, et c'est la troisième réponse à
+  « combien de pas » — après la prop `totalSteps`, qui gagne, et avant le compte des
+  enfants-éléments. Ce qui suit la marque prend encore part, mais par `data-steps` seul :
+  un article écrit donc ses pas dans l'ordre de lecture, puis pose **après** les enfants
+  qui appartiennent à plusieurs d'entre eux — sans que leur position compte pour un pas
+  que personne ne voulait. Un enfant placé après la marque et qui ne nomme aucun pas ne
+  s'allume jamais, ce qui est la lecture honnête de « il ne fait pas partie de la
+  séquence ».
 - **`ScrollListener` garde `startOnVisible`**, et c'est la dernière grammaire divergente.
 - **`Scrllgngn` a un problème voisin, pas le même** — son tracking s'active à la seule
   présence de `onScrolled`, faute d'interrupteur. À regarder quand son tour viendra ;
