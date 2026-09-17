@@ -330,6 +330,19 @@ Ce qui reste ouvert tient en deux lignes :
   - **`WithViewportObservation` est mort** avec la conversion, son dernier consommateur.
     `ViewportObserverOptions` reste pour `ListLoader`, qui observe une sentinelle pour
     charger la suite — pas de vocabulaire, pas d'instructions, juste un observateur.
+- **`ResizeObserver` n'a pas besoin des déclenchements de visibilité, et c'est tranché.**
+  La question se pose parce que `ScrollListener` en avait besoin, mais les deux ne coûtent
+  pas de la même façon : `ScrollListener` a un moteur qui **tourne** — des écouteurs et une
+  passe de mesure par image tant qu'une instance suit —, donc son coût est proportionnel au
+  temps. `ResizeObserver` est une API qui ne rappelle qu'au **changement réel** de taille :
+  un élément hors écran qui ne bouge pas ne coûte pas un cycle, et quand il bouge, c'est
+  justement le moment où la mesure compte — la débrancher garantirait des valeurs périmées
+  au retour, donc un travail à ordonnancer à l'entrée en échange d'un travail qui n'avait
+  pas lieu.
+  Le coût réel est ailleurs : **chaque mesure déclenche un rendu** qui réécrit huit
+  attributs et seize propriétés. Vingt instances pendant un redimensionnement de fenêtre
+  font du bruit. Si ça se voit un jour, la réponse est un throttle ou une comparaison de
+  valeurs — pas un interrupteur de visibilité.
 - **`Scrllgngn` a un problème voisin, pas le même** — son tracking s'active à la seule
   présence de `onScrolled`, faute d'interrupteur. À regarder quand son tour viendra ;
   `onVisibilityChanged` est peut-être déjà la réponse.
