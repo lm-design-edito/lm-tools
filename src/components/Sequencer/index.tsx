@@ -3,6 +3,7 @@ import {
   cloneElement,
   isValidElement,
   useEffect,
+  useRef,
   useState,
   type FunctionComponent,
   type PropsWithChildren,
@@ -14,8 +15,18 @@ import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames, useChangeDispatch } from '../utils/index.js'
 import type { WithClassName } from '../utils/types.js'
+import { useViewportBehaviours } from '../utils/viewport-behaviours/index.js'
+import type {
+  ActionTable,
+  ViewportBehaviours
+} from '../utils/viewport-behaviours/types.js'
 import { sequencer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
+import type {
+  SequencerAction,
+  SequencerDomain,
+  SequencerVerb
+} from './types.js'
 
 /**
  * The attribute a child uses to say which steps it belongs to.
@@ -56,9 +67,16 @@ const STEPS_ATTRIBUTE = 'data-steps'
  * @property step - The position, taken over by the consumer. Provided, the tempo stops
  * advancing anything: the counter is theirs.
  * @property defaultStep - The position to start from. Ignored when `step` is provided.
- * @property play - Whether the sequence advances. **There are no controls in this
- * component** — nothing to click, so nothing to surrender to — and this is the only way
- * it moves on its own.
+ * @property play - Whether the sequence advances, taken over by the consumer. Provided,
+ * it is the whole answer and the instructions no longer reach it, the way `step` takes
+ * the counter over from the tempo.
+ * @property defaultPlay - Whether it starts advancing. `false` by default, and the
+ * starting point a `'play'` instruction moves from — not a setting, hence `default…`.
+ * @property behavioursSuspended - Holds back the instructions that **start** something,
+ * and lets through those that stop it. For a consumer withholding the sequence behind
+ * something — a warning to accept, typically. What was held back is replayed the moment
+ * this goes false, so lifting the veil on an already-visible sequence does what was
+ * asked. `':force'` does not override it.
  * @property tempo - Speed in beats per minute: one step every `60000 / tempo` ms, so `60`
  * is a step per second. Clamped to a minimum of `1`.
  * @property loop - Whether the sequence wraps round. **`false` by default**, so a
@@ -67,11 +85,15 @@ const STEPS_ATTRIBUTE = 'data-steps'
  * active step it resolves to. Never on mount.
  * @property onIsPlayingChanged - Called once the effective play state changed — which
  * includes it dropping to `false` on its own at the end.
- * @property onIsEndedChanged - Called when the sequence reaches its last step, or leaves
- * it. A looping sequence never ends, so never emits.
+ * @property onIsEndedChanged - Called when the sequence ends, or leaves that state.
+ * **The end is the counter leaving the last step, not arriving on it** — the last step
+ * is owed its beat like every other one, and a sequence paused on it has not ended. A
+ * looping sequence never ends, so never emits.
  * @property onLooped - Called on each wrap, only while `loop` is `true`.
  * @property onReachedFirstStep - Called when the position becomes `0`.
- * @property onReachedLastStep - Called when the position becomes the last one.
+ * @property onReachedLastStep - Called when the position becomes the last one. This is
+ * the arrival, where `onIsEndedChanged` is the departure: on a playing sequence they are
+ * one beat apart.
  */
 export type Props = PropsWithChildren<WithClassName<{
   totalSteps?: number
@@ -79,6 +101,7 @@ export type Props = PropsWithChildren<WithClassName<{
   step?: number
   defaultStep?: number
   play?: boolean
+  defaultPlay?: boolean
   tempo?: number
   loop?: boolean
   onStepChanged?: (step: number, activeStep: number) => void
@@ -88,6 +111,8 @@ export type Props = PropsWithChildren<WithClassName<{
   onReachedFirstStep?: () => void
   onReachedLastStep?: () => void
 }>>
+  & ViewportBehaviours<SequencerAction>
+  & { behavioursSuspended?: boolean }
 
 /**
  * `data-steps="2, 6"` into the steps it names.
@@ -126,6 +151,21 @@ function stepsOf (child: ReactElement, elementIndex: number): number[] {
  * Children that are not elements — text, whitespace — are rendered untouched and take no
  * part: they carry no class, so they simply stay visible throughout.
  *
+ * @remarks
+ * **Viewport-driven behaviour is declared, not named by a prop.** `whenVisible` and
+ * `whenHidden` take a verb or a list of them, out of {@link SequencerAction} — `'play'`,
+ * `'jump-start'`, `'jump-by:1'` — each optionally suffixed by `':once'` and `':force'`.
+ * The old `playOnVisible`, `pauseOnHidden`, `resetOnVisible` and `resetOnHidden` are
+ * those four instructions written the long way: `whenHidden={['pause', 'jump-start']}`
+ * is the pair of them, and the order of a list is the order of execution. See
+ * `components/utils/viewport-behaviours` for the grammar, and the `visibility…` props
+ * for what « visible » means and how long it has to have been true.
+ *
+ * **Nothing surrenders here.** The layer lets a reader's hand switch an instruction off
+ * for the rest of the mount, and this component has no control for a hand to touch — so
+ * `':force'` has nothing to override, and the single `'playback'` domain is a formality.
+ * A gate still holds `'play'` back, which is a different brake. @see {@link SequencerDomain}
+ *
  * ### On the root
  * `--playing`, `--at-start`, `--at-end`, `--ended`, plus `data-step`, `data-active-step`,
  * `data-total-steps` and `data-tempo`.
@@ -148,6 +188,7 @@ export const Sequencer: FunctionComponent<Props> = ({
   step,
   defaultStep,
   play,
+  defaultPlay,
   tempo = 60,
   loop,
   onStepChanged,
@@ -156,11 +197,22 @@ export const Sequencer: FunctionComponent<Props> = ({
   onLooped,
   onReachedFirstStep,
   onReachedLastStep,
+  behavioursSuspended,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
   className,
   children
 }) => {
   const [internalStep, setInternalStep] = useState(step ?? defaultStep ?? 0)
+  const [internalPlay, setInternalPlay] = useState(defaultPlay ?? false)
   const [hasLapped, setHasLapped] = useState(0)
+  const rootRef = useRef<HTMLDivElement>(null)
 
   // Children, split once: what takes part and what merely renders.
   const childrenArr = Children.toArray(children)
@@ -176,11 +228,14 @@ export const Sequencer: FunctionComponent<Props> = ({
     : 0
   const activeStep = stepMap?.[position] ?? position
 
-  // A sequence that does not loop stops on its last step, and says so rather than
-  // claiming to still be playing. Derived rather than held: nothing has to be unset when
-  // `loop` or `step` changes under it.
-  const isEnded = loop !== true && stepsCount > 0 && position >= stepsCount - 1
-  const isPlaying = (play ?? false) && !isEnded
+  // **The end is the counter leaving the last step, not arriving on it.** The last step
+  // is owed its beat like every other one, so the counter runs one past the end while
+  // the position clamps to it — which is also what keeps the whole thing derived: nothing
+  // has to be unset when `loop` or `step` changes under it, and `onReachedLastStep` stays
+  // the arrival that this is not. A sequence merely paused on the last step has not
+  // ended, and a consumer driving `step` says so by naming the position after the last.
+  const isEnded = loop !== true && stepsCount > 0 && rawStep >= stepsCount
+  const isPlaying = (play ?? internalPlay) && !isEnded
 
   useEffect(() => {
     if (!isPlaying || step !== undefined || stepsCount <= 0) return
@@ -200,6 +255,76 @@ export const Sequencer: FunctionComponent<Props> = ({
     setHasLapped(lap)
     onLooped?.()
   }, [lap, loop])
+
+  // Viewport behaviours
+
+  // A jump names a position and lands on it **within the current lap**: the counter is
+  // absolute, so setting it to a bare position on a looping sequence would count as a
+  // wrap backwards and fire `onLooped` for a move nobody made. `jump-by` is left alone
+  // on purpose — stepping past the last position really is a wrap, and says so.
+  const jumpToPosition = (target: number): void => {
+    if (step !== undefined || stepsCount <= 0) return
+    const resolved = target < 0 ? stepsCount + target : target
+    const bounded = loop === true
+      ? absoluteModulo(resolved, stepsCount)
+      : clamp(resolved, 0, stepsCount - 1)
+    setInternalStep(lap * stepsCount + bounded)
+  }
+
+  const jumpBy = (offset: number): void => {
+    if (step !== undefined || stepsCount <= 0) return
+    setInternalStep(current => current + offset)
+  }
+
+  // What each verb does. Rebuilt on every render — it closes over the setters — which is
+  // why the generic layer reads it through a ref rather than a dependency list.
+  //
+  // `play` and `pause` need no guard against a controlled `play`: the effective state
+  // reads the prop first, so the internal one they write is simply never consulted.
+  const actions: ActionTable<SequencerVerb, SequencerDomain> = {
+    play: { kind: 'start', domain: 'playback', run: () => setInternalPlay(true) },
+    pause: { kind: 'stop', domain: 'playback', run: () => setInternalPlay(false) },
+    // A jump starts nothing on its own — it moves a counter, playing or not — so a gate
+    // has no reason to hold it back.
+    'jump-to': {
+      kind: 'stop',
+      domain: 'playback',
+      run: arg => {
+        const target = Number(arg)
+        if (!Number.isFinite(target)) return
+        jumpToPosition(target)
+      }
+    },
+    'jump-start': { kind: 'stop', domain: 'playback', run: () => jumpToPosition(0) },
+    'jump-end': { kind: 'stop', domain: 'playback', run: () => jumpToPosition(-1) },
+    'jump-by': {
+      kind: 'stop',
+      domain: 'playback',
+      run: arg => {
+        const offset = Number(arg)
+        if (!Number.isFinite(offset)) return
+        jumpBy(offset)
+      }
+    }
+  }
+
+  // The surrender half of the result is dropped, and that is the whole of what this
+  // component's lack of controls changes: nothing here can be taken over by hand.
+  useViewportBehaviours<SequencerAction>(
+    rootRef,
+    {
+      visibilityThreshold,
+      visibilityRoot,
+      visibilityRootMargin,
+      visibilityOnAfterMs,
+      visibilityOffAfterMs,
+      whenVisible,
+      whenHidden,
+      onVisibilityChanged
+    },
+    actions,
+    behavioursSuspended === true
+  )
 
   // State dispatch
   useChangeDispatch(position, () => onStepChanged?.(position, activeStep))
@@ -232,6 +357,7 @@ export const Sequencer: FunctionComponent<Props> = ({
 
   let elementIndex = -1
   return <div
+    ref={rootRef}
     className={rootClss}
     data-step={position}
     data-active-step={activeStep}
