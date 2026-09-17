@@ -1,6 +1,7 @@
 import {
   Children,
   cloneElement,
+  Fragment,
   isValidElement,
   useEffect,
   useRef,
@@ -130,6 +131,29 @@ function parseSteps (raw: unknown): number[] | null {
   return steps
 }
 
+/**
+ * The children, with fragments opened.
+ *
+ * **`Children.toArray` does not go through a `<>…</>`**: a fragment is one element to it,
+ * and one that cannot be classed either — `cloneElement` on it would hand `className` to
+ * `React.Fragment`, which warns and drops it. So a consumer whose children arrive wrapped
+ * in one gets a sequence of exactly one step, stuck on position `0`.
+ *
+ * That consumer is not hypothetical: lm-link renders an article's `<nodelist>` through
+ * `lm-html`, which returns `<>{children}</>` — every sequence written in hyper-json
+ * therefore arrives wrapped. Opening them here rather than asking each consumer to
+ * flatten is the only place the fix belongs: a fragment is a grouping with no rendered
+ * element of its own, so it has no business consuming a step.
+ */
+function flattenChildren (nodes: ReactNode): ReactNode[] {
+  return Children.toArray(nodes).flatMap((child): ReactNode[] => {
+    if (!isValidElement(child) || child.type !== Fragment) return [child]
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a fragment's props are its children and its key, whatever else they are
+    const { children } = child.props as { children?: ReactNode }
+    return flattenChildren(children)
+  })
+}
+
 /** The steps a child answers to: what it declares, or where it sits. */
 function stepsOf (child: ReactElement, elementIndex: number): number[] {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a React element's props are a record, whatever else they are
@@ -149,7 +173,9 @@ function stepsOf (child: ReactElement, elementIndex: number): number[] {
  * modifiers, silently.
  *
  * Children that are not elements — text, whitespace — are rendered untouched and take no
- * part: they carry no class, so they simply stay visible throughout.
+ * part: they carry no class, so they simply stay visible throughout. **A fragment is
+ * opened rather than counted**: it groups without rendering an element of its own, so
+ * there would be nothing to class and nothing to show for the step it would consume.
  *
  * @remarks
  * **Viewport-driven behaviour is declared, not named by a prop.** `whenVisible` and
@@ -215,7 +241,7 @@ export const Sequencer: FunctionComponent<Props> = ({
   const rootRef = useRef<HTMLDivElement>(null)
 
   // Children, split once: what takes part and what merely renders.
-  const childrenArr = Children.toArray(children)
+  const childrenArr = flattenChildren(children)
   const elements = childrenArr.filter(isValidElement)
   const stepsCount = Math.max(totalSteps ?? elements.length, 0)
 
