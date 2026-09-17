@@ -46,9 +46,10 @@ export type Props = PropsWithChildren<WithClassName<{
 }>>
 
 /**
- * Absolute positioning overlay component. Renders a base content layer and
- * stacks one or more overlays on top of it, each independently positioned via
- * percentage coordinates and a justify alignment.
+ * Positions overlays over a base layer — **by publishing where they go, not by placing
+ * them**. Each overlay carries its anchor and its shift as custom properties, and a
+ * consumer's stylesheet turns them into a position. Naked like the rest of the library:
+ * without such a sheet, the overlays render in the flow, under the base.
  *
  * ### Child elements
  * - `__base` — wrapping `<div>` that contains `children`.
@@ -56,12 +57,14 @@ export type Props = PropsWithChildren<WithClassName<{
  * are omitted).
  *
  * ### CSS custom properties on each overlay element
- * - `--PRIVATE-left` — derived from `xPercent` (e.g. `42%`). Used internally
- * to set the horizontal anchor position.
- * - `--PRIVATE-top` — derived from `yPercent` (e.g. `10%`). Used internally
- * to set the vertical anchor position.
- * - `--PRIVATE-translate-x` — derived from `justify`. Used internally to shift
- * the overlay relative to its anchor.
+ * **They are the whole of what this component does**, and they are public: it computes
+ * three values and writes them down, and a consumer's stylesheet decides what to do with
+ * them. It renders no positioning of its own — `styles.module.css` is empty, as for every
+ * component here whose JavaScript measures nothing.
+ * - `--lm-overlayer-anchor-x` — `xPercent` as a percentage (e.g. `42%`).
+ * - `--lm-overlayer-anchor-y` — `yPercent` as a percentage (e.g. `10%`).
+ * - `--lm-overlayer-translate-x` — `justify` as the shift it means: `0%` for `'left'`,
+ * `-50%` for `'center'`, `-100%` for `'right'`, `-n%` for a number.
  *
  * @param props - Component properties.
  * @see {@link Props}
@@ -90,10 +93,15 @@ export const Overlayer: FunctionComponent<Props> = ({
       else if (justify === 'left') { computedTranslateX = '0%' }
       else if (justify === 'right') { computedTranslateX = '-100%' }
       else { computedTranslateX = '-50%' }
+      // Written out in full, one literal per line: they are this component's public API,
+      // a consumer greps for the exact string, and it has to exist in the source they
+      // read. Public and not `--PRIVATE-`, because they are a conversion of props an
+      // article wrote — three numbers given back as percentages — and not a mechanism
+      // this component keeps to itself.
       const overlayCustomProps: Record<string, string> = {
-        '--PRIVATE-left': `${xPercent}%`,
-        '--PRIVATE-top': `${yPercent}%`,
-        '--PRIVATE-translate-x': computedTranslateX
+        '--lm-overlayer-anchor-x': `${xPercent}%`,
+        '--lm-overlayer-anchor-y': `${yPercent}%`,
+        '--lm-overlayer-translate-x': computedTranslateX
       }
       if (isFalsy(overlayChildren)) return null
       return <div
