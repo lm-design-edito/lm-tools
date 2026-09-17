@@ -118,10 +118,9 @@ une grammaire (`auto` + verbe + quand) pour ne pas les décrire huit fois. Qu'un
 eu besoin d'inventer une grammaire pour rendre une API lisible était le signe que l'API
 pouvait la porter elle-même : c'est ce qui a été fait.
 
-La couche générique vit dans `components/utils/viewport-behaviours/` ; `Video` et
-`Sequencer` la consomment. **Ce qui reste, et c'est tout ce qui reste : `ScrollListener`
-garde `startOnVisible`**, et c'est la dernière grammaire divergente. Trois grammaires pour
-la même idée, c'était le point de départ ; il en reste une de trop.
+La couche générique vit dans `components/utils/viewport-behaviours/`, et `Video`,
+`Sequencer` et `ScrollListener` la consomment. **Le chantier est fini** : trois grammaires
+pour la même idée au départ, il n'en reste qu'une.
 
 Ce qui suit est le contrat tel qu'il est écrit, et pourquoi il tombe de ce côté-là.
 
@@ -314,7 +313,23 @@ Ce qui reste ouvert tient en deux lignes :
   que personne ne voulait. Un enfant placé après la marque et qui ne nomme aucun pas ne
   s'allume jamais, ce qui est la lecture honnête de « il ne fait pas partie de la
   séquence ».
-- **`ScrollListener` garde `startOnVisible`**, et c'est la dernière grammaire divergente.
+- **`ScrollListener` y est passé, et deux verbes suffisent** : `track` et `untrack`.
+  Mesurer est tout ce que ce composant fait, donc commencer et arrêter est tout ce qu'une
+  instruction peut toucher. Il a récupéré `tracking` / `defaultTracking` au passage —
+  `defaultTracking` vaut **vrai**, ce que le composant a toujours fait, et l'ancien
+  `startOnVisible` s'écrit `defaultTracking={false}` plus `whenVisible='track'`. Plus
+  verbeux qu'avant, et c'est le prix assumé d'une grammaire unique.
+  - **Le `<div>` intérieur a disparu.** L'observateur tourne sur la racine, comme chez
+    `Video` et `Sequencer`, donc plus d'`IntersectionObserverComponent` imbriqué. C'est
+    plus grave ici qu'ailleurs : le composant existe pour qu'une feuille anime sur les
+    propriétés qu'il porte, et une boîte de plus mettait les enfants un étage en dessous
+    de l'élément qui les porte.
+  - **`--tracking` est un modifieur de racine**, l'état dont `--measured` n'était que la
+    conséquence — un écouteur arrêté garde ses dernières valeurs, donc il peut être mesuré
+    sans plus suivre. `onIsTrackingChanged` avec.
+  - **`WithViewportObservation` est mort** avec la conversion, son dernier consommateur.
+    `ViewportObserverOptions` reste pour `ListLoader`, qui observe une sentinelle pour
+    charger la suite — pas de vocabulaire, pas d'instructions, juste un observateur.
 - **`Scrllgngn` a un problème voisin, pas le même** — son tracking s'active à la seule
   présence de `onScrolled`, faute d'interrupteur. À regarder quand son tour viendra ;
   `onVisibilityChanged` est peut-être déjà la réponse.
