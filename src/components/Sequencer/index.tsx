@@ -43,6 +43,24 @@ import type {
  */
 const STEPS_ATTRIBUTE = 'data-steps'
 
+/**
+ * The attribute a child uses to say that the sequence ends on it.
+ *
+ * It answers a shape the positional fallback could not: an article writes the steps in
+ * reading order, then — **after** the sequence proper — the children that belong to
+ * several steps at once and name them with {@link STEPS_ATTRIBUTE}. Those trailing
+ * children would each claim a step of their own in the count, and the sequence would run
+ * on into steps where nothing but them is lit.
+ *
+ * Marking the last step is what separates the two halves, and it is written where the
+ * separation is rather than recounted in a prop — the same reason `data-steps` lives on
+ * the child. A child after the mark that names no step therefore never lights up, which
+ * is the honest reading of « it is not part of the sequence ».
+ *
+ * Valueless, as an HTML boolean attribute: what matters is that it is there.
+ */
+const LAST_STEP_ATTRIBUTE = 'data-last-step'
+
 /*
  * Two numbers run this component and they are not the same one.
  *
@@ -56,10 +74,11 @@ const STEPS_ATTRIBUTE = 'data-steps'
  */
 
 /**
- * @property totalSteps - How many steps the sequence has. Falls back to the number of
- * **element** children: text and whitespace never count, which matters more than it
- * looks — an article writes its children across several lines, and a text node counting
- * as a step would put every index out by one.
+ * @property totalSteps - How many steps the sequence has. Falls back to the first child
+ * marked `data-last-step`, which sets the count to its own position plus one, and then
+ * to the number of **element** children: text and whitespace never count, which matters
+ * more than it looks — an article writes its children across several lines, and a text
+ * node counting as a step would put every index out by one.
  * @property stepMap - Rewrites what a position means, **by position and nothing else**:
  * at position `i` the active step is `stepMap[i]` when there is one, and `i` otherwise.
  * `[2, 6, 7]` over seven steps plays `2, 6, 7, 3, 4, 5, 6` — a step may be skipped, may
@@ -154,6 +173,20 @@ function flattenChildren (nodes: ReactNode): ReactNode[] {
   })
 }
 
+/**
+ * Whether a child carries {@link LAST_STEP_ATTRIBUTE}.
+ *
+ * Present is enough — `data-last-step` alone gives `''` through lm-html, and `true`
+ * written in JSX. Only an explicit denial is read as one, so that a consumer computing
+ * the attribute can write `false` without having to leave it out.
+ */
+function isLastStep (child: ReactElement): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a React element's props are a record, whatever else they are
+  const raw = (child.props as Record<string, unknown>)[LAST_STEP_ATTRIBUTE]
+  if (raw === undefined || raw === null) return false
+  return raw !== false && raw !== 'false'
+}
+
 /** The steps a child answers to: what it declares, or where it sits. */
 function stepsOf (child: ReactElement, elementIndex: number): number[] {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a React element's props are a record, whatever else they are
@@ -176,6 +209,20 @@ function stepsOf (child: ReactElement, elementIndex: number): number[] {
  * part: they carry no class, so they simply stay visible throughout. **A fragment is
  * opened rather than counted**: it groups without rendering an element of its own, so
  * there would be nothing to class and nothing to show for the step it would consume.
+ *
+ * ### Where the sequence ends
+ * A child marked `data-last-step` ends it, and what follows still takes part — through
+ * `data-steps` alone. That is what lets an article write the steps in reading order and
+ * put the children belonging to several of them at once **after**, where they read as
+ * what they are, rather than having their position counted as a step of its own:
+ *
+ * ```html
+ * <div>1</div><div>2</div><div data-last-step>3</div>
+ * <div data-steps="0, 1">both of the first two</div>
+ * ```
+ *
+ * Three steps, four children. A trailing child that names no step never lights up, which
+ * is the honest reading of « it is not part of the sequence ».
  *
  * @remarks
  * **Viewport-driven behaviour is declared, not named by a prop.** `whenVisible` and
@@ -243,7 +290,13 @@ export const Sequencer: FunctionComponent<Props> = ({
   // Children, split once: what takes part and what merely renders.
   const childrenArr = flattenChildren(children)
   const elements = childrenArr.filter(isValidElement)
-  const stepsCount = Math.max(totalSteps ?? elements.length, 0)
+  // Three answers to « how long is the sequence », in decreasing order of explicitness:
+  // the prop, then the child that says the sequence ends on it, then the count of
+  // element children. The prop wins because it is the one a consumer writes knowing the
+  // whole, where the mark only knows where it sits.
+  const markedLast = elements.findIndex(isLastStep)
+  const impliedSteps = markedLast === -1 ? elements.length : markedLast + 1
+  const stepsCount = Math.max(totalSteps ?? impliedSteps, 0)
 
   // The two numbers
   const rawStep = step ?? internalStep
