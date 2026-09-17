@@ -299,35 +299,6 @@ Ce qui reste ouvert tient en deux lignes :
   présence de `onScrolled`, faute d'interrupteur. À regarder quand son tour viendra ;
   `onVisibilityChanged` est peut-être déjà la réponse.
 
-## `Video` — `onFullscreenChange` ne se déclenche jamais
-
-Trouvé en documentant les handlers dans la démo de lm-link, et pas encore corrigé.
-
-`Video` rend son `ControlledVideo` en **étalant `controlledProps` en premier**, puis en
-posant ses propres gestionnaires par-dessus. La plupart de ceux qui écrasent repassent la
-main au consommateur — `handlePlayButtonClick` appelle `onPlayButtonClicked` avant de
-faire céder le domaine. **`handleFullscreenChange` est le seul qui ne le fait pas :**
-
-```tsx
-const handleFullscreenChange = useCallback((isFullscreen: boolean) => {
-  if (!isFullscreen) setFullscreen(false)
-}, [])
-```
-
-Il ne sert que l'état interne, et le `onFullscreenChange` du consommateur est écrasé sans
-être rappelé. Or `VideoLink` le déclare dans ses `handlerProps` : un article peut l'écrire,
-et rien ne part. `onIsFullscreenChanged`, lui, n'est pas écrasé et fonctionne — ce qui rend
-le trou d'autant plus discret, les deux noms se ressemblant.
-
-Le correctif tient en une ligne — appeler `controlledProps.onFullscreenChange?.(isFullscreen)`
-—, mais il demande une publication pour que lm-link en profite. **La fiche de la démo
-signale l'événement comme inopérant en attendant**, et c'est cette mention qui sera à
-retirer le jour de la correction.
-
-Les deux ne disent d'ailleurs pas la même chose et méritent de coexister :
-`onIsFullscreenChanged` est l'état du composant, `onFullscreenChange` celui du navigateur
-— donc la touche Échap et le bouton natif, hors du composant.
-
 ## `Video` — deux idées à instruire sur la tête de lecture
 
 Notées telles quelles, à reprendre en discussion : ni l'une ni l'autre n'est conçue.
