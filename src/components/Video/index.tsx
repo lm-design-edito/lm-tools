@@ -241,7 +241,8 @@ export const Video: FunctionComponent<Props> = ({
 
   const handleFullscreenChange = useCallback((isFullscreen: boolean) => {
     if (!isFullscreen) setFullscreen(false)
-  }, [])
+    controlledProps.onFullscreenChange?.(isFullscreen)
+  }, [controlledProps.onFullscreenChange])
 
   const handleOnLoadedMetadataEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
     muteAttributeWorkaround(e.currentTarget, controlledProps.muted ?? false)
