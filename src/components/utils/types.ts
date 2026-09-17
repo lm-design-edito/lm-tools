@@ -18,6 +18,11 @@ export type WithClassName <T extends Record<string, unknown>> = T & {
  * They mirror `ObserverOptions` of the `IntersectionObserver` component, where they
  * end up. Restated here rather than imported from it: that component reads
  * {@link WithClassName} from this very file, and the two shouldn't import each other.
+ *
+ * **`ListLoader` is the last consumer**, and that is the shape of things: a component
+ * that watches itself to *do* something now takes `ViewportBehaviours` instead, which
+ * carries its own `visibility…` dial. What is left here is for the one that watches a
+ * sentinel to load more — no vocabulary, no instructions, just an observer.
  */
 export type ViewportObserverOptions = {
   threshold?: number | number[]
@@ -25,18 +30,3 @@ export type ViewportObserverOptions = {
   rootMargin?: string
 }
 
-/**
- * Extends a type with an internal observer's settings and with what it sees.
- *
- * For a component observing **one** element — itself, usually. A component with
- * several observers takes {@link ViewportObserverOptions} alone, since a single
- * visibility handler couldn't say which of them crossed.
- *
- * `Scrllgngn` deliberately stays out of both: its observers take a `rootMargin`
- * derived from its `viewportOffset*` props, which are its own version of the dial.
- *
- * @template T - The base type to extend.
- */
-export type WithViewportObservation <T extends Record<string, unknown>> = T
-  & ViewportObserverOptions
-  & { onVisibilityChanged?: (isVisible: boolean) => void }
