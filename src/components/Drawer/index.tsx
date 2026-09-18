@@ -3,6 +3,9 @@ import {
   type PropsWithChildren,
   type FunctionComponent,
   type ReactNode,
+  type RefObject,
+  useLayoutEffect,
+  useRef,
   useState
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
@@ -29,8 +32,9 @@ import cssModule from './styles.module.css'
  * through the root modifiers. Pass `null` to render an empty closer.
  * @property openerBtnSelector - CSS selector picking the toggle *inside*
  * `openerContent`. Without it the whole bar opens the drawer; with it, only a click
- * landing inside a matching descendant does. An invalid selector is ignored, and the
- * bar stays whole.
+ * landing inside a matching descendant does. Whatever it points at receives the
+ * `opener-btn` class, so CSS can reach the toggle too. An invalid selector falls back
+ * to the whole bar.
  * @property closerBtnSelector - Same, for the closer. Defaults to
  * `openerBtnSelector`, like the content it goes with.
  * @property defaultIsOpened - Initial open state in uncontrolled mode.
@@ -62,27 +66,58 @@ export type Props = PropsWithChildren<WithClassName<{
 }>>
 
 /**
+ * Marks whatever a `…BtnSelector` points at with the command's `-btn` public class.
+ *
+ * **The class is the single source of truth**, for CSS and for the click handler alike:
+ * without it, a stylesheet would have no way to reach the toggle — the selector is a
+ * JavaScript prop and leaves no trace in the markup — and the two would answer the
+ * question « what is the toggle » by different means.
+ *
+ * The no-selector case never gets here: the class is then written straight into the
+ * bar's own `className`, because the whole bar *is* the toggle. So this hook only ever
+ * runs to narrow that down to a few descendants.
+ *
+ * **It writes into DOM that React owns.** React does not reset an attribute it has not
+ * diffed, so the class survives an ordinary re-render — but a bar whose own `className`
+ * changes would be rewritten, class included. Hence `content` among the dependencies:
+ * whatever makes the content change is also what repairs the marking, before paint.
+ *
+ * An invalid selector marks the bar itself. A consumer typo would otherwise leave no
+ * toggle at all and a drawer that no longer opens; falling back to the whole bar is the
+ * behaviour they had before writing the selector.
+ */
+function useToggleMarking (
+  barRef: RefObject<HTMLDivElement | null>,
+  selector: string | undefined,
+  btnClassName: string,
+  content: ReactNode
+): void {
+  useLayoutEffect(() => {
+    const bar = barRef.current
+    if (bar === null) return
+    bar.querySelectorAll(`.${btnClassName}`).forEach(node => { node.classList.remove(btnClassName) })
+    if (selector === undefined) return
+    bar.classList.remove(btnClassName)
+    try {
+      bar.querySelectorAll(selector).forEach(node => { node.classList.add(btnClassName) })
+    } catch (err) {
+      bar.classList.add(btnClassName)
+    }
+  }, [barRef, selector, btnClassName, content])
+}
+
+/**
  * Whether a click on a command should toggle the drawer.
  *
- * Without a selector the whole bar is the toggle, which is the common case. With one,
- * the click has to land inside a matching descendant **of that same bar** — hence the
- * `contains` check on top of `closest`, without which a selector could be satisfied by
- * an ancestor sitting outside the drawer entirely.
- *
- * An invalid selector makes `closest` throw. A consumer typo would then break every
- * click on the drawer, so it is caught and the bar simply stays whole: degrading to the
- * default behaviour beats a command that no longer opens anything.
+ * The test is « did the click land inside a marked element », never the selector itself:
+ * {@link useToggleMarking} has already resolved what the toggle is. `contains` comes on
+ * top of `closest` because a marked element could, in principle, sit outside this bar.
  */
-function isToggleHit (event: MouseEvent<HTMLDivElement>, selector?: string): boolean {
-  if (selector === undefined) return true
+function isToggleHit (event: MouseEvent<HTMLDivElement>, btnClassName: string): boolean {
   const { target, currentTarget } = event
   if (!(target instanceof Element)) return false
-  try {
-    const hit = target.closest(selector)
-    return hit !== null && currentTarget.contains(hit)
-  } catch (err) {
-    return true
-  }
+  const hit = target.closest(`.${btnClassName}`)
+  return hit !== null && currentTarget.contains(hit)
 }
 
 /**
@@ -101,6 +136,9 @@ function isToggleHit (event: MouseEvent<HTMLDivElement>, selector?: string): boo
  * - `opener`
  * - `closer`
  * - `content`
+ * - `opener-btn` / `closer-btn` — the toggle. On the bar itself when the whole bar is
+ *   clickable, on whatever `openerBtnSelector` / `closerBtnSelector` point at otherwise.
+ *   Always present, so a stylesheet has one place to look.
  *
  * ### CSS custom properties on the root element
  * - `--lm-drawer-content-width` / `--lm-drawer-content-width-raw`
@@ -126,10 +164,9 @@ function isToggleHit (event: MouseEvent<HTMLDivElement>, selector?: string): boo
  *   `closerBtnSelector` default to their opener counterpart, so that bar is written
  *   once. What tells the two states apart is CSS, through the root modifiers.
  * - **`…BtnSelector` narrows the click, it does not move it.** The handler stays on the
- *   bar and the selector is tested against the click's target, so nothing in the markup
- *   changes and a consumer keeps full control of what the row contains. The flip side:
- *   the component can't know which element is the toggle, so a `cursor` on the bar is
- *   the consumer's business either way.
+ *   bar; the selector only decides which descendants carry the `-btn` class, and the
+ *   handler asks that class. So the consumer keeps full control of what the row
+ *   contains, and a stylesheet reaches the toggle without knowing the selector.
  */
 export const Drawer: FunctionComponent<Props> = ({
   openerContent,
@@ -151,6 +188,8 @@ export const Drawer: FunctionComponent<Props> = ({
     width: number
     height: number
   }>()
+  const openerRef = useRef<HTMLDivElement | null>(null)
+  const closerRef = useRef<HTMLDivElement | null>(null)
   const isControlled = isOpenedProp !== undefined
   const isOpened = isOpenedProp ?? internalIsOpened
   // Une barre écrite une fois sert les deux états : le plus souvent un titre et une
@@ -159,6 +198,17 @@ export const Drawer: FunctionComponent<Props> = ({
   // vide, et le consommateur garde le moyen de n'en rendre aucun.
   const resolvedCloserContent = closerContent === undefined ? openerContent : closerContent
   const resolvedCloserBtnSelector = closerBtnSelector ?? openerBtnSelector
+
+  // Class names
+  // Le `-btn` désigne la bascule, et il existe dans tous les cas : posé ici quand la
+  // barre entière en tient lieu, posé sur les descendants par {@link useToggleMarking}
+  // quand un sélecteur la rétrécit. Une feuille n'a donc qu'un endroit où regarder, et
+  // le gestionnaire de clic qu'une question à poser.
+  const c = clss(publicClassName, { cssModule })
+  const openerBtnClss = c('opener-btn')
+  const closerBtnClss = c('closer-btn')
+  useToggleMarking(openerRef, openerBtnSelector, openerBtnClss, openerContent)
+  useToggleMarking(closerRef, resolvedCloserBtnSelector, closerBtnClss, resolvedCloserContent)
 
   // State dispatch
   useChangeDispatch(isOpened, onIsOpenedChanged)
@@ -170,13 +220,13 @@ export const Drawer: FunctionComponent<Props> = ({
 
   // User action handlers
   const handleOpenerClick = (event: MouseEvent<HTMLDivElement>): void => {
-    if (!isToggleHit(event, openerBtnSelector)) return
+    if (!isToggleHit(event, openerBtnClss)) return
     onOpenerClicked?.(isOpened)
     if (isControlled) return
     setInternalIsOpened(true)
   }
   const handleCloserClick = (event: MouseEvent<HTMLDivElement>): void => {
-    if (!isToggleHit(event, resolvedCloserBtnSelector)) return
+    if (!isToggleHit(event, closerBtnClss)) return
     onCloserClicked?.(isOpened)
     if (isControlled) return
     setInternalIsOpened(false)
@@ -187,14 +237,17 @@ export const Drawer: FunctionComponent<Props> = ({
   }
 
   // Rendering
-  const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null, {
     'opened': isOpened,
     'closed': !isOpened,
     measured: contentDimensions !== undefined
   }), className)
-  const openerClss = c('opener')
-  const closerClss = c('closer')
+  const openerClss = openerBtnSelector === undefined
+    ? mergeClassNames(c('opener'), openerBtnClss)
+    : c('opener')
+  const closerClss = resolvedCloserBtnSelector === undefined
+    ? mergeClassNames(c('closer'), closerBtnClss)
+    : c('closer')
   const contentClss = c('content')
   let dataAttributes: Record<string, string> = {}
   let customCssProps: Record<string, string> = {}
@@ -215,8 +268,14 @@ export const Drawer: FunctionComponent<Props> = ({
     className={rootClss}
     {...dataAttributes}
     style={{ ...customCssProps }}>
-    <div className={openerClss} onClick={handleOpenerClick}>{openerContent}</div>
-    <div className={closerClss} onClick={handleCloserClick}>{resolvedCloserContent}</div>
+    <div
+      ref={openerRef}
+      className={openerClss}
+      onClick={handleOpenerClick}>{openerContent}</div>
+    <div
+      ref={closerRef}
+      className={closerClss}
+      onClick={handleCloserClick}>{resolvedCloserContent}</div>
     <div className={contentClss}>
       <ResizeObserverComponent onResized={handleContentResized}>
         {children}
