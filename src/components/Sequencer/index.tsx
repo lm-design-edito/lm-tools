@@ -241,7 +241,19 @@ function stepsOf (child: ReactElement, elementIndex: number): number[] {
  *
  * ### On the root
  * `--playing`, `--at-start`, `--at-end`, `--ended`, plus `data-step`, `data-active-step`,
- * `data-total-steps` and `data-tempo`.
+ * `data-total-steps`, `data-tempo` and `data-lap`.
+ *
+ * The same five numbers are also published as custom properties —
+ * `--lm-sequencer-step`, `--lm-sequencer-active-step`, `--lm-sequencer-total-steps`,
+ * `--lm-sequencer-tempo`, `--lm-sequencer-lap` — plus `--lm-sequencer-raw-step`, the
+ * counter that keeps growing across laps (`lap × total + step`). **A data attribute
+ * selects, a custom property computes**: `attr()` cannot feed a `calc()`, so a rule that
+ * wants to turn something by a degree per step needs the property, and gets it on every
+ * descendant since custom properties inherit —
+ * `transform: rotate(calc(var(--lm-sequencer-raw-step) * 5deg))`.
+ *
+ * No `-raw` twin as `ResizeObserver` has: every one of these is a bare number, and none
+ * of them would mean anything with a unit attached.
  *
  * ### On each element child
  * The `__child` element class, then three pairs, one of each always present:
@@ -442,6 +454,24 @@ export const Sequencer: FunctionComponent<Props> = ({
     return positions
   }
 
+  // **The lap count is the wraps, so it is zero without `loop`.** The internal counter
+  // runs one past the end and stays there, which makes `lap` read `1` on a sequence that
+  // never wrapped at all — true of the division, false of the thing it is named after,
+  // and `onLooped` says the same by never firing without `loop`.
+  const publishedLap = loop === true ? lap : 0
+  // Rebuilt from the published lap rather than read off `rawStep`, for that same reason:
+  // at the end of a non-looping sequence the internal counter sits one step past the last
+  // position, and a number meant to drive a transform must not overshoot the picture.
+  const rawStepProp = publishedLap * stepsCount + position
+  const cssCustomProps: Record<string, string> = {
+    '--lm-sequencer-step': `${position}`,
+    '--lm-sequencer-active-step': `${activeStep}`,
+    '--lm-sequencer-total-steps': `${stepsCount}`,
+    '--lm-sequencer-tempo': `${tempo}`,
+    '--lm-sequencer-lap': `${publishedLap}`,
+    '--lm-sequencer-raw-step': `${rawStepProp}`
+  }
+
   let elementIndex = -1
   return <div
     ref={rootRef}
@@ -449,7 +479,9 @@ export const Sequencer: FunctionComponent<Props> = ({
     data-step={position}
     data-active-step={activeStep}
     data-total-steps={stepsCount}
-    data-tempo={tempo}>
+    data-tempo={tempo}
+    data-lap={publishedLap}
+    style={{ ...cssCustomProps }}>
     {childrenArr.map((child, childPos): ReactNode => {
       if (!isValidElement(child)) return child
       elementIndex += 1
