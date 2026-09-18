@@ -341,13 +341,21 @@ export const Sequencer: FunctionComponent<Props> = ({
   // absolute, so setting it to a bare position on a looping sequence would count as a
   // wrap backwards and fire `onLooped` for a move nobody made. `jump-by` is left alone
   // on purpose — stepping past the last position really is a wrap, and says so.
+  //
+  // **The lap offset is for looping sequences only, and adding it elsewhere was a bug.**
+  // A sequence that does not loop runs its counter one past the end and leaves it there,
+  // so `lap` reads `1` from that moment on — and `jump-start` landed on `1 * stepsCount`,
+  // which is precisely the ended position it was asked to leave. The symptom: a sequence
+  // with `whenVisible='jump-start'` played once, stopped on its last step, and stayed
+  // there however many times it was scrolled past. Nothing is lost by dropping the
+  // offset here: without `loop`, there is no wrap to misread and `onLooped` never fires.
   const jumpToPosition = (target: number): void => {
     if (step !== undefined || stepsCount <= 0) return
     const resolved = target < 0 ? stepsCount + target : target
     const bounded = loop === true
       ? absoluteModulo(resolved, stepsCount)
       : clamp(resolved, 0, stepsCount - 1)
-    setInternalStep(lap * stepsCount + bounded)
+    setInternalStep(loop === true ? lap * stepsCount + bounded : bounded)
   }
 
   const jumpBy = (offset: number): void => {
