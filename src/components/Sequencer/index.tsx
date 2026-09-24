@@ -1,7 +1,6 @@
 import {
   Children,
   cloneElement,
-  Fragment,
   isValidElement,
   useEffect,
   useRef,
@@ -151,29 +150,6 @@ function parseSteps (raw: unknown): number[] | null {
 }
 
 /**
- * The children, with fragments opened.
- *
- * **`Children.toArray` does not go through a `<>…</>`**: a fragment is one element to it,
- * and one that cannot be classed either — `cloneElement` on it would hand `className` to
- * `React.Fragment`, which warns and drops it. So a consumer whose children arrive wrapped
- * in one gets a sequence of exactly one step, stuck on position `0`.
- *
- * That consumer is not hypothetical: lm-link renders an article's `<nodelist>` through
- * `lm-html`, which returns `<>{children}</>` — every sequence written in hyper-json
- * therefore arrives wrapped. Opening them here rather than asking each consumer to
- * flatten is the only place the fix belongs: a fragment is a grouping with no rendered
- * element of its own, so it has no business consuming a step.
- */
-function flattenChildren (nodes: ReactNode): ReactNode[] {
-  return Children.toArray(nodes).flatMap((child): ReactNode[] => {
-    if (!isValidElement(child) || child.type !== Fragment) return [child]
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a fragment's props are its children and its key, whatever else they are
-    const { children } = child.props as { children?: ReactNode }
-    return flattenChildren(children)
-  })
-}
-
-/**
  * Whether a child carries {@link LAST_STEP_ATTRIBUTE}.
  *
  * Present is enough — `data-last-step` alone gives `''` through lm-html, and `true`
@@ -300,7 +276,7 @@ export const Sequencer: FunctionComponent<Props> = ({
   const rootRef = useRef<HTMLDivElement>(null)
 
   // Children, split once: what takes part and what merely renders.
-  const childrenArr = flattenChildren(children)
+  const childrenArr = Children.toArray(children)
   const elements = childrenArr.filter(isValidElement)
   // Three answers to « how long is the sequence », in decreasing order of explicitness:
   // the prop, then the child that says the sequence ends on it, then the count of
