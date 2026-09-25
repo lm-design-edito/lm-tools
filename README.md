@@ -30,7 +30,7 @@ Coding conventions live in [CLAUDE.md](./CLAUDE.md) and in the root
 
 **Rien de bloquant en attente sur les composants**, mais deux sujets ouverts qui les
 traversent : « Le trou de synchronisation des événements de `Scrllgngn` » et
-« L'uniformisation des payloads de handlers » plus bas. Aucun des deux ne bloque la
+« Les payloads de handlers — ce qui reste ouvert » plus bas. Aucun des deux ne bloque la
 première publication de lm-link. La passe
 d'alignement, la reprise de `Subtitles`, celle de `Video`, le chantier `Scrllgngn` et
 la mise en conformité d'`UIModule` sont faits ; les états internes remontent tous en
@@ -89,23 +89,24 @@ drapeau pour les distinguer.
 **En hyper-json, `update` ne sera jamais appelé**, les props d'un article étant statiques.
 Il a été réparé pour un consommateur React ; ce qui paie pour lm-link, c'est `postInit`.
 
-## L'uniformisation des payloads de handlers
+## Les payloads de handlers — ce qui reste ouvert
 
-Le `CLAUDE.md` pose qu'**un handler prend exactement un argument**, nommé dès qu'il en
-porte plusieurs. La règle est écrite, elle n'est pas encore tenue partout : **13 handlers
-sur 79 restent positionnels** — dix sur `Video`, deux sur `BeforeAfter` (`onClicked`,
-`onDragged`) et `onCopyClicked` sur `Clippable`. Les cinq qui portaient deux scalaires
-sans contexte d'appel — `onPaginationClicked`, `onStepChanged`, `onPageChanged`,
-`onPageFetched`, `onPageFetchFailed` — sont convertis.
+**La règle est tenue : les 79 handlers prennent exactement un argument**, nommé dès
+qu'ils en portent plusieurs. Les dix-huit qui étaient positionnels sont convertis — cinq
+qui portaient deux scalaires (`onPaginationClicked`, `onStepChanged`, `onPageChanged`,
+`onPageFetched`, `onPageFetchFailed`), puis les treize qui portaient un contexte d'appel :
+les dix de `Video`, `onClicked` et `onDragged` sur `BeforeAfter`, `onCopyClicked` sur
+`Clippable`.
 
-**Décision prise : on ne touche à rien pour l'instant.** Les treize restants portent un
-événement DOM et, pour `Video`, une référence à l'élément. Ces deux valeurs sont là
-volontairement et on les garde : un consommateur React s'en sert pour empêcher un défaut
-ou piloter la balise directement.
+Rien ne s'est perdu au passage : `event` et l'élément — `videoElement` sur `Video` —
+restent transmis, ils sont là volontairement et un consommateur React s'en sert pour
+empêcher un défaut ou piloter la balise. Les dix de `Video` partagent le type
+`VideoActionPayload<E, T>`, qui pose `event` et `videoElement` une fois pour toutes.
 
-Ce qui reste à trancher, le jour où le sujet s'ouvre, ce sont deux questions que la
-conversion rend difficiles à éviter — tant que c'est positionnel, l'écart se lit à peine ;
-écrit `{ event, isOn, video }` d'un côté et `isOn` de l'autre, il saute aux yeux.
+**Deux questions restent ouvertes, et aucune ne bloque la publication de lm-link.** Le
+passage au record les rend visibles là où le positionnel les masquait : écrit
+`{ event, isOn, videoElement }` d'un côté et `{ isOn }` de l'autre, l'écart saute aux
+yeux.
 
 - **Un handler d'action porte-t-il toujours son événement ?** Une quinzaine ne le font
   pas : `onBackgroundClicked`, `onContentClicked`, `onCloseButtonClicked`,
@@ -119,10 +120,9 @@ conversion rend difficiles à éviter — tant que c'est positionnel, l'écart s
   mais ni le scroller d'une galerie, ni le contenu d'un tiroir, ni la surcouche d'une
   lightbox ne sont atteignables.
 
-Une note de méthode pour qui reprendra : le relevé ne se fait pas au `grep`. Les
-signatures multi-lignes lui échappent — c'est ainsi qu'`onCopyClicked` a été manqué deux
-fois — et `index.controlled.tsx` doit être dans le périmètre au même titre
-qu'`index.tsx`.
+Une note de méthode : le relevé ne se fait pas au `grep`. Les signatures multi-lignes lui
+échappent — c'est ainsi qu'`onCopyClicked` a été manqué deux fois — et
+`index.controlled.tsx` doit être dans le périmètre au même titre qu'`index.tsx`.
 
 ## Formater un temps — une seule grammaire pour les dates et les durées
 
