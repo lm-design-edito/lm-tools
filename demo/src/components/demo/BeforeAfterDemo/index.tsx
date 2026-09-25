@@ -144,8 +144,8 @@ export type ControlledProps = PropsWithChildren<WithClassName<{
   ratio?: number
   before?: ReactNode
   after?: ReactNode
-  onDragged?: (xRatio: number, yRatio: number) => void
-  onClicked?: (xRatio: number, yRatio: number) => void
+  onDragged?: (payload: { xRatio: number, yRatio: number }) => void
+  onClicked?: (payload: { xRatio: number, yRatio: number }) => void
 }>>
 
 /**
@@ -169,9 +169,9 @@ const demoProps: BeforeAfterProps = {
   before: <div style={{ width: 500, height: 300, background: 'coral' }}><button>CORAL</button></div>,
   after: <div style={{ width: 800, height: 300, background: 'cornflowerblue' }}><button>BLUE</button></div>,
   // eslint-disable-next-line no-console
-  onDragged: (x, y) => console.log('x:', x, 'y:', y),
+  onDragged: ({ xRatio, yRatio }) => console.log('x:', xRatio, 'y:', yRatio),
   // eslint-disable-next-line no-console
-  onClicked: (x, y) => console.log('x:', x, 'y:', y)
+  onClicked: ({ xRatio, yRatio }) => console.log('x:', xRatio, 'y:', yRatio)
 }
 
 export const BeforeAfterDemo: FunctionComponent = () => {

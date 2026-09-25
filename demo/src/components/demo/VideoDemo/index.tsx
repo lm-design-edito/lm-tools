@@ -126,14 +126,14 @@ export type Props = PropsWithChildren<WithClassName<{
   autoPauseWhenHidden?: boolean
   autoLoudWhenVisible?: boolean
   autoMuteWhenHidden?: boolean
-  onPlayButtonClicked?: (e: MouseEvent<HTMLButtonElement>, isPlaying: boolean, videoEl: HTMLVideoElement | null) => void
-  onPauseButtonClicked?: (e: MouseEvent<HTMLButtonElement>, isPlaying: boolean, videoEl: HTMLVideoElement | null) => void
-  onLoudButtonClicked?: (e: MouseEvent<HTMLButtonElement>, isLoud: boolean, videoEl: HTMLVideoElement | null) => void
-  onMuteButtonClicked?: (e: MouseEvent<HTMLButtonElement>, isLoud: boolean, videoEl: HTMLVideoElement | null) => void
-  onFullscreenButtonClicked?: (e: MouseEvent<HTMLButtonElement>, isFullscreen: boolean, videoEl: HTMLVideoElement | null) => void
-  onVolumeRangeChanged?: (e: React.ChangeEvent<HTMLInputElement>, targetVolume: number, currentVolume: number, videoEl: HTMLVideoElement | null) => void
-  onRateRangeChanged?: (e: React.ChangeEvent<HTMLInputElement>, targetRate: number, currentRate: number, videoEl: HTMLVideoElement | null) => void
-  onTimelineClicked?: (e: React.MouseEvent<HTMLDivElement>, targetTime: number, currentTime: number, videoEl: HTMLVideoElement | null) => void
+  onPlayButtonClicked?: (payload: { event: MouseEvent<HTMLButtonElement>, isPlaying: boolean, videoElement: HTMLVideoElement | null }) => void
+  onPauseButtonClicked?: (payload: { event: MouseEvent<HTMLButtonElement>, isPlaying: boolean, videoElement: HTMLVideoElement | null }) => void
+  onLoudButtonClicked?: (payload: { event: MouseEvent<HTMLButtonElement>, isLoud: boolean, videoElement: HTMLVideoElement | null }) => void
+  onMuteButtonClicked?: (payload: { event: MouseEvent<HTMLButtonElement>, isLoud: boolean, videoElement: HTMLVideoElement | null }) => void
+  onFullscreenButtonClicked?: (payload: { event: MouseEvent<HTMLButtonElement>, isFullscreen: boolean, videoElement: HTMLVideoElement | null }) => void
+  onVolumeRangeChanged?: (payload: { event: React.ChangeEvent<HTMLInputElement>, targetVolume: number, currentVolume: number, videoElement: HTMLVideoElement | null }) => void
+  onRateRangeChanged?: (payload: { event: React.ChangeEvent<HTMLInputElement>, targetRate: number, currentRate: number, videoElement: HTMLVideoElement | null }) => void
+  onTimelineClicked?: (payload: { event: React.MouseEvent<HTMLDivElement>, targetTime: number, currentTime: number, videoElement: HTMLVideoElement | null }) => void
   onIsPlayingChanged?: (isPlaying: boolean) => void
   onIsLoudChanged?: (isLoud: boolean) => void
   onIsFullscreenChanged?: (isFullscreen: boolean) => void
@@ -294,37 +294,37 @@ const VideoControlledDemo: FunctionComponent = ({
         }
       }}
       onFullscreenChange={isFullscreen => setFullscreen(isFullscreen)}
-      onPlayButtonClicked={(e, isPlaying, videoEl) => {
+      onPlayButtonClicked={payload => {
         setPlay(true)
-        demoProps.onPlayButtonClicked?.(e, isPlaying, videoEl)
+        demoProps.onPlayButtonClicked?.(payload)
       }}
-      onPauseButtonClicked={(e, isPlaying, videoEl) => {
+      onPauseButtonClicked={payload => {
         setPlay(false)
-        demoProps.onPauseButtonClicked?.(e, isPlaying, videoEl)
+        demoProps.onPauseButtonClicked?.(payload)
       }}
-      onVolumeRangeChanged={(e, targetVolume, currentVolume, videoEl) => {
-        setVolume(targetVolume)
-        demoProps.onVolumeRangeChanged?.(e, targetVolume, currentVolume, videoEl)
+      onVolumeRangeChanged={payload => {
+        setVolume(payload.targetVolume)
+        demoProps.onVolumeRangeChanged?.(payload)
       }}
-      onRateRangeChanged={(e, targetRate, currentRate, videoEl) => {
-        setPlaybackRate(targetRate)
-        demoProps.onRateRangeChanged?.(e, targetRate, currentRate, videoEl)
+      onRateRangeChanged={payload => {
+        setPlaybackRate(payload.targetRate)
+        demoProps.onRateRangeChanged?.(payload)
       }}
-      onTimelineClicked={(e, targetTime, currentTime, videoEl) => {
-        if (controlledCurrentTime) setCurrentTimeMs(secondsToMs(targetTime))
-        demoProps.onTimelineClicked?.(e, targetTime, currentTime, videoEl)
+      onTimelineClicked={payload => {
+        if (controlledCurrentTime) setCurrentTimeMs(secondsToMs(payload.targetTime))
+        demoProps.onTimelineClicked?.(payload)
       }}
-      onLoudButtonClicked={(e, isLoud, videoEl) => {
+      onLoudButtonClicked={payload => {
         setMute(false)
-        demoProps.onLoudButtonClicked?.(e, isLoud, videoEl)
+        demoProps.onLoudButtonClicked?.(payload)
       }}
-      onMuteButtonClicked={(e, isLoud, videoEl) => {
+      onMuteButtonClicked={payload => {
         setMute(true)
-        demoProps.onMuteButtonClicked?.(e, isLoud, videoEl)
+        demoProps.onMuteButtonClicked?.(payload)
       }}
-      onFullscreenButtonClicked={(e, isFullscreen, videoEl) => {
-        setFullscreen(!isFullscreen)
-        demoProps.onFullscreenButtonClicked?.(e, isFullscreen, videoEl)
+      onFullscreenButtonClicked={payload => {
+        setFullscreen(!payload.isFullscreen)
+        demoProps.onFullscreenButtonClicked?.(payload)
       }}
       currentTimeMs={currentTimeMs} />
     </>
@@ -377,14 +377,14 @@ export const VideoDemo: FunctionComponent = () => {
     onLoadedMetadata: (e) => {
       setTotalTimeMs(secondsToMs(e.currentTarget.duration))
     },
-    onPlayButtonClicked: (e, isPlaying, videoEl) => {},
-    onPauseButtonClicked: (e, isPlaying, videoEl) => {},
-    onLoudButtonClicked: (e, isLoud, videoEl) => {},
-    onMuteButtonClicked: (e, isLoud, videoEl) => {},
-    onFullscreenButtonClicked: (e, isFullscreen, videoEl) => {},
-    onVolumeRangeChanged: (e, targetVolume, currentVolume, videoEl) => {},
-    onRateRangeChanged: (e, targetRate, currentRate, videoEl) => {},
-    onTimelineClicked: (e, targetTime, currentTime, videoEl) => {},
+    onPlayButtonClicked: () => {},
+    onPauseButtonClicked: () => {},
+    onLoudButtonClicked: () => {},
+    onMuteButtonClicked: () => {},
+    onFullscreenButtonClicked: () => {},
+    onVolumeRangeChanged: () => {},
+    onRateRangeChanged: () => {},
+    onTimelineClicked: () => {},
     onIsPlayingChanged: (isPlaying) => {},
     onIsLoudChanged: (isLoud) => {},
     onIsFullscreenChanged: (isFullscreen) => {},
