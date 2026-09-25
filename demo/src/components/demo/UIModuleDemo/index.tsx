@@ -47,7 +47,9 @@ const tsxDetails = `/**
  * error state.
  * @property postInit - Optional. Called once, right after the element returned by
  * \`init\` has been appended. First point at which the module holds an attached
- * element: layout can be measured and ancestors reached.
+ * element: layout can be measured and ancestors reached. **May return a teardown
+ * function**, run at unmount before \`destroy\` — which lets whatever it set up stay in
+ * its own closure instead of being filed somewhere \`destroy\` can find it again.
  * @property update - Optional. Called when the \`props\` object changes identity,
  * once the module is live. Compared by reference, not by value — a consumer passing
  * an inline object gets one call per render, one passing a stable reference gets one
@@ -61,7 +63,7 @@ const tsxDetails = `/**
  */
 type ModuleData = {
   init: (props: Record<string, unknown>) => Element
-  postInit?: (target: Element, props: Record<string, unknown>) => void
+  postInit?: (target: Element, props: Record<string, unknown>) => void | (() => void)
   update?: (target: Element, props: Record<string, unknown>) => void
   destroy?: (target: Element) => void
   css?: string[]
