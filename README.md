@@ -28,8 +28,10 @@ Coding conventions live in [CLAUDE.md](./CLAUDE.md) and in the root
 
 ## Où en est la bibliothèque
 
-**Rien en attente sur les composants**, mais un constat non résolu qui les traverse :
-voir « Le trou de synchronisation des événements de `Scrllgngn` » plus bas. La passe
+**Rien de bloquant en attente sur les composants**, mais deux sujets ouverts qui les
+traversent : « Le trou de synchronisation des événements de `Scrllgngn` » et
+« L'uniformisation des payloads de handlers » plus bas. Aucun des deux ne bloque la
+première publication de lm-link. La passe
 d'alignement, la reprise de `Subtitles`, celle de `Video`, le chantier `Scrllgngn` et
 la mise en conformité d'`UIModule` sont faits ; les états internes remontent tous en
 modifieurs de classe racine.
@@ -86,6 +88,41 @@ drapeau pour les distinguer.
 
 **En hyper-json, `update` ne sera jamais appelé**, les props d'un article étant statiques.
 Il a été réparé pour un consommateur React ; ce qui paie pour lm-link, c'est `postInit`.
+
+## L'uniformisation des payloads de handlers
+
+Le `CLAUDE.md` pose qu'**un handler prend exactement un argument**, nommé dès qu'il en
+porte plusieurs. La règle est écrite, elle n'est pas encore tenue partout : **13 handlers
+sur 79 restent positionnels** — dix sur `Video`, deux sur `BeforeAfter` (`onClicked`,
+`onDragged`) et `onCopyClicked` sur `Clippable`. Les cinq qui portaient deux scalaires
+sans contexte d'appel — `onPaginationClicked`, `onStepChanged`, `onPageChanged`,
+`onPageFetched`, `onPageFetchFailed` — sont convertis.
+
+**Décision prise : on ne touche à rien pour l'instant.** Les treize restants portent un
+événement DOM et, pour `Video`, une référence à l'élément. Ces deux valeurs sont là
+volontairement et on les garde : un consommateur React s'en sert pour empêcher un défaut
+ou piloter la balise directement.
+
+Ce qui reste à trancher, le jour où le sujet s'ouvre, ce sont deux questions que la
+conversion rend difficiles à éviter — tant que c'est positionnel, l'écart se lit à peine ;
+écrit `{ event, isOn, video }` d'un côté et `isOn` de l'autre, il saute aux yeux.
+
+- **Un handler d'action porte-t-il toujours son événement ?** Une quinzaine ne le font
+  pas : `onBackgroundClicked`, `onContentClicked`, `onCloseButtonClicked`,
+  `onOpenButtonClicked`, `onDismissClicked`, `onEscapePressed`, les quatre
+  `on(Next|Prev)(Button|Arrow)(Clicked|Pressed)`, `onOpenerClicked`, `onCloserClicked`,
+  `onPrevClicked`, `onNextClicked`, `onLoadPageClicked`. `onEscapePressed` est le cas le
+  plus parlant : une pression de touche qui ne transmet pas son `KeyboardEvent`.
+- **Un composant expose-t-il son élément interne ?** Posture bien plus engageante : seul
+  `Video` le fait. Les composants d'observation le donnent indirectement — `onResized`
+  passe l'entrée qui contient `.target`, `onIntersected` passe `ioEntry` et `observer` —
+  mais ni le scroller d'une galerie, ni le contenu d'un tiroir, ni la surcouche d'une
+  lightbox ne sont atteignables.
+
+Une note de méthode pour qui reprendra : le relevé ne se fait pas au `grep`. Les
+signatures multi-lignes lui échappent — c'est ainsi qu'`onCopyClicked` a été manqué deux
+fois — et `index.controlled.tsx` doit être dans le périmètre au même titre
+qu'`index.tsx`.
 
 ## Formater un temps — une seule grammaire pour les dates et les durées
 
