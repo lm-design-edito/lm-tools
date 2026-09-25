@@ -37,9 +37,11 @@ import cssModule from './styles.module.css'
  * @property destroy - Optional. Called when the component unmounts or `src` changes.
  * Receives the `Element` previously returned by `init`. Use it to tear down event
  * listeners, timers, or third-party instances.
- * @property css - Optional array of raw CSS strings scoped automatically to
- * the host element via `.<publicClassName>#<id> { … }` and injected as
- * `<style>` elements.
+ * @property css - Optional stylesheet, injected in a `<style>` and wrapped in
+ * `.<publicClassName>#<id> { … }` so it reaches this instance and nothing else.
+ * **Write rules, not bare declarations**: a declaration would land on the host, which
+ * the module does not own — the consumer styles it, and the two would fight. Rules are
+ * resolved by CSS nesting, so they need only name what `init` built.
  */
 type ModuleData = {
   init: (props: Record<string, unknown>) => Element
@@ -47,7 +49,7 @@ type ModuleData = {
   postInit?: (target: Element, props: Record<string, unknown>) => void | (() => void)
   update?: (target: Element, props: Record<string, unknown>) => void
   destroy?: (target: Element) => void
-  css?: string[]
+  css?: string
 }
 
 /** A module that initialized successfully, paired with the element it produced. */
@@ -111,13 +113,13 @@ export type Props = WithClassName<{
  *
  * ### Root element attributes
  * - `id` — a stable generated id, assigned once on mount and used to scope the
- * module's `css` entries to this specific instance.
+ * module's `css` to this specific instance.
  *
  * @param props - Component properties.
  * @see {@link Props}
  * @see {@link ModuleData}
  * @returns A host `<div>` into which the module's root `Element` is appended,
- * along with any `<style>` blocks exported by the module.
+ * along with the `<style>` the module exported, if any.
  */
 export const UIModule: FunctionComponent<Props> = ({
   src,
@@ -164,10 +166,7 @@ export const UIModule: FunctionComponent<Props> = ({
         if (!('init' in data) || typeof data.init !== 'function') return setLoadedModule(new Error('Module exported member `init` must be a function'))
         if ('destroy' in data && typeof data.destroy !== 'function') return setLoadedModule(new Error('Module exported member `destroy` must be a function'))
         if ('postInit' in data && typeof data.postInit !== 'function') return setLoadedModule(new Error('Module exported member `postInit` must be a function'))
-        if ('css' in data) {
-          if (!Array.isArray(data.css)) return setLoadedModule(new Error('Module exported member `css` must be an array of strings'))
-          if (data.css.some(entry => typeof entry !== 'string')) return setLoadedModule(new Error('Module exported member `css` must be an array of strings'))
-        }
+        if ('css' in data && typeof data.css !== 'string') return setLoadedModule(new Error('Module exported member `css` must be a string'))
         if ('update' in data && typeof data.update !== 'function') return setLoadedModule(new Error('Module exported member `update` must be a function'))
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- shape fully validated by the checks above
         const module = data as ModuleData
@@ -241,13 +240,13 @@ export const UIModule: FunctionComponent<Props> = ({
     }),
     className
   )
-  const moduleCss = hasErrored || loadedModule === null ? [] : loadedModule.css ?? []
+  const moduleCss = hasErrored || loadedModule === null ? undefined : loadedModule.css
   return <div
     className={rootClss}
     ref={rootRef}
     id={id}>
-    {moduleCss.map((css, cssPos) => <style key={cssPos}>
-      {`.${publicClassName}#${id} { ${css} }`}
-    </style>)}
+    {moduleCss !== undefined && <style>
+      {`.${publicClassName}#${id} { ${moduleCss} }`}
+    </style>}
   </div>
 }
