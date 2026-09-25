@@ -4,7 +4,7 @@ const EDGE_TOLERANCE = 1
 /** The layout, measured once, so that reading the active slot touches no element. */
 export type Geometry = {
   /** Scroll positions that bring each slot to the middle, clamped to the track. */
-  offsets: number[]
+  scrollPositions: number[]
   /** Midpoints between consecutive slot centres, in content coordinates. */
   boundaries: number[]
   /** Half the viewport, kept here rather than read again on every scroll. */
@@ -14,7 +14,7 @@ export type Geometry = {
 }
 
 export const EMPTY_GEOMETRY: Geometry = {
-  offsets: [],
+  scrollPositions: [],
   boundaries: [],
   halfViewport: 0,
   maxScroll: 0
@@ -23,9 +23,9 @@ export const EMPTY_GEOMETRY: Geometry = {
 /**
  * Everything the gallery needs to know about its own layout.
  *
- * Positions are taken against the scroller's own box rather than `offsetLeft`, which is
- * relative to whichever ancestor happens to be positioned — so a gallery nested anywhere
- * measures the same.
+ * Positions are taken against the scroller's own box rather than the DOM's `offsetLeft`,
+ * which is relative to whichever ancestor happens to be positioned — so a gallery nested
+ * anywhere measures the same.
  *
  * **Boundaries come from slot centres, and scroll positions are clamped.** Keeping them
  * apart is what avoids ties: two slots at the same end of the track share a scroll
@@ -41,7 +41,7 @@ export function measureGeometry (scroller: HTMLElement): Geometry {
     return rect.left - scrollerLeft + scrollLeft + rect.width / 2
   })
   return {
-    offsets: centers.map(center => Math.min(Math.max(center - halfViewport, 0), maxScroll)),
+    scrollPositions: centers.map(center => Math.min(Math.max(center - halfViewport, 0), maxScroll)),
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- i is in range by construction, centers[i] sits before the one being mapped
     boundaries: centers.slice(1).map((center, i) => (centers[i]! + center) / 2),
     halfViewport,

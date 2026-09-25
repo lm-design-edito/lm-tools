@@ -24,8 +24,8 @@ import {
 } from './utils.js'
 import cssModule from './styles.module.css'
 
-/** Resolves one side's padding to a CSS length, falling back to the shorthand then to `0px`. */
-function resolvePadding (
+/** Resolves one side's offset to a CSS length, falling back to the shorthand then to `0px`. */
+function resolveOffset (
   side: string | number | undefined,
   shorthand: string | number | undefined
 ): string {
@@ -36,10 +36,10 @@ function resolvePadding (
 /**
  * Props for the Gallery component.
  *
- * @property paddingLeft - Left padding applied to the first slot. A number is pixels.
- * Falls back to `padding`, then `0px`.
- * @property paddingRight - Right padding applied to the last slot. Same rules.
- * @property padding - Shorthand for both ends, used when a side is not set.
+ * @property offsetLeft - Room kept before the first slot, so it can reach the middle
+ * like any other. A number is pixels. Falls back to `offset`, then `0px`.
+ * @property offsetRight - Room kept after the last slot. Same rules.
+ * @property offset - Shorthand for both ends, used when a side is not set.
  * @property prevButtonContent - Content of the "previous" control. Defaults to `"prev"`.
  * @property nextButtonContent - Content of the "next" control. Defaults to `"next"`.
  * @property paginationContent - Content of each pagination item: a node used for all of
@@ -60,9 +60,9 @@ function resolvePadding (
  * @property children - One slot per child.
  */
 export type Props = PropsWithChildren<WithClassName<{
-  paddingLeft?: string | number
-  paddingRight?: string | number
-  padding?: string | number
+  offsetLeft?: string | number
+  offsetRight?: string | number
+  offset?: string | number
   prevButtonContent?: ReactNode
   nextButtonContent?: ReactNode
   paginationContent?: ReactNode | ((page: number) => ReactNode)
@@ -107,9 +107,9 @@ export type Props = PropsWithChildren<WithClassName<{
  * reads as `0`.
  */
 export const Gallery: FunctionComponent<Props> = ({
-  paddingLeft,
-  paddingRight,
-  padding,
+  offsetLeft,
+  offsetRight,
+  offset,
   prevButtonContent,
   nextButtonContent,
   paginationContent,
@@ -164,9 +164,9 @@ export const Gallery: FunctionComponent<Props> = ({
 
   const scrollToSlot = useCallback((pos: number, smooth = true): void => {
     const scrollerElt = scrollerRef.current
-    const offset = geometryRef.current.offsets[pos]
-    if (scrollerElt === null || offset === undefined) return
-    scrollerElt.scrollTo({ left: offset, behavior: smooth ? 'smooth' : 'instant' })
+    const scrollPosition = geometryRef.current.scrollPositions[pos]
+    if (scrollerElt === null || scrollPosition === undefined) return
+    scrollerElt.scrollTo({ left: scrollPosition, behavior: smooth ? 'smooth' : 'instant' })
   }, [])
 
   // User actions handlers
@@ -251,8 +251,8 @@ export const Gallery: FunctionComponent<Props> = ({
   const nextBtnClss = c('next')
   const paginationClss = c('pagination')
   const dataAttributes: Record<string, string> = { 'data-active': `${activeIndex}` }
-  const actualPaddingLeft = resolvePadding(paddingLeft, padding)
-  const actualPaddingRight = resolvePadding(paddingRight, padding)
+  const actualOffsetLeft = resolveOffset(offsetLeft, offset)
+  const actualOffsetRight = resolveOffset(offsetRight, offset)
   return <div
     className={rootClss}
     {...dataAttributes}>
@@ -263,10 +263,10 @@ export const Gallery: FunctionComponent<Props> = ({
         const slotClss = c('slot', { active: pos === activeIndex })
         const style: Record<string, string | undefined> = {
           'margin-left': pos === 0
-            ? actualPaddingLeft
+            ? actualOffsetLeft
             : undefined,
           'margin-right': pos === childrenCount - 1
-            ? actualPaddingRight
+            ? actualOffsetRight
             : undefined
         }
         return <div
