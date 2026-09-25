@@ -28,11 +28,11 @@ Coding conventions live in [CLAUDE.md](./CLAUDE.md) and in the root
 
 ## Où en est la bibliothèque
 
-**Un seul chantier en attente sur les composants : `UIModule`**, dont le contrat
-promet ce que le code ne fait pas — voir « `UIModule` — le contrat à mettre en
-conformité » plus bas. Le reste est fait : la passe d'alignement, la reprise de
-`Subtitles`, celle de `Video` et le chantier `Scrllgngn` ; les états internes
-remontent tous en modifieurs de classe racine.
+**Rien en attente sur les composants**, mais un constat non résolu qui les traverse :
+voir « Le trou de synchronisation des événements de `Scrllgngn` » plus bas. La passe
+d'alignement, la reprise de `Subtitles`, celle de `Video`, le chantier `Scrllgngn` et
+la mise en conformité d'`UIModule` sont faits ; les états internes remontent tous en
+modifieurs de classe racine.
 
 lm-tools n'est pas le sujet principal pour l'instant : l'attention va à la première
 publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là —
@@ -40,47 +40,23 @@ publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là
 gardant que la coquille CLI chez lui. C'est le prochain vrai chantier de ce dépôt,
 et il n'ouvrira qu'une fois lm-link publié.
 
-## `UIModule` — le contrat à mettre en conformité
+## Le trou de synchronisation des événements de `Scrllgngn`
 
-Le contrat `ModuleData` décrit un cycle de vie que le composant ne tient qu'à moitié.
-Relevé en préparant la fiche `ui-module` de lm-link.
+Constaté en préparant la fiche `ui-module` de lm-link, et **pas propre à `UIModule` :
+il concerne tout consommateur JS des événements de `Scrllgngn`.**
 
-| # | Sujet | État | Ce qu'il faut faire |
-|---|-------|------|---------------------|
-| 1 | **`destroy` optionnel** | requis aujourd'hui | Un module sans rien à défaire est puni comme un module cassé : l'oubli fait échouer la **validation**, donc rien ne s'initialise et la racine passe en `--error`. Type en `destroy?:`, branche de validation alignée sur celle d'`update`, appel en `?.`. |
-| 2 | **`update` réellement appelé** | déclaré, validé, jamais appelé | Un effet sur `[props]` — la référence du record, pas son contenu : le composant ne sait rien des valeurs, une comparaison profonde y serait coûteuse et fausse. Un appelant qui écrit son objet en ligne reçoit donc un appel par rendu, un appelant qui mémoïse n'en reçoit que sur changement réel. Ne rien faire si le module n'exporte pas `update` : ré-initialiser détruirait son état sur un changement qu'il n'a pas demandé à suivre. |
-| 3 | **`postInit` ajouté au contrat** | n'existe pas | `postInit?: (target: Element, props) => void`, appelé dans l'effet `[moduleTarget]` juste après l'`appendChild`. C'est le seul moment où le module tient un élément **attaché** : `init` travaille sur un nœud détaché, donc y mesurer une boîte rend des zéros et `closest()` rend `null`, sans que rien ne lève. |
-| 4 | **Les props courantes au `init`** | périmées possible | `props` est capturé dans la fermeture de l'effet `[src]`. S'il change pendant que l'import est en vol, `init` reçoit l'objet d'avant. Une ref tenue à jour règle celui-ci et sert aux trois autres. |
-| 5 | **La doc du composant** | promet le contraire | Elle annonce `update` « called when props change », ce qui est faux, et ne dit nulle part qu'`init` reçoit un nœud détaché — la seule phrase qui éviterait la moitié des surprises. |
+Un module vivant dans un bloc fixe écoute ce que le bloc dispatche via `onScrolled`. Or
+`Scrllgngn` fait une passe de mesure dès l'abonnement, sans attendre un scroll : le
+contexte vrai est donc émis **une fois**, au montage. Un module chargé par `import()`
+naît après. Il rate cette émission, et le garde `contextsAreEqual` empêche toute
+ré-émission tant que rien ne bouge.
 
-Deux remarques que le tableau ne porte pas :
-
-- **`postInit` plutôt qu'un premier `update` d'office.** Les deux fermaient le même trou,
-  mais surcharger `update` lui aurait donné deux sens — « tu es dans le document » une
-  fois, « les props ont changé » N fois — et obligé chaque module à porter un drapeau pour
-  les distinguer. Un export de plus contre un drapeau dans chaque module : le cycle de vie
-  de l'hôte devient lisible dans le contrat au lieu d'être deviné.
-- **En hyper-json, `update` ne sera jamais appelé**, les props d'un article étant
-  statiques. Le point 2 est pour un consommateur React ; ce qui paie pour lm-link, c'est
-  le point 3.
-
-### Le trou de synchronisation, constaté et non résolu
-
-Reste un problème qu'aucun des cinq points ci-dessus ne ferme, et qui n'est pas propre à
-`UIModule` : **il concerne tout consommateur JS des événements de `Scrllgngn`.**
-
-Un module vivant dans un bloc fixe écoute les événements que le bloc dispatche via
-`onScrolled`. Or `Scrllgngn` fait une passe de mesure dès l'abonnement, sans attendre un
-scroll : le contexte vrai est donc émis **une fois**, au montage du scrllgngn. Un module
-chargé par `import()` naît après. Il rate cette émission, et le garde `contextsAreEqual`
-empêche toute ré-émission tant que rien ne bouge.
-
-**La condition exacte : bloc dans sa zone d'affichage au moment où le module naît, et
-lecteur immobile.** Le déclencheur le plus probable est un rechargement de page avec
-restauration du défilement — Chrome rend la main au milieu du document —, mais un import
-lent pendant que le lecteur entre en zone puis s'arrête produit le même état. Tant que le
-lecteur continue de défiler, la frame suivante redispatche et tout se répare seul : le
-trou ne persiste que dans l'immobilité.
+**La condition exacte : bloc dans sa zone d'affichage au moment où le consommateur
+naît, et lecteur immobile.** Le déclencheur le plus probable est un rechargement de page
+avec restauration du défilement — Chrome rend la main au milieu du document —, mais un
+import lent pendant que le lecteur entre en zone puis s'arrête produit le même état. Tant
+que le lecteur défile, la frame suivante redispatche et tout se répare seul : le trou ne
+persiste que dans l'immobilité.
 
 Ce n'est **pas** un problème hors zone d'affichage : là, il n'y a rien de vrai à dire —
 `indexOfCurrentPageInDisplayZone` vaudrait `-1`, `contiguousDisplayZone` serait vide — et
@@ -89,8 +65,27 @@ le bloc.
 
 Une piste existe et n'est pas instruite : la projection DOM du contexte — les trois
 propriétés personnalisées et les cinq attributs `data-` — est un **état** qui reste
-lisible à tout moment, là où l'événement est un front qui passe une fois. Elle rendrait la
-naissance du module indifférente à l'heure. À trancher plus tard.
+lisible à tout moment, là où l'événement est un front qui passe une fois. Avec
+`postInit`, qui donne au module un élément attaché, elle rendrait sa naissance
+indifférente à l'heure. À trancher.
+
+### Ce que la mise en conformité d'`UIModule` a réglé, et ce qu'elle n'a pas réglé
+
+Le contrat `ModuleData` décrivait un cycle de vie que le composant ne tenait qu'à moitié.
+C'est fait : `destroy` est optionnel — son oubli faisait échouer la **validation**, donc
+un module sans rien à défaire était puni comme un module cassé ; `update` est réellement
+appelé, sur changement d'**identité** du record de props, le composant ne sachant rien des
+valeurs ; `postInit` a été ajouté, appelé juste après l'`appendChild`, seul moment où le
+module tient un élément attaché — `init` travaille sur un nœud détaché, où mesurer une
+boîte rend des zéros sans que rien ne lève ; et `init` lit désormais les props courantes
+par une ref, au lieu de celles capturées dans la fermeture de l'effet `[src]`.
+
+**`postInit` plutôt qu'un premier `update` d'office** : les deux fermaient le même trou,
+mais surcharger `update` lui aurait donné deux sens et obligé chaque module à porter un
+drapeau pour les distinguer.
+
+**En hyper-json, `update` ne sera jamais appelé**, les props d'un article étant statiques.
+Il a été réparé pour un consommateur React ; ce qui paie pour lm-link, c'est `postInit`.
 
 ## Formater un temps — une seule grammaire pour les dates et les durées
 
