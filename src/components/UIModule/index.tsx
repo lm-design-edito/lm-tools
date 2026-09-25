@@ -27,7 +27,9 @@ import cssModule from './styles.module.css'
  * error state.
  * @property postInit - Optional. Called once, right after the element returned by
  * `init` has been appended. First point at which the module holds an attached
- * element: layout can be measured and ancestors reached.
+ * element: layout can be measured and ancestors reached. **May return a teardown
+ * function**, run at unmount before `destroy` — which lets whatever it set up stay in
+ * its own closure instead of being filed somewhere `destroy` can find it again.
  * @property update - Optional. Called when the `props` object changes identity,
  * once the module is live. Compared by reference, not by value — a consumer passing
  * an inline object gets one call per render, one passing a stable reference gets one
@@ -41,7 +43,8 @@ import cssModule from './styles.module.css'
  */
 type ModuleData = {
   init: (props: Record<string, unknown>) => Element
-  postInit?: (target: Element, props: Record<string, unknown>) => void
+  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type -- same optional-teardown return as React's own EffectCallback; a module returning nothing has to stay valid
+  postInit?: (target: Element, props: Record<string, unknown>) => void | (() => void)
   update?: (target: Element, props: Record<string, unknown>) => void
   destroy?: (target: Element) => void
   css?: string[]
@@ -51,6 +54,7 @@ type ModuleData = {
 type LiveInstance = {
   module: ModuleData
   target: Element
+  cleanup?: () => void
 }
 
 /**
@@ -93,7 +97,8 @@ export type Props = WithClassName<{
  * ### Lifecycle
  * `init(props)` builds the element, **detached**. It is appended, then `postInit`
  * runs on it attached. `update` follows each change of the `props` object's
- * identity, and `destroy` runs on unmount or when `src` changes.
+ * identity. At unmount, or when `src` changes, the teardown `postInit` returned runs
+ * first, then `destroy`.
  *
  * ### CSS modifiers
  * Reflecting the current load lifecycle:
@@ -187,6 +192,9 @@ export const UIModule: FunctionComponent<Props> = ({
     return () => {
       const liveInstance = liveInstanceRef.current
       if (liveInstance === null) return
+      // The teardown `postInit` handed back first: it undoes what `postInit` did, so it
+      // runs in reverse order of construction.
+      liveInstance.cleanup?.()
       liveInstance.module.destroy?.(liveInstance.target)
       liveInstanceRef.current = null
     }
@@ -205,7 +213,10 @@ export const UIModule: FunctionComponent<Props> = ({
     if (moduleTarget === null) return
     if (rootRef.current === null) return
     rootRef.current.appendChild(moduleTarget)
-    liveInstanceRef.current?.module.postInit?.(moduleTarget, propsRef.current ?? {})
+    const liveInstance = liveInstanceRef.current
+    if (liveInstance === null) return
+    const cleanup = liveInstance.module.postInit?.(moduleTarget, propsRef.current ?? {})
+    if (typeof cleanup === 'function') liveInstance.cleanup = cleanup
   }, [moduleTarget])
 
   // Fx. dep. `props` - hand a props change to a module that is already live. Compared
