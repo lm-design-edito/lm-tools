@@ -3,9 +3,10 @@ import {
   type PropsWithChildren,
   type ReactNode,
   Children,
+  useCallback,
   useEffect,
-  useState,
-  useRef
+  useRef,
+  useState
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import type { WithClassName } from '../utils/types.js'
@@ -14,7 +15,13 @@ import {
   useChangeDispatch
 } from '../utils/index.js'
 import { gallery as publicClassName } from '../public-classnames.js'
-import { forceActivateSlot } from './utils.js'
+import {
+  EMPTY_GEOMETRY,
+  measureGeometry,
+  readActiveIndex,
+  readReach,
+  type Geometry
+} from './utils.js'
 import cssModule from './styles.module.css'
 
 /** Resolves one side's padding to a CSS length, falling back to the shorthand then to `0px`. */
@@ -29,40 +36,28 @@ function resolvePadding (
 /**
  * Props for the Gallery component.
  *
- * @property paddingLeft - Left padding applied to the first slot. Accepts a number (pixels) or any valid CSS length value.
- * If not provided, falls back to `padding` or `0px`.
- * @property paddingRight - Right padding applied to the last slot. Accepts a number (pixels) or any valid CSS length value.
- * If not provided, falls back to `padding` or `0px`.
- * @property padding - Shorthand horizontal padding applied to both ends when `paddingLeft` and/or `paddingRight`
- * are not explicitly defined. Accepts a number (pixels) or any valid CSS length value.
- * @property prevButtonContent - Content rendered inside the "previous" navigation control.
- * Defaults to the string `"prev"` when not provided.
- * @property nextButtonContent - Content rendered inside the "next" navigation control.
- * Defaults to the string `"next"` when not provided.
- * @property paginationContent - Content rendered inside each pagination item.
- * Can be:
- * - A ReactNode used for all pages,
- * - A function receiving the page index and returning a ReactNode,
- * - Undefined, in which case the page index is displayed.
- * @property defaultActive - Optional. When uncontrolled mode, sets the default active slot at mount
- * @property active - Optional controlled index. When provided, the active slot is driven by this
- * value instead of internal scroll-derived state. When omitted, the component manages its own
- * active index based on scroll position.
- * @property noSnap - Optional, defines if scroll is free in side the scroller or not (defaults to false)
- * @property onPrevClicked - Called when the "previous" control is clicked,
- * before the gallery reacts, with the active index as it was.
- * @property onNextClicked - Called when the "next" control is clicked, before
- * the gallery reacts, with the active index as it was.
- * @property onPaginationClicked - Called when a pagination item is clicked,
- * before the gallery reacts, with the active index as it was and the target index.
- * @property onActiveSlotChanged - Called after the active slot changed, with
- * the new index.
- * @property onCanGoLeftChanged - Called after the ability to scroll further left
- * changed, with the new value. Never on mount.
- * @property onCanGoRightChanged - Called after the ability to scroll further
- * right changed, with the new value. Never on mount.
- * @property className - Optional additional class name(s) applied to the root element.
- * @property children - Elements rendered as gallery slots. Each child is wrapped in a slot container.
+ * @property paddingLeft - Left padding applied to the first slot. A number is pixels.
+ * Falls back to `padding`, then `0px`.
+ * @property paddingRight - Right padding applied to the last slot. Same rules.
+ * @property padding - Shorthand for both ends, used when a side is not set.
+ * @property prevButtonContent - Content of the "previous" control. Defaults to `"prev"`.
+ * @property nextButtonContent - Content of the "next" control. Defaults to `"next"`.
+ * @property paginationContent - Content of each pagination item: a node used for all of
+ * them, a function of the page index, or undefined to show the index.
+ * @property defaultActive - Slot to scroll to at mount, in uncontrolled mode.
+ * @property active - Controlled index. When set, the active slot is this one and hand
+ * scrolling is disabled.
+ * @property noSnap - Frees the scroll from snapping to a slot.
+ * @property onPrevClicked - Fires before the gallery reacts, with the index as it was.
+ * @property onNextClicked - Fires before the gallery reacts, with the index as it was.
+ * @property onPaginationClicked - Fires before the gallery reacts, with the index as it
+ * was and the one aimed at.
+ * @property onActiveSlotChanged - Fires after the active slot changed, with the new index.
+ * @property onCanGoLeftChanged - Fires after the ability to scroll further left changed.
+ * Never on mount.
+ * @property onCanGoRightChanged - Same, to the right.
+ * @property className - Added to the root element.
+ * @property children - One slot per child.
  */
 export type Props = PropsWithChildren<WithClassName<{
   paddingLeft?: string | number
@@ -83,17 +78,33 @@ export type Props = PropsWithChildren<WithClassName<{
 }>>
 
 /**
- * Horizontally scrollable gallery component with navigation controls and pagination.
+ * Horizontally scrollable gallery, with navigation controls and pagination.
  *
- * Tracks the active slot based on scroll position and exposes state through CSS class names
- * and a `data-active` attribute on the root element.
+ * Geometry is measured **once per layout change** into a table of scroll positions, one
+ * per slot, and the boundaries between them. A scroll event then only has to place a
+ * number between two others — no element is measured while the reader scrolls.
+ *
+ * The same table is what the controls scroll to, so reading the active slot and moving
+ * to one cannot disagree, with or without snapping.
+ *
+ * ### CSS elements
+ * - `scroller`
+ * - `slot`, `slot--active`
+ * - `actions`, `prev`, `next`
+ * - `pagination`, `page`, `page--active`
+ *
+ * Root modifiers: `controlled`, `no-snap`, `measured`, `at-first`, `at-last`,
+ * `can-go-left`, `can-go-right`.
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A container element wrapping:
- * - A scrollable area containing each child in a slot wrapper,
- * - Previous/next navigation controls,
- * - Pagination controls allowing direct slot activation.
+ * @returns A container wrapping the scroller, the two controls and the pagination.
+ *
+ * @remarks
+ * Nothing is measured while the reader scrolls: the table is rebuilt only when a box
+ * changes size or a slot is added, watched through a `ResizeObserver`. Until the first
+ * measurement lands, the root carries no `measured` modifier and every slot position
+ * reads as `0`.
  */
 export const Gallery: FunctionComponent<Props> = ({
   paddingLeft,
@@ -116,92 +127,117 @@ export const Gallery: FunctionComponent<Props> = ({
 }) => {
   // State & refs
   const scrollerRef = useRef<HTMLDivElement>(null)
-  const [activeIndex, setActiveIndex] = useState(0)
+  const geometryRef = useRef<Geometry>(EMPTY_GEOMETRY)
+  const [scrolledIndex, setScrolledIndex] = useState(0)
+  const [isMeasured, setIsMeasured] = useState(false)
   const [canGoLeft, setCanGoLeft] = useState(false)
   const [canGoRight, setCanGoRight] = useState(false)
   const childrenCount = Children.count(children)
   const isControlled = active !== undefined
+  // Controlled, the prop is the answer: the class names and `data-active` say where the
+  // gallery was told to be, rather than where a smooth scroll has got to so far.
+  const activeIndex = active ?? scrolledIndex
 
   // State dispatch
   useChangeDispatch(activeIndex, onActiveSlotChanged)
   useChangeDispatch(canGoLeft, onCanGoLeftChanged)
   useChangeDispatch(canGoRight, onCanGoRightChanged)
 
+  const readScroll = useCallback((): void => {
+    const scrollerElt = scrollerRef.current
+    if (scrollerElt === null) return
+    const { scrollLeft } = scrollerElt
+    const geometry = geometryRef.current
+    setScrolledIndex(readActiveIndex(geometry, scrollLeft))
+    const { canGoLeft, canGoRight } = readReach(geometry, scrollLeft)
+    setCanGoLeft(canGoLeft)
+    setCanGoRight(canGoRight)
+  }, [])
+
+  const measure = useCallback((): void => {
+    const scrollerElt = scrollerRef.current
+    if (scrollerElt === null) return
+    geometryRef.current = measureGeometry(scrollerElt)
+    setIsMeasured(true)
+    readScroll()
+  }, [readScroll])
+
+  const scrollToSlot = useCallback((pos: number, smooth = true): void => {
+    const scrollerElt = scrollerRef.current
+    const offset = geometryRef.current.offsets[pos]
+    if (scrollerElt === null || offset === undefined) return
+    scrollerElt.scrollTo({ left: offset, behavior: smooth ? 'smooth' : 'instant' })
+  }, [])
+
   // User actions handlers
   const handlePrevClick = (): void => {
     onPrevClicked?.(activeIndex)
     if (isControlled) return
-    forceActivateSlot(scrollerRef.current, activeIndex - 1)
+    scrollToSlot(activeIndex - 1)
   }
   const handleNextClick = (): void => {
     onNextClicked?.(activeIndex)
     if (isControlled) return
-    forceActivateSlot(scrollerRef.current, activeIndex + 1)
+    scrollToSlot(activeIndex + 1)
   }
   const handlePaginationClick = (pos: number): void => {
     onPaginationClicked?.(activeIndex, pos)
     if (isControlled) return
-    forceActivateSlot(scrollerRef.current, pos)
+    scrollToSlot(pos)
   }
 
-  // Scroll position calculation
+  // Fx. dep. childrenCount - Measure, and measure again whenever a box changes size.
+  // Watching the slots and not only the scroller is what makes a late image or font
+  // land correctly, where a delay after mount could only guess.
   useEffect(() => {
     const scrollerElt = scrollerRef.current
     if (scrollerElt === null) return
-    scrollerElt.scrollBy(-1, 0)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(scrollerElt)
+    Array.from(scrollerElt.children).forEach(child => observer.observe(child))
+    return (): void => observer.disconnect()
+  }, [childrenCount, measure])
+
+  // Fx. no dep. - One read per frame while scrolling, and it touches no element.
+  useEffect(() => {
+    const scrollerElt = scrollerRef.current
+    if (scrollerElt === null) return
     let animationFrame: number | null = null
-    const update = (): void => {
-      animationFrame = null
-      const { scrollLeft, clientWidth, scrollWidth } = scrollerElt
-      const center = scrollLeft + clientWidth / 2
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- scrollerElt.children (HTMLCollection) always contains Element/HTMLElement nodes
-      const children = Array.from(scrollerElt.children) as HTMLElement[]
-      let closestIndex = 0
-      let closestDistance = Infinity
-      children.forEach((child, index) => {
-        const childCenter = child.offsetLeft + child.offsetWidth / 2
-        const distance = Math.abs(center - childCenter)
-        if (distance < closestDistance) {
-          closestDistance = distance
-          closestIndex = index
-        }
-      })
-      setActiveIndex(closestIndex)
-      setCanGoLeft(scrollLeft > 0)
-      setCanGoRight(scrollLeft + clientWidth < scrollWidth)
-    }
     const onScroll = (): void => {
       if (animationFrame !== null) return
-      animationFrame = requestAnimationFrame(update)
+      animationFrame = requestAnimationFrame(() => {
+        animationFrame = null
+        readScroll()
+      })
     }
     scrollerElt.addEventListener('scroll', onScroll, { passive: true })
-    update()
     return (): void => {
       scrollerElt.removeEventListener('scroll', onScroll)
       if (animationFrame !== null) cancelAnimationFrame(animationFrame)
     }
-  }, [])
+  }, [readScroll])
 
-  // Sync scroll position to 'active' prop at mount time
+  // Fx. no dep. - Place the gallery where it starts, once the table exists.
   useEffect(() => {
     const toActivate = active ?? defaultActive
     if (toActivate === undefined) return
-    const id = setTimeout(() => forceActivateSlot(scrollerRef.current, toActivate, false), 50)
-    return () => clearTimeout(id)
+    scrollToSlot(toActivate, false)
   }, [])
 
-  // Sync scroll position to 'active' prop
+  // Fx. dep. active - Follow the controlled index.
   useEffect(() => {
     if (active === undefined) return
-    forceActivateSlot(scrollerRef.current, active)
+    scrollToSlot(active)
   }, [active])
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(
     c(null, {
-      'controlled': active !== undefined,
+      'controlled': isControlled,
       'no-snap': noSnap === true,
+      'measured': isMeasured,
       'at-first': activeIndex === 0,
       'at-last': activeIndex === childrenCount - 1,
       'can-go-left': canGoLeft,
@@ -229,7 +265,7 @@ export const Gallery: FunctionComponent<Props> = ({
           'margin-left': pos === 0
             ? actualPaddingLeft
             : undefined,
-          'margin-right': pos === Children.count(children) - 1
+          'margin-right': pos === childrenCount - 1
             ? actualPaddingRight
             : undefined
         }
@@ -265,11 +301,9 @@ export const Gallery: FunctionComponent<Props> = ({
           className={pageClss}
           data-page={pos}
           onClick={() => handlePaginationClick(pos)}>
-          {typeof paginationContent === 'string'
-            ? paginationContent
-            : typeof paginationContent === 'function'
-              ? paginationContent(pos)
-              : pos}
+          {typeof paginationContent === 'function'
+            ? paginationContent(pos)
+            : paginationContent ?? pos}
         </div>
       })}
     </div>
