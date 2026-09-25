@@ -100,8 +100,8 @@ const LAST_STEP_ATTRIBUTE = 'data-last-step'
  * is a step per second. Clamped to a minimum of `1`.
  * @property loop - Whether the sequence wraps round. **`false` by default**, so a
  * sequence ends the way a video does rather than running forever.
- * @property onStepChanged - Called when the position changes, with the position and the
- * active step it resolves to. Never on mount.
+ * @property onStepChanged - Called when the position changes, with `step` and the
+ * `activeStep` it resolves to. Never on mount.
  * @property onIsPlayingChanged - Called once the effective play state changed — which
  * includes it dropping to `false` on its own at the end.
  * @property onIsEndedChanged - Called when the sequence ends, or leaves that state.
@@ -123,7 +123,7 @@ export type Props = PropsWithChildren<WithClassName<{
   defaultPlay?: boolean
   tempo?: number
   loop?: boolean
-  onStepChanged?: (step: number, activeStep: number) => void
+  onStepChanged?: (payload: { step: number, activeStep: number }) => void
   onIsPlayingChanged?: (isPlaying: boolean) => void
   onIsEndedChanged?: (isEnded: boolean) => void
   onLooped?: () => void
@@ -402,7 +402,7 @@ export const Sequencer: FunctionComponent<Props> = ({
   )
 
   // State dispatch
-  useChangeDispatch(position, () => onStepChanged?.(position, activeStep))
+  useChangeDispatch(position, () => onStepChanged?.({ step: position, activeStep }))
   useChangeDispatch(isPlaying, onIsPlayingChanged)
   useChangeDispatch(isEnded, onIsEndedChanged)
   useChangeDispatch(position === 0, atStart => { if (atStart) onReachedFirstStep?.() })

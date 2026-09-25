@@ -150,8 +150,8 @@ export type PropsPage = {
  * - `'both'`   — forces blocks on both sides.
  * - `'none'`   — no forcing (default behaviour).
  * @property onPageChanged - Called once the current page has changed, never on
- * mount. Receives the zero-based index of the new current page and the
- * corresponding page definition, if available.
+ * mount. Receives `currentPagePos`, the zero-based index of the new current page,
+ * and `pageData`, its definition when there is one.
  * @property onContentVisibilityChanged - Called after the scrolling content
  * area entered or left the viewport, with the new value. Never on mount.
  * @property className - Optional additional class name(s) applied to the root
@@ -166,7 +166,7 @@ export type Props = WithClassName<{
   viewportOffsetLeft?: ViewportOffset
   stickyBlocksLazyLoadDistance?: number
   forceStickBlocks?: 'before' | 'after' | 'both' | 'none'
-  onPageChanged?: (currentPagePos: number, pageData?: PropsPage) => void
+  onPageChanged?: (payload: { currentPagePos: number, pageData?: PropsPage }) => void
   onContentVisibilityChanged?: (isVisible: boolean) => void
 }>
 
@@ -420,7 +420,10 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   }, [isOnScreen, readVisibleZone])
 
   // Handlers
-  useChangeDispatch(currentPagePos, pagePos => onPageChanged?.(pagePos, pages?.[pagePos]))
+  useChangeDispatch(currentPagePos, pagePos => onPageChanged?.({
+    currentPagePos: pagePos,
+    pageData: pages?.[pagePos]
+  }))
   useChangeDispatch(contentVisible, onContentVisibilityChanged)
   const handleTopBoundDetect: IOCompProps['onIntersected'] = e => setTopVis(e.ioEntry?.isIntersecting ?? false)
   const handleCntDetect: IOCompProps['onIntersected'] = e => setCntVis(e.ioEntry?.isIntersecting ?? false)

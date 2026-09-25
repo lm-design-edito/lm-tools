@@ -44,10 +44,11 @@ type LoadedPageData<T> = {
  * `onPageFetchFailed` and retried according to `fetchRetriesNb`.
  * @property staleAfterMs - Delay after which a loaded page is refetched, counted
  * from its own last successful load. When omitted, pages are never refreshed.
- * @property onPageFetched - Called after a page's items have been stored. Not
- * called for a page dropped while its request was in flight.
- * @property onPageFetchFailed - Called on every failed attempt, not only once retries
- * are exhausted. When omitted, failures are logged with `console.warn`.
+ * @property onPageFetched - Called with `pagePos` and `items` after a page's items
+ * have been stored. Not called for a page dropped while its request was in flight.
+ * @property onPageFetchFailed - Called with `pagePos` and `error` on every failed
+ * attempt, not only once retries are exhausted. When omitted, failures are logged
+ * with `console.warn`.
  * @property fetchRetriesNb - Number of retries after a failed fetch. Defaults to
  * `Infinity`, so a page keeps retrying until it succeeds.
  * @property fetchRetriesDelayMs - Delay between two attempts. Defaults to `1000`.
@@ -59,8 +60,8 @@ export type Props<T> = Omit<ControlledProps<T>, 'itemsPages' | 'loadingPages' | 
   dropPagesFurtherThan?: number
   fetch: (page: number) => Promise<T[]>
   staleAfterMs?: number
-  onPageFetched?: (pagePos: number, items: T[]) => void
-  onPageFetchFailed?: (pagePos: number, error: Error) => void
+  onPageFetched?: (payload: { pagePos: number, items: T[] }) => void
+  onPageFetchFailed?: (payload: { pagePos: number, error: Error }) => void
   fetchRetriesNb?: number
   fetchRetriesDelayMs?: number
 }
@@ -150,7 +151,7 @@ export const ListLoader = <T,>({
 
   const reportFetchError = (page: number, err: unknown): void => {
     const error = toError(err)
-    if (onPageFetchFailed !== undefined) return onPageFetchFailed(page, error)
+    if (onPageFetchFailed !== undefined) return onPageFetchFailed({ pagePos: page, error })
     // eslint-disable-next-line no-console
     console.warn(`ListLoader failed to fetch page ${page}`, error)
   }
@@ -164,7 +165,7 @@ export const ListLoader = <T,>({
       .then(items => {
         if (!requestedPages.current.has(page)) return
         storePage(page, items)
-        onPageFetched?.(page, items)
+        onPageFetched?.({ pagePos: page, items })
         setPageLoading(page, false)
       })
       .catch((err: unknown) => {

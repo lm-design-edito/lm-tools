@@ -50,8 +50,8 @@ function resolveOffset (
  * @property noSnap - Frees the scroll from snapping to a slot.
  * @property onPrevClicked - Fires before the gallery reacts, with the index as it was.
  * @property onNextClicked - Fires before the gallery reacts, with the index as it was.
- * @property onPaginationClicked - Fires before the gallery reacts, with the index as it
- * was and the one aimed at.
+ * @property onPaginationClicked - Fires before the gallery reacts, with `activePos`
+ * as it was and `targetPos`, the one aimed at.
  * @property onActiveSlotChanged - Fires after the active slot changed, with the new index.
  * @property onCanGoLeftChanged - Fires after the ability to scroll further left changed.
  * Never on mount.
@@ -71,7 +71,7 @@ export type Props = PropsWithChildren<WithClassName<{
   noSnap?: boolean
   onPrevClicked?: (activePos: number) => void
   onNextClicked?: (activePos: number) => void
-  onPaginationClicked?: (activePos: number, targetPos: number) => void
+  onPaginationClicked?: (payload: { activePos: number, targetPos: number }) => void
   onActiveSlotChanged?: (activePos: number) => void
   onCanGoLeftChanged?: (canGoLeft: boolean) => void
   onCanGoRightChanged?: (canGoRight: boolean) => void
@@ -181,7 +181,7 @@ export const Gallery: FunctionComponent<Props> = ({
     scrollToSlot(activeIndex + 1)
   }
   const handlePaginationClick = (pos: number): void => {
-    onPaginationClicked?.(activeIndex, pos)
+    onPaginationClicked?.({ activePos: activeIndex, targetPos: pos })
     if (isControlled) return
     scrollToSlot(pos)
   }
