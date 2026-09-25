@@ -57,16 +57,18 @@ const tsxDetails = `/**
  * @property destroy - Optional. Called when the component unmounts or \`src\` changes.
  * Receives the \`Element\` previously returned by \`init\`. Use it to tear down event
  * listeners, timers, or third-party instances.
- * @property css - Optional array of raw CSS strings scoped automatically to
- * the host element via \`.<publicClassName>#<id> { … }\` and injected as
- * \`<style>\` elements.
+ * @property css - Optional stylesheet, injected in a \`<style>\` and wrapped in
+ * \`.<publicClassName>#<id> { … }\` so it reaches this instance and nothing else.
+ * **Write rules, not bare declarations**: a declaration would land on the host, which
+ * the module does not own — the consumer styles it, and the two would fight. Rules are
+ * resolved by CSS nesting, so they need only name what \`init\` built.
  */
 type ModuleData = {
   init: (props: Record<string, unknown>) => Element
   postInit?: (target: Element, props: Record<string, unknown>) => void | (() => void)
   update?: (target: Element, props: Record<string, unknown>) => void
   destroy?: (target: Element) => void
-  css?: string[]
+  css?: string
 }
 
 /**
