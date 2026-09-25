@@ -37,25 +37,33 @@ Used to scope the module's \`css\` entries to this specific instance.
 along with any \`<style>\` blocks exported by the module.`
 
 const tsxDetails = `/**
- * Describes the contract a dynamically imported UI module must satisfy.
- * Every member is validated at runtime after the import resolves.
+ * Describes the contract a dynamically imported UI module must satisfy. Only \`init\`
+ * is required; every member present is validated at runtime after the import resolves.
  *
- * @property init - Called once after the module loads. Receives the current
- * \`props\` and must return the root \`Element\` that will be appended to the
- * host \`<div>\`. Throwing inside \`init\` is caught and surfaced as an error state.
- * @property destroy - Called when the component unmounts or \`src\` changes.
- * Receives the \`Element\` previously returned by \`init\`. Use it to tear down
- * event listeners, timers, or third-party instances.
- * @property update - Optional. Called when \`props\` change after the module is
- * already initialized. Receives the live \`Element\` and the new props object.
+ * @property init - Called once after the module loads. Receives the current \`props\`
+ * and must return the root \`Element\` that will be appended to the host \`<div>\`.
+ * **The element is not in the document yet**, so measuring it or reaching its
+ * ancestors belongs in \`postInit\`, not here. Throwing is caught and surfaced as an
+ * error state.
+ * @property postInit - Optional. Called once, right after the element returned by
+ * \`init\` has been appended. First point at which the module holds an attached
+ * element: layout can be measured and ancestors reached.
+ * @property update - Optional. Called when the \`props\` object changes identity,
+ * once the module is live. Compared by reference, not by value — a consumer passing
+ * an inline object gets one call per render, one passing a stable reference gets one
+ * per real change.
+ * @property destroy - Optional. Called when the component unmounts or \`src\` changes.
+ * Receives the \`Element\` previously returned by \`init\`. Use it to tear down event
+ * listeners, timers, or third-party instances.
  * @property css - Optional array of raw CSS strings scoped automatically to
  * the host element via \`.<publicClassName>#<id> { … }\` and injected as
  * \`<style>\` elements.
  */
 type ModuleData = {
   init: (props: Record<string, unknown>) => Element
-  destroy: (target: Element) => void
+  postInit?: (target: Element, props: Record<string, unknown>) => void
   update?: (target: Element, props: Record<string, unknown>) => void
+  destroy?: (target: Element) => void
   css?: string[]
 }
 
@@ -63,11 +71,10 @@ type ModuleData = {
  * Props for the {@link UIModule} component.
  *
  * @property src - URL of the ES module to import dynamically. The module must
- * satisfy the {@link ModuleData} interface — \`init\` and \`destroy\` are required,
- * \`update\` and \`css\` are optional. When \`undefined\`, nothing is loaded and the
- * component stays in the \`--no-module\` state.
- * @property props - Arbitrary key-value object forwarded verbatim to the
- * module's \`init\` call and, on subsequent changes, to \`update\` (if exported).
+ * satisfy the {@link ModuleData} interface — only \`init\` is required. When
+ * \`undefined\`, nothing is loaded and the component stays in the \`--no-module\` state.
+ * @property props - Arbitrary key-value object forwarded verbatim to \`init\`, then to
+ * \`postInit\`, then to \`update\` whenever the object's identity changes.
  * @property onIdGenerated - Called once on mount with the instance's generated
  * \`id\`. The id never changes afterwards, so this fires exactly once.
  * @property onIsLoadingChanged - Called after the loading state changed, with
