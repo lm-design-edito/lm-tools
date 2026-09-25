@@ -23,11 +23,11 @@ and a \`data-active\` attribute on the root element.
 const tsxDetails = `/**
  * Props for the Gallery component.
  *
- * @property paddingLeft - Left padding applied to the first slot. Accepts a number (pixels) or any valid CSS length value.
- * If not provided, falls back to \`padding\` or \`0px\`.
- * @property paddingRight - Right padding applied to the last slot. Accepts a number (pixels) or any valid CSS length value.
- * If not provided, falls back to \`padding\` or \`0px\`.
- * @property padding - Shorthand horizontal padding applied to both ends when \`paddingLeft\` and/or \`paddingRight\`
+ * @property offsetLeft - Room kept before the first slot, so it can reach the middle like any other.
+ * Accepts a number (pixels) or any valid CSS length value. If not provided, falls back to \`offset\` or \`0px\`.
+ * @property offsetRight - Room kept after the last slot. Accepts a number (pixels) or any valid CSS length value.
+ * If not provided, falls back to \`offset\` or \`0px\`.
+ * @property offset - Shorthand for both ends, applied when \`offsetLeft\` and/or \`offsetRight\`
  * are not explicitly defined. Accepts a number (pixels) or any valid CSS length value.
  * @property prevButtonContent - Content rendered inside the "previous" navigation control.
  * Defaults to the string \`"prev"\` when not provided.
@@ -55,9 +55,9 @@ const tsxDetails = `/**
  * @property children - Elements rendered as gallery slots. Each child is wrapped in a slot container.
  */
 export type Props = PropsWithChildren<WithClassName<{
-  paddingLeft?: string | number
-  paddingRight?: string | number
-  padding?: string | number
+  offsetLeft?: string | number
+  offsetRight?: string | number
+  offset?: string | number
   prevButtonContent?: ReactNode
   nextButtonContent?: ReactNode
   paginationContent?: ReactNode | ((page: number) => ReactNode)
@@ -117,8 +117,8 @@ const demoStyles = `
 }`
 
 const demoProps: GalleryProps = {
-  paddingLeft: '30%',
-  paddingRight: '30%',
+  offsetLeft: '30%',
+  offsetRight: '30%',
   prevButtonContent: <button>‹</button>,
   nextButtonContent: <button>›</button>,
   paginationContent: page => `${page}`,
