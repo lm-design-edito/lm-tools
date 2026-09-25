@@ -128,8 +128,8 @@ export type Props<T> = Omit<ControlledProps<T>, 'itemsPages' | 'loadingPages' | 
   dropPagesFurtherThan?: number
   fetch: (page: number) => Promise<T[]>
   staleAfterMs?: number
-  onPageFetched?: (pagePos: number, items: T[]) => void
-  onPageFetchFailed?: (pagePos: number, error: Error) => void
+  onPageFetched?: (payload: { pagePos: number, items: T[] }) => void
+  onPageFetchFailed?: (payload: { pagePos: number, error: Error }) => void
   fetchRetriesNb?: number
   fetchRetriesDelayMs?: number
 }
@@ -194,8 +194,8 @@ const demoProps: ListLoaderProps<DemoItem> = {
   filter: () => true,
   display: item => <span>{item.label}</span>,
   getIdentifier: item => item.id,
-  onPageFetched: (pagePos, items) => console.log('loaded page', pagePos, items),
-  onPageFetchFailed: (pagePos, error) => console.log('failed page', pagePos, error)
+  onPageFetched: ({ pagePos, items }) => console.log('loaded page', pagePos, items),
+  onPageFetchFailed: ({ pagePos, error }) => console.log('failed page', pagePos, error)
 }
 
 export const ListLoaderDemo: FunctionComponent = () => {

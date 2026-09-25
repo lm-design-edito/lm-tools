@@ -70,7 +70,7 @@ export type Props = PropsWithChildren<WithClassName<{
   defaultPlay?: boolean
   tempo?: number
   loop?: boolean
-  onStepChanged?: (step: number, activeStep: number) => void
+  onStepChanged?: (payload: { step: number, activeStep: number }) => void
   onIsPlayingChanged?: (isPlaying: boolean) => void
   onIsEndedChanged?: (isEnded: boolean) => void
   onLooped?: () => void

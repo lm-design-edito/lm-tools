@@ -66,7 +66,7 @@ export type Props = PropsWithChildren<WithClassName<{
   noSnap?: boolean
   onPrevClicked?: (activePos: number) => void
   onNextClicked?: (activePos: number) => void
-  onPaginationClicked?: (activePos: number, targetPos: number) => void
+  onPaginationClicked?: (payload: { activePos: number, targetPos: number }) => void
   onActiveSlotChanged?: (activePos: number) => void
 }>>`
 

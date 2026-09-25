@@ -138,13 +138,13 @@ export type Props = WithClassName<{
   thresholdOffsetPercent?: number
   stickyBlocksLazyLoadDistance?: number
   forceStickBlocks?: 'before' | 'after' | 'both' | 'none'
-  onPageChanged?: (currentPagePos: number, pageData?: PropsPage) => void
+  onPageChanged?: (payload: { currentPagePos: number, pageData?: PropsPage }) => void
 }>`
 
 const demoProps: ScrllgngnProps = {
   forceStickBlocks: 'none',
   thresholdOffsetPercent: 80,
-  onPageChanged: (pos, data) => console.log(pos, data),
+  onPageChanged: ({ currentPagePos, pageData }) => console.log(currentPagePos, pageData),
   pages: [{
     id: 'premiere-page',
     blocks: [{
