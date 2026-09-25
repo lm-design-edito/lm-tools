@@ -17,25 +17,33 @@ import { uiModule as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
 /**
- * Describes the contract a dynamically imported UI module must satisfy.
- * Every member is validated at runtime after the import resolves.
+ * Describes the contract a dynamically imported UI module must satisfy. Only `init`
+ * is required; every member present is validated at runtime after the import resolves.
  *
- * @property init - Called once after the module loads. Receives the current
- * `props` and must return the root `Element` that will be appended to the
- * host `<div>`. Throwing inside `init` is caught and surfaced as an error state.
- * @property destroy - Called when the component unmounts or `src` changes.
- * Receives the `Element` previously returned by `init`. Use it to tear down
- * event listeners, timers, or third-party instances.
- * @property update - Optional. Called when `props` change after the module is
- * already initialized. Receives the live `Element` and the new props object.
+ * @property init - Called once after the module loads. Receives the current `props`
+ * and must return the root `Element` that will be appended to the host `<div>`.
+ * **The element is not in the document yet**, so measuring it or reaching its
+ * ancestors belongs in `postInit`, not here. Throwing is caught and surfaced as an
+ * error state.
+ * @property postInit - Optional. Called once, right after the element returned by
+ * `init` has been appended. First point at which the module holds an attached
+ * element: layout can be measured and ancestors reached.
+ * @property update - Optional. Called when the `props` object changes identity,
+ * once the module is live. Compared by reference, not by value — a consumer passing
+ * an inline object gets one call per render, one passing a stable reference gets one
+ * per real change.
+ * @property destroy - Optional. Called when the component unmounts or `src` changes.
+ * Receives the `Element` previously returned by `init`. Use it to tear down event
+ * listeners, timers, or third-party instances.
  * @property css - Optional array of raw CSS strings scoped automatically to
  * the host element via `.<publicClassName>#<id> { … }` and injected as
  * `<style>` elements.
  */
 type ModuleData = {
   init: (props: Record<string, unknown>) => Element
-  destroy: (target: Element) => void
+  postInit?: (target: Element, props: Record<string, unknown>) => void
   update?: (target: Element, props: Record<string, unknown>) => void
+  destroy?: (target: Element) => void
   css?: string[]
 }
 
@@ -49,11 +57,10 @@ type LiveInstance = {
  * Props for the {@link UIModule} component.
  *
  * @property src - URL of the ES module to import dynamically. The module must
- * satisfy the {@link ModuleData} interface — `init` and `destroy` are required,
- * `update` and `css` are optional. When `undefined`, nothing is loaded and the
- * component stays in the `--no-module` state.
- * @property props - Arbitrary key-value object forwarded verbatim to the
- * module's `init` call and, on subsequent changes, to `update` (if exported).
+ * satisfy the {@link ModuleData} interface — only `init` is required. When
+ * `undefined`, nothing is loaded and the component stays in the `--no-module` state.
+ * @property props - Arbitrary key-value object forwarded verbatim to `init`, then to
+ * `postInit`, then to `update` whenever the object's identity changes.
  * @property onIdGenerated - Called once on mount with the instance's generated
  * `id`. The id never changes afterwards, so this fires exactly once.
  * @property onIsLoadingChanged - Called after the loading state changed, with
@@ -79,8 +86,14 @@ export type Props = WithClassName<{
  * and appends that element to its own root `<div>`.
  *
  * The imported module is expected to conform to the {@link ModuleData} interface.
- * Any violation (missing exports, wrong types, `init` not returning an `Element`)
- * transitions the component into the `--error` state and logs to `console.error`.
+ * A missing `init`, a member of the wrong type, or an `init` not returning an
+ * `Element` transitions the component into the `--error` state and logs to
+ * `console.error`.
+ *
+ * ### Lifecycle
+ * `init(props)` builds the element, **detached**. It is appended, then `postInit`
+ * runs on it attached. `update` follows each change of the `props` object's
+ * identity, and `destroy` runs on unmount or when `src` changes.
  *
  * ### CSS modifiers
  * Reflecting the current load lifecycle:
@@ -119,11 +132,18 @@ export const UIModule: FunctionComponent<Props> = ({
   // What the teardown needs, held outside state so the load effect can depend on
   // `src` alone and still destroy whatever is actually live at cleanup time.
   const liveInstanceRef = useRef<LiveInstance | null>(null)
+  // The load effect depends on `src` alone, so the props it closes over are those of
+  // the render it ran on. This is what `init` and `postInit` read instead.
+  const propsRef = useRef(props)
 
   // State dispatch
   useChangeDispatch(isLoading, onIsLoadingChanged)
   useChangeDispatch(loadedModule, onLoadedModuleChanged)
   useChangeDispatch(moduleTarget, onModuleTargetChanged)
+
+  // Fx. no dep. - keep the latest props reachable from the effects that run outside
+  // their own render, declared first so they read this render's value and not the last
+  useEffect(() => { propsRef.current = props })
 
   // Fx. no dep. - report the generated id, which never changes afterwards
   useEffect(() => { onIdGenerated?.(id) }, [])
@@ -137,7 +157,8 @@ export const UIModule: FunctionComponent<Props> = ({
         setIsLoading(false)
         if (!isNonNullObject(data)) return setLoadedModule(new Error('Not a module'))
         if (!('init' in data) || typeof data.init !== 'function') return setLoadedModule(new Error('Module exported member `init` must be a function'))
-        if (!('destroy' in data) || typeof data.destroy !== 'function') return setLoadedModule(new Error('Module exported member `destroy` must be a function'))
+        if ('destroy' in data && typeof data.destroy !== 'function') return setLoadedModule(new Error('Module exported member `destroy` must be a function'))
+        if ('postInit' in data && typeof data.postInit !== 'function') return setLoadedModule(new Error('Module exported member `postInit` must be a function'))
         if ('css' in data) {
           if (!Array.isArray(data.css)) return setLoadedModule(new Error('Module exported member `css` must be an array of strings'))
           if (data.css.some(entry => typeof entry !== 'string')) return setLoadedModule(new Error('Module exported member `css` must be an array of strings'))
@@ -147,7 +168,7 @@ export const UIModule: FunctionComponent<Props> = ({
         const module = data as ModuleData
         setLoadedModule(module)
         try {
-          const target = module.init(props ?? {})
+          const target = module.init(propsRef.current ?? {})
           if (!(target instanceof Element)) return setLoadedModule(new Error('Module exported function `init` must return an Element'))
           liveInstanceRef.current = { module, target }
           setModuleTarget(target)
@@ -166,7 +187,7 @@ export const UIModule: FunctionComponent<Props> = ({
     return () => {
       const liveInstance = liveInstanceRef.current
       if (liveInstance === null) return
-      liveInstance.module.destroy(liveInstance.target)
+      liveInstance.module.destroy?.(liveInstance.target)
       liveInstanceRef.current = null
     }
   }, [src])
@@ -177,12 +198,24 @@ export const UIModule: FunctionComponent<Props> = ({
     if (loadedModule instanceof Error) console.error(loadedModule)
   }, [loadedModule])
 
-  // Fx. dep. `moduleTarget` - append the element the module built
+  // Fx. dep. `moduleTarget` - append the element the module built, then hand it back
+  // attached. `init` ran on a detached node, so this is the first point a module can
+  // measure its own box or reach an ancestor.
   useEffect(() => {
     if (moduleTarget === null) return
     if (rootRef.current === null) return
     rootRef.current.appendChild(moduleTarget)
+    liveInstanceRef.current?.module.postInit?.(moduleTarget, propsRef.current ?? {})
   }, [moduleTarget])
+
+  // Fx. dep. `props` - hand a props change to a module that is already live. Compared
+  // by reference: the component knows nothing of the values, so it leaves the call to
+  // the consumer's reference discipline and the module's own reading of what changed.
+  useEffect(() => {
+    const liveInstance = liveInstanceRef.current
+    if (liveInstance === null) return
+    liveInstance.module.update?.(liveInstance.target, props ?? {})
+  }, [props])
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
