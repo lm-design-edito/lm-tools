@@ -78,16 +78,16 @@ export const BeforeAfter: FunctionComponent<Props> = ({
     if (isControlled) return
     setInternalRatio(mode === 'horizontal' ? xRatio : yRatio)
   }
-  const handleDrag = (xRatio: number, yRatio: number): void => {
+  const handleDrag = ({ xRatio, yRatio }: { xRatio: number, yRatio: number }): void => {
     const x = toDividerRatio(xRatio)
     const y = toDividerRatio(yRatio)
-    onDragged?.(x, y)
+    onDragged?.({ xRatio: x, yRatio: y })
     moveDividerTo(x, y)
   }
-  const handleClick = (xRatio: number, yRatio: number): void => {
+  const handleClick = ({ xRatio, yRatio }: { xRatio: number, yRatio: number }): void => {
     const x = toDividerRatio(xRatio)
     const y = toDividerRatio(yRatio)
-    onClicked?.(x, y)
+    onClicked?.({ xRatio: x, yRatio: y })
     moveDividerTo(x, y)
   }
 

@@ -250,14 +250,14 @@ export const Video: FunctionComponent<Props> = ({
   }, [controlledProps.onLoadedMetadata, controlledProps.muted])
 
   // User actions
-  const handlePlayButtonClick = useCallback<NonNullable<Props['onPlayButtonClicked']>>((e, isPlaying, video) => {
-    onPlayButtonClicked?.(e, isPlaying, video)
+  const handlePlayButtonClick = useCallback<NonNullable<Props['onPlayButtonClicked']>>(payload => {
+    onPlayButtonClicked?.(payload)
     surrender('playback')
     setPlay(true)
   }, [onPlayButtonClicked, surrender])
 
-  const handlePauseButtonClick = useCallback<NonNullable<Props['onPauseButtonClicked']>>((e, isPlaying, video) => {
-    onPauseButtonClicked?.(e, isPlaying, video)
+  const handlePauseButtonClick = useCallback<NonNullable<Props['onPauseButtonClicked']>>(payload => {
+    onPauseButtonClicked?.(payload)
     surrender('playback')
     setPlay(false)
   }, [onPauseButtonClicked, surrender])
@@ -265,47 +265,47 @@ export const Video: FunctionComponent<Props> = ({
   // The picture toggles, where the two buttons each say one thing. It is the same gesture
   // as pressing one of them — a consumer tracking whether the reader has taken over
   // playback has to count this one too, since it is the same decision made elsewhere.
-  const handleVideoClick = useCallback<NonNullable<Props['onVideoClicked']>>((e, isPlaying, video) => {
-    onVideoClicked?.(e, isPlaying, video)
+  const handleVideoClick = useCallback<NonNullable<Props['onVideoClicked']>>(payload => {
+    onVideoClicked?.(payload)
     surrender('playback')
-    setPlay(!isPlaying)
+    setPlay(!payload.isPlaying)
   }, [onVideoClicked, surrender])
 
-  const handleLoudButtonClick = useCallback<NonNullable<Props['onLoudButtonClicked']>>((e, isLoud, video) => {
-    onLoudButtonClicked?.(e, isLoud, video)
+  const handleLoudButtonClick = useCallback<NonNullable<Props['onLoudButtonClicked']>>(payload => {
+    onLoudButtonClicked?.(payload)
     surrender('sound')
     setMute(false)
   }, [onLoudButtonClicked, surrender])
 
-  const handleMuteButtonClick = useCallback<NonNullable<Props['onMuteButtonClicked']>>((e, isLoud, video) => {
-    onMuteButtonClicked?.(e, isLoud, video)
+  const handleMuteButtonClick = useCallback<NonNullable<Props['onMuteButtonClicked']>>(payload => {
+    onMuteButtonClicked?.(payload)
     surrender('sound')
     setMute(true)
   }, [onMuteButtonClicked, surrender])
 
-  const handleRateRangeChange = useCallback<NonNullable<Props['onRateRangeChanged']>>((e, targetRate, currentRate, video) => {
-    onRateRangeChanged?.(e, targetRate, currentRate, video)
-    setPlaybackRate(targetRate)
+  const handleRateRangeChange = useCallback<NonNullable<Props['onRateRangeChanged']>>(payload => {
+    onRateRangeChanged?.(payload)
+    setPlaybackRate(payload.targetRate)
   }, [onRateRangeChanged])
 
-  const handleVolumeRangeChange = useCallback<NonNullable<Props['onVolumeRangeChanged']>>((e, targetVolume, currentVolume, video) => {
-    onVolumeRangeChanged?.(e, targetVolume, currentVolume, video)
+  const handleVolumeRangeChange = useCallback<NonNullable<Props['onVolumeRangeChanged']>>(payload => {
+    onVolumeRangeChanged?.(payload)
     surrender('sound')
-    setVolume(targetVolume)
+    setVolume(payload.targetVolume)
   }, [onVolumeRangeChanged, surrender])
 
-  const handleFullscreenButtonClick = useCallback<NonNullable<Props['onFullscreenButtonClicked']>>((e, isFullscreen, video) => {
-    onFullscreenButtonClicked?.(e, isFullscreen, video)
-    setFullscreen(!isFullscreen)
+  const handleFullscreenButtonClick = useCallback<NonNullable<Props['onFullscreenButtonClicked']>>(payload => {
+    onFullscreenButtonClicked?.(payload)
+    setFullscreen(!payload.isFullscreen)
   }, [onFullscreenButtonClicked])
 
   // Un seul bouton pour les deux sens, contrairement à lecture/pause et son/muet qui en
   // ont un chacun : ceux-là existent en paire dans le DOM et la feuille en montre un,
   // parce qu'ils portent deux glyphes opposés. Les sous-titres n'en portent qu'un, dont
   // seul l'habillage change — inutile d'en rendre deux pour n'en montrer jamais qu'un.
-  const handleSubtitlesButtonClick = useCallback<NonNullable<Props['onSubtitlesButtonClicked']>>((e, isSubtitlesOn, video) => {
-    onSubtitlesButtonClicked?.(e, isSubtitlesOn, video)
-    setSubtitlesOn(!isSubtitlesOn)
+  const handleSubtitlesButtonClick = useCallback<NonNullable<Props['onSubtitlesButtonClicked']>>(payload => {
+    onSubtitlesButtonClicked?.(payload)
+    setSubtitlesOn(!payload.isSubtitlesOn)
   }, [onSubtitlesButtonClicked])
 
   // `autoPlay` is forwarded to the element, but the play state is owned here, so

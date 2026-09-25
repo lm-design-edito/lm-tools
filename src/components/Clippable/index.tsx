@@ -31,7 +31,7 @@ const clippedModifierDurationMs = 3000
  * say different things, and an article that names one without the other means the other
  * to come from the stylesheet.
  * @property onCopyClicked - Called when the copy button is clicked, before the
- * clipboard content is resolved, with the container's raw HTML.
+ * clipboard content is resolved, with `event` and the container's `rawHtml`.
  * @property onClipped - Called once content has been written to the clipboard.
  * Not called when the write fails.
  * @property onCopyFailed - Called when the clipboard write throws, with the
@@ -43,10 +43,10 @@ export type Props = PropsWithChildren<WithClassName<{
   toClip?: string | ((curr: string | undefined) => string | undefined)
   copyBtnContent?: ReactNode
   clippedBtnContent?: ReactNode
-  onCopyClicked?: (
-    e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>,
-    rawContent: string | undefined
-  ) => void
+  onCopyClicked?: (payload: {
+    event: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>
+    rawHtml: string | undefined
+  }) => void
   onClipped?: (content: string) => void
   onCopyFailed?: (error: unknown) => void
 }>>
@@ -89,7 +89,7 @@ export const Clippable: FunctionComponent<Props> = ({
   // User action handlers
   const handleCopyClick = async (e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>): Promise<void> => {
     const rawHtml = contentRef.current?.innerHTML
-    onCopyClicked?.(e, rawHtml)
+    onCopyClicked?.({ event: e, rawHtml })
     const html = typeof toClip === 'string'
       ? toClip
       : typeof toClip === 'function'

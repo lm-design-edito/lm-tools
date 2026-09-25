@@ -23,9 +23,9 @@ import cssModule from './styles.module.css'
  * @property before - Content rendered in the first (before) panel.
  * @property after - Content rendered in the second (after) panel.
  * @property onDragged - Called on each pointer move while dragging, with the
- * pointer's x and y ratios relative to the component's bounds.
+ * pointer's `xRatio` and `yRatio` relative to the component's bounds.
  * @property onClicked - Called on pointer release when no drag occurred, with
- * the release position's x and y ratios.
+ * the release position's `xRatio` and `yRatio`.
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Arbitrary content to inject inside the component.
  */
@@ -34,8 +34,8 @@ export type Props = PropsWithChildren<WithClassName<{
   ratio?: number
   before?: ReactNode
   after?: ReactNode
-  onDragged?: (xRatio: number, yRatio: number) => void
-  onClicked?: (xRatio: number, yRatio: number) => void
+  onDragged?: (payload: { xRatio: number, yRatio: number }) => void
+  onClicked?: (payload: { xRatio: number, yRatio: number }) => void
 }>>
 
 /**
@@ -95,11 +95,11 @@ export const ControlledBeforeAfter: FunctionComponent<Props> = ({
   }
   const reportDrag = (clientX: number, clientY: number): void => {
     const ratios = getRatios(clientX, clientY)
-    if (ratios !== null) onDragged?.(ratios.xRatio, ratios.yRatio)
+    if (ratios !== null) onDragged?.(ratios)
   }
   const reportClick = (clientX: number, clientY: number): void => {
     const ratios = getRatios(clientX, clientY)
-    if (ratios !== null) onClicked?.(ratios.xRatio, ratios.yRatio)
+    if (ratios !== null) onClicked?.(ratios)
   }
 
   // User action handlers

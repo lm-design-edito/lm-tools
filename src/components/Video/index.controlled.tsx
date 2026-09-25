@@ -71,6 +71,10 @@ import {
  * to update the prop instead. Because a playing element advances the time by
  * itself, a controlled time also implies a stopped video: `play` and `autoPlay`
  * are ignored for as long as this prop is provided.
+ *
+ * Every action handler below receives one {@link VideoActionPayload}: the `event` that
+ * triggered it, the `videoElement` it acted on, and the values named in its own entry.
+ *
  * @property onPlayButtonClicked - Called when the play button is clicked, before
  * the component reacts, with the playback state as it was.
  * @property onPauseButtonClicked - Called when the pause button is clicked, before
@@ -131,6 +135,15 @@ import {
  *
  * Also inherits all standard HTML props for a <video> element.
  */
+/**
+ * What every action handler of this component carries: the event that triggered it, the
+ * `<video>` it acted on, and the values of that action.
+ */
+export type VideoActionPayload<E, T> = {
+  event: E
+  videoElement: HTMLVideoElement | null
+} & T
+
 export type Props = PropsWithChildren<WithClassName<{
   // The `<figure>` handed back to whoever renders this component. It exists for the
   // uncontrolled `Video` above it, which observes that element rather than wrapping it
@@ -158,16 +171,16 @@ export type Props = PropsWithChildren<WithClassName<{
   playbackRate?: number
   currentTimeMs?: number
   timeFormat?: string
-  onPlayButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isPlaying: boolean, video: HTMLVideoElement | null) => void
-  onPauseButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isPlaying: boolean, video: HTMLVideoElement | null) => void
-  onLoudButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isLoud: boolean, video: HTMLVideoElement | null) => void
-  onMuteButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isLoud: boolean, video: HTMLVideoElement | null) => void
-  onVolumeRangeChanged?: (e: React.ChangeEvent<HTMLInputElement>, targetVolume: number, currentVolume: number, video: HTMLVideoElement | null) => void
-  onRateRangeChanged?: (e: React.ChangeEvent<HTMLInputElement>, targetRate: number, currentRate: number, video: HTMLVideoElement | null) => void
-  onFullscreenButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isFullscreen: boolean, video: HTMLVideoElement | null) => void
-  onSubtitlesButtonClicked?: (e: React.MouseEvent<HTMLButtonElement>, isSubtitlesOn: boolean, video: HTMLVideoElement | null) => void
-  onTimelineClicked?: (e: React.MouseEvent<HTMLDivElement>, targetTime: number, currentTime: number, video: HTMLVideoElement | null) => void
-  onVideoClicked?: (e: React.MouseEvent<HTMLVideoElement>, isPlaying: boolean, video: HTMLVideoElement | null) => void
+  onPlayButtonClicked?: (payload: VideoActionPayload<React.MouseEvent<HTMLButtonElement>, { isPlaying: boolean }>) => void
+  onPauseButtonClicked?: (payload: VideoActionPayload<React.MouseEvent<HTMLButtonElement>, { isPlaying: boolean }>) => void
+  onLoudButtonClicked?: (payload: VideoActionPayload<React.MouseEvent<HTMLButtonElement>, { isLoud: boolean }>) => void
+  onMuteButtonClicked?: (payload: VideoActionPayload<React.MouseEvent<HTMLButtonElement>, { isLoud: boolean }>) => void
+  onVolumeRangeChanged?: (payload: VideoActionPayload<React.ChangeEvent<HTMLInputElement>, { targetVolume: number, currentVolume: number }>) => void
+  onRateRangeChanged?: (payload: VideoActionPayload<React.ChangeEvent<HTMLInputElement>, { targetRate: number, currentRate: number }>) => void
+  onFullscreenButtonClicked?: (payload: VideoActionPayload<React.MouseEvent<HTMLButtonElement>, { isFullscreen: boolean }>) => void
+  onSubtitlesButtonClicked?: (payload: VideoActionPayload<React.MouseEvent<HTMLButtonElement>, { isSubtitlesOn: boolean }>) => void
+  onTimelineClicked?: (payload: VideoActionPayload<React.MouseEvent<HTMLDivElement>, { targetTime: number, currentTime: number }>) => void
+  onVideoClicked?: (payload: VideoActionPayload<React.MouseEvent<HTMLVideoElement>, { isPlaying: boolean }>) => void
   onIsPlayingChanged?: (isPlaying: boolean) => void
   onIsFullscreenChanged?: (isFullscreen: boolean) => void
   onIsLoudChanged?: (isLoud: boolean) => void
@@ -345,7 +358,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   // Custom action handlers
   const handlePlayButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     const wasPlaying = videoRef.current?.paused === false
-    onPlayButtonClicked?.(e, wasPlaying, videoRef.current)
+    onPlayButtonClicked?.({ event: e, isPlaying: wasPlaying, videoElement: videoRef.current })
   }, [onPlayButtonClicked])
 
   // The picture as a play/pause surface. It reports and nothing more, like every other
@@ -359,44 +372,49 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   const handleVideoClick = useCallback((e: React.MouseEvent<HTMLVideoElement>) => {
     if (togglePlayOnClick !== true) return
     const wasPlaying = videoRef.current?.paused === false
-    onVideoClicked?.(e, wasPlaying, videoRef.current)
+    onVideoClicked?.({ event: e, isPlaying: wasPlaying, videoElement: videoRef.current })
   }, [togglePlayOnClick, onVideoClicked])
 
   const handlePauseButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     const wasPlaying = videoRef.current?.paused === false
-    onPauseButtonClicked?.(e, wasPlaying, videoRef.current)
+    onPauseButtonClicked?.({ event: e, isPlaying: wasPlaying, videoElement: videoRef.current })
   }, [onPauseButtonClicked])
 
   const handleLoudButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    onLoudButtonClicked?.(e, isLoud, videoRef.current)
+    onLoudButtonClicked?.({ event: e, isLoud, videoElement: videoRef.current })
   }, [onLoudButtonClicked, isLoud])
 
   const handleMuteButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    onMuteButtonClicked?.(e, isLoud, videoRef.current)
+    onMuteButtonClicked?.({ event: e, isLoud, videoElement: videoRef.current })
   }, [onMuteButtonClicked, isLoud])
 
   const handleFullscreenButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    onFullscreenButtonClicked?.(e, isFullscreen, videoRef.current)
+    onFullscreenButtonClicked?.({ event: e, isFullscreen, videoElement: videoRef.current })
   }, [onFullscreenButtonClicked, isFullscreen])
 
   const handleSubtitlesButtonClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    onSubtitlesButtonClicked?.(e, subtitlesOn, videoRef.current)
+    onSubtitlesButtonClicked?.({ event: e, isSubtitlesOn: subtitlesOn, videoElement: videoRef.current })
   }, [onSubtitlesButtonClicked, subtitlesOn])
 
   const handleVolumeRangeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const targetVolume = Number(e.currentTarget.value) / 100
-    onVolumeRangeChanged?.(e, targetVolume, volume, videoRef.current)
+    onVolumeRangeChanged?.({ event: e, targetVolume, currentVolume: volume, videoElement: videoRef.current })
   }, [onVolumeRangeChanged, volume])
 
   const handleRateRangeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    onRateRangeChanged?.(e, Number(e.currentTarget.value), playbackRate, videoRef.current)
+    onRateRangeChanged?.({
+      event: e,
+      targetRate: Number(e.currentTarget.value),
+      currentRate: playbackRate,
+      videoElement: videoRef.current
+    })
   }, [onRateRangeChanged, playbackRate])
 
   const handleTimelineClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (videoRef.current === null) return
     const progress = getTimelineClickProgress(e)
     const targetTime = progress * totalTime
-    onTimelineClicked?.(e, targetTime, currentTime, videoRef.current)
+    onTimelineClicked?.({ event: e, targetTime, currentTime, videoElement: videoRef.current })
     // A controlled time is the parent's to move: it is expected to update the
     // prop in response to this very handler.
     if (!isTimeControlled) {
