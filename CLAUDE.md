@@ -105,6 +105,11 @@ types. When the two disagree, Preact wins.
 One flat `on…` prop per callback — no `stateHandlers {}` / `actionHandlers {}` bags,
 and one handler per state item even when there are six, as on `Video`.
 
+**A handler takes exactly one argument.** Carrying more than one value means a named
+record — `onPaginationClicked({ activePos, targetPos })` —, never positional
+parameters. Every handler then has the same shape, the call site says what each value
+is, and a later field can be added without moving anything a consumer already reads.
+
 - **Actions** — past participle, fired **before** the component reacts, carrying the
   value **as it was**: `onTimelineClicked`.
 - **State** — past participle, fired **after**, carrying the **new** value:
