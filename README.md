@@ -42,6 +42,25 @@ publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là
 gardant que la coquille CLI chez lui. C'est le prochain vrai chantier de ce dépôt,
 et il n'ouvrira qu'une fois lm-link publié.
 
+**Une suppression attend le chantier de lm-link : `behavioursSuspended`.** Il
+est décidé là-bas — une passerelle neutralisera elle-même les props de son composant tant
+que le contenu est retenu derrière un disclaimer, plutôt que de passer un booléen que le
+composant interprète. Ce qui partira d'ici : la prop sur les trois `Props`
+(`Video:70`, `Sequencer:134`, `ScrollListener:76`) et leurs appels du hook ; dans
+`utils/viewport-behaviours/index.ts`, le paramètre `suspended`, `heldBackRef`, la branche
+`released` et le champ `suspended` de `lastRunRef` ; et **`ActionSpec.kind`**, dont le seul
+lecteur est la vérification de suspension (`index.ts:212`) et qui devient mort dans une
+vingtaine d'entrées de tables d'actions. À faire après lm-link, jamais avant : un
+`behavioursSuspended` absent vaut `false`, donc la neutralisation à la passerelle tient
+seule pendant l'intervalle. Détail complet dans la roadmap de lm-link, « Le remplacement
+de la porte par le contexte `Disclaimer` ».
+
+**Deux justifications à réécrire au même passage** : le README (« ce sont des chaînes
+obligatoirement : lm-link […] XML statique ») et le commentaire de `isInstruction`
+fondent la grammaire d'instructions sur ce qu'un consommateur en fait. lm-tools se
+justifie sur son propre étage : cette grammaire existe pour faciliter les déclenchements
+conditionnels sans écrire de callback.
+
 ## Le trou de synchronisation des événements de `Scrllgngn`
 
 Constaté en préparant la fiche `ui-module` de lm-link, et **pas propre à `UIModule` :
