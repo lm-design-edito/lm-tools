@@ -117,6 +117,7 @@ export const ListLoader = <T,>({
     clamp(defaultPage ?? firstPagePos, firstPagePos, lastPagePos)
   ])
   const requestedPages = useRef(new Set<number>())
+  const retryTimeouts = useRef(new Set<number>())
   // Single source of truth for what should be loaded. Memoized so the effects
   // below keep a stable dependency when the page set has not actually changed.
   const currentPages = useMemo(
@@ -171,9 +172,21 @@ export const ListLoader = <T,>({
       .catch((err: unknown) => {
         reportFetchError(page, err)
         if (retriesLeft <= 0) return setPageLoading(page, false)
-        window.setTimeout(() => loadPage(page, retriesLeft - 1), fetchRetriesDelayMs)
+        const timeout = window.setTimeout(() => {
+          retryTimeouts.current.delete(timeout)
+          loadPage(page, retriesLeft - 1)
+        }, fetchRetriesDelayMs)
+        retryTimeouts.current.add(timeout)
       })
   }
+
+  // Fx. dep. none - Emptying `requestedPages` closes the gate every pending fetch and
+  // retry passes through, so nothing survives the unmount.
+  useEffect(() => () => {
+    retryTimeouts.current.forEach(timeout => { window.clearTimeout(timeout) })
+    retryTimeouts.current.clear()
+    requestedPages.current.clear()
+  }, [])
 
   // Fx. dep. `currentPages` - Drops everything held for pages no longer wanted.
   // The updaters return `curr` untouched when nothing was removed, so an unstable
