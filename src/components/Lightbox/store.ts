@@ -24,11 +24,11 @@ let state: LightboxState = {
 
 // The one writer. Its equality check is what keeps a write that changes nothing — closing
 // an already closed group, a `step` clamped at an end — from waking every member.
-function setState (next: LightboxState): void {
-  if (next.openGroup === state.openGroup
-    && next.openMemberId === state.openMemberId
-    && next.members === state.members) return
-  state = next
+function setLightboxesStoreState (nextState: LightboxState): void {
+  if (nextState.openGroup === state.openGroup
+    && nextState.openMemberId === state.openMemberId
+    && nextState.members === state.members) return
+  state = nextState
   for (const listener of listeners) listener()
 }
 
@@ -42,7 +42,7 @@ export function getState (): LightboxState {
 }
 
 export function register (member: LightboxMember): void {
-  setState({
+  setLightboxesStoreState({
     ...state,
     members: new Map(state.members).set(member.id, member)
   })
@@ -54,7 +54,7 @@ export function unregister (id: string): void {
   members.delete(id)
   // A member leaving while it is the one shown would strand the group on nothing.
   const leavesNothingOpen = state.openMemberId === id
-  setState({
+  setLightboxesStoreState({
     openGroup: leavesNothingOpen ? null : state.openGroup,
     openMemberId: leavesNothingOpen ? null : state.openMemberId,
     members
@@ -81,11 +81,11 @@ export function membersOf (group: string): LightboxMember[] {
 }
 
 export function open (group: string, memberId: string): void {
-  setState({ ...state, openGroup: group, openMemberId: memberId })
+  setLightboxesStoreState({ ...state, openGroup: group, openMemberId: memberId })
 }
 
 export function close (): void {
-  setState({ ...state, openGroup: null, openMemberId: null })
+  setLightboxesStoreState({ ...state, openGroup: null, openMemberId: null })
 }
 
 /** Moves to another member of the open group by `offset`, clamped at both ends. */
@@ -99,5 +99,5 @@ export function step (offset: number): void {
   // `index` is clamped into the list `current` was just found in.
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const target = ordered[index]!
-  setState({ ...state, openMemberId: target.id })
+  setLightboxesStoreState({ ...state, openMemberId: target.id })
 }
