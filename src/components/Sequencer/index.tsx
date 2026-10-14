@@ -31,17 +31,8 @@ import {
   hasDataLastStepAttribute
 } from './utils.js'
 
-/*
- * Two numbers run this component and they are not the same one.
- *
- * **The position** is the counter. It goes from `0` to `totalSteps - 1`, it is what the
- * tempo advances, and it is what `step` controls when a consumer provides it.
- *
- * **The active step** is what the position *means* — `stepMap[position] ?? position`.
- * Without a `stepMap` the two are equal, which is why they were one number until now.
- *
- * Children are matched against the active step, never against the position.
- */
+// The position is the counter the tempo advances; the active step is what it means
+// through `stepMap`. Children are matched against the active step, never the position.
 
 /**
  * @property totalSteps - How many steps the sequence has. Falls back to the first child
@@ -202,13 +193,8 @@ export const Sequencer: FunctionComponent<Props> = ({
   const [hasLapped, setHasLapped] = useState(0)
   const rootRef = useRef<HTMLDivElement>(null)
 
-  // Children, split once: what takes part and what merely renders.
   const childrenArr = Children.toArray(children)
   const elements = childrenArr.filter(isValidElement)
-  // Three answers to « how long is the sequence », in decreasing order of explicitness:
-  // the prop, then the child that says the sequence ends on it, then the count of
-  // element children. The prop wins because it is the one a consumer writes knowing the
-  // whole, where the mark only knows where it sits.
   const markedLast = elements.findIndex(hasDataLastStepAttribute)
   const impliedSteps = markedLast === -1 ? elements.length : markedLast + 1
   const stepsCount = Math.max(totalSteps ?? impliedSteps, 0)
@@ -222,12 +208,8 @@ export const Sequencer: FunctionComponent<Props> = ({
     : 0
   const activeStep = stepMap?.[position] ?? position
 
-  // **The end is the counter leaving the last step, not arriving on it.** The last step
-  // is owed its beat like every other one, so the counter runs one past the end while
-  // the position clamps to it — which is also what keeps the whole thing derived: nothing
-  // has to be unset when `loop` or `step` changes under it, and `onReachedLastStep` stays
-  // the arrival that this is not. A sequence merely paused on the last step has not
-  // ended, and a consumer driving `step` says so by naming the position after the last.
+  // The counter runs one past the end so the last step gets its beat, and the position
+  // clamps to it. Ended is therefore leaving the last step, not arriving on it.
   const isEnded = loop !== true && stepsCount > 0 && rawStep >= stepsCount
   const isPlaying = (play ?? internalPlay) && !isEnded
 
@@ -252,18 +234,8 @@ export const Sequencer: FunctionComponent<Props> = ({
 
   // Viewport behaviours
 
-  // A jump names a position and lands on it **within the current lap**: the counter is
-  // absolute, so setting it to a bare position on a looping sequence would count as a
-  // wrap backwards and fire `onLooped` for a move nobody made. `jump-by` is left alone
-  // on purpose — stepping past the last position really is a wrap, and says so.
-  //
-  // **The lap offset is for looping sequences only, and adding it elsewhere was a bug.**
-  // A sequence that does not loop runs its counter one past the end and leaves it there,
-  // so `lap` reads `1` from that moment on — and `jump-start` landed on `1 * stepsCount`,
-  // which is precisely the ended position it was asked to leave. The symptom: a sequence
-  // with `whenVisible='jump-start'` played once, stopped on its last step, and stayed
-  // there however many times it was scrolled past. Nothing is lost by dropping the
-  // offset here: without `loop`, there is no wrap to misread and `onLooped` never fires.
+  // The lap offset only applies while looping: on a sequence that does not loop, `lap`
+  // reads `1` past the end, and adding it would land `jump-start` back on the end.
   const jumpToPosition = (target: number): void => {
     if (step !== undefined || stepsCount <= 0) return
     const resolved = target < 0 ? stepsCount + target : target
@@ -278,11 +250,8 @@ export const Sequencer: FunctionComponent<Props> = ({
     setInternalStep(current => current + offset)
   }
 
-  // What each verb does. Rebuilt on every render — it closes over the setters — which is
-  // why the generic layer reads it through a ref rather than a dependency list.
-  //
   // `play` and `pause` need no guard against a controlled `play`: the effective state
-  // reads the prop first, so the internal one they write is simply never consulted.
+  // reads the prop first, so the internal one they write is never consulted.
   const actions: ActionTable<SequencerVerb, SequencerDomain> = {
     play: { domain: 'playback', run: () => setInternalPlay(true) },
     pause: { domain: 'playback', run: () => setInternalPlay(false) },
@@ -306,8 +275,7 @@ export const Sequencer: FunctionComponent<Props> = ({
     }
   }
 
-  // The surrender half of the result is dropped, and that is the whole of what this
-  // component's lack of controls changes: nothing here can be taken over by hand.
+  // The surrender half is dropped: this component has no control a hand could take over.
   useViewportBehaviours<SequencerAction>(
     rootRef,
     {
@@ -342,8 +310,6 @@ export const Sequencer: FunctionComponent<Props> = ({
     ended: isEnded
   }), className)
 
-  // Walked once per render: for each element, the positions of this lap at which it is
-  // active. Cheap, and it is what makes the three pairs answerable without memory.
   const positionsOf = (steps: number[]): number[] => {
     const positions: number[] = []
     for (let i = 0; i < stepsCount; i += 1) {
@@ -352,14 +318,9 @@ export const Sequencer: FunctionComponent<Props> = ({
     return positions
   }
 
-  // **The lap count is the wraps, so it is zero without `loop`.** The internal counter
-  // runs one past the end and stays there, which makes `lap` read `1` on a sequence that
-  // never wrapped at all — true of the division, false of the thing it is named after,
-  // and `onLooped` says the same by never firing without `loop`.
+  // A lap is a wrap, so there is none without `loop` — where the internal counter would
+  // report `1` past the end. Both numbers below are rebuilt from it rather than `rawStep`.
   const publishedLap = loop === true ? lap : 0
-  // Rebuilt from the published lap rather than read off `rawStep`, for that same reason:
-  // at the end of a non-looping sequence the internal counter sits one step past the last
-  // position, and a number meant to drive a transform must not overshoot the picture.
   const rawStepProp = publishedLap * stepsCount + position
   const cssCustomProps: Record<string, string> = {
     '--lm-sequencer-step': `${position}`,
@@ -398,9 +359,7 @@ export const Sequencer: FunctionComponent<Props> = ({
       })
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a React element's props are a record, whatever else they are
       const ownClassName = (child.props as Record<string, unknown>).className
-      // `className` is the whole of what a child is asked to honour, and the only prop
-      // touched here — its own is kept, and comes second so a consumer's class wins a
-      // shorthand conflict.
+      // The child's own class comes second, so a consumer wins a shorthand conflict.
       const nextProps: Partial<Record<string, unknown>> = {
         key: childPos,
         className: mergeClassNames(
