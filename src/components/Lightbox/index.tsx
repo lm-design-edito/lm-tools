@@ -184,15 +184,9 @@ export const Lightbox: FunctionComponent<Props> = ({
   const sizeRef = useRef<{ width: number, height: number } | null>(null)
   const [hasAppliedDefault, setHasAppliedDefault] = useState(false)
   const isControlled = isOnProp !== undefined
-
-  const declaredGroups = group === undefined
-    ? []
-    : (Array.isArray(group) ? group : [group])
+  const declaredGroups = group === undefined ? [] : (Array.isArray(group) ? group : [group])
   const isGrouped = declaredGroups.length > 0
-  // A member without a group still needs one to be opened through: its own. The prefix
-  // is a form no one declares by accident — group keys are free strings otherwise.
   const groups = isGrouped ? declaredGroups : [`solo:${id}`]
-  // `groups` is never empty: a member without a declared group gets its own.
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const ownGroup = groups[0]!
   const groupsKey = groups.join(' ')
