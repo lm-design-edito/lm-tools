@@ -18,10 +18,10 @@ import {
 } from '../utils/index.js'
 import { lightbox as publicClassName } from '../public-classnames.js'
 import {
-  close as closeLightbox,
+  closeLightbox,
   getLightboxesStoreState,
-  membersOf,
-  open as openLightbox,
+  getMembersOf,
+  openLightbox,
   registerLightboxesStoreMember,
   step,
   unregisterLightboxesStoreMember,
@@ -202,7 +202,7 @@ export const Lightbox: FunctionComponent<Props> = ({
 
   const isOn = isOnProp ?? (storeState.openMemberId === id)
   const openGroup = storeState.openGroup
-  const siblingsCount = isOn && openGroup !== null ? membersOf(openGroup).length : 0
+  const siblingsCount = isOn && openGroup !== null ? getMembersOf(openGroup).length : 0
 
   // Fx. dep. id, groupsKey - Joins the shared registry, which is what lets another
   // member reach this one. `getElement` rather than the element itself: the registry

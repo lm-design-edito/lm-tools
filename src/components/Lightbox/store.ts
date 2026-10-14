@@ -1,14 +1,3 @@
-/**
- * The registry of lightbox groups, shared by every {@link Lightbox} on the page.
- *
- * Deliberately outside React: nothing guarantees that two lightboxes of a page share
- * a tree — a caller is free to mount each component in its own root — so a context
- * could not reach from one to the other, where a module-level store can.
- *
- * Members are kept unordered here; the order that matters is the **document's**, and
- * it is read from the DOM when a group opens. React's mount order is not it.
- */
-
 import type {
   LightboxMember,
   LightboxState
@@ -22,8 +11,8 @@ let state: LightboxState = {
   members: new Map()
 }
 
-// The one writer. Its equality check is what keeps a write that changes nothing — closing
-// an already closed group, a `step` clamped at an end — from waking every member.
+export const getLightboxesStoreState = (): LightboxState => state
+
 function setLightboxesStoreState (nextState: LightboxState): void {
   if (nextState.openGroup === state.openGroup
     && nextState.openMemberId === state.openMemberId
@@ -38,10 +27,6 @@ export function watchLightboxesStoreState (onStoreStateChange: () => void): () =
     stateChangeCallbacks.delete(onStoreStateChange)
   }
   return unwatchLightboxesStoreState
-}
-
-export function getLightboxesStoreState (): LightboxState {
-  return state
 }
 
 export function registerLightboxesStoreMember (member: LightboxMember): void {
@@ -72,7 +57,7 @@ export function unregisterLightboxesStoreMember (memberId: string): void {
  * guarantees the two match. Only runs when a group opens or navigates, over a
  * handful of members.
  */
-export function membersOf (group: string): LightboxMember[] {
+export function getMembersOf (group: string): LightboxMember[] {
   const found = [...state.members.values()].filter(member => member.groups.includes(group))
   return found.sort((a, b) => {
     const aElt = a.getElement()
@@ -83,11 +68,11 @@ export function membersOf (group: string): LightboxMember[] {
   })
 }
 
-export function open (group: string, memberId: string): void {
+export function openLightbox (group: string, memberId: string): void {
   setLightboxesStoreState({ ...state, openGroup: group, openMemberId: memberId })
 }
 
-export function close (): void {
+export function closeLightbox (): void {
   setLightboxesStoreState({ ...state, openGroup: null, openMemberId: null })
 }
 
@@ -95,7 +80,7 @@ export function close (): void {
 export function step (offset: number): void {
   const { openGroup, openMemberId } = state
   if (openGroup === null || openMemberId === null) return
-  const ordered = membersOf(openGroup)
+  const ordered = getMembersOf(openGroup)
   const current = ordered.findIndex(member => member.id === openMemberId)
   if (current === -1) return
   const index = Math.min(ordered.length - 1, Math.max(0, current + offset))
