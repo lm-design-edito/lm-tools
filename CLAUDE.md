@@ -43,9 +43,9 @@ folders want the same helper, it moves to a folder of its own.
 
 **A file's length is never a reason to split it.** `max-lines` is off, alongside
 `complexity` and `max-params`: a threshold cannot tell four hundred lines of tangled
-logic from a component that is richly commented, and this repo comments richly on
-purpose. A move to a sibling file has to earn itself on its own — the code is shared by
-two consumers, or it belongs to a different subject than the file it sits in. « The
+logic from a component that is long because its subject is. A move to a sibling file has
+to earn itself on its own — the code is shared by two consumers, or it belongs to a
+different subject than the file it sits in. « The
 entry point was getting long » is not one of those, and a module born of it exists only
 to hold what was evicted.
 
@@ -57,7 +57,8 @@ exported from `index.tsx`, which is where consumers look for it.
 
 This is the one repo whose functions are consumed from other projects, so the
 tooltip an IDE shows at the call site *is* the documentation. Write for that
-reader.
+reader. Everything that is **not** JSDoc follows « Comments » in the root
+[`../CLAUDE.md`](../CLAUDE.md): one or two lines, and rarely.
 
 - Document exported symbols. Internal helpers don't need it.
 - One precise sentence beats an exhaustive paragraph. Say *why* and *when*, never
