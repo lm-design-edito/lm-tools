@@ -61,6 +61,10 @@ fondent la grammaire d'instructions sur ce qu'un consommateur en fait. lm-tools 
 justifie sur son propre étage : cette grammaire existe pour faciliter les déclenchements
 conditionnels sans écrire de callback.
 
+**Et une réflexion repoussée, à ouvrir après** : l'harmonisation du motif `when*`
+lui-même. Le retrait de `kind` allège les tables d'actions sans toucher à la grammaire —
+c'est elle qu'il faudra regarder ensuite, d'un bloc, pour les trois composants à la fois.
+
 ## Le trou de synchronisation des événements de `Scrllgngn`
 
 Constaté en préparant la fiche `ui-module` de lm-link, et **pas propre à `UIModule` :
