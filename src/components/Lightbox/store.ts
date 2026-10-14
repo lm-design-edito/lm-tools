@@ -49,13 +49,6 @@ export function unregisterLightbox (lightboxId: string): void {
   })
 }
 
-/**
- * The lightboxes of a group, in **document order**.
- *
- * `compareDocumentPosition` rather than mount order: React mounts a tree in its own
- * order, and a caller may mount each component in a root of its own, so nothing
- * guarantees the two match.
- */
 export function getGroupLightboxes (group: string): RegisteredLightbox[] {
   const found = [...storeState.lightboxesById.values()]
     .filter(lightbox => lightbox.groups.includes(group))
@@ -76,8 +69,7 @@ export function closeLightbox (): void {
   setLightboxesStoreState({ ...storeState, openGroup: null, openLightboxId: null })
 }
 
-/** Opens another lightbox of the open group, `offset` places away, clamped. */
-export function stepOpenLightbox (offset: number): void {
+export function navigateOpenGroupBy (offset: number): void {
   const { openGroup, openLightboxId } = storeState
   if (openGroup === null || openLightboxId === null) return
   const ordered = getGroupLightboxes(openGroup)

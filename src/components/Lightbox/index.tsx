@@ -21,9 +21,9 @@ import {
   closeLightbox,
   getGroupLightboxes,
   getLightboxesStoreState,
+  navigateOpenGroupBy,
   openLightbox,
   registerLightbox,
-  stepOpenLightbox,
   unregisterLightbox,
   watchLightboxesStoreState
 } from './store.js'
@@ -248,11 +248,11 @@ export const Lightbox: FunctionComponent<Props> = ({
   }
   const handlePrevButtonClick: MouseEventHandler<HTMLButtonElement> = () => {
     onPrevButtonClicked?.(isOn)
-    stepOpenLightbox(-1)
+    navigateOpenGroupBy(-1)
   }
   const handleNextButtonClick: MouseEventHandler<HTMLButtonElement> = () => {
     onNextButtonClicked?.(isOn)
-    stepOpenLightbox(1)
+    navigateOpenGroupBy(1)
   }
   const handleContentClick: MouseEventHandler<HTMLDivElement> = () => {
     if (openOnClick !== true || isOn) return
@@ -289,10 +289,10 @@ export const Lightbox: FunctionComponent<Props> = ({
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'ArrowLeft') {
         onPrevArrowPressed?.(isOn)
-        stepOpenLightbox(-1)
+        navigateOpenGroupBy(-1)
       } else if (e.key === 'ArrowRight') {
         onNextArrowPressed?.(isOn)
-        stepOpenLightbox(1)
+        navigateOpenGroupBy(1)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
