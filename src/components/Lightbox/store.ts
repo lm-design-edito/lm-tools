@@ -1,29 +1,18 @@
 /**
  * The registry of lightbox groups, shared by every {@link Lightbox} on the page.
  *
- * Deliberately outside React. lm-link renders each component in its **own React
- * root** — `renderInTarget` calls `createRoot` per component — so two `<lm-image>`
- * in the same article never share a tree, and a context could not reach from one to
- * the other. A module-level store can.
+ * Deliberately outside React: nothing guarantees that two lightboxes of a page share
+ * a tree — a caller is free to mount each component in its own root — so a context
+ * could not reach from one to the other, where a module-level store can.
  *
  * Members are kept unordered here; the order that matters is the **document's**, and
  * it is read from the DOM when a group opens. React's mount order is not it.
  */
 
-/** What a member hands the store so the group can find and place it. */
-export type LightboxMember = {
-  id: string
-  groups: string[]
-  /** The member's anchor in the page, for ordering. `null` before it mounts. */
-  getElement: () => HTMLElement | null
-}
-
-export type LightboxState = {
-  /** The group currently open, `null` when nothing is. */
-  openGroup: string | null
-  /** The member currently shown. */
-  openMemberId: string | null
-}
+import type {
+  LightboxMember,
+  LightboxState
+} from './types.js'
 
 const members = new Map<string, LightboxMember>()
 const listeners = new Set<() => void>()
