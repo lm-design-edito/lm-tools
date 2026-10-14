@@ -24,7 +24,6 @@ import {
   membersOf,
   open as openLightbox,
   register,
-  soloGroupOf,
   step,
   subscribe,
   unregister
@@ -191,8 +190,9 @@ export const Lightbox: FunctionComponent<Props> = ({
     ? []
     : (Array.isArray(group) ? group : [group])
   const isGrouped = declaredGroups.length > 0
-  // A member without a group still needs one to be opened through: its own.
-  const groups = isGrouped ? declaredGroups : [soloGroupOf(id)]
+  // A member without a group still needs one to be opened through: its own. The prefix
+  // is a form no one declares by accident — group keys are free strings otherwise.
+  const groups = isGrouped ? declaredGroups : [`solo:${id}`]
   // `groups` is never empty: a member without a declared group gets its own.
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const ownGroup = groups[0]!

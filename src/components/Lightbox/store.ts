@@ -42,11 +42,6 @@ export function getState (): LightboxState {
   return state
 }
 
-/** A member's own group, when it declared none: it is a group of one. */
-export function soloGroupOf (id: string): string {
-  return `solo:${id}`
-}
-
 export function register (member: LightboxMember): void {
   members.set(member.id, member)
   emit()
