@@ -7,7 +7,6 @@ import {
   useState,
   type FunctionComponent,
   type PropsWithChildren,
-  type ReactElement,
   type ReactNode
 } from 'react'
 import { absoluteModulo } from '../../agnostic/numbers/absolute-modulo/index.js'
@@ -27,38 +26,10 @@ import type {
   SequencerDomain,
   SequencerVerb
 } from './types.js'
-
-/**
- * The attribute a child uses to say which steps it belongs to.
- *
- * **Written on the child rather than gathered in a prop**, and that is the whole
- * difference with the `activateOnStep` this component used to take. A parallel array and
- * a children list derive from one another: inserting a child in the middle means
- * reindexing the array, and nothing signals the one time it is forgotten. Carried by the
- * child, the attachment travels with it.
- *
- * It stays in the DOM once read — it costs nothing, it is worth having while debugging,
- * and a stylesheet can select on it.
- */
-const STEPS_ATTRIBUTE = 'data-steps'
-
-/**
- * The attribute a child uses to say that the sequence ends on it.
- *
- * It answers a shape the positional fallback could not: an article writes the steps in
- * reading order, then — **after** the sequence proper — the children that belong to
- * several steps at once and name them with {@link STEPS_ATTRIBUTE}. Those trailing
- * children would each claim a step of their own in the count, and the sequence would run
- * on into steps where nothing but them is lit.
- *
- * Marking the last step is what separates the two halves, and it is written where the
- * separation is rather than recounted in a prop — the same reason `data-steps` lives on
- * the child. A child after the mark that names no step therefore never lights up, which
- * is the honest reading of « it is not part of the sequence ».
- *
- * Valueless, as an HTML boolean attribute: what matters is that it is there.
- */
-const LAST_STEP_ATTRIBUTE = 'data-last-step'
+import {
+  getChildActiveSteps,
+  hasDataLastStepAttribute
+} from './utils.js'
 
 /*
  * Two numbers run this component and they are not the same one.
@@ -126,43 +97,6 @@ export type Props = PropsWithChildren<WithClassName<{
   onReachedLastStep?: () => void
 }>>
   & ViewportBehaviours<SequencerAction>
-
-/**
- * `data-steps="2, 6"` into the steps it names.
- *
- * Anything unreadable gives back `null`, which the caller reads as « the attribute was
- * not written » and falls back to the child's position. That is lm-link's rule applied
- * here — a typo costs the default behaviour, never a broken one.
- */
-function parseSteps (raw: unknown): number[] | null {
-  if (typeof raw !== 'string') return null
-  const parts = raw.split(',').map(part => part.trim()).filter(part => part !== '')
-  if (parts.length === 0) return null
-  const steps = parts.map(Number)
-  if (steps.some(step => !Number.isInteger(step))) return null
-  return steps
-}
-
-/**
- * Whether a child carries {@link LAST_STEP_ATTRIBUTE}.
- *
- * Present is enough — `data-last-step` alone gives `''` through lm-html, and `true`
- * written in JSX. Only an explicit denial is read as one, so that a consumer computing
- * the attribute can write `false` without having to leave it out.
- */
-function isLastStep (child: ReactElement): boolean {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a React element's props are a record, whatever else they are
-  const raw = (child.props as Record<string, unknown>)[LAST_STEP_ATTRIBUTE]
-  if (raw === undefined || raw === null) return false
-  return raw !== false && raw !== 'false'
-}
-
-/** The steps a child answers to: what it declares, or where it sits. */
-function stepsOf (child: ReactElement, elementIndex: number): number[] {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a React element's props are a record, whatever else they are
-  const declared = parseSteps((child.props as Record<string, unknown>)[STEPS_ATTRIBUTE])
-  return declared ?? [elementIndex]
-}
 
 /**
  * A sequencer over its children, which it classifies and never moves.
@@ -275,7 +209,7 @@ export const Sequencer: FunctionComponent<Props> = ({
   // the prop, then the child that says the sequence ends on it, then the count of
   // element children. The prop wins because it is the one a consumer writes knowing the
   // whole, where the mark only knows where it sits.
-  const markedLast = elements.findIndex(isLastStep)
+  const markedLast = elements.findIndex(hasDataLastStepAttribute)
   const impliedSteps = markedLast === -1 ? elements.length : markedLast + 1
   const stepsCount = Math.max(totalSteps ?? impliedSteps, 0)
 
@@ -449,7 +383,7 @@ export const Sequencer: FunctionComponent<Props> = ({
     {childrenArr.map((child, childPos): ReactNode => {
       if (!isValidElement(child)) return child
       elementIndex += 1
-      const steps = stepsOf(child, elementIndex)
+      const steps = getChildActiveSteps(child, elementIndex)
       const positions = positionsOf(steps)
       const isOn = steps.includes(activeStep)
       const hasEarlier = positions.some(p => p < position)
