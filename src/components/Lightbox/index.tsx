@@ -22,9 +22,9 @@ import {
   getLightboxesStoreState,
   membersOf,
   open as openLightbox,
-  register,
+  registerLightboxesStoreMember,
   step,
-  unregister,
+  unregisterLightboxesStoreMember,
   watchLightboxesStoreState
 } from './store.js'
 import cssModule from './styles.module.css'
@@ -208,8 +208,8 @@ export const Lightbox: FunctionComponent<Props> = ({
   // member reach this one. `getElement` rather than the element itself: the registry
   // reads it when it needs to order the group, and never holds it.
   useEffect(() => {
-    register({ id, groups, getElement: () => rootRef.current })
-    return () => unregister(id)
+    registerLightboxesStoreMember({ id, groups, getElement: () => rootRef.current })
+    return () => unregisterLightboxesStoreMember(id)
   }, [id, groupsKey])
 
   // Keeps the last size the content had in place, so the placeholder can hold it once

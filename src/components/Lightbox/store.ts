@@ -44,19 +44,19 @@ export function getLightboxesStoreState (): LightboxState {
   return state
 }
 
-export function register (member: LightboxMember): void {
+export function registerLightboxesStoreMember (member: LightboxMember): void {
   setLightboxesStoreState({
     ...state,
     members: new Map(state.members).set(member.id, member)
   })
 }
 
-export function unregister (id: string): void {
-  if (!state.members.has(id)) return
+export function unregisterLightboxesStoreMember (memberId: string): void {
+  if (!state.members.has(memberId)) return
   const members = new Map(state.members)
-  members.delete(id)
+  members.delete(memberId)
   // A member leaving while it is the one shown would strand the group on nothing.
-  const leavesNothingOpen = state.openMemberId === id
+  const leavesNothingOpen = state.openMemberId === memberId
   setLightboxesStoreState({
     openGroup: leavesNothingOpen ? null : state.openGroup,
     openMemberId: leavesNothingOpen ? null : state.openMemberId,
