@@ -40,7 +40,6 @@ export function unregisterLightbox (lightboxId: string): void {
   if (!storeState.lightboxesById.has(lightboxId)) return
   const lightboxesById = new Map(storeState.lightboxesById)
   lightboxesById.delete(lightboxId)
-  // A lightbox leaving while it is the one shown would strand the group on nothing.
   const leavesNothingOpen = storeState.openLightboxId === lightboxId
   setLightboxesStoreState({
     openGroup: leavesNothingOpen ? null : storeState.openGroup,
@@ -76,7 +75,6 @@ export function navigateOpenGroupBy (offset: number): void {
   const current = ordered.findIndex(lightbox => lightbox.id === openLightboxId)
   if (current === -1) return
   const index = Math.min(ordered.length - 1, Math.max(0, current + offset))
-  // `index` is clamped into the list `current` was just found in.
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const target = ordered[index]!
   setLightboxesStoreState({ ...storeState, openLightboxId: target.id })
