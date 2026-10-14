@@ -25,10 +25,10 @@ import {
  * belongs by subject, because the publish step only maps `index.js` and `types.js` into
  * the package's exports — a `utils.js` is unreachable from outside, whatever it holds.
  *
- * **Exported for the consumers that receive their props as text.** lm-link reads an
- * article's XML, where nothing is typed, and has to reject `'jump-to:banana'` before it
- * reaches a component. Written on its side, the rule would exist twice and drift in
- * silence — a verb added here would be rejected there for no visible reason.
+ * **Exported for the callers that build an instruction at runtime**, out of a string
+ * nothing has typed, and have to reject `'jump-to:banana'` before it reaches a
+ * component. Written on their side, the rule would exist twice and drift in silence —
+ * a verb added here would be rejected there for no visible reason.
  *
  * Returns a plain boolean rather than a type predicate, and that is not an oversight: a
  * verb taking an argument is written `'jump-to:500'`, which is not a member of the verb
@@ -58,11 +58,9 @@ export function isInstruction (
 /**
  * Whether the element counts as visible — **as a state, not as a crossing**.
  *
- * That distinction is the whole point. An `IntersectionObserver` reports an event, and
- * a behaviour hung on the event only ever runs when the screen is traversed. A
- * component already visible whose behaviour was held back — behind a lm-link gate,
- * typically — never gets a second chance, because nothing crosses when the gate lifts.
- * Held as a state, the condition can be recombined with whatever else gates it.
+ * That distinction is what the delays below are built on, and what lets a caller
+ * recombine visibility with whatever else it tracks: an `IntersectionObserver` reports
+ * an event, which is readable once, where a state is readable at any moment.
  *
  * The delays are a debounce **on this state**: the element has to hold its new value
  * for that long before the value is committed. A component crossed while scrolling fast
@@ -130,10 +128,6 @@ export type ViewportBehavioursResult = {
  * @param targetRef - The element to watch.
  * @param props - The component's visibility props.
  * @param table - What each of its verbs does. @see {@link ActionTable}
- * @param suspended - Holds back the verbs that **start** something, and lets through
- * those that stop something. This is a capability's doing — a lm-link gate — and it is
- * not the same as a surrender: a gate speaks of consent not yet given, so `':force'`
- * does not override it.
  *
  * @remarks
  * **An instruction yields to the reader by default.** The failure modes are not
@@ -145,8 +139,7 @@ export type ViewportBehavioursResult = {
 export function useViewportBehaviours <A extends string> (
   targetRef: RefObject<Element | null>,
   props: ViewportBehaviours<A>,
-  table: ActionTable<A>,
-  suspended = false
+  table: ActionTable<A>
 ): ViewportBehavioursResult {
   const {
     whenVisible,
@@ -166,8 +159,7 @@ export function useViewportBehaviours <A extends string> (
 
   const surrenderedRef = useRef(new Set<string>())
   const spentRef = useRef(new Set<string>())
-  const heldBackRef = useRef(new Set<string>())
-  const lastRunRef = useRef<{ isVisible?: boolean, suspended: boolean }>({ suspended })
+  const lastRunRef = useRef<{ isVisible?: boolean }>({})
 
   const surrender = useCallback((domain: string) => {
     surrenderedRef.current.add(domain)
@@ -189,37 +181,25 @@ export function useViewportBehaviours <A extends string> (
   useEffect(() => {
     if (isVisible === undefined) return
     const last = lastRunRef.current
-    const crossed = last.isVisible !== isVisible
-    const released = !crossed && last.suspended && !suspended
-    lastRunRef.current = { isVisible, suspended }
-    // Neither the state nor the suspension moved: nothing to do. Without this, any
-    // unrelated re-render would replay the list.
-    if (!crossed && !released) return
+    // The visibility state has not moved: nothing to do. Without this, any unrelated
+    // re-render would replay the list.
+    if (last.isVisible === isVisible) return
+    lastRunRef.current = { isVisible }
 
     const trigger = isVisible ? 'visible' : 'hidden'
     const list = toInstructionList(isVisible ? whenVisible : whenHidden)
     const runnable = dedupe(list)
-    if (released) heldBackRef.current.clear()
 
     for (const parsed of runnable) {
       const key = `${trigger}|${parsed.verb}|${parsed.arg ?? ''}`
-      // A suspension only reaches a verb that *starts* something, and it is the only
-      // one of the two brakes that can be lifted — hence the held-back list, replayed
-      // on release so a gate opening on a visible component does what it was asked.
       const spec = tableRef.current.get(parsed.verb)
       if (spec === undefined) continue
-      if (released && !heldBackRef.current.has(key)) continue
-      if (suspended && spec.kind === 'start') {
-        heldBackRef.current.add(key)
-        continue
-      }
       if (!parsed.force && surrenderedRef.current.has(spec.domain)) continue
       if (parsed.once && spentRef.current.has(key)) continue
       if (parsed.once) spentRef.current.add(key)
-      heldBackRef.current.delete(key)
       spec.run(parsed.arg)
     }
-  }, [isVisible, suspended, whenVisible, whenHidden])
+  }, [isVisible, whenVisible, whenHidden])
 
   return { isVisible, surrender }
 }

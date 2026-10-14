@@ -30,8 +30,5 @@ export type ScrollListenerAction = ScrollListenerVerb
  * and nothing that ever surrenders. The field is part of `ActionSpec` and is declared
  * honestly rather than split into domains no hand could ever tell apart. The consequence
  * is that `':force'` has no trigger here.
- *
- * A gate is the other brake, and it does reach `track`: measuring a subtree nobody is
- * being shown is work done for no one.
  */
 export type ScrollListenerDomain = 'tracking'

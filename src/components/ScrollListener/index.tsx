@@ -41,9 +41,6 @@ import type {
  * which is what this component has always done — a starting point and not a setting,
  * hence `default…`. `defaultTracking={false}` with `whenVisible='track'` is the old
  * `startOnVisible`, written in the shared grammar.
- * @property behavioursSuspended - Holds back the instructions that **start** something,
- * and lets through those that stop it. A gate reaches `'track'`: measuring a subtree
- * nobody is being shown is work done for no one.
  * @property onIsTrackingChanged - Called once the effective tracking state changed.
  * @property onScrollStateChanged - Called after the measured {@link ScrollState}
  * changed. Receives `undefined` until the first measurement lands.
@@ -73,7 +70,6 @@ export type Props = PropsWithChildren<WithClassName<{
   onScrollDirectionChanged?: (direction: 'up' | 'down') => void
 }>>
   & ViewportBehaviours<ScrollListenerAction>
-  & { behavioursSuspended?: boolean }
 
 /**
  * Exposes scroll metrics — both the document's and its own — as CSS custom
@@ -135,7 +131,6 @@ export type Props = PropsWithChildren<WithClassName<{
 export const ScrollListener: FunctionComponent<Props> = ({
   tracking,
   defaultTracking,
-  behavioursSuspended,
   visibilityThreshold,
   visibilityRoot,
   visibilityRootMargin,
@@ -172,8 +167,8 @@ export const ScrollListener: FunctionComponent<Props> = ({
   // `tracking`: the effective state reads the prop first, so the internal one they write
   // is simply never consulted.
   const actions: ActionTable<ScrollListenerVerb, ScrollListenerDomain> = {
-    track: { kind: 'start', domain: 'tracking', run: () => setInternalTracking(true) },
-    untrack: { kind: 'stop', domain: 'tracking', run: () => setInternalTracking(false) }
+    track: { domain: 'tracking', run: () => setInternalTracking(true) },
+    untrack: { domain: 'tracking', run: () => setInternalTracking(false) }
   }
 
   // The surrender half of the result is dropped: this component has no control a reader
@@ -192,8 +187,7 @@ export const ScrollListener: FunctionComponent<Props> = ({
       whenHidden,
       onVisibilityChanged
     },
-    actions,
-    behavioursSuspended === true
+    actions
   )
 
   // State dispatch

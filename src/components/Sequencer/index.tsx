@@ -91,11 +91,6 @@ const LAST_STEP_ATTRIBUTE = 'data-last-step'
  * the counter over from the tempo.
  * @property defaultPlay - Whether it starts advancing. `false` by default, and the
  * starting point a `'play'` instruction moves from — not a setting, hence `default…`.
- * @property behavioursSuspended - Holds back the instructions that **start** something,
- * and lets through those that stop it. For a consumer withholding the sequence behind
- * something — a warning to accept, typically. What was held back is replayed the moment
- * this goes false, so lifting the veil on an already-visible sequence does what was
- * asked. `':force'` does not override it.
  * @property tempo - Speed in beats per minute: one step every `60000 / tempo` ms, so `60`
  * is a step per second. Clamped to a minimum of `1`.
  * @property loop - Whether the sequence wraps round. **`false` by default**, so a
@@ -131,7 +126,6 @@ export type Props = PropsWithChildren<WithClassName<{
   onReachedLastStep?: () => void
 }>>
   & ViewportBehaviours<SequencerAction>
-  & { behavioursSuspended?: boolean }
 
 /**
  * `data-steps="2, 6"` into the steps it names.
@@ -213,7 +207,7 @@ function stepsOf (child: ReactElement, elementIndex: number): number[] {
  * **Nothing surrenders here.** The layer lets a reader's hand switch an instruction off
  * for the rest of the mount, and this component has no control for a hand to touch — so
  * `':force'` has nothing to override, and the single `'playback'` domain is a formality.
- * A gate still holds `'play'` back, which is a different brake. @see {@link SequencerDomain}
+ * @see {@link SequencerDomain}
  *
  * ### On the root
  * `--playing`, `--at-start`, `--at-end`, `--ended`, plus `data-step`, `data-active-step`,
@@ -258,7 +252,6 @@ export const Sequencer: FunctionComponent<Props> = ({
   onLooped,
   onReachedFirstStep,
   onReachedLastStep,
-  behavioursSuspended,
   visibilityThreshold,
   visibilityRoot,
   visibilityRootMargin,
@@ -357,12 +350,9 @@ export const Sequencer: FunctionComponent<Props> = ({
   // `play` and `pause` need no guard against a controlled `play`: the effective state
   // reads the prop first, so the internal one they write is simply never consulted.
   const actions: ActionTable<SequencerVerb, SequencerDomain> = {
-    play: { kind: 'start', domain: 'playback', run: () => setInternalPlay(true) },
-    pause: { kind: 'stop', domain: 'playback', run: () => setInternalPlay(false) },
-    // A jump starts nothing on its own — it moves a counter, playing or not — so a gate
-    // has no reason to hold it back.
+    play: { domain: 'playback', run: () => setInternalPlay(true) },
+    pause: { domain: 'playback', run: () => setInternalPlay(false) },
     'jump-to': {
-      kind: 'stop',
       domain: 'playback',
       run: arg => {
         const target = Number(arg)
@@ -370,10 +360,9 @@ export const Sequencer: FunctionComponent<Props> = ({
         jumpToPosition(target)
       }
     },
-    'jump-start': { kind: 'stop', domain: 'playback', run: () => jumpToPosition(0) },
-    'jump-end': { kind: 'stop', domain: 'playback', run: () => jumpToPosition(-1) },
+    'jump-start': { domain: 'playback', run: () => jumpToPosition(0) },
+    'jump-end': { domain: 'playback', run: () => jumpToPosition(-1) },
     'jump-by': {
-      kind: 'stop',
       domain: 'playback',
       run: arg => {
         const offset = Number(arg)
@@ -397,8 +386,7 @@ export const Sequencer: FunctionComponent<Props> = ({
       whenHidden,
       onVisibilityChanged
     },
-    actions,
-    behavioursSuspended === true
+    actions
   )
 
   // State dispatch

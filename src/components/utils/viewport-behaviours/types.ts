@@ -3,10 +3,9 @@
  *
  * - `once` — runs on the first crossing only. The credit is per (verb, trigger) pair
  *   and lives for the mount.
- * - `force` — runs even after the reader has taken over the verb's domain. It
- *   overrides the **surrender**, never a suspension: a gate speaks of consent not yet
- *   given, a surrender of an intention already expressed, and an article able to force
- *   its way past a disclaimer would empty it of its purpose.
+ * - `force` — runs even after the reader has taken over the verb's domain. It is the
+ *   one way out of a surrender, and the only one: nothing else holds an instruction
+ *   back.
  *
  * **They are a set, not a sequence.** `'play:once:force'` and `'play:force:once'` are
  * the same instruction, which is what spares the contract an ordering rule.
@@ -45,10 +44,6 @@ export type ParsedInstruction = {
 /**
  * What a component says about one of its verbs.
  *
- * @property kind - Whether the verb starts something or stops it. A suspension — a
- * lm-link gate, typically — holds back `'start'` and lets `'stop'` through, since a
- * verb that quietens a component can never work against a reader who hasn't consented
- * yet.
  * @property domain - Which of the component's controls this verb competes with.
  * `play` and `pause` share `'playback'`, `loud` and `mute` share `'sound'` — so pausing
  * by hand doesn't stop the sound from being cut on the way out. One flag for all of
@@ -56,7 +51,6 @@ export type ParsedInstruction = {
  * @property run - Does the thing. Receives the verb's argument, when it takes one.
  */
 export type ActionSpec<D extends string = string> = {
-  kind: 'start' | 'stop'
   domain: D
   run: (arg?: string) => void
 }

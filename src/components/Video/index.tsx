@@ -29,13 +29,6 @@ import {
  * Props for the {@link Video} component.
  *
  * Extends all ControlledVideo props except play, mute, fullscreen, volume, playbackRate, and their associated event handlers
- * @property behavioursSuspended - Holds back the instructions that **start** something,
- * and lets through those that stop it. For a consumer withholding the video behind
- * something — a warning to accept, typically: a video kept back that plays anyway is not
- * withheld, it is merely hard to see. What was held back is replayed the moment this
- * goes false, so lifting the veil on an already-visible video does what was asked, which
- * a crossing-based trigger could never do. `':force'` does not override it: it speaks of
- * consent not yet given, where a surrender speaks of an intention already expressed.
  * @property visibilityThreshold - How much of the video has to be on screen to count as
  * seen. See {@link VisibilityOptions} for this and the four that follow it.
  * @property whenVisible - What to do each time it becomes visible.
@@ -65,10 +58,7 @@ import {
 // handing in its own would take the observer's target away.
 export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mute' | 'playbackRate' | 'subtitlesOn' | 'rootRef' | 'videoRef'>
   & ViewportBehaviours<VideoAction>
-  & {
-    defaultSubtitlesOn?: boolean
-    behavioursSuspended?: boolean
-  }
+  & { defaultSubtitlesOn?: boolean }
 
 /**
  * Full-featured video player component. Wraps a native `<video>` element with
@@ -121,7 +111,6 @@ export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mu
 
 export const Video: FunctionComponent<Props> = ({
   defaultSubtitlesOn = true,
-  behavioursSuspended,
   visibilityThreshold,
   visibilityRoot,
   visibilityRootMargin,
@@ -166,14 +155,11 @@ export const Video: FunctionComponent<Props> = ({
   // **Seeking belongs to `playback`.** A reader who has dragged the timeline has said
   // where they want to be, and an automatic jump would take it back from them.
   const actions: ActionTable<VideoVerb, VideoDomain> = {
-    play: { kind: 'start', domain: 'playback', run: () => setPlay(true) },
-    pause: { kind: 'stop', domain: 'playback', run: () => setPlay(false) },
-    loud: { kind: 'start', domain: 'sound', run: () => setMute(false) },
-    mute: { kind: 'stop', domain: 'sound', run: () => setMute(true) },
-    // A seek starts nothing on its own — it moves a playhead, playing or not — so a gate
-    // has no reason to hold it back.
+    play: { domain: 'playback', run: () => setPlay(true) },
+    pause: { domain: 'playback', run: () => setPlay(false) },
+    loud: { domain: 'sound', run: () => setMute(false) },
+    mute: { domain: 'sound', run: () => setMute(true) },
     'jump-to': {
-      kind: 'stop',
       domain: 'playback',
       run: arg => {
         const targetMs = Number(arg)
@@ -181,8 +167,8 @@ export const Video: FunctionComponent<Props> = ({
         forceJumpTo(videoRef.current, targetMs)
       }
     },
-    'jump-start': { kind: 'stop', domain: 'playback', run: () => forceJumpTo(videoRef.current, 0) },
-    'jump-end': { kind: 'stop', domain: 'playback', run: () => forceJumpTo(videoRef.current, -1) }
+    'jump-start': { domain: 'playback', run: () => forceJumpTo(videoRef.current, 0) },
+    'jump-end': { domain: 'playback', run: () => forceJumpTo(videoRef.current, -1) }
   }
 
   const { surrender: surrenderAnyDomain } = useViewportBehaviours<VideoAction>(
@@ -197,8 +183,7 @@ export const Video: FunctionComponent<Props> = ({
       whenHidden,
       onVisibilityChanged
     },
-    actions,
-    behavioursSuspended === true
+    actions
   )
 
   // Narrowed back to this component's own domains. The generic layer takes a `string`,
