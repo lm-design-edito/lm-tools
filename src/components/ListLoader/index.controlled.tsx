@@ -145,8 +145,6 @@ export const ControlledListLoader = <T,>({
     .filter(pagePos => inBoundsPages.includes(pagePos))
     .sort((a, b) => a - b)
 
-  // Nothing loaded and nothing on its way: without a button of its own the component
-  // would render an empty box, with no way in. Waiting on a first page needs none.
   const hasNothing = loadedPages.length === 0 && sortedLoadingPages.length === 0
   const slots = hasNothing
     ? [{

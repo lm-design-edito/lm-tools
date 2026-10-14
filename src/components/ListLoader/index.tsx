@@ -134,8 +134,6 @@ export const ListLoader = <T,>({
         return kept.length === next.length ? next : kept
       })
     }
-    // Requested, not loaded, not in flight: the page had exhausted its retries, and
-    // the click is what gives it a fresh budget.
     const gaveUp = requestedPages.current.has(pagePos)
       && !itemsPages.has(pagePos)
       && !loadingPages.has(pagePos)
@@ -186,8 +184,7 @@ export const ListLoader = <T,>({
       })
   }
 
-  // Fx. dep. none - Emptying `requestedPages` closes the gate every pending fetch and
-  // retry passes through, so nothing survives the unmount.
+  // Fx. dep. none - Emptying `requestedPages` is what stops a fetch already in flight.
   useEffect(() => () => {
     retryTimeouts.current.forEach(timeout => { window.clearTimeout(timeout) })
     retryTimeouts.current.clear()

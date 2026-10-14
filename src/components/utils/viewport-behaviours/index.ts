@@ -181,8 +181,7 @@ export function useViewportBehaviours <A extends string> (
   useEffect(() => {
     if (isVisible === undefined) return
     const last = lastRunRef.current
-    // The visibility state has not moved: nothing to do. Without this, any unrelated
-    // re-render would replay the list.
+    // Without this, any unrelated re-render would replay the list.
     if (last.isVisible === isVisible) return
     lastRunRef.current = { isVisible }
 

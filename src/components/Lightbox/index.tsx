@@ -193,8 +193,7 @@ export const Lightbox: FunctionComponent<Props> = ({
 
   const [storeState, setStoreState] = useState(getLightboxesStoreState)
 
-  // Fx. dep. none - The read before the watch catches a store that moved between the
-  // first render and this effect.
+  // Fx. dep. none - The read catches a store that moved before this effect ran.
   useEffect(() => {
     setStoreState(getLightboxesStoreState())
     return watchLightboxesStoreState(() => setStoreState(getLightboxesStoreState()))
