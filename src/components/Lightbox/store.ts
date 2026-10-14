@@ -22,9 +22,8 @@ let state: LightboxState = {
   members: new Map()
 }
 
-// The one writer, and its equality check is not an optimisation: a member reads the
-// state through `useSyncExternalStore`, which compares what `getState` returns, so a
-// new object for an unchanged state would loop it.
+// The one writer. Its equality check is what keeps a write that changes nothing — closing
+// an already closed group, a `step` clamped at an end — from waking every member.
 function setState (next: LightboxState): void {
   if (next.openGroup === state.openGroup
     && next.openMemberId === state.openMemberId
