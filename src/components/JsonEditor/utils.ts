@@ -7,13 +7,8 @@ import type {
 } from './types.js'
 import cssModule from './styles.module.css'
 
-/**
- * Shared by every editor in the tree — they all emit class names under the same
- * public prefix, so a single instance is what keeps them consistent.
- */
 export const c = clss(publicClassName, { cssModule })
 
-/** Which {@link ValueType} a value belongs to. */
 export function getValueType (value: JsonValue): ValueType {
   if (value === null) return 'null'
   if (Array.isArray(value)) return 'array'
