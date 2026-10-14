@@ -24,8 +24,8 @@ import {
   open as openLightbox,
   register,
   step,
-  subscribe,
-  unregister
+  unregister,
+  watchLightboxesStoreState
 } from './store.js'
 import cssModule from './styles.module.css'
 
@@ -193,12 +193,11 @@ export const Lightbox: FunctionComponent<Props> = ({
 
   const [storeState, setStoreState] = useState(getLightboxesStoreState)
 
-  // Fx. dep. none - Follows the shared registry for the whole mount. `subscribe` returns
-  // its own teardown, and the read before it catches a store that moved between the first
-  // render and this effect.
+  // Fx. dep. none - The read before the watch catches a store that moved between the
+  // first render and this effect.
   useEffect(() => {
     setStoreState(getLightboxesStoreState())
-    return subscribe(() => setStoreState(getLightboxesStoreState()))
+    return watchLightboxesStoreState(() => setStoreState(getLightboxesStoreState()))
   }, [])
 
   const isOn = isOnProp ?? (storeState.openMemberId === id)

@@ -14,7 +14,7 @@ import type {
   LightboxState
 } from './types.js'
 
-const listeners = new Set<() => void>()
+const stateChangeCallbacks = new Set<() => void>()
 
 let state: LightboxState = {
   openGroup: null,
@@ -29,12 +29,15 @@ function setLightboxesStoreState (nextState: LightboxState): void {
     && nextState.openMemberId === state.openMemberId
     && nextState.members === state.members) return
   state = nextState
-  for (const listener of listeners) listener()
+  for (const onStoreStateChange of stateChangeCallbacks) onStoreStateChange()
 }
 
-export function subscribe (listener: () => void): () => void {
-  listeners.add(listener)
-  return () => { listeners.delete(listener) }
+export function watchLightboxesStoreState (onStoreStateChange: () => void): () => void {
+  stateChangeCallbacks.add(onStoreStateChange)
+  const unwatchLightboxesStoreState = (): void => {
+    stateChangeCallbacks.delete(onStoreStateChange)
+  }
+  return unwatchLightboxesStoreState
 }
 
 export function getLightboxesStoreState (): LightboxState {
