@@ -42,28 +42,18 @@ publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là
 gardant que la coquille CLI chez lui. C'est le prochain vrai chantier de ce dépôt,
 et il n'ouvrira qu'une fois lm-link publié.
 
-**Une suppression attend le chantier de lm-link : `behavioursSuspended`.** Il
-est décidé là-bas — une passerelle neutralisera elle-même les props de son composant tant
-que le contenu est retenu derrière un disclaimer, plutôt que de passer un booléen que le
-composant interprète. Ce qui partira d'ici : la prop sur les trois `Props`
-(`Video:70`, `Sequencer:134`, `ScrollListener:76`) et leurs appels du hook ; dans
-`utils/viewport-behaviours/index.ts`, le paramètre `suspended`, `heldBackRef`, la branche
-`released` et le champ `suspended` de `lastRunRef` ; et **`ActionSpec.kind`**, dont le seul
-lecteur est la vérification de suspension (`index.ts:212`) et qui devient mort dans une
-vingtaine d'entrées de tables d'actions. À faire après lm-link, jamais avant : un
-`behavioursSuspended` absent vaut `false`, donc la neutralisation à la passerelle tient
-seule pendant l'intervalle. Détail complet dans la roadmap de lm-link, « Le remplacement
-de la porte par le contexte `Disclaimer` ».
+**`behavioursSuspended` a été retiré**, et avec lui tout ce qui le servait : le
+paramètre `suspended` du hook, la liste des instructions retenues, leur rejeu à
+l'ouverture, et le champ `kind` d'`ActionSpec`, dont la vérification de suspension était
+le seul lecteur. Retenir un composant est désormais l'affaire de l'appelant, qui ne lui
+passe pas les props qui déclenchent quelque chose — lm-link le fait à la passerelle, dans
+son contexte `Disclaimer`. La couche de visibilité n'a plus qu'un frein, la reddition.
+Reste à publier, puis à bumper lm-link, où deux `Omit<…, 'behavioursSuspended'>`
+attendent d'être retirés.
 
-**Deux justifications à réécrire au même passage** : le README (« ce sont des chaînes
-obligatoirement : lm-link […] XML statique ») et le commentaire de `isInstruction`
-fondent la grammaire d'instructions sur ce qu'un consommateur en fait. lm-tools se
-justifie sur son propre étage : cette grammaire existe pour faciliter les déclenchements
-conditionnels sans écrire de callback.
-
-**Et une réflexion repoussée, à ouvrir après** : l'harmonisation du motif `when*`
-lui-même. Le retrait de `kind` allège les tables d'actions sans toucher à la grammaire —
-c'est elle qu'il faudra regarder ensuite, d'un bloc, pour les trois composants à la fois.
+**Une réflexion repoussée, à ouvrir ensuite** : l'harmonisation du motif `when*`
+lui-même. Le retrait de `kind` a allégé les tables d'actions sans toucher à la grammaire —
+c'est elle qu'il faudra regarder, d'un bloc, pour les trois composants à la fois.
 
 ## Le trou de synchronisation des événements de `Scrllgngn`
 
@@ -238,8 +228,9 @@ Ce qui suit est le contrat tel qu'il est écrit, et pourquoi il tombe de ce côt
 **Deux props, pas huit** — `whenVisible` et `whenHidden` —, chacune prenant une
 instruction ou une liste d'instructions. Le composant publie un **vocabulaire de verbes**
 qui lui est propre ; la couche générique ne connaît que des chaînes. Et ce sont des
-chaînes obligatoirement : lm-link est le consommateur principal et ses props viennent d'un
-XML statique, qu'une fonction ou un objet ne traverse pas.
+chaînes pour ce qu'elles rendent possible : déclarer un déclenchement conditionnel sans
+écrire de callback, et le déclarer là où une fonction ne passe pas — un attribut, un
+champ de formulaire, une structure sérialisée.
 
 ```ts
 export type Modifier = 'once' | 'force'
@@ -258,11 +249,10 @@ commun** plutôt que groupés dans un record : `visibilityThreshold`, `visibilit
 bien dans un type et mal à l'appel, où il coûte une paire d'accolades pour poser une
 valeur ; le préfixe groupe aussi bien, et dans la liste d'autocomplétion en plus.
 
-**Le déclencheur devient un état.** La visibilité est tenue en état et les instructions
-tirent sur la transition d'une condition **dérivée** — `isVisible && !suspended` — et non
-sur le franchissement de l'écran. Une porte qui s'ouvre sur une vidéo déjà visible fait
-passer cette condition de `false` à `true` : le bug d'en dessous disparaît sans cas
-particulier.
+**Le déclencheur est un état, pas un franchissement.** La visibilité est tenue en état
+et les instructions tirent sur sa transition. C'est ce qui rend les deux délais possibles,
+et ce qui laisse un appelant recombiner la visibilité avec ce qu'il suit par ailleurs : un
+événement d'observateur se lit une fois, un état se lit à tout moment.
 
 **Les deux délais sont un debounce sur l'état**, pas un report de l'action.
 `visibilityOnAfterMs` veut dire « doit rester visible ce temps-là pour compter comme
@@ -270,15 +260,14 @@ visible » :
 une vidéo croisée en scrollant vite ne compte jamais comme vue, donc rien ne tire et aucun
 crédit `once` n'est dépensé. Un délai posé sur l'action aurait demandé de l'annuler.
 
-**Chaque composant publie une table**, et ses deux champs répondent chacun à une des
-questions restées ouvertes ci-dessous : `domain` pour la main du lecteur — toucher
-lecture/pause éteint le domaine `playback` et laisse `sound` intact —, `kind` pour la
-porte, qui suspend ce qui *lance* et jamais ce qui *calme*.
+**Chaque composant publie une table**, dont le `domain` répond à la question restée
+ouverte ci-dessous : la main du lecteur — toucher lecture/pause éteint le domaine
+`playback` et laisse `sound` intact.
 
 ```ts
 const videoActions: ActionTable<VideoAction> = {
-  play: { kind: 'start', domain: 'playback', run: () => setPlay(true) },
-  mute: { kind: 'stop', domain: 'sound', run: () => setMute(true) }
+  play: { domain: 'playback', run: () => setPlay(true) },
+  mute: { domain: 'sound', run: () => setMute(true) }
 }
 ```
 
@@ -313,17 +302,14 @@ devinera pas de l'exemple lui-même.
 <Video whenVisible={['play:force']} whenHidden={['pause']} />
 ```
 
-**Mais `:force` ne passe jamais la porte.** Il ignore la *reddition*, jamais la
-*suspension* d'une capacité comme le disclaimer de lm-link. Les deux se ressemblent et
-n'ont rien à voir : une porte parle d'un consentement **pas encore donné**, une reddition
-d'une intention **déjà exprimée**. Un article qui pourrait forcer le passage d'un
-avertissement le viderait de son objet.
+**La reddition éteint le domaine entier**, et c'est un cas d'usage concret qui le
+demande : on appuie sur play sur une citation sonore, puis on continue à lire l'article en
+écoutant. Une pause automatique à la sortie de l'écran serait hostile.
 
-**La reddition éteint le domaine entier, `start` et `stop`.** Elle diffère là aussi de la
-porte, qui ne suspend que ce qui lance. La raison est un cas d'usage concret : on appuie
-sur play sur une citation sonore, puis on continue à lire l'article en écoutant. Une pause
-automatique à la sortie de l'écran serait hostile, alors que derrière une porte elle
-serait juste.
+**Et la reddition est le seul frein de cette couche.** Un appelant qui veut retenir un
+composant entier — le disclaimer de lm-link est le cas type — ne passe pas par ici : il ne
+lui passe pas les props qui déclenchent quelque chose. La couche n'a donc aucune notion de
+contenu retenu, et `:force` n'a qu'une chose à contourner.
 
 **Ce qui compte comme une prise de main est une décision du composant**, pas de la couche
 générique. lm-link a déjà tranché pour la vidéo, et le jugement est bon : les boutons
