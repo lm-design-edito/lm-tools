@@ -1,4 +1,5 @@
 import type { JSX, ReactNode } from 'react'
+import { integersBetween } from '../../agnostic/arrays/integers-between/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { IntersectionObserverComponent } from '../IntersectionObserver/index.js'
 import type {
@@ -7,7 +8,6 @@ import type {
 } from '../utils/types.js'
 import { mergeClassNames } from '../utils/index.js'
 import { listLoader as publicClassName } from '../public-classnames.js'
-import { rangeBetween } from './utils.js'
 import cssModule from './styles.module.css'
 
 /** Which position a load button occupies in the rendered sequence. */
@@ -138,23 +138,31 @@ export const ControlledListLoader = <T,>({
   const gapPages = loadedPages.flatMap((pagePos, pos) => {
     const prevPage = loadedPages[pos - 1]
     if (prevPage === undefined) return []
-    return rangeBetween(prevPage + 1, pagePos - 1)
+    return integersBetween(prevPage + 1, pagePos - 1)
   })
-
-  const slots = [
-    ...firstLoadedPage !== undefined && firstLoadedPage > firstPagePos
-      ? [{ pagePos: firstLoadedPage - 1, kind: 'prev' as const }]
-      : [],
-    ...loadedPages.map(pagePos => ({ pagePos, kind: 'items' as const })),
-    ...gapPages.map(pagePos => ({ pagePos, kind: 'gap' as const })),
-    ...lastLoadedPage !== undefined && lastLoadedPage < lastPagePos
-      ? [{ pagePos: lastLoadedPage + 1, kind: 'next' as const }]
-      : []
-  ].sort((a, b) => a.pagePos - b.pagePos)
 
   const sortedLoadingPages = [...loadingPages ?? []]
     .filter(pagePos => inBoundsPages.includes(pagePos))
     .sort((a, b) => a - b)
+
+  // Nothing loaded and nothing on its way: without a button of its own the component
+  // would render an empty box, with no way in. Waiting on a first page needs none.
+  const hasNothing = loadedPages.length === 0 && sortedLoadingPages.length === 0
+  const slots = hasNothing
+    ? [{
+        pagePos: [...inBoundsPages].sort((a, b) => a - b)[0] ?? firstPagePos,
+        kind: 'gap' as const
+      }]
+    : [
+        ...firstLoadedPage !== undefined && firstLoadedPage > firstPagePos
+          ? [{ pagePos: firstLoadedPage - 1, kind: 'prev' as const }]
+          : [],
+        ...loadedPages.map(pagePos => ({ pagePos, kind: 'items' as const })),
+        ...gapPages.map(pagePos => ({ pagePos, kind: 'gap' as const })),
+        ...lastLoadedPage !== undefined && lastLoadedPage < lastPagePos
+          ? [{ pagePos: lastLoadedPage + 1, kind: 'next' as const }]
+          : []
+      ].sort((a, b) => a.pagePos - b.pagePos)
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null, { loading: sortedLoadingPages.length > 0 }), className)
 

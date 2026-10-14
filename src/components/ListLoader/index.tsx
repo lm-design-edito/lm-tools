@@ -5,13 +5,13 @@ import {
   useState,
   type ReactNode
 } from 'react'
+import { integersBetween } from '../../agnostic/arrays/integers-between/index.js'
 import { toError } from '../../agnostic/misc/cast/index.js'
 import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import {
   type Props as ControlledProps,
   ControlledListLoader
 } from './index.controlled.js'
-import { rangeBetween } from './utils.js'
 
 /** A page's items together with the moment they were last fetched. */
 type LoadedPageData<T> = {
@@ -134,6 +134,12 @@ export const ListLoader = <T,>({
         return kept.length === next.length ? next : kept
       })
     }
+    // Requested, not loaded, not in flight: the page had exhausted its retries, and
+    // the click is what gives it a fresh budget.
+    const gaveUp = requestedPages.current.has(pagePos)
+      && !itemsPages.has(pagePos)
+      && !loadingPages.has(pagePos)
+    if (gaveUp) loadPage(pagePos)
     onLoadPageClicked?.(pagePos)
   }
 
@@ -210,7 +216,7 @@ export const ListLoader = <T,>({
     if (!fillGaps) return
     setInternalPages(curr => {
       if (curr.length === 0) return curr
-      const missing = rangeBetween(Math.min(...curr), Math.max(...curr))
+      const missing = integersBetween(Math.min(...curr), Math.max(...curr))
         .filter(page => !curr.includes(page))
       if (missing.length === 0) return curr
       return [...curr, ...missing]
