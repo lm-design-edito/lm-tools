@@ -37,7 +37,7 @@ export function subscribe (listener: () => void): () => void {
   return () => { listeners.delete(listener) }
 }
 
-export function getState (): LightboxState {
+export function getLightboxesStoreState (): LightboxState {
   return state
 }
 

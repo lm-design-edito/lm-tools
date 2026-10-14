@@ -19,7 +19,7 @@ import {
 import { lightbox as publicClassName } from '../public-classnames.js'
 import {
   close as closeLightbox,
-  getState,
+  getLightboxesStoreState,
   membersOf,
   open as openLightbox,
   register,
@@ -191,14 +191,14 @@ export const Lightbox: FunctionComponent<Props> = ({
   const ownGroup = groups[0]!
   const groupsKey = groups.join(' ')
 
-  const [storeState, setStoreState] = useState(getState)
+  const [storeState, setStoreState] = useState(getLightboxesStoreState)
 
   // Fx. dep. none - Follows the shared registry for the whole mount. `subscribe` returns
   // its own teardown, and the read before it catches a store that moved between the first
   // render and this effect.
   useEffect(() => {
-    setStoreState(getState())
-    return subscribe(() => setStoreState(getState()))
+    setStoreState(getLightboxesStoreState())
+    return subscribe(() => setStoreState(getLightboxesStoreState()))
   }, [])
 
   const isOn = isOnProp ?? (storeState.openMemberId === id)
