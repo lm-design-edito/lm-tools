@@ -1,64 +1,64 @@
 import type {
-  LightboxMember,
-  LightboxState
+  LightboxesStoreState,
+  RegisteredLightbox
 } from './types.js'
 
-const stateChangeCallbacks = new Set<() => void>()
+const storeStateChangeCallbacks = new Set<() => void>()
 
-let state: LightboxState = {
+let storeState: LightboxesStoreState = {
   openGroup: null,
-  openMemberId: null,
-  members: new Map()
+  openLightboxId: null,
+  lightboxesById: new Map()
 }
 
-export const getLightboxesStoreState = (): LightboxState => state
+export const getLightboxesStoreState = (): LightboxesStoreState => storeState
 
-function setLightboxesStoreState (nextState: LightboxState): void {
-  if (nextState.openGroup === state.openGroup
-    && nextState.openMemberId === state.openMemberId
-    && nextState.members === state.members) return
-  state = nextState
-  for (const onStoreStateChange of stateChangeCallbacks) onStoreStateChange()
+function setLightboxesStoreState (nextState: LightboxesStoreState): void {
+  if (nextState.openGroup === storeState.openGroup
+    && nextState.openLightboxId === storeState.openLightboxId
+    && nextState.lightboxesById === storeState.lightboxesById) return
+  storeState = nextState
+  for (const onStoreStateChange of storeStateChangeCallbacks) onStoreStateChange()
 }
 
 export function watchLightboxesStoreState (onStoreStateChange: () => void): () => void {
-  stateChangeCallbacks.add(onStoreStateChange)
+  storeStateChangeCallbacks.add(onStoreStateChange)
   const unwatchLightboxesStoreState = (): void => {
-    stateChangeCallbacks.delete(onStoreStateChange)
+    storeStateChangeCallbacks.delete(onStoreStateChange)
   }
   return unwatchLightboxesStoreState
 }
 
-export function registerLightboxesStoreMember (member: LightboxMember): void {
+export function registerLightbox (lightbox: RegisteredLightbox): void {
   setLightboxesStoreState({
-    ...state,
-    members: new Map(state.members).set(member.id, member)
+    ...storeState,
+    lightboxesById: new Map(storeState.lightboxesById).set(lightbox.id, lightbox)
   })
 }
 
-export function unregisterLightboxesStoreMember (memberId: string): void {
-  if (!state.members.has(memberId)) return
-  const members = new Map(state.members)
-  members.delete(memberId)
-  // A member leaving while it is the one shown would strand the group on nothing.
-  const leavesNothingOpen = state.openMemberId === memberId
+export function unregisterLightbox (lightboxId: string): void {
+  if (!storeState.lightboxesById.has(lightboxId)) return
+  const lightboxesById = new Map(storeState.lightboxesById)
+  lightboxesById.delete(lightboxId)
+  // A lightbox leaving while it is the one shown would strand the group on nothing.
+  const leavesNothingOpen = storeState.openLightboxId === lightboxId
   setLightboxesStoreState({
-    openGroup: leavesNothingOpen ? null : state.openGroup,
-    openMemberId: leavesNothingOpen ? null : state.openMemberId,
-    members
+    openGroup: leavesNothingOpen ? null : storeState.openGroup,
+    openLightboxId: leavesNothingOpen ? null : storeState.openLightboxId,
+    lightboxesById
   })
 }
 
 /**
- * The members of a group, in **document order**.
+ * The lightboxes of a group, in **document order**.
  *
  * `compareDocumentPosition` rather than mount order: React mounts a tree in its own
  * order, and a caller may mount each component in a root of its own, so nothing
- * guarantees the two match. Only runs when a group opens or navigates, over a
- * handful of members.
+ * guarantees the two match.
  */
-export function getMembersOf (group: string): LightboxMember[] {
-  const found = [...state.members.values()].filter(member => member.groups.includes(group))
+export function getGroupLightboxes (group: string): RegisteredLightbox[] {
+  const found = [...storeState.lightboxesById.values()]
+    .filter(lightbox => lightbox.groups.includes(group))
   return found.sort((a, b) => {
     const aElt = a.getElement()
     const bElt = b.getElement()
@@ -68,24 +68,24 @@ export function getMembersOf (group: string): LightboxMember[] {
   })
 }
 
-export function openLightbox (group: string, memberId: string): void {
-  setLightboxesStoreState({ ...state, openGroup: group, openMemberId: memberId })
+export function openLightbox (group: string, lightboxId: string): void {
+  setLightboxesStoreState({ ...storeState, openGroup: group, openLightboxId: lightboxId })
 }
 
 export function closeLightbox (): void {
-  setLightboxesStoreState({ ...state, openGroup: null, openMemberId: null })
+  setLightboxesStoreState({ ...storeState, openGroup: null, openLightboxId: null })
 }
 
-/** Moves to another member of the open group by `offset`, clamped at both ends. */
-export function step (offset: number): void {
-  const { openGroup, openMemberId } = state
-  if (openGroup === null || openMemberId === null) return
-  const ordered = getMembersOf(openGroup)
-  const current = ordered.findIndex(member => member.id === openMemberId)
+/** Opens another lightbox of the open group, `offset` places away, clamped. */
+export function stepOpenLightbox (offset: number): void {
+  const { openGroup, openLightboxId } = storeState
+  if (openGroup === null || openLightboxId === null) return
+  const ordered = getGroupLightboxes(openGroup)
+  const current = ordered.findIndex(lightbox => lightbox.id === openLightboxId)
   if (current === -1) return
   const index = Math.min(ordered.length - 1, Math.max(0, current + offset))
   // `index` is clamped into the list `current` was just found in.
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const target = ordered[index]!
-  setLightboxesStoreState({ ...state, openMemberId: target.id })
+  setLightboxesStoreState({ ...storeState, openLightboxId: target.id })
 }

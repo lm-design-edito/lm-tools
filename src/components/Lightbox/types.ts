@@ -1,17 +1,17 @@
-/** What a member hands the store so the group can find and place it. */
-export type LightboxMember = {
+/** What a lightbox hands the store so its group can find and place it. */
+export type RegisteredLightbox = {
   id: string
   groups: string[]
-  /** The member's anchor in the page, for ordering. `null` before it mounts. */
+  /** The lightbox's anchor in the page, for ordering. `null` before it mounts. */
   getElement: () => HTMLElement | null
 }
 
-/** Everything the store holds, and everything a member watches. */
-export type LightboxState = {
+/** Everything the store holds, and everything a lightbox watches. */
+export type LightboxesStoreState = {
   /** The group currently open, `null` when nothing is. */
   openGroup: string | null
-  /** The member currently shown. */
-  openMemberId: string | null
+  /** The lightbox currently shown. */
+  openLightboxId: string | null
   /** Every mounted lightbox of the page, unordered. */
-  members: ReadonlyMap<string, LightboxMember>
+  lightboxesById: ReadonlyMap<string, RegisteredLightbox>
 }

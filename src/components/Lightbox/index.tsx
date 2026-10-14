@@ -19,12 +19,12 @@ import {
 import { lightbox as publicClassName } from '../public-classnames.js'
 import {
   closeLightbox,
+  getGroupLightboxes,
   getLightboxesStoreState,
-  getMembersOf,
   openLightbox,
-  registerLightboxesStoreMember,
-  step,
-  unregisterLightboxesStoreMember,
+  registerLightbox,
+  stepOpenLightbox,
+  unregisterLightbox,
   watchLightboxesStoreState
 } from './store.js'
 import cssModule from './styles.module.css'
@@ -32,10 +32,10 @@ import cssModule from './styles.module.css'
 /**
  * Props for the {@link Lightbox} component.
  *
- * @property group - The group(s) this lightbox belongs to. Members of a group share
- * one lightbox and are navigable from it, in document order. The **first** group is the
- * one a click on this member opens; the others only matter when another member opens
- * them. Declaring none makes it a group of its own.
+ * @property group - The group(s) this lightbox belongs to. The lightboxes of a group
+ * are navigable from one another, in document order. The **first** group is the one a
+ * click on this lightbox opens; the others only matter when another lightbox of them is
+ * opened. Declaring none makes it a group of its own.
  * @property closeBtnContent - Content rendered inside the close button.
  * @property openBtnContent - Content rendered inside the open button. Left empty, the
  * button is still rendered: a stylesheet hides an empty control with `:empty`, and the
@@ -43,13 +43,13 @@ import cssModule from './styles.module.css'
  * @property prevBtnContent - Content rendered inside the previous button. The button is
  * always rendered; the root's `navigable` modifier says whether it has anywhere to go.
  * @property nextBtnContent - Content rendered inside the next button, same.
- * @property isOn - Controlled state. When defined, this member is driven by the
- * parent and the shared registry never opens or closes it.
+ * @property isOn - Controlled state. When defined, this lightbox is driven by the
+ * parent and the shared store never opens or closes it.
  * @property defaultIsOn - Whether the lightbox starts open, in uncontrolled mode.
  * Ignored when `isOn` is provided. Defaults to `false`.
  * @property exitOnEscape - When `true`, pressing `Escape` closes the lightbox.
  * @property navOnArrowKeys - When `true`, the left and right arrow keys move through
- * the open group. Only has an effect on a group of more than one member.
+ * the open group. Only has an effect on a group of more than one lightbox.
  * @property exitOnBgClick - When `true`, clicking the backdrop, and not its
  * content, closes it.
  * @property openOnClick - When `true`, clicking the content opens the lightbox. An
@@ -69,7 +69,7 @@ import cssModule from './styles.module.css'
  * @property onPrevArrowPressed - Called when the left arrow is pressed while the lightbox
  * is open (only while `navOnArrowKeys` is `true`), before the lightbox reacts.
  * @property onNextArrowPressed - Same, for the right arrow.
- * @property onIsOnChanged - Called after this member's state changed, with the new
+ * @property onIsOnChanged - Called after this lightbox's state changed, with the new
  * value.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - The content, rendered in place while closed and moved onto the
@@ -104,7 +104,7 @@ export type Props = PropsWithChildren<WithClassName<{
  * when opened.
  *
  * ### CSS modifiers
- * - `on` - this member is open.
+ * - `on` - this lightbox is open.
  * - `off` - it is not.
  * - `grouped` - it belongs to a group it did not invent.
  * - `navigable` - that group holds someone else, so the previous and next controls
@@ -143,9 +143,9 @@ export type Props = PropsWithChildren<WithClassName<{
  *   the popover API - would do the opposite, being document-wide and above
  *   everything, and paint over whichever article is being read.
  * - **Groups are held outside React**, in `./store.ts`: a consumer may render each
- *   component in a root of its own, in which case members of a group share no tree
- *   and a context could not reach from one to the other.
- * - Every member holds its own backdrop; only the open one is lifted over the page.
+ *   component in a root of its own, in which case the lightboxes of a group share no
+ *   tree and a context could not reach from one to the other.
+ * - Every lightbox holds its own backdrop; only the open one is lifted over the page.
  *   Navigating a group therefore lowers one and lifts another, and neither one's
  *   content is touched.
  * - This component ships **no appearance**: covering the page, the backdrop and the
@@ -188,7 +188,7 @@ export const Lightbox: FunctionComponent<Props> = ({
   const isGrouped = declaredGroups.length > 0
   const groups = isGrouped ? declaredGroups : [`solo:${id}`]
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const ownGroup = groups[0]!
+  const primaryGroup = groups[0]!
   const groupsKey = groups.join(' ')
 
   const [storeState, setStoreState] = useState(getLightboxesStoreState)
@@ -200,16 +200,16 @@ export const Lightbox: FunctionComponent<Props> = ({
     return watchLightboxesStoreState(() => setStoreState(getLightboxesStoreState()))
   }, [])
 
-  const isOn = isOnProp ?? (storeState.openMemberId === id)
+  const isOn = isOnProp ?? (storeState.openLightboxId === id)
   const openGroup = storeState.openGroup
-  const siblingsCount = isOn && openGroup !== null ? getMembersOf(openGroup).length : 0
+  const openGroupSize = isOn && openGroup !== null ? getGroupLightboxes(openGroup).length : 0
 
-  // Fx. dep. id, groupsKey - Joins the shared registry, which is what lets another
-  // member reach this one. `getElement` rather than the element itself: the registry
+  // Fx. dep. id, groupsKey - Joins the store, which is what lets another lightbox of
+  // the group reach this one. `getElement` rather than the element itself: the store
   // reads it when it needs to order the group, and never holds it.
   useEffect(() => {
-    registerLightboxesStoreMember({ id, groups, getElement: () => rootRef.current })
-    return () => unregisterLightboxesStoreMember(id)
+    registerLightbox({ id, groups, getElement: () => rootRef.current })
+    return () => unregisterLightbox(id)
   }, [id, groupsKey])
 
   // Keeps the last size the content had in place, so the placeholder can hold it once
@@ -231,8 +231,8 @@ export const Lightbox: FunctionComponent<Props> = ({
   // User action handlers
   const requestOpen = useCallback((): void => {
     if (isControlled) return
-    openLightbox(ownGroup, id)
-  }, [isControlled, ownGroup, id])
+    openLightbox(primaryGroup, id)
+  }, [isControlled, primaryGroup, id])
   const requestClose = useCallback((): void => {
     if (isControlled) return
     closeLightbox()
@@ -248,11 +248,11 @@ export const Lightbox: FunctionComponent<Props> = ({
   }
   const handlePrevButtonClick: MouseEventHandler<HTMLButtonElement> = () => {
     onPrevButtonClicked?.(isOn)
-    step(-1)
+    stepOpenLightbox(-1)
   }
   const handleNextButtonClick: MouseEventHandler<HTMLButtonElement> = () => {
     onNextButtonClicked?.(isOn)
-    step(1)
+    stepOpenLightbox(1)
   }
   const handleContentClick: MouseEventHandler<HTMLDivElement> = () => {
     if (openOnClick !== true || isOn) return
@@ -280,33 +280,33 @@ export const Lightbox: FunctionComponent<Props> = ({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [exitOnEscape, isOn, requestClose, onEscapePressed])
 
-  // Fx. dep. navOnArrowKeys, isOn, siblingsCount, onPrevArrowPressed,
+  // Fx. dep. navOnArrowKeys, isOn, openGroupSize, onPrevArrowPressed,
   // onNextArrowPressed - The arrow keys walk the open group. Bound only while the
   // lightbox is open and the group holds someone else, so the keys stay the page's the
   // rest of the time.
   useEffect(() => {
-    if (navOnArrowKeys !== true || !isOn || siblingsCount < 2) return
+    if (navOnArrowKeys !== true || !isOn || openGroupSize < 2) return
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'ArrowLeft') {
         onPrevArrowPressed?.(isOn)
-        step(-1)
+        stepOpenLightbox(-1)
       } else if (e.key === 'ArrowRight') {
         onNextArrowPressed?.(isOn)
-        step(1)
+        stepOpenLightbox(1)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [navOnArrowKeys, isOn, siblingsCount, onPrevArrowPressed, onNextArrowPressed])
+  }, [navOnArrowKeys, isOn, openGroupSize, onPrevArrowPressed, onNextArrowPressed])
 
-  // Fx. dep. hasAppliedDefault, isControlled, defaultIsOn, ownGroup, id - An
+  // Fx. dep. hasAppliedDefault, isControlled, defaultIsOn, primaryGroup, id - An
   // uncontrolled lightbox asked to start open says so once, and never again: the
   // registry owns the state from then on.
   useEffect(() => {
     if (hasAppliedDefault || isControlled || !defaultIsOn) return
     setHasAppliedDefault(true)
-    openLightbox(ownGroup, id)
-  }, [hasAppliedDefault, isControlled, defaultIsOn, ownGroup, id])
+    openLightbox(primaryGroup, id)
+  }, [hasAppliedDefault, isControlled, defaultIsOn, primaryGroup, id])
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
@@ -314,7 +314,7 @@ export const Lightbox: FunctionComponent<Props> = ({
     on: isOn,
     off: !isOn,
     grouped: isGrouped,
-    navigable: siblingsCount > 1,
+    navigable: openGroupSize > 1,
     'open-on-click': openOnClick === true && !isOn
   }), className)
   const size = sizeRef.current
