@@ -3,8 +3,11 @@ import { randomHash } from '../../agnostic/random/uuid/index.js'
 import type {
   PropsBlock,
   PropsPage,
-  PropsStickyBlock
-} from './index.js'
+  PropsStickyBlock,
+  StickyDepth,
+  TrackedBlockContext,
+  ViewportOffset
+} from './types.js'
 
 /** The subset of a bounding rect a {@link Scrllgngn} tracks and exposes. */
 export type ScreenRect = {
@@ -78,7 +81,7 @@ export function consolidateStickyBlocks (pages?: PropsPage[]): Map<string, Conso
  */
 export function lazyLoadedBlocks (
   blocks: Map<string, ConsolidatedStickyBlock>,
-  depth: 'back' | 'front',
+  depth: StickyDepth,
   currentPagePos: number,
   lazyLoadDistance: number
 ): Array<[string, ConsolidatedStickyBlock]> {
@@ -157,42 +160,6 @@ function toPrivateLength (value?: number): string {
  * Scroll tracking
  *
  * * * * * * * * * * * * * * * * */
-
-/**
- * Where one tracked block stands in the scroll, as handed to its `onScrolled`.
- *
- * Every progression is a `0`–`1` ratio measured against the threshold line, and
- * weighted **by pixel height**: a zone of unequal pages is not the same as
- * `(indexOfCurrentPage + currentPageProgression) / displayZone.length`.
- *
- * @property currentPage - Zero-based position of the page in view.
- * @property currentPageProgression - `0` when the current page's top meets the
- * threshold, `1` when its bottom does.
- * @property displayZone - Every page the block's `id` appears on. A block without
- * an `id` shows on one page, so its zone holds that page alone and its three
- * progressions are equal.
- * @property indexOfCurrentPageInDisplayZone - Where `currentPage` sits in
- * `displayZone`.
- * @property displayZoneProgression - Progression across the whole zone. On a zone
- * like `[2, 3, 5]` it runs 0 → ~0.66 over pages 2–3, pauses while page 4 shows the
- * block nowhere, then resumes to 1 on page 5.
- * @property contiguousDisplayZone - The unbroken run of `displayZone` containing
- * `currentPage` — `[2, 3]` for the zone above while on page 2 or 3.
- * @property indexOfCurrentPageInContiguousDisplayZone - Where `currentPage` sits in
- * `contiguousDisplayZone`.
- * @property contiguousDisplayZoneProgression - Progression across that run alone,
- * so it always spans a full 0 → 1.
- */
-export type TrackedBlockContext = {
-  currentPage: number
-  currentPageProgression: number
-  displayZone: number[]
-  indexOfCurrentPageInDisplayZone: number
-  displayZoneProgression: number
-  contiguousDisplayZone: number[]
-  indexOfCurrentPageInContiguousDisplayZone: number
-  contiguousDisplayZoneProgression: number
-}
 
 /** How far the threshold line has travelled through one page, in pixels. */
 export type PageScrollMetrics = {
@@ -427,9 +394,6 @@ export type VisibleZoneRect = {
   width: number
   height: number
 }
-
-/** A length as authored: a bare number means pixels, a string is CSS's problem. */
-export type ViewportOffset = number | string
 
 /** The four edges, as authored on the component. */
 export type ViewportOffsets = {
