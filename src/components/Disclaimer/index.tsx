@@ -16,7 +16,7 @@ import cssModule from './styles.module.css'
 /**
  * Props for the {@link Disclaimer} component.
  *
- * @property children - The content the disclaimer gates, rendered below the panel.
+ * @property children - The content the disclaimer withholds, rendered below the panel.
  * @property undisclosedContent - Content displayed inside the disclaimer panel,
  * until it is dismissed.
  * @property togglerContent - Content rendered inside the dismiss toggler.
@@ -55,7 +55,7 @@ export type Props = PropsWithChildren<WithClassName<{
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A root `<div>` holding the disclaimer panel and the gated content.
+ * @returns A root `<div>` holding the disclaimer panel and the withheld content.
  *
  * @remarks
  * - In controlled mode (`isOn` defined), visibility is fully driven by the
