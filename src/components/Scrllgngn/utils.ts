@@ -3,7 +3,9 @@ import { randomHash } from '../../agnostic/random/uuid/index.js'
 import type {
   PropsBlock,
   PropsPage,
-  PropsStickyBlock,
+  PropsStickyBlock
+} from './index.js'
+import type {
   StickyDepth,
   TrackedBlockContext,
   ViewportOffset

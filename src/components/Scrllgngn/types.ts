@@ -1,5 +1,3 @@
-import type { PropsWithChildren } from 'react'
-
 /**
  * The depths that lift a block out of the scroll flow.
  *
@@ -67,68 +65,4 @@ export type TrackedBlockContext = {
   contiguousDisplayZone: number[]
   indexOfCurrentPageInContiguousDisplayZone: number
   contiguousDisplayZoneProgression: number
-}
-
-/**
- * Common properties shared by all block types.
- *
- * @property id - Optional stable identifier for the block. Used to consolidate
- * blocks with the same id across multiple pages into a single sticky block
- * displayed across those pages.
- * @property onScrolled - Called with this block's {@link TrackedBlockContext} on
- * every frame the scroll moved it, while it is displayed. Declaring it is what
- * turns tracking on for the block — nothing is measured for a block without it.
- * @property children - Content rendered inside the block.
- */
-export type PropsCommonBlock = PropsWithChildren<{
-  id?: string
-  // [WIP] `onScrolled` doubles as the tracking switch, so a block that only wants
-  // the custom properties and `data-` attributes, without a handler, has no way to
-  // ask for them. Reopen a boolean here if that case ever shows up.
-  onScrolled?: (context: TrackedBlockContext) => void
-}>
-
-/**
- * A block that scrolls with the page content.
- *
- * @property depth - When set to `'scroll'` or omitted, the block is rendered
- * inline in the scrolling content layer.
- */
-export type PropsScrollBlock = PropsCommonBlock & {
-  depth?: 'scroll'
-}
-
-/**
- * A block that sticks to the viewport, rendered outside the scroll flow.
- *
- * @property depth - `'back'` renders the block behind the scrolling content;
- * `'front'` renders it in front.
- * @property zIndex - Optional explicit z-index. Sticky blocks are otherwise
- * stacked in the order they appear across pages (ascending).
- */
-export type PropsStickyBlock = PropsCommonBlock & {
-  depth: StickyDepth
-  zIndex?: number
-}
-
-/**
- * Union of all block variants accepted by a {@link PropsPage}.
- *
- * @see {@link PropsScrollBlock}
- * @see {@link PropsStickyBlock}
- */
-export type PropsBlock = PropsScrollBlock | PropsStickyBlock
-
-/**
- * Describes a single page in the scrollytelling sequence.
- *
- * @property id - Optional identifier for the page.
- * @property blocks - Ordered list of blocks belonging to this page.
- * Scroll blocks are rendered inline; sticky blocks (`'back'` / `'front'`) are
- * lifted into their respective layer and consolidated with same-id blocks from
- * other pages.
- */
-export type PropsPage = {
-  id?: string
-  blocks?: PropsBlock[]
 }

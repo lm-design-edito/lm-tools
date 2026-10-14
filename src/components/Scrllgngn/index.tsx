@@ -1,5 +1,6 @@
 import {
   type FunctionComponent,
+  type PropsWithChildren,
   useCallback,
   useEffect,
   useRef,
@@ -31,7 +32,7 @@ import {
 import { scrllgngn as publicClassName } from '../public-classnames.js'
 import type {
   ForceStickMode,
-  PropsPage,
+  StickyDepth,
   TrackedBlockContext,
   ViewportOffset
 } from './types.js'
@@ -64,10 +65,74 @@ import {
 import cssModule from './styles.module.css'
 
 /**
+ * Common properties shared by all block types.
+ *
+ * @property id - Optional stable identifier for the block. Used to consolidate
+ * blocks with the same id across multiple pages into a single sticky block
+ * displayed across those pages.
+ * @property onScrolled - Called with this block's {@link TrackedBlockContext} on
+ * every frame the scroll moved it, while it is displayed. Declaring it is what
+ * turns tracking on for the block — nothing is measured for a block without it.
+ * @property children - Content rendered inside the block.
+ */
+export type PropsCommonBlock = PropsWithChildren<{
+  id?: string
+  // [WIP] `onScrolled` doubles as the tracking switch, so a block that only wants
+  // the custom properties and `data-` attributes, without a handler, has no way to
+  // ask for them. Reopen a boolean here if that case ever shows up.
+  onScrolled?: (context: TrackedBlockContext) => void
+}>
+
+/**
+ * A block that scrolls with the page content.
+ *
+ * @property depth - When set to `'scroll'` or omitted, the block is rendered
+ * inline in the scrolling content layer.
+ */
+export type PropsScrollBlock = PropsCommonBlock & {
+  depth?: 'scroll'
+}
+
+/**
+ * A block that sticks to the viewport, rendered outside the scroll flow.
+ *
+ * @property depth - `'back'` renders the block behind the scrolling content;
+ * `'front'` renders it in front.
+ * @property zIndex - Optional explicit z-index. Sticky blocks are otherwise
+ * stacked in the order they appear across pages (ascending).
+ */
+export type PropsStickyBlock = PropsCommonBlock & {
+  depth: StickyDepth
+  zIndex?: number
+}
+
+/**
+ * Union of all block variants accepted by a {@link PropsPage}.
+ *
+ * @see {@link PropsScrollBlock}
+ * @see {@link PropsStickyBlock}
+ */
+export type PropsBlock = PropsScrollBlock | PropsStickyBlock
+
+/**
+ * Describes a single page in the scrollytelling sequence.
+ *
+ * @property id - Optional identifier for the page.
+ * @property blocks - Ordered list of blocks belonging to this page.
+ * Scroll blocks are rendered inline; sticky blocks (`'back'` / `'front'`) are
+ * lifted into their respective layer and consolidated with same-id blocks from
+ * other pages.
+ */
+export type PropsPage = {
+  id?: string
+  blocks?: PropsBlock[]
+}
+
+/**
  * Props for the {@link Scrllgngn} component.
  *
  * @property pages - Ordered list of pages that compose the scrollytelling
- * sequence. Each page may contain any mix of block variants.
+ * sequence. Each page may contain any mix of {@link PropsBlock} variants.
  * @property thresholdOffsetPercent - Where the threshold line sits, as a
  * percentage of the **visible zone** — not of the viewport, so a threshold stays
  * put under a sticky nav. It decides which page counts as current, and anchors
@@ -159,14 +224,14 @@ export type Props = WithClassName<{
  * - `--active` modifier when the block's page range includes the current page.
  * - `--lazy-loaded` modifier when the block is mounted but not on the current page.
  * - An inline `z-index` derived from the block's position in the sorted stack
- * (overridden by a block's `zIndex` if provided).
+ * (overridden by {@link PropsStickyBlock.zIndex} if provided).
  *
  * ### Scroll block elements
  * Each scroll block sits in its own wrapper, whatever it does — a block that isn't
  * tracked still gets one, so the DOM keeps the same shape either way.
  *
  * ### Tracked block elements
- * A block declaring an `onScrolled` also carries its
+ * A block declaring {@link PropsCommonBlock.onScrolled} also carries its
  * {@link TrackedBlockContext} on its wrapper, for scrollytelling driven in CSS
  * alone. Written straight to the element on the frames they change, so they never
  * re-render the sequence.

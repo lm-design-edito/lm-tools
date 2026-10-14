@@ -55,6 +55,14 @@ attendent d'être retirés.
 lui-même. Le retrait de `kind` a allégé les tables d'actions sans toucher à la grammaire —
 c'est elle qu'il faudra regarder, d'un bloc, pour les trois composants à la fois.
 
+**Another one, same shelf: moving every component's prop types into its `types.ts`.**
+Today they sit in `index.tsx`, next to the component, and that stays the rule for now.
+`Scrllgngn` is the one place where it bites: its `utils.ts` needs `PropsPage` and
+`PropsBlock`, so it imports them back from `index.tsx` while `index.tsx` imports its
+functions — a type-only cycle, accepted deliberately for this one component. Doing it
+properly means moving the prop types of all of them at once and fixing the imports
+after, which is a pass of its own.
+
 ## Le trou de synchronisation des événements de `Scrllgngn`
 
 Constaté en préparant la fiche `ui-module` de lm-link, et **pas propre à `UIModule` :
