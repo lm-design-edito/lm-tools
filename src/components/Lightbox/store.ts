@@ -14,23 +14,23 @@ import type {
   LightboxState
 } from './types.js'
 
-const members = new Map<string, LightboxMember>()
 const listeners = new Set<() => void>()
 
 let state: LightboxState = {
   openGroup: null,
-  openMemberId: null
+  openMemberId: null,
+  members: new Map()
 }
 
-function emit (): void {
-  for (const listener of listeners) listener()
-}
-
+// The one writer, and its equality check is not an optimisation: a member reads the
+// state through `useSyncExternalStore`, which compares what `getState` returns, so a
+// new object for an unchanged state would loop it.
 function setState (next: LightboxState): void {
   if (next.openGroup === state.openGroup
-    && next.openMemberId === state.openMemberId) return
+    && next.openMemberId === state.openMemberId
+    && next.members === state.members) return
   state = next
-  emit()
+  for (const listener of listeners) listener()
 }
 
 export function subscribe (listener: () => void): () => void {
@@ -43,44 +43,50 @@ export function getState (): LightboxState {
 }
 
 export function register (member: LightboxMember): void {
-  members.set(member.id, member)
-  emit()
+  setState({
+    ...state,
+    members: new Map(state.members).set(member.id, member)
+  })
 }
 
 export function unregister (id: string): void {
+  if (!state.members.has(id)) return
+  const members = new Map(state.members)
   members.delete(id)
   // A member leaving while it is the one shown would strand the group on nothing.
-  if (state.openMemberId === id) setState({ openGroup: null, openMemberId: null })
-  else emit()
+  const leavesNothingOpen = state.openMemberId === id
+  setState({
+    openGroup: leavesNothingOpen ? null : state.openGroup,
+    openMemberId: leavesNothingOpen ? null : state.openMemberId,
+    members
+  })
 }
 
 /**
  * The members of a group, in **document order**.
  *
  * `compareDocumentPosition` rather than mount order: React mounts a tree in its own
- * order, and lm-link mounts each component in a root of its own, so nothing
+ * order, and a caller may mount each component in a root of its own, so nothing
  * guarantees the two match. Only runs when a group opens or navigates, over a
  * handful of members.
  */
 export function membersOf (group: string): LightboxMember[] {
-  const found = [...members.values()].filter(member => member.groups.includes(group))
+  const found = [...state.members.values()].filter(member => member.groups.includes(group))
   return found.sort((a, b) => {
     const aElt = a.getElement()
     const bElt = b.getElement()
     if (aElt === null || bElt === null) return 0
     const position = aElt.compareDocumentPosition(bElt)
-    if ((position & Node.DOCUMENT_POSITION_FOLLOWING) !== 0) return -1
-    if ((position & Node.DOCUMENT_POSITION_PRECEDING) !== 0) return 1
-    return 0
+    return (position & Node.DOCUMENT_POSITION_PRECEDING) !== 0 ? 1 : -1
   })
 }
 
 export function open (group: string, memberId: string): void {
-  setState({ openGroup: group, openMemberId: memberId })
+  setState({ ...state, openGroup: group, openMemberId: memberId })
 }
 
 export function close (): void {
-  setState({ openGroup: null, openMemberId: null })
+  setState({ ...state, openGroup: null, openMemberId: null })
 }
 
 /** Moves to another member of the open group by `offset`, clamped at both ends. */
@@ -90,7 +96,9 @@ export function step (offset: number): void {
   const ordered = membersOf(openGroup)
   const current = ordered.findIndex(member => member.id === openMemberId)
   if (current === -1) return
-  const target = ordered[Math.min(ordered.length - 1, Math.max(0, current + offset))]
-  if (target === undefined) return
-  setState({ openGroup, openMemberId: target.id })
+  const index = Math.min(ordered.length - 1, Math.max(0, current + offset))
+  // `index` is clamped into the list `current` was just found in.
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const target = ordered[index]!
+  setState({ ...state, openMemberId: target.id })
 }

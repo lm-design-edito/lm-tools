@@ -6,10 +6,12 @@ export type LightboxMember = {
   getElement: () => HTMLElement | null
 }
 
-/** What the store holds: at most one open group, and the member it shows. */
+/** Everything the store holds, and everything a member watches. */
 export type LightboxState = {
   /** The group currently open, `null` when nothing is. */
   openGroup: string | null
   /** The member currently shown. */
   openMemberId: string | null
+  /** Every mounted lightbox of the page, unordered. */
+  members: ReadonlyMap<string, LightboxMember>
 }
