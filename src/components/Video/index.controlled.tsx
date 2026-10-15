@@ -24,6 +24,10 @@ import {
   Subtitles,
   type Props as SubsProps
 } from '../Subtitles/index.js'
+import type {
+  SourceData,
+  TrackData
+} from './types.js'
 import {
   forceExitFullscreen,
   forceFullscreen,
@@ -35,17 +39,9 @@ import {
   forceVolume,
   getTimelineClickProgress,
   msToSeconds,
-  secondsToMs,
-  type SourceData,
-  type TrackData
+  secondsToMs
 } from './utils.js'
 
-/**
- * Describes a single video source.
- *
- * @property src - URL of the video file.
- * @property type - MIME type of the source (e.g. `'video/mp4'`).
- */
 /**
  * Props for the ControlledVideo component.
  *

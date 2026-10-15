@@ -54,3 +54,16 @@ export type VideoAction =
  * want to be, and an automatic jump would take it back from them.
  */
 export type VideoDomain = 'playback' | 'sound'
+
+export type SourceData = {
+  src?: string
+  type?: string
+}
+
+export type TrackData = {
+  src?: string
+  kind?: 'subtitles' | 'captions' | 'descriptions' | 'chapters' | 'metadata'
+  srclang?: string
+  label?: string
+  default?: boolean
+}
