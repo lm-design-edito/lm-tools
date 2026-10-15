@@ -109,9 +109,6 @@ export const Subtitles: FunctionComponent<Props> = ({
   const [loadError, setLoadError] = useState<Error | null>(null)
   const [parsedSubs, setParsedSubs] = useState<SrtCue[]>([])
 
-  // The load handlers are read through refs so the effect below can depend on the
-  // source alone. Depending on their identity re-fetches on every parent render —
-  // and `Video` re-renders several times a second as the timecode moves.
   const onLoadedRef = useRef(onLoaded)
   const onLoadFailedRef = useRef(onLoadFailed)
   useEffect(() => {
