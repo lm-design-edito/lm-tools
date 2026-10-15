@@ -5,8 +5,8 @@ import type {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { isFalsy } from '../../agnostic/booleans/is-falsy/index.js'
+import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { mergeClassNames } from '../utils/index.js'
 import { overlayer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 

@@ -12,7 +12,8 @@ import {
 import { absoluteModulo } from '../../agnostic/numbers/absolute-modulo/index.js'
 import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
-import { mergeClassNames, useChangeDispatch } from '../utils/index.js'
+import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
+import { useChangeDispatch } from '../utils/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { useViewportBehaviours } from '../utils/viewport-behaviours/index.js'
 import type {

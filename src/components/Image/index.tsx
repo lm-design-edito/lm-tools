@@ -4,8 +4,8 @@ import {
   useMemo
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
+import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import { parseSrcSetSourcesList } from '../Video/utils.js'
-import { mergeClassNames } from '../utils/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { image as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'

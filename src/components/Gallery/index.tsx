@@ -9,11 +9,9 @@ import {
   useState
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
+import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
-import {
-  mergeClassNames,
-  useChangeDispatch
-} from '../utils/index.js'
+import { useChangeDispatch } from '../utils/index.js'
 import { gallery as publicClassName } from '../public-classnames.js'
 import {
   EMPTY_GEOMETRY,

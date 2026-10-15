@@ -8,6 +8,7 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
+import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   IntersectionObserverComponent,
   type Props as IOCompProps
@@ -25,10 +26,7 @@ import {
   unsubscribe
 } from '../ScrollListener/utils.js'
 import type { WithClassName } from '../utils/types.js'
-import {
-  mergeClassNames,
-  useChangeDispatch
-} from '../utils/index.js'
+import { useChangeDispatch } from '../utils/index.js'
 import { scrllgngn as publicClassName } from '../public-classnames.js'
 import type {
   ForceStickMode,

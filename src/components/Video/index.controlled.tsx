@@ -12,11 +12,9 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { formatDuration } from '../../agnostic/time/duration/format-duration/index.js'
+import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
-import {
-  mergeClassNames,
-  useChangeDispatch
-} from '../utils/index.js'
+import { useChangeDispatch } from '../utils/index.js'
 import cssModule from './styles.module.css'
 import { video as publicClassName } from '../public-classnames.js'
 import {

@@ -9,7 +9,7 @@ import {
   type RefObject
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
-import { mergeClassNames } from '../utils/index.js'
+import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { intersectionObserver as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
