@@ -4,10 +4,8 @@ import {
   useMemo
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
-import {
-  mergeClassNames,
-  parseSourceList
-} from '../utils/index.js'
+import { parseSrcSetSourcesList } from '../Video/utils.js'
+import { mergeClassNames } from '../utils/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { image as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
@@ -24,7 +22,7 @@ import cssModule from './styles.module.css'
  * `<source>` inside a `<video>` carries `src` and nothing else useful, where this one
  * carries `srcSet`, `media` and `sizes`, and neither element accepts the other's
  * attributes. What the two do share is how a list of them is read — see
- * `parseSourceList` in `components/utils`, whose `stringKey` is exactly that difference.
+ * `parseSrcSetSourcesList` in `Video/utils`, whose `stringKey` is exactly that difference.
  */
 type SourceData = {
   srcSet?: string
@@ -71,7 +69,7 @@ export const Image: FunctionComponent<Props> = ({
 }) => {
   // State
   const parsedSources = useMemo(
-    () => parseSourceList<SourceData>(sources, 'srcSet'),
+    () => parseSrcSetSourcesList<SourceData>(sources, 'srcSet'),
     [sources]
   )
 

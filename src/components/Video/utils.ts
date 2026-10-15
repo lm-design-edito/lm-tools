@@ -132,3 +132,24 @@ export const forceJumpTo = (
   // eslint-disable-next-line no-param-reassign
   video.currentTime = msToSeconds(Math.min(Math.max(absolute, 0), durationMs))
 }
+
+/* Source lists */
+
+export function parseSrcSetSourcesList <T extends Record<string, unknown>> (
+  given: string | string[] | T[] | undefined,
+  stringKey: keyof T & string
+): T[] {
+  const fromString = (value: string): T => {
+    const single: Record<string, string> = { [stringKey]: value }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a one-key record is the narrowest `T` a bare string can describe; every other field is optional by contract
+    return single as T
+  }
+  if (given === undefined) return []
+  if (typeof given === 'string') return [fromString(given)]
+  if (!Array.isArray(given)) return []
+  if (given.length === 0) return []
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element sampled just above; array is read as homogeneous
+  if (typeof given[0] === 'string') return (given as string[]).map(fromString)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- first element was checked not to be a string just above; array is read as homogeneous
+  return given as T[]
+}

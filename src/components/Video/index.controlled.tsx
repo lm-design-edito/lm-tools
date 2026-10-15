@@ -15,7 +15,6 @@ import { formatDuration } from '../../agnostic/time/duration/format-duration/ind
 import type { WithClassName } from '../utils/types.js'
 import {
   mergeClassNames,
-  parseSourceList,
   useChangeDispatch
 } from '../utils/index.js'
 import cssModule from './styles.module.css'
@@ -39,6 +38,7 @@ import {
   forceVolume,
   getTimelineClickProgress,
   msToSeconds,
+  parseSrcSetSourcesList,
   secondsToMs
 } from './utils.js'
 
@@ -471,8 +471,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     '--lm-video-playback-rate': `${playbackRate}`
   }
 
-  const parsedSources = useMemo(() => parseSourceList<SourceData>(sources, 'src'), [sources])
-  const parsedTracks = useMemo(() => parseSourceList<TrackData>(tracks, 'src'), [tracks])
+  const parsedSources = useMemo(() => parseSrcSetSourcesList<SourceData>(sources, 'src'), [sources])
+  const parsedTracks = useMemo(() => parseSrcSetSourcesList<TrackData>(tracks, 'src'), [tracks])
 
   const videoClss = c('video')
   const videoControlsClss = c('video-controls')
