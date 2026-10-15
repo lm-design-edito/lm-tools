@@ -2,7 +2,7 @@ import {
   type FunctionComponent,
   useState
 } from 'react'
-import { useChangeDispatch } from '../utils/index.js'
+import { useStateChangeDispatch } from '../utils/index.js'
 import {
   ControlledBeforeAfter,
   type Props as ControlledProps
@@ -71,7 +71,7 @@ export const BeforeAfter: FunctionComponent<Props> = ({
   const effectiveRatio = isControlled ? ratio : internalRatio
 
   // State dispatch
-  useChangeDispatch(effectiveRatio, onRatioChanged)
+  useStateChangeDispatch(effectiveRatio, onRatioChanged)
 
   // User action handlers
   const moveDividerTo = (xRatio: number, yRatio: number): void => {

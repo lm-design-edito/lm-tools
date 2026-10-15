@@ -9,7 +9,7 @@ import { clss } from '../../agnostic/css/clss/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { useChangeDispatch } from '../utils/index.js'
+import { useStateChangeDispatch } from '../utils/index.js'
 import { useViewportBehaviours } from '../utils/viewport-behaviours/index.js'
 import type {
   ActionTable,
@@ -189,13 +189,13 @@ export const ScrollListener: FunctionComponent<Props> = ({
   )
 
   // State dispatch
-  useChangeDispatch(isTracking, onIsTrackingChanged)
-  useChangeDispatch(scrollState, onScrollStateChanged)
-  useChangeDispatch(
+  useStateChangeDispatch(isTracking, onIsTrackingChanged)
+  useStateChangeDispatch(scrollState, onScrollStateChanged)
+  useStateChangeDispatch(
     scrollProgress,
     progress => { if (progress !== undefined) onScrollProgressChanged?.(progress) }
   )
-  useChangeDispatch(
+  useStateChangeDispatch(
     scrollDirection,
     direction => { if (direction !== null) onScrollDirectionChanged?.(direction) }
   )

@@ -10,7 +10,7 @@ import { isNonNullObject } from '../../agnostic/objects/is-object/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { useChangeDispatch } from '../utils/index.js'
+import { useStateChangeDispatch } from '../utils/index.js'
 import { uiModule as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -142,9 +142,9 @@ export const UIModule: FunctionComponent<Props> = ({
   const propsRef = useRef(props)
 
   // State dispatch
-  useChangeDispatch(isLoading, onIsLoadingChanged)
-  useChangeDispatch(loadedModule, onLoadedModuleChanged)
-  useChangeDispatch(moduleTarget, onModuleTargetChanged)
+  useStateChangeDispatch(isLoading, onIsLoadingChanged)
+  useStateChangeDispatch(loadedModule, onLoadedModuleChanged)
+  useStateChangeDispatch(moduleTarget, onModuleTargetChanged)
 
   // Fx. no dep. - keep the latest props reachable from the effects that run outside
   // their own render, declared first so they read this render's value and not the last

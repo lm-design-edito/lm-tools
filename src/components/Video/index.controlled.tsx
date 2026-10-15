@@ -14,7 +14,7 @@ import { clss } from '../../agnostic/css/clss/index.js'
 import { formatDuration } from '../../agnostic/time/duration/format-duration/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { useChangeDispatch } from '../utils/index.js'
+import { useStateChangeDispatch } from '../utils/index.js'
 import cssModule from './styles.module.css'
 import { video as publicClassName } from '../public-classnames.js'
 import {
@@ -553,14 +553,14 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   }, [onFullscreenChange])
 
   // State handlers
-  useChangeDispatch(currentTimeMs, onCurrentTimeMsChanged)
-  useChangeDispatch(isElementPlaying, onIsPlayingChanged)
-  useChangeDispatch(isFullscreen, onIsFullscreenChanged)
-  useChangeDispatch(isLoud, onIsLoudChanged)
-  useChangeDispatch(subtitlesOn, onIsSubtitlesOnChanged)
-  useChangeDispatch(isEnded, onIsEndedChanged)
-  useChangeDispatch(volume, onVolumeChanged)
-  useChangeDispatch(playbackRate, onPlaybackRateChanged)
+  useStateChangeDispatch(currentTimeMs, onCurrentTimeMsChanged)
+  useStateChangeDispatch(isElementPlaying, onIsPlayingChanged)
+  useStateChangeDispatch(isFullscreen, onIsFullscreenChanged)
+  useStateChangeDispatch(isLoud, onIsLoudChanged)
+  useStateChangeDispatch(subtitlesOn, onIsSubtitlesOnChanged)
+  useStateChangeDispatch(isEnded, onIsEndedChanged)
+  useStateChangeDispatch(volume, onVolumeChanged)
+  useStateChangeDispatch(playbackRate, onPlaybackRateChanged)
 
   return <figure
     ref={rootRef}

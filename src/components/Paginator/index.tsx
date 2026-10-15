@@ -9,7 +9,7 @@ import {
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { useChangeDispatch } from '../utils/index.js'
+import { useStateChangeDispatch } from '../utils/index.js'
 import { paginator as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -135,10 +135,10 @@ export const Paginator: FunctionComponent<Props> = ({
   }, [thresholdOffsetPercent, thresholdPercent])
 
   // State dispatch
-  useChangeDispatch(pagesState, pages => onPagesChanged?.(Array
+  useStateChangeDispatch(pagesState, pages => onPagesChanged?.(Array
     .from(pages)
     .map(([, pageState]) => pageState)))
-  useChangeDispatch(directionState, onDirectionChanged)
+  useStateChangeDispatch(directionState, onDirectionChanged)
 
   // Catch scroll direction listening on scroll events
   useEffect(() => {

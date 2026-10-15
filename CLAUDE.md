@@ -114,7 +114,7 @@ is, and a later field can be added without moving anything a consumer already re
 - **Actions** — past participle, fired **before** the component reacts, carrying the
   value **as it was**: `onTimelineClicked`.
 - **State** — past participle, fired **after**, carrying the **new** value:
-  `onRatioChanged`. Dispatch with `useChangeDispatch`.
+  `onRatioChanged`. Dispatch with `useStateChangeDispatch`.
 - The past participle marks the component's own semantics; a prop that merely
   forwards a native handler keeps its native name (`onChange` on `Input`).
 - Both modes: action handlers always fire, only the state update is guarded by the

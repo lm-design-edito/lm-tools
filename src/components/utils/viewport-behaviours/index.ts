@@ -6,7 +6,7 @@ import {
   type RefObject
 } from 'react'
 import { useIntersectionObserver } from '../../IntersectionObserver/index.js'
-import { useChangeDispatch } from '../index.js'
+import { useStateChangeDispatch } from '../index.js'
 import type {
   ActionSpec,
   ActionTable,
@@ -173,7 +173,7 @@ export function useViewportBehaviours <A extends string> (
 
   // Reported on the **settled** state, delays included: a consumer watching visibility
   // and a consumer running instructions have to be told the same story.
-  useChangeDispatch(isVisible, next => {
+  useStateChangeDispatch(isVisible, next => {
     if (next === undefined) return
     onVisibilityChanged?.(next)
   })

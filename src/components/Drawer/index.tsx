@@ -15,7 +15,7 @@ import {
   type Props as ResizeObserverProps
 } from '../ResizeObserver/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { useChangeDispatch } from '../utils/index.js'
+import { useStateChangeDispatch } from '../utils/index.js'
 import { drawer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -209,8 +209,8 @@ export const Drawer: FunctionComponent<Props> = ({
   useToggleMarking(closerRef, resolvedCloserBtnSelector, closerBtnClss, resolvedCloserContent)
 
   // State dispatch
-  useChangeDispatch(isOpened, onIsOpenedChanged)
-  useChangeDispatch(
+  useStateChangeDispatch(isOpened, onIsOpenedChanged)
+  useStateChangeDispatch(
     contentDimensions,
     dimensions => { if (dimensions !== undefined) onContentResized?.(dimensions) },
     (a, b) => a?.width === b?.width && a?.height === b?.height

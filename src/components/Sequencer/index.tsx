@@ -13,7 +13,7 @@ import { absoluteModulo } from '../../agnostic/numbers/absolute-modulo/index.js'
 import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import { useChangeDispatch } from '../utils/index.js'
+import { useStateChangeDispatch } from '../utils/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { useViewportBehaviours } from '../utils/viewport-behaviours/index.js'
 import type {
@@ -293,11 +293,11 @@ export const Sequencer: FunctionComponent<Props> = ({
   )
 
   // State dispatch
-  useChangeDispatch(position, () => onStepChanged?.({ step: position, activeStep }))
-  useChangeDispatch(isPlaying, onIsPlayingChanged)
-  useChangeDispatch(isEnded, onIsEndedChanged)
-  useChangeDispatch(position === 0, atStart => { if (atStart) onReachedFirstStep?.() })
-  useChangeDispatch(
+  useStateChangeDispatch(position, () => onStepChanged?.({ step: position, activeStep }))
+  useStateChangeDispatch(isPlaying, onIsPlayingChanged)
+  useStateChangeDispatch(isEnded, onIsEndedChanged)
+  useStateChangeDispatch(position === 0, atStart => { if (atStart) onReachedFirstStep?.() })
+  useStateChangeDispatch(
     stepsCount > 0 && position === stepsCount - 1,
     atEnd => { if (atEnd) onReachedLastStep?.() }
   )

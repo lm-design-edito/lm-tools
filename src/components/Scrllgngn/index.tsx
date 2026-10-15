@@ -26,7 +26,7 @@ import {
   unsubscribe
 } from '../ScrollListener/utils.js'
 import type { WithClassName } from '../utils/types.js'
-import { useChangeDispatch } from '../utils/index.js'
+import { useStateChangeDispatch } from '../utils/index.js'
 import { scrllgngn as publicClassName } from '../public-classnames.js'
 import type {
   ForceStickMode,
@@ -422,11 +422,11 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   }, [isOnScreen, readVisibleZone])
 
   // Handlers
-  useChangeDispatch(currentPagePos, pagePos => onPageChanged?.({
+  useStateChangeDispatch(currentPagePos, pagePos => onPageChanged?.({
     currentPagePos: pagePos,
     pageData: pages?.[pagePos]
   }))
-  useChangeDispatch(contentVisible, onContentVisibilityChanged)
+  useStateChangeDispatch(contentVisible, onContentVisibilityChanged)
   const handleTopBoundDetect: IOCompProps['onIntersected'] = e => setTopVis(e.ioEntry?.isIntersecting ?? false)
   const handleCntDetect: IOCompProps['onIntersected'] = e => setCntVis(e.ioEntry?.isIntersecting ?? false)
   const handleBtmBoundDetect: IOCompProps['onIntersected'] = e => setBtmVis(e.ioEntry?.isIntersecting ?? false)

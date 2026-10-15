@@ -11,7 +11,7 @@ import {
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { useChangeDispatch } from '../utils/index.js'
+import { useStateChangeDispatch } from '../utils/index.js'
 import { gallery as publicClassName } from '../public-classnames.js'
 import {
   EMPTY_GEOMETRY,
@@ -137,9 +137,9 @@ export const Gallery: FunctionComponent<Props> = ({
   const activeIndex = active ?? scrolledIndex
 
   // State dispatch
-  useChangeDispatch(activeIndex, onActiveSlotChanged)
-  useChangeDispatch(canGoLeft, onCanGoLeftChanged)
-  useChangeDispatch(canGoRight, onCanGoRightChanged)
+  useStateChangeDispatch(activeIndex, onActiveSlotChanged)
+  useStateChangeDispatch(canGoLeft, onCanGoLeftChanged)
+  useStateChangeDispatch(canGoRight, onCanGoRightChanged)
 
   const readScroll = useCallback((): void => {
     const scrollerElt = scrollerRef.current

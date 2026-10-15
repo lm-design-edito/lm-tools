@@ -24,7 +24,7 @@ import {
  * re-run the effect each time and defeat the guard. The handler is read when the
  * effect fires, so it is never a stale one.
  */
-export function useChangeDispatch <T> (
+export function useStateChangeDispatch <T> (
   value: T,
   onChange?: (value: T) => void,
   isEqual: (a: T, b: T) => boolean = Object.is

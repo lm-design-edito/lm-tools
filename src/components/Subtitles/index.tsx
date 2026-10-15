@@ -10,7 +10,7 @@ import { parseSrt } from '../../agnostic/subtitles/parse-srt/index.js'
 import type { SrtCue } from '../../agnostic/subtitles/parse-srt/types.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { useChangeDispatch } from '../utils/index.js'
+import { useStateChangeDispatch } from '../utils/index.js'
 import { subtitles as publicClassName } from '../public-classnames.js'
 import {
   lastElapsedPos as toLastElapsedPos,
@@ -115,7 +115,7 @@ export const Subtitles: FunctionComponent<Props> = ({
   })
 
   // State dispatch
-  useChangeDispatch(parsedSubs, onParsed)
+  useStateChangeDispatch(parsedSubs, onParsed)
 
   // Fx. dep. cues, srtFileContent, src - Load from whichever source is set
   useEffect(() => {
