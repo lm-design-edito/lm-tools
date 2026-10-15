@@ -24,6 +24,13 @@ compiling (`npx tsc --project demo/src/tsconfig.json --noEmit`).
 `cssColorsMap.ts`, which is not even kebab-case) that are debts rather than
 precedents. Folder name kebab-case, exported symbol its camelCase form.
 
+**A leading `@` means the folder is about one named thing** — a library, a service, an
+algorithm — where a bare name is about a concept. `node/@express`, `node/@aws-s3`,
+`node/encryption/@aes-256-gcm`, `agnostic/@react` on one side; `agnostic/css`,
+`agnostic/time`, `node/files` on the other. It is also where a dependency becomes
+visible: anything under `@react` costs the consumer React, and the path says so before
+the import does.
+
 **Two filenames are public, and only two.** The publish step generates the package's
 `exports` map by globbing `**/index.js` and `**/types.js` — nothing else gets an entry,
 so nothing else can be imported from outside, whatever it holds. A symbol a consumer
