@@ -63,6 +63,14 @@ functions — a type-only cycle, accepted deliberately for this one component. D
 properly means moving the prop types of all of them at once and fixing the imports
 after, which is a pass of its own.
 
+**And on the same shelf, in no hurry at all: what belongs in `agnostic/css` and what
+belongs in `agnostic/html`.** `mergeClassNames` moved to `css/merge-class-names`, next
+to `clss`, `bem` and `is-valid-css-class-name` — but a class name is an HTML attribute
+value, not a CSS construct, and `isValidClassName` proves it: it rejects a leading dot,
+so it validates what goes in `class="…"`, never a selector. The whole family may read
+better under `html/`. Worth deciding once, for all of them together, rather than moving
+one and splitting the set.
+
 ## Le trou de synchronisation des événements de `Scrllgngn`
 
 Constaté en préparant la fiche `ui-module` de lm-link, et **pas propre à `UIModule` :
