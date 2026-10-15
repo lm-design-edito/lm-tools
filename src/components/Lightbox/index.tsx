@@ -10,10 +10,10 @@ import {
   type PropsWithChildren,
   type ReactNode
 } from 'react'
+import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { useStateChangeDispatch } from '../utils/index.js'
 import { lightbox as publicClassName } from '../public-classnames.js'
 import {
   closeLightbox,

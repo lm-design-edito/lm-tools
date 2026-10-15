@@ -5,11 +5,11 @@ import {
   type FunctionComponent,
   type PropsWithChildren
 } from 'react'
+import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { useStateChangeDispatch } from '../utils/index.js'
 import { useViewportBehaviours } from '../utils/viewport-behaviours/index.js'
 import type {
   ActionTable,

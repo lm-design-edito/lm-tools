@@ -9,11 +9,11 @@ import {
   type PropsWithChildren,
   type ReactNode
 } from 'react'
+import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
 import { absoluteModulo } from '../../agnostic/numbers/absolute-modulo/index.js'
 import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import { useStateChangeDispatch } from '../utils/index.js'
 import type { WithClassName } from '../utils/types.js'
 import { useViewportBehaviours } from '../utils/viewport-behaviours/index.js'
 import type {

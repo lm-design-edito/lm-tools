@@ -6,7 +6,7 @@ import {
   type RefObject
 } from 'react'
 import { useIntersectionObserver } from '../../IntersectionObserver/index.js'
-import { useStateChangeDispatch } from '../index.js'
+import { useStateChangeDispatch } from '../../../agnostic/@react/effects/use-state-change-dispatch/index.js'
 import type {
   ActionSpec,
   ActionTable,

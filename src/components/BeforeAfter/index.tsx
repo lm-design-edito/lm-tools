@@ -2,7 +2,7 @@ import {
   type FunctionComponent,
   useState
 } from 'react'
-import { useStateChangeDispatch } from '../utils/index.js'
+import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
 import {
   ControlledBeforeAfter,
   type Props as ControlledProps
