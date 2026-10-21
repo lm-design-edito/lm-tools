@@ -8,7 +8,12 @@
 export function mergeClassNames (...names: Array<string | null | undefined | Array<string | null | undefined>>): string {
   return names.map(name => {
     if (typeof name !== 'string' && !Array.isArray(name)) return false
-    if (Array.isArray(name)) return mergeClassNames(...name)
+    // An array that yields nothing comes back as `''`, which would survive the filter
+    // below and join as an empty segment — a trailing or doubled space in the result.
+    if (Array.isArray(name)) {
+      const merged = mergeClassNames(...name)
+      return merged === '' ? false : merged
+    }
     if (name.trim() === '') return false
     return name.trim()
   }).filter((name): name is string => typeof name === 'string')
