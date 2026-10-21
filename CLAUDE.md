@@ -48,6 +48,12 @@ genuinely minimal, and only when the sibling `index.ts` is its **single** consum
 are a way of keeping an entry point readable, not a third public surface. The moment two
 folders want the same helper, it moves to a folder of its own.
 
+**One exception stands, decided on purpose:** `Image` imports `parseSrcSetSourcesList`
+from `Video/utils.ts`. The two elements read a `<source>` list the same way and differ
+only in which attribute a bare string fills — `src` for a `<video>`, `srcSet` for a
+`<picture>` —, which is what the function's `stringKey` carries. It stays in `Video`
+rather than moving to a folder of its own. Don't "fix" it.
+
 **A file's length is never a reason to split it.** `max-lines` is off, alongside
 `complexity` and `max-params`: a threshold cannot tell four hundred lines of tangled
 logic from a component that is long because its subject is. A move to a sibling file has
