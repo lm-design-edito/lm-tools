@@ -284,10 +284,9 @@ export const Video: FunctionComponent<Props> = ({
     setFullscreen(!payload.isFullscreen)
   }, [onFullscreenButtonClicked])
 
-  // Un seul bouton pour les deux sens, contrairement à lecture/pause et son/muet qui en
-  // ont un chacun : ceux-là existent en paire dans le DOM et la feuille en montre un,
-  // parce qu'ils portent deux glyphes opposés. Les sous-titres n'en portent qu'un, dont
-  // seul l'habillage change — inutile d'en rendre deux pour n'en montrer jamais qu'un.
+  // One button for both directions, where play/pause and loud/mute get one each: those
+  // carry two opposed glyphs, so both are rendered and the stylesheet shows one. The
+  // subtitles button carries a single glyph whose styling alone changes.
   const handleSubtitlesButtonClick = useCallback<NonNullable<Props['onSubtitlesButtonClicked']>>(payload => {
     onSubtitlesButtonClicked?.(payload)
     setSubtitlesOn(!payload.isSubtitlesOn)
