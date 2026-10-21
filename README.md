@@ -36,7 +36,14 @@ d'alignement, la reprise de `Subtitles`, celle de `Video`, le chantier `Scrllgng
 la mise en conformité d'`UIModule` sont faits ; les états internes remontent tous en
 modifieurs de classe racine.
 
-lm-tools n'est pas le sujet principal pour l'instant : l'attention va à la première
+**Le chantier du moment est une passe de rangement**, et c'est elle qui passe devant la
+route vers la publication de lm-link : on finit ici ce qui est en cours avant de reprendre
+là-bas. On repart du **relevé de `components/utils/viewport-behaviours`**, entamé et laissé
+ouvert exprès — « Le relevé rouvert », plus bas. Viennent ensuite les sujets portés de
+session en session : le motif `when*` pour les trois composants d'un bloc, les types de
+props vers les `types.ts`, et la question `css` / `html`.
+
+Passé ce rangement, lm-tools n'est plus le sujet principal : l'attention va à la première
 publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là —
 **lm-cli doit rapatrier sa logique métier dans `agnostic/` et `node/`**, en ne
 gardant que la coquille CLI chez lui. C'est le prochain vrai chantier de ce dépôt,
@@ -234,8 +241,10 @@ eu besoin d'inventer une grammaire pour rendre une API lisible était le signe q
 pouvait la porter elle-même : c'est ce qui a été fait.
 
 La couche générique vit dans `components/utils/viewport-behaviours/`, et `Video`,
-`Sequencer` et `ScrollListener` la consomment. **Le chantier est fini** : trois grammaires
-pour la même idée au départ, il n'en reste qu'une.
+`Sequencer` et `ScrollListener` la consomment. **La conversion est finie** : trois
+grammaires pour la même idée au départ, il n'en reste qu'une. **Le relevé de ce qu'elle a
+produit, lui, est en cours** — voir « Le relevé rouvert » à la fin de cette section, qui
+est le chantier ouvert du moment.
 
 Ce qui suit est le contrat tel qu'il est écrit, et pourquoi il tombe de ce côté-là.
 
@@ -457,6 +466,36 @@ Ce qui reste ouvert tient en deux lignes :
 - **`Scrllgngn` a un problème voisin, pas le même** — son tracking s'active à la seule
   présence de `onScrolled`, faute d'interrupteur. À regarder quand son tour viendra ;
   `onVisibilityChanged` est peut-être déjà la réponse.
+
+### The survey reopened — what the layer cannot do yet
+
+The conversion is done; the layer it produced has not been reviewed until now. One fact
+first, because everything below rests on it: the `verb:arg:modifier` grammar has **exactly
+one trigger**, viewport visibility, and three consumers — `Video`, `Sequencer` and
+`ScrollListener`. Nothing else in `src/` so much as splits a string on `:`. So this is a
+general mechanism that has never been tried against a second signal, and the parts that
+look general may only be general in intention.
+
+Four weak points, in the order they matter:
+
+1. **The grammar is general, the trigger is welded on.** Verbs, arguments, modifiers and
+   both ledgers are indifferent to where the signal comes from, but only visibility can
+   fire them, and the module's name, props and types all say so. « Do X when the sequence
+   reaches step 3 » has no way in.
+2. **`domain` and `surrender` are inert for two consumers out of three.** `Sequencer` and
+   `ScrollListener` each declare a single domain and each document that nothing ever
+   surrenders — which also makes `':force'` a no-op there.
+3. **A vocabulary is declared four to five times per component** — verbs array, verb type,
+   argument validators, action type, action table — and `Video` and `Sequencer` duplicate
+   each other's verbs wholesale, which `Sequencer`'s own doc admits in writing.
+4. **None of it is observable.** The ledgers are refs, so neither a root-class modifier nor
+   a callback can say that a domain was surrendered or that an instruction ran — against
+   this repo's own rule that every state a component holds surfaces as a modifier.
+
+Two smaller questions raised and not answered. **`dedupe` keys on verb *and* argument**, so
+`['jump-to:100', 'jump-to:200']` both run, in order — intended, or an accident of the key?
+And **the `once` ledger includes the trigger**, so `play:once` holds one credit for visible
+and another for hidden, which is probably right and is written nowhere.
 
 ## `Video` — deux idées à instruire sur la tête de lecture
 
