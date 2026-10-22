@@ -20,12 +20,6 @@ of its own.
 - \`--measured\` — a first measurement landed.
 - \`--scrolling-up\` / \`--scrolling-down\` — the document's last known direction.
 
-### Viewport behaviours
-\`whenVisible\` and \`whenHidden\` take \`track\`, \`untrack\`, or a list, each optionally
-suffixed by \`:once\` and \`:force\`. The old \`startOnVisible\` is
-\`defaultTracking={false}\` plus \`whenVisible='track'\`, and \`stopOnHidden\` is
-\`whenHidden='untrack'\` — which is exactly what this demo does.
-
 ### CSS custom properties on the root element
 Each measurement comes as a \`px\` length under its bare name, and as a \`-raw\` twin holding the plain number:
 - \`--{prefix}-window-width\`, \`--{prefix}-window-height\`
@@ -65,8 +59,6 @@ const tsxDetails = `/**
  * @property onIsTrackingChanged - Called once the effective tracking state changed.
  * @property onScrollStateChanged - Called after the measured {@link ScrollState}
  * changed. Receives \`undefined\` until the first measurement lands.
- * @property onVisibilityChanged - Called when it enters or leaves the viewport, on the
- * settled state.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React nodes rendered inside the scroll listener container.
  */
@@ -77,19 +69,11 @@ export type Props = PropsWithChildren<WithClassName<{
   onScrollStateChanged?: (scrollState?: ScrollState) => void
   onScrollProgressChanged?: (progress: number) => void
   onScrollDirectionChanged?: (direction: 'up' | 'down') => void
-}>>
-  & ViewportBehaviours<ScrollListenerAction>
-  & { behavioursSuspended?: boolean }`
+}>>`
 
 const demoStyles = ``
 
-// Les deux anciennes props, dites dans la grammaire commune : `startOnVisible` est
-// `defaultTracking: false` plus `whenVisible: 'track'`, et `stopOnHidden` est
-// `whenHidden: 'untrack'`.
 const demoProps: ScrollListenerProps = {
-  defaultTracking: false,
-  whenVisible: 'track',
-  whenHidden: 'untrack',
   children: <div style={{
     backgroundColor: 'yellow',
       width: 700,

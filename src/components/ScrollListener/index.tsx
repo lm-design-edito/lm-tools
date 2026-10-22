@@ -10,11 +10,6 @@ import { clss } from '../../agnostic/css/clss/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { useViewportBehaviours } from '../utils/viewport-behaviours/index.js'
-import type {
-  ActionTable,
-  ViewportBehaviours
-} from '../utils/viewport-behaviours/types.js'
 import { scrollListener as publicClassName } from '../public-classnames.js'
 import {
   getScrollProgress,
@@ -24,27 +19,17 @@ import {
   type ScrollState
 } from './utils.js'
 import cssModule from './styles.module.css'
-import type {
-  ScrollListenerAction,
-  ScrollListenerDomain,
-  ScrollListenerVerb
-} from './types.js'
 
 /**
  * Props for the {@link ScrollListener} component.
  *
  * @property tracking - Whether the component is measuring, taken over by the consumer.
- * Provided, it is the whole answer and the instructions no longer reach it.
  * @property defaultTracking - Whether it starts measuring on mount. `true` by default,
  * which is what this component has always done — a starting point and not a setting,
- * hence `default…`. `defaultTracking={false}` with `whenVisible='track'` is the old
- * `startOnVisible`, written in the shared grammar.
+ * hence `default…`.
  * @property onIsTrackingChanged - Called once the effective tracking state changed.
  * @property onScrollStateChanged - Called after the measured {@link ScrollState}
  * changed. Receives `undefined` until the first measurement lands.
- * @property onVisibilityChanged - Called when the component enters or leaves the
- * viewport, on the **settled** state — the `visibility…` delays included, so a consumer
- * watching visibility and a consumer running instructions are told the same story.
  * @property onScrollProgressChanged - Called after the element's vertical outer
  * scroll progress changed: `0` when it is about to enter the viewport, `1` once
  * it has fully left it. Never on mount.
@@ -67,7 +52,6 @@ export type Props = PropsWithChildren<WithClassName<{
   onScrollProgressChanged?: (progress: number) => void
   onScrollDirectionChanged?: (direction: 'up' | 'down') => void
 }>>
-  & ViewportBehaviours<ScrollListenerAction>
 
 /**
  * Exposes scroll metrics — both the document's and its own — as CSS custom
@@ -109,15 +93,8 @@ export type Props = PropsWithChildren<WithClassName<{
  * @returns A container exposing the metrics, with the children as its own.
  *
  * @remarks
- * **Viewport-driven behaviour is declared, not named by a prop.** `whenVisible` and
- * `whenHidden` take `'track'`, `'untrack'`, or a list, each optionally suffixed by
- * `':once'` and `':force'`. The old `startOnVisible` is `defaultTracking={false}` plus
- * `whenVisible='track'`, and `stopOnHidden` is `whenHidden='untrack'`. See
- * `components/utils/viewport-behaviours` for the grammar, and the `visibility…` props for
- * what « visible » means and how long it has to have been true.
- *
- * **The observer runs on the root itself.** There is no inner box between this element
- * and the children any more, and that matters here more than anywhere else in the
+ * **The measurements are published on the root itself.** There is no inner box between
+ * this element and the children, and that matters here more than anywhere else in the
  * library: the whole point is a stylesheet animating on the properties this element
  * carries, which it cannot do if what it wants to move sits one level below.
  *
@@ -129,16 +106,8 @@ export type Props = PropsWithChildren<WithClassName<{
 export const ScrollListener: FunctionComponent<Props> = ({
   tracking,
   defaultTracking,
-  visibilityThreshold,
-  visibilityRoot,
-  visibilityRootMargin,
-  visibilityOnAfterMs,
-  visibilityOffAfterMs,
-  whenVisible,
-  whenHidden,
   onIsTrackingChanged,
   onScrollStateChanged,
-  onVisibilityChanged,
   onScrollProgressChanged,
   onScrollDirectionChanged,
   className,
@@ -146,7 +115,9 @@ export const ScrollListener: FunctionComponent<Props> = ({
 }) => {
   // State & refs
   const [subscriberId] = useState(() => randomHash(6))
-  const [internalTracking, setInternalTracking] = useState(defaultTracking ?? true)
+  // No setter: nothing switches tracking any more, the prop and this seed are the two
+  // answers there are.
+  const [internalTracking] = useState(defaultTracking ?? true)
   const [scrollState, setScrollState] = useState<ScrollState>()
   const [scrollDirection, setScrollDirection] = useState<'up' | 'down' | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -157,36 +128,6 @@ export const ScrollListener: FunctionComponent<Props> = ({
   const scrollProgress = scrollState === undefined
     ? undefined
     : getScrollProgress(scrollState).y
-
-  // Viewport behaviours
-
-  // Measuring is the only thing this component does, so starting and stopping it is the
-  // whole vocabulary. `track` and `untrack` need no guard against a controlled
-  // `tracking`: the effective state reads the prop first, so the internal one they write
-  // is simply never consulted.
-  const actions: ActionTable<ScrollListenerVerb, ScrollListenerDomain> = {
-    track: { domain: 'tracking', run: () => setInternalTracking(true) },
-    untrack: { domain: 'tracking', run: () => setInternalTracking(false) }
-  }
-
-  // The surrender half of the result is dropped: this component has no control a reader
-  // could take over. The observer runs on the root itself — there is no inner box any
-  // more, and that matters more here than anywhere: a stylesheet reads the measurements
-  // off this element, so its children have to be its children.
-  useViewportBehaviours<ScrollListenerAction>(
-    rootRef,
-    {
-      visibilityThreshold,
-      visibilityRoot,
-      visibilityRootMargin,
-      visibilityOnAfterMs,
-      visibilityOffAfterMs,
-      whenVisible,
-      whenHidden,
-      onVisibilityChanged
-    },
-    actions
-  )
 
   // State dispatch
   useStateChangeDispatch(isTracking, onIsTrackingChanged)
