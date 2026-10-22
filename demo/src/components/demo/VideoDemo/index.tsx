@@ -17,8 +17,7 @@ const name = 'Video'
 
 const description = `
 Full-featured video player component. Wraps a native \`<video>\` element with
-playback controls, volume, playback speed, a timeline, optional subtitles,
-and viewport-driven auto-play/mute behaviours.
+playback controls, volume, playback speed, a timeline and optional subtitles.
 
 ### Root element modifiers
 The root \`<figure>\` receives the public class name defined by \`video\` and
@@ -101,14 +100,6 @@ type TrackData = {
  * @property fullscreenBtnContent - Custom content for the fullscreen button. Defaults to \`'fullscreen'\`.
  * @property subtitles - Props forwarded to the internal {@link Subtitles} component.
  * \`timecodeMs\` is injected automatically from the current playback position.
- * @property autoPlayWhenVisible - When \`true\`, triggers playback the first time the
- * component intersects the viewport.
- * @property autoPauseWhenHidden - When \`true\`, pauses playback whenever the component
- * leaves the viewport.
- * @property autoLoudWhenVisible - When \`true\`, unmutes the video the first time the
- * component intersects the viewport.
- * @property autoMuteWhenHidden - When \`true\`, mutes the video whenever the component
- * leaves the viewport.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React children rendered inside the \`<video>\` element itself
  * (e.g. fallback content).
@@ -182,11 +173,7 @@ const add = (x: number, amountPercent: number, max: number) => Math.min(max, (x 
 const sub = (x: number, amountPercent: number, min: number) => Math.max(min, (x * 100 - amountPercent) / 100)
 
 
-const VideoControlledDemo: FunctionComponent = ({
-  whenVisible,
-  whenHidden,
-  ...demoProps
-}: VideoProps) => {
+const VideoControlledDemo: FunctionComponent = (demoProps: VideoProps) => {
   const [play, setPlay] = useState(false)
   const [volume, setVolume] = useState(1)
   const [playbackRate, setPlaybackRate] = useState(1)
@@ -370,8 +357,6 @@ export const VideoDemo: FunctionComponent = () => {
     controls: true,
     muted: true,
     // autoPlay: true,
-    whenVisible: ['play'],
-    whenHidden: ['pause', 'mute'],
     loop: true,
     currentTimeMs,
     onLoadedMetadata: (e) => {

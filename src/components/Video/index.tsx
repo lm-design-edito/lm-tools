@@ -3,23 +3,9 @@ import {
   type ReactEventHandler,
   useCallback,
   useEffect,
-  useRef,
   useState
 } from 'react'
-import { useViewportBehaviours } from '../utils/viewport-behaviours/index.js'
-import type {
-  ActionTable,
-  ViewportBehaviours
-} from '../utils/viewport-behaviours/types.js'
-import {
-  forceJumpTo,
-  muteAttributeWorkaround
-} from './utils.js'
-import type {
-  VideoAction,
-  VideoDomain,
-  VideoVerb
-} from './types.js'
+import { muteAttributeWorkaround } from './utils.js'
 import {
   ControlledVideo,
   type Props as ControlledProps
@@ -29,12 +15,6 @@ import {
  * Props for the {@link Video} component.
  *
  * Extends all ControlledVideo props except play, mute, fullscreen, volume, playbackRate, and their associated event handlers
- * @property visibilityThreshold - How much of the video has to be on screen to count as
- * seen. See {@link VisibilityOptions} for this and the four that follow it.
- * @property whenVisible - What to do each time it becomes visible.
- * @property whenHidden - The same, on the way out.
- * @property onVisibilityChanged - Called with the new value once it has settled — the
- * delays included, so this and the instructions are told the same story. Never on mount.
  * @property currentTimeMs - When provided, hands ownership of the current time
  * (in milliseconds) to the parent, which is then responsible for updating it —
  * typically to scrub the video from scroll position. A controlled time implies a
@@ -53,11 +33,7 @@ import {
  * @property children - React children rendered inside the `<video>` element itself
  * (e.g. fallback content).
  */
-// The two refs are omitted along with the controlled state: this component sets both,
-// to observe the `<figure>` it renders and to seek the `<video>` inside it. A consumer
-// handing in its own would take the observer's target away.
-export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mute' | 'playbackRate' | 'subtitlesOn' | 'rootRef' | 'videoRef'>
-  & ViewportBehaviours<VideoAction>
+export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mute' | 'playbackRate' | 'subtitlesOn'>
   & { defaultSubtitlesOn?: boolean }
 
 /**
@@ -76,23 +52,10 @@ export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mu
  * `HTMLMediaElement`, shared with `<audio>`; only fullscreen is video's own. And an
  * `<audio>` tag can't be autoplayed: the muted-autoplay exemption browsers grant is
  * for video, so an `<audio>` waits for a user gesture whatever its muted state.
- * `autoPlayWhenVisible` on an audio file therefore needs `muted` and `playsInline`
- * on a `<video>`, which is what this is. The one thing lost is the assistive-tech
+ * Autoplaying an audio file therefore needs `muted` and `playsInline` on a `<video>`,
+ * which is what this is. The one thing lost is the assistive-tech
  * label: a screen reader announces a video player. Worth a `tag` prop the day that
  * matters more than autoplay — not before.
- *
- * **Viewport-driven behaviour is declared, not named by a prop.** `whenVisible` and
- * `whenHidden` take a verb or a list of them, out of {@link VideoAction} — `'play'`,
- * `'mute'`, `'jump-to:500'` — each optionally suffixed by `':once'` and `':force'`. See
- * `components/utils/viewport-behaviours` for the grammar and its rules, and the
- * `visibility…` props for what « visible » means and how long
- * it has to have been true.
- *
- * **An instruction yields to the reader by default.** Touching a control surrenders its
- * domain for the rest of the mount: playback covers the play and pause buttons, the
- * picture when it toggles, and the timeline, since seeking is saying where one wants to
- * be. Sound covers the two sound buttons and the volume slider. Fullscreen and playback
- * rate surrender nothing, being neither. `':force'` opts out.
  *
  * **`loop` reaches the element untouched**, like every other native media attribute
  * this component does not drive itself. It was once destructured out of the props and
@@ -101,8 +64,8 @@ export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mu
  * consequence worth knowing: a looping element never fires `ended`, so the `--ended`
  * modifier and the `isEnded` it feeds to `Subtitles` simply never come.
  *
- * Browsers refuse an unmuted `play()` outside a user gesture, so pairing a `'loud'`
- * instruction with a `'play'` one will usually have the playback rejected. The
+ * Browsers refuse an unmuted `play()` outside a user gesture, so asking for playback
+ * without muting will usually have it rejected. The
  * refusal is caught rather than ignored — the element is read back once the attempt
  * settles, and the play state follows what it says — so the controls stay truthful.
  * The media still won't play, though: autoplay muted, and leave unmuting to the
@@ -111,14 +74,6 @@ export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mu
 
 export const Video: FunctionComponent<Props> = ({
   defaultSubtitlesOn = true,
-  visibilityThreshold,
-  visibilityRoot,
-  visibilityRootMargin,
-  visibilityOnAfterMs,
-  visibilityOffAfterMs,
-  whenVisible,
-  whenHidden,
-  onVisibilityChanged,
   onVideoClicked,
   onPlayButtonClicked,
   onPauseButtonClicked,
@@ -138,60 +93,10 @@ export const Video: FunctionComponent<Props> = ({
   const [fullscreen, setFullscreen] = useState(false)
   const [subtitlesOn, setSubtitlesOn] = useState(defaultSubtitlesOn)
 
-  // Several paths below ask for playback — the play button, a `'play'` instruction,
-  // `autoPlay` itself. None of them may win over a parent-owned time, so the invariant
-  // is applied where the state is forwarded rather than guarded at each call site.
+  // Several paths below ask for playback — the play button, `autoPlay` itself. None of
+  // them may win over a parent-owned time, so the invariant is applied where the state
+  // is forwarded rather than guarded at each call site.
   const isTimeControlled = controlledProps.currentTimeMs !== undefined
-
-  const rootRef = useRef<HTMLElement>(null)
-  const videoRef = useRef<HTMLVideoElement>(null)
-
-  // Viewport behaviours
-
-  // What each verb does, and what it competes with. Rebuilt on every render — it closes
-  // over the setters — which is why the generic layer reads it through a ref rather than
-  // a dependency list.
-  //
-  // **Seeking belongs to `playback`.** A reader who has dragged the timeline has said
-  // where they want to be, and an automatic jump would take it back from them.
-  const actions: ActionTable<VideoVerb, VideoDomain> = {
-    play: { domain: 'playback', run: () => setPlay(true) },
-    pause: { domain: 'playback', run: () => setPlay(false) },
-    loud: { domain: 'sound', run: () => setMute(false) },
-    mute: { domain: 'sound', run: () => setMute(true) },
-    'jump-to': {
-      domain: 'playback',
-      run: arg => {
-        const targetMs = Number(arg)
-        if (!Number.isFinite(targetMs)) return
-        forceJumpTo(videoRef.current, targetMs)
-      }
-    },
-    'jump-start': { domain: 'playback', run: () => forceJumpTo(videoRef.current, 0) },
-    'jump-end': { domain: 'playback', run: () => forceJumpTo(videoRef.current, -1) }
-  }
-
-  const { surrender: surrenderAnyDomain } = useViewportBehaviours<VideoAction>(
-    rootRef,
-    {
-      visibilityThreshold,
-      visibilityRoot,
-      visibilityRootMargin,
-      visibilityOnAfterMs,
-      visibilityOffAfterMs,
-      whenVisible,
-      whenHidden,
-      onVisibilityChanged
-    },
-    actions
-  )
-
-  // Narrowed back to this component's own domains. The generic layer takes a `string`,
-  // having no vocabulary of its own; handing the handlers a typed door means a
-  // misspelled domain fails to compile instead of quietly never surrendering anything.
-  const surrender = useCallback((domain: VideoDomain) => {
-    surrenderAnyDomain(domain)
-  }, [surrenderAnyDomain])
 
   // Intrisic event handlers
   const handleOnPlayEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
@@ -237,36 +142,30 @@ export const Video: FunctionComponent<Props> = ({
   // User actions
   const handlePlayButtonClick = useCallback<NonNullable<Props['onPlayButtonClicked']>>(payload => {
     onPlayButtonClicked?.(payload)
-    surrender('playback')
     setPlay(true)
-  }, [onPlayButtonClicked, surrender])
+  }, [onPlayButtonClicked])
 
   const handlePauseButtonClick = useCallback<NonNullable<Props['onPauseButtonClicked']>>(payload => {
     onPauseButtonClicked?.(payload)
-    surrender('playback')
     setPlay(false)
-  }, [onPauseButtonClicked, surrender])
+  }, [onPauseButtonClicked])
 
   // The picture toggles, where the two buttons each say one thing. It is the same gesture
-  // as pressing one of them — a consumer tracking whether the reader has taken over
-  // playback has to count this one too, since it is the same decision made elsewhere.
+  // as pressing one of them, and a consumer tracking playback has to count this one too.
   const handleVideoClick = useCallback<NonNullable<Props['onVideoClicked']>>(payload => {
     onVideoClicked?.(payload)
-    surrender('playback')
     setPlay(!payload.isPlaying)
-  }, [onVideoClicked, surrender])
+  }, [onVideoClicked])
 
   const handleLoudButtonClick = useCallback<NonNullable<Props['onLoudButtonClicked']>>(payload => {
     onLoudButtonClicked?.(payload)
-    surrender('sound')
     setMute(false)
-  }, [onLoudButtonClicked, surrender])
+  }, [onLoudButtonClicked])
 
   const handleMuteButtonClick = useCallback<NonNullable<Props['onMuteButtonClicked']>>(payload => {
     onMuteButtonClicked?.(payload)
-    surrender('sound')
     setMute(true)
-  }, [onMuteButtonClicked, surrender])
+  }, [onMuteButtonClicked])
 
   const handleRateRangeChange = useCallback<NonNullable<Props['onRateRangeChanged']>>(payload => {
     onRateRangeChanged?.(payload)
@@ -275,9 +174,8 @@ export const Video: FunctionComponent<Props> = ({
 
   const handleVolumeRangeChange = useCallback<NonNullable<Props['onVolumeRangeChanged']>>(payload => {
     onVolumeRangeChanged?.(payload)
-    surrender('sound')
     setVolume(payload.targetVolume)
-  }, [onVolumeRangeChanged, surrender])
+  }, [onVolumeRangeChanged])
 
   const handleFullscreenButtonClick = useCallback<NonNullable<Props['onFullscreenButtonClicked']>>(payload => {
     onFullscreenButtonClicked?.(payload)
@@ -300,15 +198,12 @@ export const Video: FunctionComponent<Props> = ({
 
   // Render
   //
-  // **The `<figure>` is the root, and there is nothing above it.** The observer runs on
-  // that element rather than on a box built to hold it: a wrapper would take the outer
-  // position — the one a consumer lays out — and leave `className` naming an inner
-  // element, which is the wrong way round. So no wrapper, and no second class-name prop
-  // to reach past it.
+  // **The `<figure>` is the root, and there is nothing above it.** A wrapper would take
+  // the outer position — the one a consumer lays out — and leave `className` naming an
+  // inner element, which is the wrong way round. So no wrapper, and no second class-name
+  // prop to reach past it.
   return <ControlledVideo
     {...controlledProps}
-    rootRef={rootRef}
-    videoRef={videoRef}
     play={play && !isTimeControlled}
     volume={volume}
     mute={mute}
