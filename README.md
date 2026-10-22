@@ -38,10 +38,12 @@ modifieurs de classe racine.
 
 **Le chantier du moment est une passe de rangement**, et c'est elle qui passe devant la
 route vers la publication de lm-link : on finit ici ce qui est en cours avant de reprendre
-là-bas. On repart du **relevé de `components/utils/viewport-behaviours`**, entamé et laissé
-ouvert exprès — « Le relevé rouvert », plus bas. Viennent ensuite les sujets portés de
-session en session : le motif `when*` pour les trois composants d'un bloc, les types de
-props vers les `types.ts`, et la question `css` / `html`.
+là-bas. On y reconstruit **la conscience de la visibilité**, de zéro : le relevé de
+`components/utils/viewport-behaviours` a conclu que la couche se tenait mal, et le code
+qui la portait est sorti du dépôt plutôt que d'être amendé — voir « La couche de
+visibilité, démontée » plus bas. Viennent ensuite les sujets portés de session en
+session : le motif `when*` pour les trois composants d'un bloc, les types de props vers
+les `types.ts`, et la question `css` / `html`.
 
 Passé ce rangement, lm-tools n'est plus le sujet principal : l'attention va à la première
 publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là —
@@ -49,18 +51,13 @@ publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là
 gardant que la coquille CLI chez lui. C'est le prochain vrai chantier de ce dépôt,
 et il n'ouvrira qu'une fois lm-link publié.
 
-**`behavioursSuspended` a été retiré**, et avec lui tout ce qui le servait : le
-paramètre `suspended` du hook, la liste des instructions retenues, leur rejeu à
-l'ouverture, et le champ `kind` d'`ActionSpec`, dont la vérification de suspension était
-le seul lecteur. Retenir un composant est désormais l'affaire de l'appelant, qui ne lui
-passe pas les props qui déclenchent quelque chose — lm-link le fait à la passerelle, dans
-son contexte `Disclaimer`. La couche de visibilité n'a plus qu'un frein, la reddition.
-Reste à publier, puis à bumper lm-link, où deux `Omit<…, 'behavioursSuspended'>`
-attendent d'être retirés.
+**`behavioursSuspended` avait été retiré avant la couche entière**, et le principe qu'il
+a laissé vaut toujours : retenir un composant est l'affaire de l'appelant, qui ne lui
+passe pas les props qui déclenchent quelque chose. Côté lm-link, deux
+`Omit<…, 'behavioursSuspended'>` attendent toujours d'être retirés.
 
-**Une réflexion repoussée, à ouvrir ensuite** : l'harmonisation du motif `when*`
-lui-même. Le retrait de `kind` a allégé les tables d'actions sans toucher à la grammaire —
-c'est elle qu'il faudra regarder, d'un bloc, pour les trois composants à la fois.
+**L'harmonisation du motif `when*` n'est plus un sujet à part** : elle était la question
+posée aux trois composants d'un bloc, et c'est désormais la reconstruction qui y répond.
 
 **Another one, same shelf: moving every component's prop types into its `types.ts`.**
 Today they sit in `index.tsx`, next to the component, and that stays the rule for now.
@@ -232,7 +229,22 @@ span qui contient son propre séparateur, et non une suite plate de jetons et de
 ponctuations. À noter aussi : les horloges se re-rendent à chaque `timeupdate`, donc ce
 composant multiplie par six ce qui est diffé à chaque tick.
 
-## Les comportements de visibilité — écrit, et `Video` y est passé
+## La couche de visibilité, démontée — et ce qu'il faut en garder
+
+**Il n'y a plus de conscience de la visibilité dans ce dépôt.** Le module
+`components/utils/viewport-behaviours` et tout ce qui le consommait — les props
+`whenVisible` / `whenHidden` / `visibility…` de `Video`, `Sequencer` et `ScrollListener`,
+leurs vocabulaires de verbes, leurs tables d'actions — ont été retirés pour que le concept
+soit reconstruit depuis zéro, et non amendé en place. Ce qui a été retiré n'est pas perdu :
+le tag **`viewport-behaviours/v1`** marque le dernier commit où tout cela existe, et
+`git show viewport-behaviours/v1:<chemin>` rend n'importe lequel de ces fichiers.
+
+Ce qui suit est donc **l'entrée de la reconstruction, pas un contrat** : l'histoire qui a
+mené là, le contrat tel qu'il était écrit, et le relevé qui a conclu qu'il fallait
+recommencer. À lire avant de reposer la moindre ligne, et à remplacer par le nouveau
+contrat quand il sera écrit.
+
+### L'histoire — d'où venait la grammaire
 
 `Video` portait **huit props** — `autoPlay`, `autoPause`, `autoMute`, `autoLoud`, chacune
 en `…WhenVisible` et `…OnceVisible` —, et la démo de lm-link avait dû les présenter comme
@@ -240,13 +252,10 @@ une grammaire (`auto` + verbe + quand) pour ne pas les décrire huit fois. Qu'un
 eu besoin d'inventer une grammaire pour rendre une API lisible était le signe que l'API
 pouvait la porter elle-même : c'est ce qui a été fait.
 
-La couche générique vit dans `components/utils/viewport-behaviours/`, et `Video`,
-`Sequencer` et `ScrollListener` la consomment. **La conversion est finie** : trois
-grammaires pour la même idée au départ, il n'en reste qu'une. **Le relevé de ce qu'elle a
-produit, lui, est en cours** — voir « Le relevé rouvert » à la fin de cette section, qui
-est le chantier ouvert du moment.
-
-Ce qui suit est le contrat tel qu'il est écrit, et pourquoi il tombe de ce côté-là.
+La couche générique vivait dans `components/utils/viewport-behaviours/`, et `Video`,
+`Sequencer` et `ScrollListener` la consommaient. La conversion avait abouti : trois
+grammaires pour la même idée au départ, il n'en restait qu'une — et c'est cette couche-là
+qui est démontée aujourd'hui.
 
 ### Ce qui est décidé
 
@@ -467,10 +476,10 @@ Ce qui reste ouvert tient en deux lignes :
   présence de `onScrolled`, faute d'interrupteur. À regarder quand son tour viendra ;
   `onVisibilityChanged` est peut-être déjà la réponse.
 
-### The survey reopened — what the layer cannot do yet
+### The survey — why it is being rebuilt rather than amended
 
-The conversion is done; the layer it produced has not been reviewed until now. One fact
-first, because everything below rests on it: the `verb:arg:modifier` grammar has **exactly
+This is the reading that ended the layer. One fact first, because everything below rests
+on it: the `verb:arg:modifier` grammar has **exactly
 one trigger**, viewport visibility, and three consumers — `Video`, `Sequencer` and
 `ScrollListener`. Nothing else in `src/` so much as splits a string on `:`. So this is a
 general mechanism that has never been tried against a second signal, and the parts that
