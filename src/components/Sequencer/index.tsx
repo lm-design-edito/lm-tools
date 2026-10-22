@@ -156,7 +156,9 @@ export const Sequencer: FunctionComponent<Props> = ({
   children
 }) => {
   const [internalStep, setInternalStep] = useState(step ?? defaultStep ?? 0)
-  const [internalPlay, setInternalPlay] = useState(defaultPlay ?? false)
+  // No setter: nothing starts or stops the sequence any more, the `play` prop and this
+  // seed are the two answers there are.
+  const [internalPlay] = useState(defaultPlay ?? false)
   const [hasLapped, setHasLapped] = useState(0)
 
   const childrenArr = Children.toArray(children)
