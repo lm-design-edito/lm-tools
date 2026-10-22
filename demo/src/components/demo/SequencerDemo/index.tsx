@@ -47,15 +47,6 @@ through \`data-steps\` alone. That is what lets the steps be written in reading 
 the children belonging to several of them at once come **after**, instead of having their
 position counted as a step nobody wanted. \`totalSteps\` still wins over the mark.
 
-### Viewport behaviours
-\`whenVisible\` and \`whenHidden\` take a verb or a list of them, each optionally
-suffixed by \`:once\` and \`:force\`. Six verbs, \`Video\`'s family word for word:
-\`play\`, \`pause\`, \`jump-to:<n>\`, \`jump-start\`, \`jump-end\`, \`jump-by:<n>\`.
-A jump names a **position**, never an active step, and a negative one counts from the
-end — \`jump-to:-1\` is the last position where \`jump-by:-1\` steps back one. The order
-of a list is the order of execution, so \`['pause', 'jump-start']\` is the old
-\`pauseOnHidden\` and \`resetOnHidden\` in one line.
-
 The end is the counter **leaving** the last step, not arriving on it — the last step is
 owed its beat like every other one. \`onReachedLastStep\` is the arrival,
 \`onIsEndedChanged\` the departure, and on a playing sequence they are one beat apart.`
@@ -76,9 +67,7 @@ export type Props = PropsWithChildren<WithClassName<{
   onLooped?: () => void
   onReachedFirstStep?: () => void
   onReachedLastStep?: () => void
-}>>
-  & ViewportBehaviours<SequencerAction>
-  & { behavioursSuspended?: boolean }`
+}>>`
 
 const demoStyles = `
 .${publicClassName} {
@@ -117,11 +106,8 @@ const childStyle = {
 // Sixteen children, one step each, plus a `stepMap` so the demo shows the two numbers
 // being different: the first three positions play steps 4, 9 and 2 before the sequence
 // carries on at position 3. The last child declares `data-steps`, so it lights up twice.
-// Driven by instructions rather than by `play`, which is the point of the two props:
-// scrolling past it stops it and rewinds it, coming back starts it over.
 const demoProps: SequencerProps = {
-  whenVisible: 'play',
-  whenHidden: ['pause', 'jump-start'],
+  defaultPlay: true,
   loop: true,
   tempo: 120,
   stepMap: [4, 9, 2],

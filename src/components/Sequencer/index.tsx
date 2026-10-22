@@ -3,7 +3,6 @@ import {
   cloneElement,
   isValidElement,
   useEffect,
-  useRef,
   useState,
   type FunctionComponent,
   type PropsWithChildren,
@@ -15,18 +14,8 @@ import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import type { WithClassName } from '../utils/types.js'
-import { useViewportBehaviours } from '../utils/viewport-behaviours/index.js'
-import type {
-  ActionTable,
-  ViewportBehaviours
-} from '../utils/viewport-behaviours/types.js'
 import { sequencer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
-import type {
-  SequencerAction,
-  SequencerDomain,
-  SequencerVerb
-} from './types.js'
 import {
   getChildActiveSteps,
   hasDataLastStepAttribute
@@ -88,7 +77,6 @@ export type Props = PropsWithChildren<WithClassName<{
   onReachedFirstStep?: () => void
   onReachedLastStep?: () => void
 }>>
-  & ViewportBehaviours<SequencerAction>
 
 /**
  * A sequencer over its children, which it classifies and never moves.
@@ -121,20 +109,6 @@ export type Props = PropsWithChildren<WithClassName<{
  * is the honest reading of « it is not part of the sequence ».
  *
  * @remarks
- * **Viewport-driven behaviour is declared, not named by a prop.** `whenVisible` and
- * `whenHidden` take a verb or a list of them, out of {@link SequencerAction} — `'play'`,
- * `'jump-start'`, `'jump-by:1'` — each optionally suffixed by `':once'` and `':force'`.
- * The old `playOnVisible`, `pauseOnHidden`, `resetOnVisible` and `resetOnHidden` are
- * those four instructions written the long way: `whenHidden={['pause', 'jump-start']}`
- * is the pair of them, and the order of a list is the order of execution. See
- * `components/utils/viewport-behaviours` for the grammar, and the `visibility…` props
- * for what « visible » means and how long it has to have been true.
- *
- * **Nothing surrenders here.** The layer lets a reader's hand switch an instruction off
- * for the rest of the mount, and this component has no control for a hand to touch — so
- * `':force'` has nothing to override, and the single `'playback'` domain is a formality.
- * @see {@link SequencerDomain}
- *
  * ### On the root
  * `--playing`, `--at-start`, `--at-end`, `--ended`, plus `data-step`, `data-active-step`,
  * `data-total-steps`, `data-tempo` and `data-lap`.
@@ -178,21 +152,12 @@ export const Sequencer: FunctionComponent<Props> = ({
   onLooped,
   onReachedFirstStep,
   onReachedLastStep,
-  visibilityThreshold,
-  visibilityRoot,
-  visibilityRootMargin,
-  visibilityOnAfterMs,
-  visibilityOffAfterMs,
-  whenVisible,
-  whenHidden,
-  onVisibilityChanged,
   className,
   children
 }) => {
   const [internalStep, setInternalStep] = useState(step ?? defaultStep ?? 0)
   const [internalPlay, setInternalPlay] = useState(defaultPlay ?? false)
   const [hasLapped, setHasLapped] = useState(0)
-  const rootRef = useRef<HTMLDivElement>(null)
 
   const childrenArr = Children.toArray(children)
   const elements = childrenArr.filter(isValidElement)
@@ -232,65 +197,6 @@ export const Sequencer: FunctionComponent<Props> = ({
     setHasLapped(lap)
     onLooped?.()
   }, [lap, loop])
-
-  // Viewport behaviours
-
-  // The lap offset only applies while looping: on a sequence that does not loop, `lap`
-  // reads `1` past the end, and adding it would land `jump-start` back on the end.
-  const jumpToPosition = (target: number): void => {
-    if (step !== undefined || stepsCount <= 0) return
-    const resolved = target < 0 ? stepsCount + target : target
-    const bounded = loop === true
-      ? absoluteModulo(resolved, stepsCount)
-      : clamp(resolved, 0, stepsCount - 1)
-    setInternalStep(loop === true ? lap * stepsCount + bounded : bounded)
-  }
-
-  const jumpBy = (offset: number): void => {
-    if (step !== undefined || stepsCount <= 0) return
-    setInternalStep(current => current + offset)
-  }
-
-  // `play` and `pause` need no guard against a controlled `play`: the effective state
-  // reads the prop first, so the internal one they write is never consulted.
-  const actions: ActionTable<SequencerVerb, SequencerDomain> = {
-    play: { domain: 'playback', run: () => setInternalPlay(true) },
-    pause: { domain: 'playback', run: () => setInternalPlay(false) },
-    'jump-to': {
-      domain: 'playback',
-      run: arg => {
-        const target = Number(arg)
-        if (!Number.isFinite(target)) return
-        jumpToPosition(target)
-      }
-    },
-    'jump-start': { domain: 'playback', run: () => jumpToPosition(0) },
-    'jump-end': { domain: 'playback', run: () => jumpToPosition(-1) },
-    'jump-by': {
-      domain: 'playback',
-      run: arg => {
-        const offset = Number(arg)
-        if (!Number.isFinite(offset)) return
-        jumpBy(offset)
-      }
-    }
-  }
-
-  // The surrender half is dropped: this component has no control a hand could take over.
-  useViewportBehaviours<SequencerAction>(
-    rootRef,
-    {
-      visibilityThreshold,
-      visibilityRoot,
-      visibilityRootMargin,
-      visibilityOnAfterMs,
-      visibilityOffAfterMs,
-      whenVisible,
-      whenHidden,
-      onVisibilityChanged
-    },
-    actions
-  )
 
   // State dispatch
   useStateChangeDispatch(position, () => onStepChanged?.({ step: position, activeStep }))
@@ -334,7 +240,6 @@ export const Sequencer: FunctionComponent<Props> = ({
 
   let elementIndex = -1
   return <div
-    ref={rootRef}
     className={rootClss}
     data-step={position}
     data-active-step={activeStep}
