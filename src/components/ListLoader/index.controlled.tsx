@@ -11,15 +11,9 @@ import type {
   WithClassName,
   WithCompId
 } from '../utils/types.js'
+import type { ObserverOptions } from '../utils/visibility/index.js'
 import { listLoader as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
-
-/** The `IntersectionObserver` settings this component mounts its own observer with. */
-export type ViewportObserverOptions = {
-  threshold?: number | number[]
-  root?: HTMLElement
-  rootMargin?: string
-}
 
 /** Which position a load button occupies in the rendered sequence. */
 type LoadButtonKind = 'prev' | 'next' | 'gap'
@@ -57,7 +51,7 @@ type LoadButtonKind = 'prev' | 'next' | 'gap'
  * start loading a page before its button actually shows.
  * @property className - Additional class name(s) applied to the root element.
  */
-export type Props<T> = WithCompId<WithClassName<ViewportObserverOptions & {
+export type Props<T> = WithCompId<WithClassName<ObserverOptions & {
   pages: number[]
   firstPagePos: number
   lastPagePos: number
