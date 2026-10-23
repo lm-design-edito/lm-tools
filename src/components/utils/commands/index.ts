@@ -2,6 +2,8 @@ import {
   useEffect,
   useRef
 } from 'react'
+import { splitFirst } from '../../../agnostic/strings/split-first/index.js'
+import { splitTrim } from '../../../agnostic/strings/split-trim/index.js'
 import type {
   AddressedCommand,
   Command
@@ -18,22 +20,16 @@ class CommandEvent extends CustomEvent<AddressedCommand> {
   }
 }
 
-function splitOnce (value: string, separator: string): [string, string | undefined] {
-  const index = value.indexOf(separator)
-  if (index === -1) return [value, undefined]
-  return [value.slice(0, index), value.slice(index + separator.length)]
-}
-
 /** Reads `@target:action:arg,arg` into its parts, or `null` when the string isn't one. */
 export function parseCommand (raw: string): Command | null {
   const trimmed = raw.trim()
   const [target, body] = trimmed.startsWith('@')
-    ? splitOnce(trimmed.slice(1), ':')
+    ? splitFirst(trimmed.slice(1), ':')
     : [undefined, trimmed]
   if (target === '' || body === undefined) return null
-  const [action, argList] = splitOnce(body, ':')
+  const [action, argList] = splitFirst(body, ':')
   if (action === '') return null
-  const args = argList === undefined ? [] : argList.split(',').map(arg => arg.trim())
+  const args = argList === undefined ? [] : splitTrim(argList, ',')
   if (args.some(arg => arg === '')) return null
   return { target, action, args }
 }
