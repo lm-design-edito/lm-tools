@@ -43,10 +43,23 @@ export function formatCommand (command: Command): string {
   return `${address}${action}${argList}`
 }
 
-/** Dispatches a command, addressed to `from` when it names no target of its own. */
-export function sendCommand (command: Command, from: string): void {
+function sendCommand (command: Command, from: string): void {
   const addressed: AddressedCommand = { ...command, target: command.target ?? from }
   commandBus.dispatchEvent(new CommandEvent(addressed))
+}
+
+/** Dispatches every command written in `raw`, addressed to `from` when one names no target. */
+export function sendCommands (raw: string | string[], from: string): void {
+  const rawCommands = typeof raw === 'string' ? [raw] : raw
+  rawCommands.forEach(rawCommand => {
+    const command = parseCommand(rawCommand)
+    if (command === null) {
+      // eslint-disable-next-line no-console
+      console.warn(`"${rawCommand}" is not a command`)
+      return
+    }
+    sendCommand(command, from)
+  })
 }
 
 /** Calls back on every command addressed to `target`, and returns the unsubscribe. */
