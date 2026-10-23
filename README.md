@@ -254,7 +254,7 @@ inherits the prop from the controlled Props type and forwards it.
 
 `components/utils/commands` holds the layer that replaces the instruction grammar of the
 dismantled visibility layer: `parseCommand` / `formatCommand` for the
-`@target:action:arg,arg` form, `sendCommands` / `subscribeToCommands` / `useCommands` for a
+`@target:force:once:action:arg,arg` form, `sendCommands` / `subscribeToCommands` / `useCommands` for a
 private `commandBus` — an `EventTarget` of its own, so no global name is taken, and not
 exported, so the grammar cannot be bypassed from outside. A command with no `@target` is
 addressed to the sender itself, resolved at the source, so a receiver only ever compares
@@ -279,10 +279,52 @@ Three decisions hold the receiving side together:
   mechanism — an action writes to the internal state, and a prop that is set makes that
   write invisible.
 
-`sendCommands(raw, from)` is the only sender there is: it takes a string or a list of them,
-warns about each one that is not a command, and sends the rest. Dispatching a single
+`sendCommands(raw, fromCompId)` is the only sender there is: it takes a string or a list of
+them, warns about each one that is not a command, and sends the rest. Dispatching a single
 command is a `sendOne` closure inside it, so nothing reaches the bus without going through
 the grammar.
+
+### La grammaire
+
+Three parts come before the action, **in any order**, and the action's arguments come last:
+
+```
+@target  force  once | <n>ce  action  arg,arg
+```
+
+`parseCommand` splits the whole string on `:` and then recognises the parts by what they
+look like — a segment starting with `@` is the target, `force` is the flag, `once` or
+`<n>ce` is a send limit — so `@hero:force:once:play` and `@hero:once:force:play` are the
+same command, and `formatCommand` re-emits both in the one canonical order above.
+
+What that costs, accepted on purpose: **an argument can no longer contain a colon**, and a
+lone argument can be neither `force`, `once`, `3ce`, nor anything starting with `@`, since
+the scan would claim it. A command is **rejected** — `null`, and a `console.warn` from
+`sendCommands` — when it names two targets, carries two send limits, says `0ce`, holds an
+empty argument, or leaves more than an action and one argument list once the modifiers are
+out.
+
+`once` is `1ce`, and the family goes on: `2ce`, `3ce`, `12ce`. It is an abbreviation, and
+it is deliberate — this grammar is a language for the library's consumers, not a naming
+convention for our own code, which is the one place that trade is acceptable.
+
+### Les limites d'envoi
+
+A send limit is counted **by the sender**, not honoured by the receiver: `sendCommands`
+keeps a map keyed on the trio *origin, target, action* — arguments and modifiers excluded,
+so `@hero:play:once` and `@hero:play:3ce` share a count — and declines to dispatch once the
+limit is reached. That is why it belongs here rather than in a trigger's props: every
+future trigger gets it for nothing, and a component receiving `@other:play:once` never has
+to know the restriction was about the sender.
+
+The count lives at module scope, so it lasts as long as the page. The consequence is worth
+wanting on purpose: a component with an **author-given** `compId` that unmounts and
+remounts resumes its count, so its `once` does not fire again — while a component with a
+**generated** id gets a fresh id and a fresh count.
+
+`force` is parsed and carried, and **nothing enforces it yet**: there is no second source
+of truth to arbitrate against until reader actions can deactivate a command. It is in the
+grammar now so the commands people write don't have to change when arbitration lands.
 
 `ScrollTracker` is the first and so far only component wired, with `track` / `untrack`.
 What does not exist yet: the other components' vocabularies. `force`, domains and surrender
@@ -466,6 +508,10 @@ porte la vidéo à 542 ms. Une valeur négative compte
 **L'argument appartient au verbe, et `once` est un suffixe uniforme par-dessus.** C'est ce
 qui fait tenir les deux ensemble sans grammaire à deux étages : le vocabulaire d'un
 composant porte ses propres formes, et la couche générique n'ajoute qu'un segment final.
+
+> **Tranché autrement depuis.** Les modifieurs passent **devant** l'action et non après —
+> voir « La grammaire » plus haut —, et `once` n'est plus un suffixe que le receveur lit :
+> c'est un compteur tenu par l'émetteur. L'argument appartient toujours au verbe.
 
 ```ts
 export const VIDEO_VERBS = ['play', 'pause', 'loud', 'mute', 'jump-to', 'jump-start', 'jump-end'] as const
