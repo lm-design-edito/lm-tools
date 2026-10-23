@@ -10,7 +10,14 @@ import {
 import { clss } from '../../agnostic/css/clss/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { iframe as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -46,9 +53,9 @@ const innerAutoHeightNotifier = (messageType: string): string => `<script>
  * @property style - Optional inline style applied to the iframe.
  * @property srcDoc - Raw HTML string rendered inside the iframe.
  */
-export type Props = WithClassName<{
+export type Props = WithCompId<WithClassName<{
   autoHeight?: boolean
-}> & Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'children'>
+}> & Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'children'>>
 
 /**
  * Iframe component with optional automatic height adjustment.
@@ -67,12 +74,15 @@ export type Props = WithClassName<{
  * @see {@link Props}
  */
 export const Iframe: FunctionComponent<Props> = ({
+  compId: givenCompId,
   autoHeight = false,
   className,
   srcDoc,
   style,
   ...iframeProps
 }): JSX.Element => {
+  const compId = useCompId(givenCompId)
+
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [height, setHeight] = useState<number | null>(null)
   const [innerMessageType] = useState(`_${randomHash(10)}`)
@@ -127,6 +137,7 @@ export const Iframe: FunctionComponent<Props> = ({
   }, [srcDoc, autoHeight])
   return <iframe
     {...iframeProps}
+    {...compIdAttribute(compId)}
     ref={iframeRef}
     className={rootClss}
     style={iframeStyle}

@@ -10,7 +10,14 @@ import { clss } from '../../agnostic/css/clss/index.js'
 import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { select as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -25,10 +32,10 @@ import cssModule from './styles.module.css'
  * @property className - Additional class name(s) applied to the select element.
  * @property children - `<option>` or `<optgroup>` elements rendered inside the select.
  */
-export type Props = SelectHTMLAttributes<HTMLSelectElement> & PropsWithChildren<WithClassName<{
+export type Props = WithCompId<SelectHTMLAttributes<HTMLSelectElement> & PropsWithChildren<WithClassName<{
   label?: ReactNode
   error?: ReactNode
-}>>
+}>>>
 
 /**
  * Select field supporting controlled and uncontrolled usage.
@@ -59,6 +66,7 @@ export type Props = SelectHTMLAttributes<HTMLSelectElement> & PropsWithChildren<
  * - `onChange` fires in both modes.
  */
 export const Select: FunctionComponent<Props> = ({
+  compId: givenCompId,
   label,
   error,
   value,
@@ -68,6 +76,8 @@ export const Select: FunctionComponent<Props> = ({
   children,
   ...rest
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State
   const [id] = useState(`_${randomHash(12)}`)
   const [internalValue, setInternalValue] = useState(defaultValue ?? '')
@@ -94,6 +104,7 @@ export const Select: FunctionComponent<Props> = ({
     {isNotFalsy(label) && <label className={c('label')} htmlFor={id}>{label}</label>}
     <select
       {...rest}
+      {...compIdAttribute(compId)}
       id={id}
       className={rootClss}
       value={currentValue}

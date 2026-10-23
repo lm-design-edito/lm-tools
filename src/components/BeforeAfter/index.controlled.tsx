@@ -10,7 +10,14 @@ import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import { round } from '../../agnostic/numbers/round/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { beforeAfter as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -29,14 +36,14 @@ import cssModule from './styles.module.css'
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Arbitrary content to inject inside the component.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   mode?: 'vertical' | 'horizontal'
   ratio?: number
   before?: ReactNode
   after?: ReactNode
   onDragged?: (payload: { xRatio: number, yRatio: number }) => void
   onClicked?: (payload: { xRatio: number, yRatio: number }) => void
-}>>
+}>>>
 
 /**
  * Controlled before/after comparison component.
@@ -70,6 +77,7 @@ export type Props = PropsWithChildren<WithClassName<{
  * uncontrolled wrapper's job.
  */
 export const ControlledBeforeAfter: FunctionComponent<Props> = ({
+  compId: givenCompId,
   mode = 'horizontal',
   ratio = 0,
   before,
@@ -79,6 +87,8 @@ export const ControlledBeforeAfter: FunctionComponent<Props> = ({
   onDragged,
   onClicked
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State & refs
   const rootRef = useRef<HTMLDivElement>(null)
   const isPointerDown = useRef(false)
@@ -145,6 +155,7 @@ export const ControlledBeforeAfter: FunctionComponent<Props> = ({
     '--lm-before-after-ratio': `${roundedRatio}`
   }
   return <div
+    {...compIdAttribute(compId)}
     ref={rootRef}
     className={rootClss}
     onMouseDown={handlePointerDown}

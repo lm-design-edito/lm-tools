@@ -11,7 +11,14 @@ import {
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { gallery as publicClassName } from '../public-classnames.js'
 import {
   EMPTY_GEOMETRY,
@@ -57,7 +64,7 @@ function resolveOffset (
  * @property className - Added to the root element.
  * @property children - One slot per child.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   offsetLeft?: string | number
   offsetRight?: string | number
   offset?: string | number
@@ -73,7 +80,7 @@ export type Props = PropsWithChildren<WithClassName<{
   onActiveSlotChanged?: (activePos: number) => void
   onCanGoLeftChanged?: (canGoLeft: boolean) => void
   onCanGoRightChanged?: (canGoRight: boolean) => void
-}>>
+}>>>
 
 /**
  * Horizontally scrollable gallery, with navigation controls and pagination.
@@ -105,6 +112,7 @@ export type Props = PropsWithChildren<WithClassName<{
  * reads as `0`.
  */
 export const Gallery: FunctionComponent<Props> = ({
+  compId: givenCompId,
   offsetLeft,
   offsetRight,
   offset,
@@ -123,6 +131,8 @@ export const Gallery: FunctionComponent<Props> = ({
   children,
   className
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State & refs
   const scrollerRef = useRef<HTMLDivElement>(null)
   const geometryRef = useRef<Geometry>(EMPTY_GEOMETRY)
@@ -252,6 +262,7 @@ export const Gallery: FunctionComponent<Props> = ({
   const actualOffsetLeft = resolveOffset(offsetLeft, offset)
   const actualOffsetRight = resolveOffset(offsetRight, offset)
   return <div
+    {...compIdAttribute(compId)}
     className={rootClss}
     {...dataAttributes}>
 

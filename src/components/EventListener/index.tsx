@@ -7,7 +7,14 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { eventListener as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -22,11 +29,11 @@ import cssModule from './styles.module.css'
  * Receives the native DOM Event object.
  * @property children - React children rendered inside the root element.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   type?: string | string[]
   targetSelector?: string
   onEvent?: (e: Event) => void
-}>>
+}>>>
 
 /**
  * Component that attaches one or multiple DOM event listeners to its root element
@@ -36,12 +43,15 @@ export type Props = PropsWithChildren<WithClassName<{
  * @returns A span element wrapping `children`, with configured event listeners.
  */
 export const EventListenerComponent: FunctionComponent<Props> = ({
+  compId: givenCompId,
   className,
   type,
   targetSelector,
   onEvent,
   children
 }): JSX.Element => {
+  const compId = useCompId(givenCompId)
+
   // Effects & refs
   const rootRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -57,6 +67,7 @@ export const EventListenerComponent: FunctionComponent<Props> = ({
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(), className)
   return <div
+    {...compIdAttribute(compId)}
     className={rootClss}
     ref={rootRef}>
     {children}

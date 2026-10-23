@@ -4,7 +4,14 @@ import type {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { button as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -16,7 +23,7 @@ import cssModule from './styles.module.css'
  *
  * @property className - Additional class name(s) applied to the root element.
  */
-export type Props = ButtonHTMLAttributes<HTMLButtonElement> & WithClassName<Record<string, unknown>>
+export type Props = WithCompId<ButtonHTMLAttributes<HTMLButtonElement> & WithClassName<Record<string, unknown>>>
 
 /**
  * Base button component.
@@ -29,10 +36,16 @@ export type Props = ButtonHTMLAttributes<HTMLButtonElement> & WithClassName<Reco
  * @returns A styled native button element.
  */
 export const Button: FunctionComponent<Props> = ({
+  compId: givenCompId,
   className,
   ...rest
 }) => {
+  const compId = useCompId(givenCompId)
+
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(), className)
-  return <button {...rest} className={rootClss} />
+  return <button
+    {...rest}
+    {...compIdAttribute(compId)}
+    className={rootClss} />
 }

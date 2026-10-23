@@ -88,6 +88,7 @@ export type Props<T> = Omit<ControlledProps<T>, 'itemsPages' | 'loadingPages' | 
  *   is in use.
  */
 export const ListLoader = <T,>({
+  compId,
   className,
   pages,
   defaultPage,
@@ -245,6 +246,7 @@ export const ListLoader = <T,>({
     .map(([page, { items }]) => [page, items] as const))
 
   return <ControlledListLoader
+    compId={compId}
     className={className}
     pages={currentPages}
     firstPagePos={firstPagePos}

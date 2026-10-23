@@ -6,7 +6,14 @@ import {
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import { parseSrcSetSourcesList } from '../Video/utils.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { image as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -45,9 +52,9 @@ type SourceData = {
  * - an array of {@link SourceData} objects for full `<source>` control.
  * @property className - Optional additional class name(s) applied to the root element.
  */
-export type Props = WithClassName<{
+export type Props = WithCompId<WithClassName<{
   sources?: string | string[] | SourceData[]
-}> & ImgHTMLAttributes<HTMLImageElement>
+}> & ImgHTMLAttributes<HTMLImageElement>>
 
 /**
  * Image component. Wraps a native `<img>` (or `<picture>`) element with
@@ -63,10 +70,13 @@ export type Props = WithClassName<{
  * @returns A `<figure>` element containing a `<picture>` with the image.
  */
 export const Image: FunctionComponent<Props> = ({
+  compId: givenCompId,
   sources,
   className,
   ...intrinsicImgAttributes
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State
   const parsedSources = useMemo(
     () => parseSrcSetSourcesList<SourceData>(sources, 'srcSet'),
@@ -92,7 +102,9 @@ export const Image: FunctionComponent<Props> = ({
       {...intrinsicImgAttributes} />
   </picture>
 
-  return <figure className={rootClss}>
+  return <figure
+    {...compIdAttribute(compId)}
+    className={rootClss}>
     {pictureContent}
   </figure>
 }

@@ -15,7 +15,14 @@ import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import { Input } from '../Input/index.js'
 import { Select } from '../Select/index.js'
 import { Textarea } from '../Textarea/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import type { JsonValue } from './types.js'
 import {
   c,
@@ -36,13 +43,13 @@ import {
  * every record in the tree. Defaults to `false`.
  * @property className - Additional class name(s) applied to the root element.
  */
-export type Props = WithClassName<{
+export type Props = WithCompId<WithClassName<{
   defaultValue?: JsonValue
   onChange?: (val: JsonValue) => void
   onValidationError?: (issues: core.$ZodIssue[]) => void
   schema?: ZodType<JsonValue>
   preventSameNameKeys?: boolean
-}>
+}>>
 
 /**
  * Interactive JSON editor component.
@@ -83,6 +90,7 @@ export type Props = WithClassName<{
  * components accepts a `value` prop.
  */
 export const JsonEditor: FunctionComponent<Props> = ({
+  compId: givenCompId,
   defaultValue = null,
   onChange,
   onValidationError,
@@ -90,6 +98,8 @@ export const JsonEditor: FunctionComponent<Props> = ({
   preventSameNameKeys,
   className
 }) => {
+  const compId = useCompId(givenCompId)
+
   const [value, setValue] = useState(defaultValue)
   const setValueAndDispatch = (val: JsonValue): void => {
     setValue(val)
@@ -105,7 +115,9 @@ export const JsonEditor: FunctionComponent<Props> = ({
     }
   }
   const rootClss = mergeClassNames(c(), className)
-  return <div className={rootClss}>
+  return <div
+    {...compIdAttribute(compId)}
+    className={rootClss}>
     <ValueEditor
       defaultValue={defaultValue}
       onChange={val => setValueAndDispatch(val)}

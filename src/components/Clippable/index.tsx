@@ -8,7 +8,14 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { clippable as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -39,7 +46,7 @@ const clippedModifierDurationMs = 3000
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Content rendered inside the copyable container.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   toClip?: string | ((curr: string | undefined) => string | undefined)
   copyBtnContent?: ReactNode
   clippedBtnContent?: ReactNode
@@ -49,7 +56,7 @@ export type Props = PropsWithChildren<WithClassName<{
   }) => void
   onClipped?: (content: string) => void
   onCopyFailed?: (error: unknown) => void
-}>>
+}>>>
 
 /**
  * Clipboard-enabled container. Renders arbitrary content alongside a copy
@@ -72,6 +79,7 @@ export type Props = PropsWithChildren<WithClassName<{
  * `clipped` modifier fires.
  */
 export const Clippable: FunctionComponent<Props> = ({
+  compId: givenCompId,
   className,
   children,
   toClip,
@@ -81,6 +89,8 @@ export const Clippable: FunctionComponent<Props> = ({
   onClipped,
   onCopyFailed
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State & refs
   const [hasBeenRecentlyClipped, setHasBeenRecentlyClipped] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -125,7 +135,9 @@ export const Clippable: FunctionComponent<Props> = ({
   }), className)
   const copyClss = c('copy')
   const contentClss = c('content')
-  return <div className={rootClss}>
+  return <div
+    {...compIdAttribute(compId)}
+    className={rootClss}>
     <button
       type='button'
       className={copyClss}

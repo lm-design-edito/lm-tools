@@ -9,7 +9,14 @@ import { createPortal } from 'react-dom'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import { shadowRoot as publicClassName } from '../public-classnames.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import cssModule from './styles.module.css'
 
 /**
@@ -29,13 +36,13 @@ import cssModule from './styles.module.css'
  * Useful as a fallback when constructable stylesheets are not used.
  * @property children - React children rendered inside the Shadow Root via a React portal.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   mode?: 'open' | 'closed'
   delegatesFocus?: boolean
   slotAssignment?: 'named' | 'manual'
   adoptedStyleSheets?: CSSStyleSheet[]
   injectedStyles?: string
-}>>
+}>>>
 
 /**
  * Component that creates a Shadow Root on its host element and renders
@@ -50,6 +57,7 @@ export type Props = PropsWithChildren<WithClassName<{
  * @returns A host `div` element that owns the created Shadow Root.
  */
 export const ShadowRootComponent: FunctionComponent<Props> = ({
+  compId: givenCompId,
   mode = 'open',
   delegatesFocus,
   slotAssignment,
@@ -58,6 +66,8 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
   className,
   children
 }) => {
+  const compId = useCompId(givenCompId)
+
   // Refs, state & effects
   const hostRef = useRef<HTMLDivElement | null>(null)
   const [shadowRoot, setShadowRoot] = useState<ShadowRoot | null>(null)
@@ -83,6 +93,7 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null, { attached: shadowRoot !== null }), className)
   return <div
+    {...compIdAttribute(compId)}
     ref={hostRef}
     className={rootClss}>
 

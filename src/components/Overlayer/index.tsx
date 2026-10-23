@@ -6,7 +6,14 @@ import type {
 import { clss } from '../../agnostic/css/clss/index.js'
 import { isFalsy } from '../../agnostic/booleans/is-falsy/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { overlayer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -41,9 +48,9 @@ type Overlay = {
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Content rendered in the base layer, below all overlays.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   overlays?: Overlay[]
-}>>
+}>>>
 
 /**
  * Positions overlays over a base layer — **by publishing where they go, not by placing
@@ -71,14 +78,19 @@ export type Props = PropsWithChildren<WithClassName<{
  * @returns A root `<div>` containing the base layer and all positioned overlay elements.
  */
 export const Overlayer: FunctionComponent<Props> = ({
+  compId: givenCompId,
   overlays,
   children,
   className
 }) => {
+  const compId = useCompId(givenCompId)
+
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(), className)
   const baseClss = c('base')
-  return <div className={rootClss}>
+  return <div
+    {...compIdAttribute(compId)}
+    className={rootClss}>
     <div className={baseClss}>{children}</div>
     {overlays?.map(({
       children: overlayChildren,

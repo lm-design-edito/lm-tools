@@ -9,7 +9,14 @@ import {
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { paginator as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -70,12 +77,12 @@ type DirectionState = 'forwards' | 'backwards' | null
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Each direct child is treated as an individual page slot.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   thresholdOffsetPercent?: number
   onDirectionChanged?: (direction: DirectionState) => void
   onPagesChanged?: (pages: PageState[]) => void
   onPageElementsChanged?: (pageElements: HTMLElement[]) => void
-}>>
+}>>>
 
 /**
  * A scroll-driven pagination component that tracks which child page is currently
@@ -104,6 +111,7 @@ export type Props = PropsWithChildren<WithClassName<{
  *   into the `'curr'` position, making it useful as a re-entry counter.
  */
 export const Paginator: FunctionComponent<Props> = ({
+  compId: givenCompId,
   thresholdOffsetPercent,
   onDirectionChanged,
   onPagesChanged,
@@ -111,6 +119,8 @@ export const Paginator: FunctionComponent<Props> = ({
   className,
   children
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State, refs, effects
   const [pagesState, setPagesState] = useState<PagesState>(new Map())
   const [directionState, setDirectionState] = useState<DirectionState>(null)
@@ -221,7 +231,9 @@ export const Paginator: FunctionComponent<Props> = ({
     className
   )
   const pagesClss = c('pages')
-  return <div className={rootClss}>
+  return <div
+    {...compIdAttribute(compId)}
+    className={rootClss}>
     <div
       className={pagesClss}
       ref={pagesRef}>

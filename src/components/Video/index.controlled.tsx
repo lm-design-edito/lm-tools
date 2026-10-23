@@ -14,7 +14,14 @@ import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-
 import { clss } from '../../agnostic/css/clss/index.js'
 import { formatDuration } from '../../agnostic/time/duration/format-duration/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import cssModule from './styles.module.css'
 import { video as publicClassName } from '../public-classnames.js'
 import {
@@ -138,7 +145,7 @@ export type VideoActionPayload<E, T> = {
   videoElement: HTMLVideoElement | null
 } & T
 
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   // The `<figure>` handed back to whoever renders this component. It exists for the
   // uncontrolled `Video` above it, which observes that element rather than wrapping it
   // in a box of its own — see `useIntersectionObserver`.
@@ -184,7 +191,7 @@ export type Props = PropsWithChildren<WithClassName<{
   onPlaybackRateChanged?: (playbackRate: number) => void
   onCurrentTimeMsChanged?: (currentTimeMs: number) => void
   onFullscreenChange?: (isFullscreen: boolean) => void
-}> & VideoHTMLAttributes<HTMLVideoElement>>
+}> & VideoHTMLAttributes<HTMLVideoElement>>>
 
 /**
  * Full-featured video player component. Wraps a native `<video>` element with
@@ -230,6 +237,7 @@ export type Props = PropsWithChildren<WithClassName<{
  * subtitles.
  */
 export const ControlledVideo: FunctionComponent<Props> = ({
+  compId: givenCompId,
   sources,
   tracks,
   subtitles,
@@ -279,6 +287,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   videoRef: givenVideoRef,
   ...intrinsicVideoAttributes
 }) => {
+  const compId = useCompId(givenCompId)
+
   const ownVideoRef = useRef<HTMLVideoElement>(null)
   const videoRef = givenVideoRef ?? ownVideoRef
 
@@ -563,6 +573,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   useStateChangeDispatch(playbackRate, onPlaybackRateChanged)
 
   return <figure
+    {...compIdAttribute(compId)}
     ref={rootRef}
     className={rootClss}
     style={rootStyles}

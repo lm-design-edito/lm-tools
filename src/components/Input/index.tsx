@@ -9,7 +9,14 @@ import { clss } from '../../agnostic/css/clss/index.js'
 import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { input as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -23,10 +30,10 @@ import cssModule from './styles.module.css'
  * @property error - Content rendered as an error message below the input. When omitted, no error is rendered.
  * @property className - Additional class name(s) applied to the input element.
  */
-export type Props = InputHTMLAttributes<HTMLInputElement> & WithClassName<{
+export type Props = WithCompId<InputHTMLAttributes<HTMLInputElement> & WithClassName<{
   label?: ReactNode
   error?: ReactNode
-}>
+}>>
 
 /**
  * Input field supporting controlled and uncontrolled usage.
@@ -57,6 +64,7 @@ export type Props = InputHTMLAttributes<HTMLInputElement> & WithClassName<{
  * - `onChange` fires in both modes.
  */
 export const Input: FunctionComponent<Props> = ({
+  compId: givenCompId,
   label,
   error,
   value,
@@ -65,6 +73,8 @@ export const Input: FunctionComponent<Props> = ({
   className,
   ...rest
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State
   const [id] = useState(`_${randomHash(12)}`)
   const [internalValue, setInternalValue] = useState(defaultValue ?? '')
@@ -91,6 +101,7 @@ export const Input: FunctionComponent<Props> = ({
     {isNotFalsy(label) && <label className={c('label')} htmlFor={id}>{label}</label>}
     <input
       {...rest}
+      {...compIdAttribute(compId)}
       id={id}
       className={rootClss}
       value={currentValue}

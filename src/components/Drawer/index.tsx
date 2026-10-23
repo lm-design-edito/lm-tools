@@ -15,7 +15,14 @@ import {
   ResizeObserverComponent,
   type Props as ResizeObserverProps
 } from '../ResizeObserver/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { drawer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -50,7 +57,7 @@ import cssModule from './styles.module.css'
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Drawer content.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   openerContent?: ReactNode
   closerContent?: ReactNode
   openerBtnSelector?: string
@@ -61,7 +68,7 @@ export type Props = PropsWithChildren<WithClassName<{
   onCloserClicked?: (isOpened: boolean) => void
   onIsOpenedChanged?: (isOpened: boolean) => void
   onContentResized?: (dimensions: { width: number, height: number }) => void
-}>>
+}>>>
 
 /**
  * Marks whatever a `…BtnSelector` points at with the command's `-btn` public class.
@@ -167,6 +174,7 @@ function isToggleHit (event: MouseEvent<HTMLDivElement>, btnClassName: string): 
  *   contains, and a stylesheet reaches the toggle without knowing the selector.
  */
 export const Drawer: FunctionComponent<Props> = ({
+  compId: givenCompId,
   openerContent,
   closerContent,
   openerBtnSelector,
@@ -180,6 +188,8 @@ export const Drawer: FunctionComponent<Props> = ({
   className,
   children
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State
   const [internalIsOpened, setInternalIsOpened] = useState(defaultIsOpened)
   const [contentDimensions, setContentDimensions] = useState<{
@@ -263,6 +273,7 @@ export const Drawer: FunctionComponent<Props> = ({
     }
   }
   return <div
+    {...compIdAttribute(compId)}
     className={rootClss}
     {...dataAttributes}
     style={{ ...customCssProps }}>

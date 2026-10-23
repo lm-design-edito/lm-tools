@@ -3,7 +3,14 @@ import { integersBetween } from '../../agnostic/arrays/integers-between/index.js
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import { IntersectionObserverComponent } from '../IntersectionObserver/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { listLoader as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -50,7 +57,7 @@ type LoadButtonKind = 'prev' | 'next' | 'gap'
  * start loading a page before its button actually shows.
  * @property className - Additional class name(s) applied to the root element.
  */
-export type Props<T> = WithClassName<ViewportObserverOptions & {
+export type Props<T> = WithCompId<WithClassName<ViewportObserverOptions & {
   pages: number[]
   firstPagePos: number
   lastPagePos: number
@@ -62,7 +69,7 @@ export type Props<T> = WithClassName<ViewportObserverOptions & {
   onLoadPageClicked?: (pagePos: number) => void
   autoLoadPrevWhenVisible?: boolean
   autoLoadNextWhenVisible?: boolean
-}>
+}>>
 
 /**
  * Presentational layer of the paginated list. Renders already-loaded pages as a
@@ -102,6 +109,7 @@ export type Props<T> = WithClassName<ViewportObserverOptions & {
  * an earlier duplicate.
  */
 export const ControlledListLoader = <T,>({
+  compId: givenCompId,
   className,
   pages,
   firstPagePos,
@@ -118,6 +126,8 @@ export const ControlledListLoader = <T,>({
   root,
   rootMargin
 }: Props<T>): ReactNode => {
+  const compId = useCompId(givenCompId)
+
   const inBoundsPages = pages.filter(pagePos => pagePos >= firstPagePos && pagePos <= lastPagePos)
 
   const filteredItems = Array.from(itemsPages)
@@ -192,6 +202,7 @@ export const ControlledListLoader = <T,>({
   }
 
   return <div
+    {...compIdAttribute(compId)}
     className={rootClss}
     data-loading-pages={sortedLoadingPages.length === 0 ? undefined : sortedLoadingPages.join(',')}>
     {slots.map(({ pagePos, kind }) => kind === 'items'

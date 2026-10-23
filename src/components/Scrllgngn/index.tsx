@@ -26,7 +26,14 @@ import {
   subscribe,
   unsubscribe
 } from '../ScrollListener/utils.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { scrllgngn as publicClassName } from '../public-classnames.js'
 import type {
   ForceStickMode,
@@ -159,7 +166,7 @@ export type PropsPage = {
  * @property className - Optional additional class name(s) applied to the root
  * element.
  */
-export type Props = WithClassName<{
+export type Props = WithCompId<WithClassName<{
   pages?: PropsPage[]
   thresholdOffsetPercent?: number
   viewportOffsetTop?: ViewportOffset
@@ -170,7 +177,7 @@ export type Props = WithClassName<{
   forceStickBlocks?: ForceStickMode
   onPageChanged?: (payload: { currentPagePos: number, pageData?: PropsPage }) => void
   onContentVisibilityChanged?: (isVisible: boolean) => void
-}>
+}>>
 
 /**
  * Scrollytelling engine component. Orchestrates layered sticky blocks (`back`
@@ -266,6 +273,7 @@ export type Props = WithClassName<{
  * measures only the pages the displayed tracked blocks span, not the whole sequence.
  */
 export const Scrllgngn: FunctionComponent<Props> = ({
+  compId: givenCompId,
   pages,
   thresholdOffsetPercent,
   viewportOffsetTop,
@@ -278,6 +286,8 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   onContentVisibilityChanged,
   className
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State
   const [topVisible, setTopVis] = useState(false)
   const [contentVisible, setCntVis] = useState(false)
@@ -481,6 +491,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   }
   const visibleZoneRootMargin = toVisibleZoneRootMargin(visibleZone)
   return <div
+    {...compIdAttribute(compId)}
     ref={rootRef}
     className={rootClss}
     data-current-page-pos={currentPagePos}

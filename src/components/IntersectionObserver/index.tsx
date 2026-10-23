@@ -10,7 +10,14 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { intersectionObserver as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -51,12 +58,12 @@ export type ObserverOptions = {
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React children rendered inside the observed element.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   onIntersected?: (details: {
     ioEntry?: IOE | undefined
     observer: IO
   }) => void
-} & ObserverOptions>>
+} & ObserverOptions>>>
 
 /**
  * Observes an element a caller already renders, rather than one wrapped in a div of
@@ -148,6 +155,7 @@ export function useIntersectionObserver (
  * - Adds an `is-intersecting` modifier class when the element is intersecting.
  */
 export const IntersectionObserverComponent: FunctionComponent<Props> = ({
+  compId: givenCompId,
   onIntersected,
   root,
   rootMargin,
@@ -155,6 +163,8 @@ export const IntersectionObserverComponent: FunctionComponent<Props> = ({
   className,
   children
 }): JSX.Element => {
+  const compId = useCompId(givenCompId)
+
   const rootRef = useRef<HTMLDivElement>(null)
   const ioEntry = useIntersectionObserver(
     rootRef,
@@ -170,6 +180,7 @@ export const IntersectionObserverComponent: FunctionComponent<Props> = ({
     className
   )
   return <div
+    {...compIdAttribute(compId)}
     className={rootClss}
     ref={rootRef}>
     {children}

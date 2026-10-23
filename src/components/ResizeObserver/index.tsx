@@ -8,7 +8,14 @@ import {
 } from 'react'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { resizeObserver as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -25,9 +32,9 @@ type ROEntryWithBoundingRect = {
  * Receives the `ResizeObserverEntry` from the observed element, or `undefined` if none.
  * @property children - React children rendered inside the root element. Only the root element is observed
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   onResized?: (entry: ROEntryWithBoundingRect) => void
-}>>
+}>>>
 
 /**
  * Component that observes its own size changes and exposes the measured content
@@ -54,10 +61,13 @@ export type Props = PropsWithChildren<WithClassName<{
  * @returns A div wrapping `children`, with resize observation applied.
  */
 export const ResizeObserverComponent: FunctionComponent<Props> = ({
+  compId: givenCompId,
   className,
   onResized,
   children
 }): JSX.Element => {
+  const compId = useCompId(givenCompId)
+
   // Refs, effects & handlers
   const [roEntry, setRoEntry] = useState<ROEntryWithBoundingRect>()
   const rootRef = useRef<HTMLDivElement | null>(null)
@@ -125,6 +135,7 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
   const rootClss = mergeClassNames(c(null, { measured: contentRect !== undefined }), className)
   return <div
     {...dataAttributes}
+    {...compIdAttribute(compId)}
     className={rootClss}
     ref={rootRef}
     style={{ ...cssCustomProps }}>

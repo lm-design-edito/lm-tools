@@ -10,7 +10,14 @@ import { toError } from '../../agnostic/misc/cast/index.js'
 import { parseSrt } from '../../agnostic/subtitles/parse-srt/index.js'
 import type { SrtCue } from '../../agnostic/subtitles/parse-srt/types.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { subtitles as publicClassName } from '../public-classnames.js'
 import {
   lastElapsedPos as toLastElapsedPos,
@@ -46,7 +53,7 @@ import cssModule from './styles.module.css'
  * is not ok, or the parse throws.
  * @property className - Optional additional class name(s) applied to the root element.
  */
-export type Props = WithClassName<{
+export type Props = WithCompId<WithClassName<{
   cues?: SrtCue[]
   srtFileContent?: string
   src?: string
@@ -56,7 +63,7 @@ export type Props = WithClassName<{
   onLoaded?: (subs: string) => void
   onParsed?: (subs: SrtCue[]) => void
   onLoadFailed?: (error: Error) => void
-}>
+}>>
 
 /**
  * Subtitle synchronization component. Takes an SRT source — parsed cues, a raw
@@ -91,6 +98,7 @@ export type Props = WithClassName<{
  * come back out of `textContent`.
  */
 export const Subtitles: FunctionComponent<Props> = ({
+  compId: givenCompId,
   cues,
   srtFileContent,
   src,
@@ -102,6 +110,8 @@ export const Subtitles: FunctionComponent<Props> = ({
   onParsed,
   onLoadFailed
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State
   const [isLoading, setIsLoading] = useState(false)
   const [loadError, setLoadError] = useState<Error | null>(null)
@@ -163,7 +173,9 @@ export const Subtitles: FunctionComponent<Props> = ({
   const boundaries = normalizeGroupBoundaries(subsGroups, parsedSubs.length - 1)
   const groups = toSubGroups(boundaries, parsedSubs.length - 1)
   const currentGroup = toCurrentGroup(groups, lastElapsedPos, isEnded)
-  return <div className={rootClss}>
+  return <div
+    {...compIdAttribute(compId)}
+    className={rootClss}>
     {timecodeMs !== undefined && groups.map(group => {
       const groupClss = c('group', { curr: currentGroup?.startPos === group.startPos })
       return <div

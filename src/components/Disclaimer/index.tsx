@@ -7,7 +7,14 @@ import {
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { disclaimer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -29,14 +36,14 @@ import cssModule from './styles.module.css'
  * new value.
  * @property className - Optional additional class name(s) applied to the root element.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   undisclosedContent?: ReactNode
   togglerContent?: ReactNode
   isOn?: boolean
   defaultIsOn?: boolean
   onDismissClicked?: (isOn: boolean) => void
   onIsOnChanged?: (isOn: boolean) => void
-}>>
+}>>>
 
 /**
  * Dismissible disclaimer panel, gating the content it wraps.
@@ -63,6 +70,7 @@ export type Props = PropsWithChildren<WithClassName<{
  * - `onIsOnChanged` fires in both modes too, and never on mount.
  */
 export const Disclaimer: FunctionComponent<Props> = ({
+  compId: givenCompId,
   children,
   undisclosedContent,
   togglerContent,
@@ -72,6 +80,8 @@ export const Disclaimer: FunctionComponent<Props> = ({
   onIsOnChanged,
   className
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State
   const [internalIsOn, setInternalIsOn] = useState(defaultIsOn)
   const isControlled = isOnProp !== undefined
@@ -97,7 +107,9 @@ export const Disclaimer: FunctionComponent<Props> = ({
   const contentClss = c('content')
   const togglerClss = c('toggler')
   const sensitiveClss = c('sensitive')
-  return <div className={rootClss}>
+  return <div
+    {...compIdAttribute(compId)}
+    className={rootClss}>
     <div className={panelClss}>
       {undisclosedContent !== undefined && <div className={contentClss}>
         {undisclosedContent}

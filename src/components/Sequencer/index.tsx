@@ -13,7 +13,14 @@ import { absoluteModulo } from '../../agnostic/numbers/absolute-modulo/index.js'
 import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { sequencer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 import {
@@ -61,7 +68,7 @@ import {
  * the arrival, where `onIsEndedChanged` is the departure: on a playing sequence they are
  * one beat apart.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   totalSteps?: number
   stepMap?: number[]
   step?: number
@@ -76,7 +83,7 @@ export type Props = PropsWithChildren<WithClassName<{
   onLooped?: () => void
   onReachedFirstStep?: () => void
   onReachedLastStep?: () => void
-}>>
+}>>>
 
 /**
  * A sequencer over its children, which it classifies and never moves.
@@ -138,6 +145,7 @@ export type Props = PropsWithChildren<WithClassName<{
  * lap without anything being reset.
  */
 export const Sequencer: FunctionComponent<Props> = ({
+  compId: givenCompId,
   totalSteps,
   stepMap,
   step,
@@ -155,6 +163,8 @@ export const Sequencer: FunctionComponent<Props> = ({
   className,
   children
 }) => {
+  const compId = useCompId(givenCompId)
+
   const [internalStep, setInternalStep] = useState(step ?? defaultStep ?? 0)
   // No setter: nothing starts or stops the sequence any more, the `play` prop and this
   // seed are the two answers there are.
@@ -242,6 +252,7 @@ export const Sequencer: FunctionComponent<Props> = ({
 
   let elementIndex = -1
   return <div
+    {...compIdAttribute(compId)}
     className={rootClss}
     data-step={position}
     data-active-step={activeStep}

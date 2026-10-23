@@ -13,7 +13,14 @@ import {
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { lightbox as publicClassName } from '../public-classnames.js'
 import {
   closeLightbox,
@@ -73,7 +80,7 @@ import cssModule from './styles.module.css'
  * @property children - The content, rendered in place while closed and moved onto the
  * inside the lightbox while open.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   group?: string | string[]
   closeBtnContent?: ReactNode
   openBtnContent?: ReactNode
@@ -95,7 +102,7 @@ export type Props = PropsWithChildren<WithClassName<{
   onPrevArrowPressed?: (isOn: boolean) => void
   onNextArrowPressed?: (isOn: boolean) => void
   onIsOnChanged?: (isOn: boolean) => void
-}>>
+}>>>
 
 /**
  * Lightbox component. Holds content in a box that a stylesheet lifts over the page
@@ -151,6 +158,7 @@ export type Props = PropsWithChildren<WithClassName<{
  *   to the end of the document and nothing looks like a lightbox.
  */
 export const Lightbox: FunctionComponent<Props> = ({
+  compId: givenCompId,
   group,
   closeBtnContent,
   openBtnContent,
@@ -175,6 +183,8 @@ export const Lightbox: FunctionComponent<Props> = ({
   children,
   className
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State & refs
   const id = useId()
   const rootRef = useRef<HTMLDivElement>(null)
@@ -322,6 +332,7 @@ export const Lightbox: FunctionComponent<Props> = ({
   // root carries a modifier per state, and `:empty` tells a control with no content
   // from one that has some.
   return <div
+    {...compIdAttribute(compId)}
     className={rootClss}
     ref={rootRef}>
     <div

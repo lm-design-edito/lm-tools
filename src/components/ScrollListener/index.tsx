@@ -9,7 +9,14 @@ import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-
 import { clss } from '../../agnostic/css/clss/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { scrollListener as publicClassName } from '../public-classnames.js'
 import {
   getScrollProgress,
@@ -44,14 +51,14 @@ import cssModule from './styles.module.css'
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React nodes rendered inside the scroll listener container.
  */
-export type Props = PropsWithChildren<WithClassName<{
+export type Props = WithCompId<PropsWithChildren<WithClassName<{
   tracking?: boolean
   defaultTracking?: boolean
   onIsTrackingChanged?: (isTracking: boolean) => void
   onScrollStateChanged?: (scrollState?: ScrollState) => void
   onScrollProgressChanged?: (progress: number) => void
   onScrollDirectionChanged?: (direction: 'up' | 'down') => void
-}>>
+}>>>
 
 /**
  * Exposes scroll metrics — both the document's and its own — as CSS custom
@@ -104,6 +111,7 @@ export type Props = PropsWithChildren<WithClassName<{
  * least one instance is tracking.
  */
 export const ScrollListener: FunctionComponent<Props> = ({
+  compId: givenCompId,
   tracking,
   defaultTracking,
   onIsTrackingChanged,
@@ -113,6 +121,8 @@ export const ScrollListener: FunctionComponent<Props> = ({
   className,
   children
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State & refs
   const [subscriberId] = useState(() => randomHash(6))
   // No setter: nothing switches tracking any more, the prop and this seed are the two
@@ -176,6 +186,7 @@ export const ScrollListener: FunctionComponent<Props> = ({
     ? {}
     : toScrollCssProps(scrollState)
   return <div
+    {...compIdAttribute(compId)}
     className={rootClss}
     ref={rootRef}
     style={{ ...customProps }}>

@@ -11,7 +11,14 @@ import { clss } from '../../agnostic/css/clss/index.js'
 import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { textarea as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -27,11 +34,11 @@ import cssModule from './styles.module.css'
  * content on every value change. Defaults to `false`.
  * @property className - Additional class name(s) applied to the textarea element.
  */
-export type Props = TextareaHTMLAttributes<HTMLTextAreaElement> & WithClassName<{
+export type Props = WithCompId<TextareaHTMLAttributes<HTMLTextAreaElement> & WithClassName<{
   label?: ReactNode
   error?: ReactNode
   autoHeight?: boolean
-}>
+}>>
 
 /**
  * Textarea field supporting controlled and uncontrolled usage.
@@ -62,6 +69,7 @@ export type Props = TextareaHTMLAttributes<HTMLTextAreaElement> & WithClassName<
  * - `onChange` fires in both modes.
  */
 export const Textarea: FunctionComponent<Props> = ({
+  compId: givenCompId,
   label,
   error,
   autoHeight = false,
@@ -71,6 +79,8 @@ export const Textarea: FunctionComponent<Props> = ({
   className,
   ...rest
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State & refs
   const [id] = useState(`_${randomHash(12)}`)
   const [internalValue, setInternalValue] = useState(defaultValue ?? '')
@@ -106,6 +116,7 @@ export const Textarea: FunctionComponent<Props> = ({
     {isNotFalsy(label) && <label className={c('label')} htmlFor={id}>{label}</label>}
     <textarea
       {...rest}
+      {...compIdAttribute(compId)}
       ref={textareaRef}
       id={id}
       className={rootClss}

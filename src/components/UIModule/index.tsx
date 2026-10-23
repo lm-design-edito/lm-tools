@@ -10,7 +10,14 @@ import { unknownToString } from '../../agnostic/errors/unknown-to-string/index.j
 import { isNonNullObject } from '../../agnostic/objects/is-object/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
-import type { WithClassName } from '../utils/types.js'
+import {
+  compIdAttribute,
+  useCompId
+} from '../utils/comp-id/index.js'
+import type {
+  WithClassName,
+  WithCompId
+} from '../utils/types.js'
 import { uiModule as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -75,14 +82,14 @@ type LiveInstance = {
  * with the `Element` returned by `init`, or `null` once unloaded or errored.
  * @property className - Optional additional class name(s) applied to the root element.
  */
-export type Props = WithClassName<{
+export type Props = WithCompId<WithClassName<{
   src?: string
   props?: Record<string, unknown>
   onIdGenerated?: (id: string) => void
   onIsLoadingChanged?: (isLoading: boolean) => void
   onLoadedModuleChanged?: (loadedModule: ModuleData | Error | null) => void
   onModuleTargetChanged?: (moduleTarget: Element | null) => void
-}>
+}>>
 
 /**
  * Dynamic UI module host. Asynchronously imports an ES module by URL, validates
@@ -120,6 +127,7 @@ export type Props = WithClassName<{
  * along with the `<style>` the module exported, if any.
  */
 export const UIModule: FunctionComponent<Props> = ({
+  compId: givenCompId,
   src,
   props,
   onIdGenerated,
@@ -128,6 +136,8 @@ export const UIModule: FunctionComponent<Props> = ({
   onModuleTargetChanged,
   className
 }) => {
+  const compId = useCompId(givenCompId)
+
   // State & refs
   const [id] = useState(() => `f${randomHash(10)}`)
   const [isLoading, setIsLoading] = useState(false)
@@ -240,6 +250,7 @@ export const UIModule: FunctionComponent<Props> = ({
   )
   const moduleCss = hasErrored || loadedModule === null ? undefined : loadedModule.css
   return <div
+    {...compIdAttribute(compId)}
     className={rootClss}
     ref={rootRef}
     id={id}>
