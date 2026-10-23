@@ -8,24 +8,32 @@ import {
   type Command
 } from './types.js'
 
-/** Reads `@target:action:arg` into its parts, or `null` when the string isn't one. */
+function splitOnce (value: string, separator: string): [string, string | undefined] {
+  const index = value.indexOf(separator)
+  if (index === -1) return [value, undefined]
+  return [value.slice(0, index), value.slice(index + separator.length)]
+}
+
+/** Reads `@target:action:arg,arg` into its parts, or `null` when the string isn't one. */
 export function parseCommand (raw: string): Command | null {
-  const segments = raw.trim().split(':')
-  if (segments.some(segment => segment === '')) return null
-  const [first, ...rest] = segments
-  if (first === undefined) return null
-  if (!first.startsWith('@')) return { action: first, args: rest }
-  const target = first.slice(1)
-  const [action, ...args] = rest
-  if (target === '' || action === undefined) return null
+  const trimmed = raw.trim()
+  const [target, body] = trimmed.startsWith('@')
+    ? splitOnce(trimmed.slice(1), ':')
+    : [undefined, trimmed]
+  if (target === '' || body === undefined) return null
+  const [action, argList] = splitOnce(body, ':')
+  if (action === '') return null
+  const args = argList === undefined ? [] : argList.split(',').map(arg => arg.trim())
+  if (args.some(arg => arg === '')) return null
   return { target, action, args }
 }
 
 /** Writes a command back as the string it is parsed from. */
 export function formatCommand (command: Command): string {
   const { target, action, args } = command
-  const prefix = target === undefined ? [] : [`@${target}`]
-  return [...prefix, action, ...args].join(':')
+  const address = target === undefined ? '' : `@${target}:`
+  const argList = args.length === 0 ? '' : `:${args.join(',')}`
+  return `${address}${action}${argList}`
 }
 
 /** Dispatches a command, addressed to `from` when it names no target of its own. */
