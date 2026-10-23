@@ -29,9 +29,9 @@ import {
 } from '../ScrollTracker/utils.js'
 import {
   compIdAttribute,
-  useCompId,
-  type WithCompId
+  useCompId
 } from '../utils/comp-id/index.js'
+import type { WithCompId } from '../utils/comp-id/types.js'
 import { scrllgngn as publicClassName } from '../public-classnames.js'
 import type {
   ForceStickMode,

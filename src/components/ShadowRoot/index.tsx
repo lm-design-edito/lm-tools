@@ -12,9 +12,9 @@ import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import { shadowRoot as publicClassName } from '../public-classnames.js'
 import {
   compIdAttribute,
-  useCompId,
-  type WithCompId
+  useCompId
 } from '../utils/comp-id/index.js'
+import type { WithCompId } from '../utils/comp-id/types.js'
 import cssModule from './styles.module.css'
 
 /**

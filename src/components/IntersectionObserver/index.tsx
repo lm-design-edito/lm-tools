@@ -9,9 +9,9 @@ import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   compIdAttribute,
-  useCompId,
-  type WithCompId
+  useCompId
 } from '../utils/comp-id/index.js'
+import type { WithCompId } from '../utils/comp-id/types.js'
 import {
   useIntersectionObserver,
   type ObserverOptions,

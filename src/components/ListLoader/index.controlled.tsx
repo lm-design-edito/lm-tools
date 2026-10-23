@@ -6,9 +6,9 @@ import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import { IntersectionObserverComponent } from '../IntersectionObserver/index.js'
 import {
   compIdAttribute,
-  useCompId,
-  type WithCompId
+  useCompId
 } from '../utils/comp-id/index.js'
+import type { WithCompId } from '../utils/comp-id/types.js'
 import type { ObserverOptions } from '../utils/intersection/index.js'
 import { listLoader as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'

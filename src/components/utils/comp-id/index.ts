@@ -13,7 +13,3 @@ export function compIdAttribute (compId: string): Record<typeof COMP_ID_ATTRIBUT
     [COMP_ID_ATTRIBUTE]: compId
   }
 }
-
-export type WithCompId <T> = T & {
-  compId?: string
-}

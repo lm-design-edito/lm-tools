@@ -17,9 +17,9 @@ import { formatDuration } from '../../agnostic/time/duration/format-duration/ind
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   compIdAttribute,
-  useCompId,
-  type WithCompId
+  useCompId
 } from '../utils/comp-id/index.js'
+import type { WithCompId } from '../utils/comp-id/types.js'
 import cssModule from './styles.module.css'
 import { video as publicClassName } from '../public-classnames.js'
 import {

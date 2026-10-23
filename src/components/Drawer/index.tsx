@@ -18,9 +18,9 @@ import {
 } from '../ResizeObserver/index.js'
 import {
   compIdAttribute,
-  useCompId,
-  type WithCompId
+  useCompId
 } from '../utils/comp-id/index.js'
+import type { WithCompId } from '../utils/comp-id/types.js'
 import { drawer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 

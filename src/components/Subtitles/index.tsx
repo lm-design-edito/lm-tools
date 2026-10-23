@@ -13,9 +13,9 @@ import type { SrtCue } from '../../agnostic/subtitles/parse-srt/types.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   compIdAttribute,
-  useCompId,
-  type WithCompId
+  useCompId
 } from '../utils/comp-id/index.js'
+import type { WithCompId } from '../utils/comp-id/types.js'
 import { subtitles as publicClassName } from '../public-classnames.js'
 import {
   lastElapsedPos as toLastElapsedPos,

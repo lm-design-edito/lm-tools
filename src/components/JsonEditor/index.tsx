@@ -18,9 +18,9 @@ import { Select } from '../Select/index.js'
 import { Textarea } from '../Textarea/index.js'
 import {
   compIdAttribute,
-  useCompId,
-  type WithCompId
+  useCompId
 } from '../utils/comp-id/index.js'
+import type { WithCompId } from '../utils/comp-id/types.js'
 import type { JsonValue } from './types.js'
 import {
   c,
