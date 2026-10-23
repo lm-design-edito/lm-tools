@@ -2,11 +2,12 @@ import {
   useEffect,
   useRef
 } from 'react'
-import {
-  COMMAND_EVENT,
-  type AddressedCommand,
-  type Command
+import type {
+  AddressedCommand,
+  Command
 } from './types.js'
+
+const COMMAND_EVENT = 'command'
 
 /** The target commands travel on, in place of `window`: nothing global is touched. */
 export const commandBus = new EventTarget()
