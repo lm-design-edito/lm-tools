@@ -238,10 +238,11 @@ and that identity is visible in the inspector, selectable in CSS and quotable in
 
 It is deliberately **not** part of the command layer. An identity is what a component *is*,
 not a detail of one subsystem that happens to need it: commands are the first consumer,
-others will follow. That is why `WithCompId` sits in `components/utils/types.ts` next to
-`WithClassName` — the one type every Props already reaches for — while the runtime lives in
-`components/utils/comp-id`: `useCompId`, which resolves the prop or generates once, and
-`compIdAttribute`, so the attribute name is written in exactly one place.
+others will follow. `components/utils/comp-id` holds all of it — `WithCompId` in its `types.ts`, and in its
+`index.ts` `useCompId`, which resolves the prop or generates once, and `compIdAttribute`, so
+the attribute name is written in exactly one place. `WithClassName`, which every Props also
+reaches for, is not ours in the same way: it is a React convention, so it lives in
+`agnostic/@react/types`.
 
 The prop is destructured as `compId: givenCompId` and the resolved value keeps the plain
 name, which is the same shape `ControlledVideo` already used for `videoRef: givenVideoRef`.
@@ -253,7 +254,7 @@ inherits the prop from the controlled Props type and forwards it.
 
 `components/utils/commands` holds the layer that replaces the instruction grammar of the
 dismantled visibility layer: `parseCommand` / `formatCommand` for the
-`@target:action:arg,arg` form, `sendCommand` / `subscribeToCommands` / `useCommands` for a
+`@target:action:arg,arg` form, `sendCommands` / `subscribeToCommands` / `useCommands` for a
 private `commandBus` — an `EventTarget` of its own, so no global name is taken, and not
 exported, so the grammar cannot be bypassed from outside. A command with no `@target` is
 addressed to the sender itself, resolved at the source, so a receiver only ever compares
@@ -278,10 +279,53 @@ Three decisions hold the receiving side together:
   mechanism — an action writes to the internal state, and a prop that is set makes that
   write invisible.
 
+`sendCommands(raw, from)` is the only exported sender: it takes a string or a list of
+them, warns about each one that is not a command, and sends the rest. The singular
+`sendCommand` is its internal helper, so nothing reaches the bus without going through the
+grammar.
+
 `ScrollTracker` is the first and so far only component wired, with `track` / `untrack`.
-What does not exist yet: the other components' vocabularies, and the actuators that would
-send a command — visibility first. `force`, domains and surrender are deliberately out
-until arbitration has a second source to arbitrate.
+What does not exist yet: the other components' vocabularies. `force`, domains and surrender
+are deliberately out until arbitration has a second source to arbitrate.
+
+## Les déclencheurs — la visibilité, première condition
+
+A **trigger** is a condition that sends commands. The component declares its verbs; a
+trigger decides when they are spoken, and visibility is the first one. The props are
+`whenVisible` and `whenHidden`, each taking a command or a list of them — `'track'`, which
+is self-addressed, or `'@someone-else:play'`, which is why `compId` exists at all.
+
+Two modules, because there are two concepts and one depends on the other:
+
+- `components/utils/intersection` — the browser API and nothing else: `ObserverOptions`,
+  `OnIntersected`, `useIntersectionObserver`. It is where the hook now lives, having been
+  moved out of the `IntersectionObserver` component's own folder, so the component,
+  `ListLoader` and visibility all speak one language. `ListLoader`'s
+  `ViewportObserverOptions` was a second name for `ObserverOptions` and is gone.
+- `components/utils/visibility` — `VisibilityOptions` and `useVisibility`, which settles
+  the raw intersection over an `onAfterMs` / `offAfterMs` delay, plus
+  `useVisibilityTriggers`, which turns each settled change into commands. **Visibility
+  depends on commands, and commands know nothing of visibility** — that direction is the
+  whole reason the triggers live here rather than in `commands/`.
+
+Three behaviours worth stating, because none of them is obvious from the code:
+
+- **`useVisibility` returns `boolean | undefined`**, `undefined` until the first
+  observation lands. Without that, a first answer of `false` cannot be told from the
+  initial value, and `useStateChangeDispatch` would swallow it.
+- **The first settled state fires**, whichever it is. A component mounted in view runs its
+  `whenVisible`, one mounted out of view runs its `whenHidden` — the state is applied as a
+  change from nothing, which is the point of writing `defaultTracking={false}` with
+  `whenVisible='track'`.
+- **Nothing is observed unless asked.** The observer mounts only if `whenVisible`,
+  `whenHidden` or `onVisibilityChanged` is set, through the `enabled` parameter
+  `useIntersectionObserver` already had. So a component given none of them costs no
+  `IntersectionObserver`, and its `--visible` modifier never appears.
+
+The options are flat and prefixed on each component — `visibilityThreshold`,
+`visibilityRoot`, `visibilityRootMargin`, `visibilityOnAfterMs`, `visibilityOffAfterMs` —
+and `useVisibilityTriggers` builds `VisibilityOptions` from them, so no component does that
+mapping by hand.
 
 ## La couche de visibilité, démontée — et ce qu'il faut en garder
 
@@ -511,8 +555,9 @@ Ce qui reste ouvert tient en deux lignes :
     conséquence — un écouteur arrêté garde ses dernières valeurs, donc il peut être mesuré
     sans plus suivre. `onIsTrackingChanged` avec.
   - **`WithViewportObservation` est mort** avec la conversion, son dernier consommateur.
-    `ViewportObserverOptions` reste pour `ListLoader`, qui observe une sentinelle pour
-    charger la suite — pas de vocabulaire, pas d'instructions, juste un observateur.
+    `ViewportObserverOptions` est resté un temps pour `ListLoader`, qui observe une
+    sentinelle pour charger la suite — pas de vocabulaire, pas d'instructions, juste un
+    observateur ; il a depuis fusionné dans l'`ObserverOptions` de `utils/intersection`.
 - **`ResizeObserver` n'a pas besoin des déclenchements de visibilité, et c'est tranché.**
   La question se pose parce que `ScrollTracker` en avait besoin, mais les deux ne coûtent
   pas de la même façon : `ScrollTracker` a un moteur qui **tourne** — des écouteurs et une
