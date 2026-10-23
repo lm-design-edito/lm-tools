@@ -252,17 +252,36 @@ inherits the prop from the controlled Props type and forwards it.
 ## Les commandes — la grammaire et le bus
 
 `components/utils/commands` holds the layer that replaces the instruction grammar of the
-dismantled visibility layer, and nothing else yet: `parseCommand` /`formatCommand` for the
+dismantled visibility layer: `parseCommand` / `formatCommand` for the
 `@target:action:arg,arg` form, `sendCommand` / `subscribeToCommands` / `useCommands` for a
-private `commandBus` — an `EventTarget` of its own, so no global name is taken. A command
-with no `@target` is addressed to the sender itself, resolved at the source, so a receiver
-only ever compares one id. There is **no registry**: a component filters what is addressed
-to it, two components sharing an id both answer, and that is the intended reading.
+private `commandBus` — an `EventTarget` of its own, so no global name is taken, and not
+exported, so the grammar cannot be bypassed from outside. A command with no `@target` is
+addressed to the sender itself, resolved at the source, so a receiver only ever compares
+one id. There is **no registry**: a component filters what is addressed to it, two
+components sharing an id both answer, and that is the intended reading.
 
-What does not exist yet: the per-component vocabularies, any validation of an action
-against them, and the actuators that would send a command — visibility first. `force`,
-domains and surrender are deliberately out until arbitration has a second source to
-arbitrate.
+`useCommands(compId, actions)` takes an **action table** — `Record<string, (args:
+string[]) => void>`, a component's verbs written as a list rather than as an `if` chain.
+An action it does not declare is a `console.warn`, since the table is the only place that
+knows the vocabulary.
+
+Three decisions hold the receiving side together:
+
+- **The transport does not interpret.** Arguments reach an action as the raw strings they
+  were written as; converting them, and warning about a bad one, belongs to the component.
+- **No shared vocabulary.** A verb exists at the level of the component that declares it.
+  Two components may both answer to `play` with nothing in common behind it, and that
+  duplication is accepted rather than factored out.
+- **A controlling prop beats a command.** Components are hybrid, not controlled or
+  uncontrolled: each prop decides whether the aspect it governs is the consumer's. The
+  `isTracking = tracking ?? internalTracking` already in `ScrollListener` is the whole
+  mechanism — an action writes to the internal state, and a prop that is set makes that
+  write invisible.
+
+`ScrollListener` is the first and so far only component wired, with `track` / `untrack`.
+What does not exist yet: the other components' vocabularies, and the actuators that would
+send a command — visibility first. `force`, domains and surrender are deliberately out
+until arbitration has a second source to arbitrate.
 
 ## La couche de visibilité, démontée — et ce qu'il faut en garder
 
