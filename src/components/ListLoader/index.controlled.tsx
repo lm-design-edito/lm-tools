@@ -3,12 +3,16 @@ import { integersBetween } from '../../agnostic/arrays/integers-between/index.js
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import { IntersectionObserverComponent } from '../IntersectionObserver/index.js'
-import type {
-  ViewportObserverOptions,
-  WithClassName
-} from '../utils/types.js'
+import type { WithClassName } from '../utils/types.js'
 import { listLoader as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
+
+/** The `IntersectionObserver` settings this component mounts its own observer with. */
+export type ViewportObserverOptions = {
+  threshold?: number | number[]
+  root?: HTMLElement
+  rootMargin?: string
+}
 
 /** Which position a load button occupies in the rendered sequence. */
 type LoadButtonKind = 'prev' | 'next' | 'gap'
