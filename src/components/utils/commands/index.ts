@@ -7,7 +7,7 @@ import type {
   Command
 } from './types.js'
 
-const COMMAND_EVENT = 'command'
+const COMMAND_EVENT = 'lm-tools-command'
 
 /** The target commands travel on, in place of `window`: nothing global is touched. */
 export const commandBus = new EventTarget()
