@@ -42,12 +42,6 @@ import cssModule from './styles.module.css'
  * it has fully left it. Never on mount.
  * @property onScrollDirectionChanged - Called after the document scroll
  * direction changed, with `'up'` or `'down'`. Never on mount.
- * @property visibilityThreshold - How much of the component has to be in view before it
- * counts as visible. See `VisibilityOptions` for this and the four that follow it.
- * @property visibilityRoot - The box visibility is measured against.
- * @property visibilityRootMargin - Grows or shrinks that box before measuring.
- * @property visibilityOnAfterMs - How long it must stay visible to count as visible.
- * @property visibilityOffAfterMs - The same, on the way out.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React nodes rendered inside the scroll listener container.
  */
