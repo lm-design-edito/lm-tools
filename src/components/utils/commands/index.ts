@@ -8,6 +8,7 @@ import {
   type Command
 } from './types.js'
 
+/** Reads `@target:action:arg` into its parts, or `null` when the string isn't one. */
 export function parseCommand (raw: string): Command | null {
   const segments = raw.trim().split(':')
   if (segments.some(segment => segment === '')) return null
@@ -20,17 +21,20 @@ export function parseCommand (raw: string): Command | null {
   return { target, action, args }
 }
 
+/** Writes a command back as the string it is parsed from. */
 export function formatCommand (command: Command): string {
   const { target, action, args } = command
   const prefix = target === undefined ? [] : [`@${target}`]
   return [...prefix, action, ...args].join(':')
 }
 
+/** Dispatches a command, addressed to `from` when it names no target of its own. */
 export function sendCommand (command: Command, from: string): void {
   const detail: AddressedCommand = { ...command, target: command.target ?? from }
   window.dispatchEvent(new CustomEvent(COMMAND_EVENT, { detail }))
 }
 
+/** Calls back on every command addressed to `target`, and returns the unsubscribe. */
 export function subscribeToCommands (
   target: string,
   onCommand: (command: AddressedCommand) => void
@@ -42,6 +46,7 @@ export function subscribeToCommands (
   return () => { window.removeEventListener(COMMAND_EVENT, listener) }
 }
 
+/** `subscribeToCommands` for as long as a component is mounted. */
 export function useCommands (
   target: string,
   onCommand: (command: AddressedCommand) => void

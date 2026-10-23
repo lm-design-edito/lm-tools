@@ -1,12 +1,14 @@
+/** The `window` event every command travels on. */
 export const COMMAND_EVENT = 'lm-command'
 
+/** A command as parsed: an action, its arguments, and a target it may not name. */
 export type Command = {
   target?: string
   action: string
   args: string[]
 }
 
-// What a sender emits: the target has been resolved, to itself when none was written.
+/** A command on the wire: the target is resolved, to the sender when none was written. */
 export type AddressedCommand = Command & { target: string }
 
 declare global {
