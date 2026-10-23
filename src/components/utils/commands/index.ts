@@ -43,13 +43,12 @@ export function formatCommand (command: Command): string {
   return `${address}${action}${argList}`
 }
 
-function sendCommand (command: Command, from: string): void {
-  const addressed: AddressedCommand = { ...command, target: command.target ?? from }
-  commandBus.dispatchEvent(new CommandEvent(addressed))
-}
-
 /** Dispatches every command written in `raw`, addressed to `from` when one names no target. */
 export function sendCommands (raw: string | string[], from: string): void {
+  const sendOne = (command: Command): void => {
+    const addressed: AddressedCommand = { ...command, target: command.target ?? from }
+    commandBus.dispatchEvent(new CommandEvent(addressed))
+  }
   const rawCommands = typeof raw === 'string' ? [raw] : raw
   rawCommands.forEach(rawCommand => {
     const command = parseCommand(rawCommand)
@@ -58,7 +57,7 @@ export function sendCommands (raw: string | string[], from: string): void {
       console.warn(`"${rawCommand}" is not a command`)
       return
     }
-    sendCommand(command, from)
+    sendOne(command)
   })
 }
 
