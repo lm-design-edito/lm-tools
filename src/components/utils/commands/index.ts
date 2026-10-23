@@ -11,8 +11,8 @@ import type {
 
 const COMMAND_EVENT = 'lm-tools-command'
 
-/** The target commands travel on, in place of `window`: nothing global is touched. */
-export const commandBus = new EventTarget()
+// Its own target rather than `window`, so nothing global is touched.
+const commandBus = new EventTarget()
 
 class CommandEvent extends CustomEvent<AddressedCommand> {
   constructor (command: AddressedCommand) {
