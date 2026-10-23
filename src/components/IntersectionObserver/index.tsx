@@ -18,7 +18,7 @@ import {
   useIntersectionObserver,
   type ObserverOptions,
   type OnIntersected
-} from '../utils/visibility/index.js'
+} from '../utils/intersection/index.js'
 import { intersectionObserver as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 

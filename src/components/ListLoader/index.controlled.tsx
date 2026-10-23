@@ -11,7 +11,7 @@ import type {
   WithClassName,
   WithCompId
 } from '../utils/types.js'
-import type { ObserverOptions } from '../utils/visibility/index.js'
+import type { ObserverOptions } from '../utils/intersection/index.js'
 import { listLoader as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
