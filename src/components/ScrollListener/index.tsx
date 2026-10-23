@@ -9,6 +9,7 @@ import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-
 import { clss } from '../../agnostic/css/clss/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
+import { useCommands } from '../utils/commands/index.js'
 import {
   compIdAttribute,
   useCompId
@@ -67,6 +68,10 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  * - `--scrolling-up` / `--scrolling-down` — the document's last known direction.
  *   Neither is present before the first scroll.
  *
+ * ### Commands
+ * - `track` / `untrack` — start or stop measuring. Both are ignored while the
+ *   `tracking` prop is set, which decides the state on its own.
+ *
  * ### CSS custom properties on the root element
  * Each measurement comes as a `px` length under its bare name, and as a `-raw`
  * twin holding the plain number:
@@ -119,9 +124,7 @@ export const ScrollListener: FunctionComponent<Props> = ({
 
   // State & refs
   const [subscriberId] = useState(() => randomHash(6))
-  // No setter: nothing switches tracking any more, the prop and this seed are the two
-  // answers there are.
-  const [internalTracking] = useState(defaultTracking ?? true)
+  const [internalTracking, setInternalTracking] = useState(defaultTracking ?? true)
   const [scrollState, setScrollState] = useState<ScrollState>()
   const [scrollDirection, setScrollDirection] = useState<'up' | 'down' | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -144,6 +147,12 @@ export const ScrollListener: FunctionComponent<Props> = ({
     scrollDirection,
     direction => { if (direction !== null) onScrollDirectionChanged?.(direction) }
   )
+
+  // Commands
+  useCommands(compId, {
+    track: () => setInternalTracking(true),
+    untrack: () => setInternalTracking(false)
+  })
 
   // Fx. dep. `scrollState` - derive the document scroll direction
   useEffect(() => {
