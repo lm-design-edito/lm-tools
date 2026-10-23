@@ -43,10 +43,10 @@ export function formatCommand (command: Command): string {
   return `${address}${action}${argList}`
 }
 
-/** Dispatches every command written in `raw`, addressed to `from` when one names no target. */
-export function sendCommands (raw: string | string[], from: string): void {
+/** Dispatches every command in `raw`, addressed to the sender when one names no target. */
+export function sendCommands (raw: string | string[], fromCompId: string): void {
   const sendOne = (command: Command): void => {
-    const addressed: AddressedCommand = { ...command, target: command.target ?? from }
+    const addressed: AddressedCommand = { ...command, target: command.target ?? fromCompId }
     commandBus.dispatchEvent(new CommandEvent(addressed))
   }
   const rawCommands = typeof raw === 'string' ? [raw] : raw
@@ -61,14 +61,14 @@ export function sendCommands (raw: string | string[], from: string): void {
   })
 }
 
-/** Calls back on every command addressed to `target`, and returns the unsubscribe. */
+/** Calls back on every command addressed to `targetCompId`, and returns the unsubscribe. */
 export function subscribeToCommands (
-  target: string,
+  targetCompId: string,
   onCommand: (command: AddressedCommand) => void
 ): () => void {
   const listener = (event: Event): void => {
     if (!(event instanceof CommandEvent)) return
-    if (event.detail.target === target) onCommand(event.detail)
+    if (event.detail.target === targetCompId) onCommand(event.detail)
   }
   commandBus.addEventListener(COMMAND_EVENT, listener)
   return () => { commandBus.removeEventListener(COMMAND_EVENT, listener) }
@@ -76,22 +76,22 @@ export function subscribeToCommands (
 
 /** Runs the action a command names, for as long as a component is mounted. */
 export function useCommands (
-  target: string,
+  targetCompId: string,
   actions: CommandActions
 ): void {
   // Through a ref, so a table rebuilt on every render doesn't resubscribe.
   const actionsRef = useRef(actions)
   actionsRef.current = actions
   useEffect(
-    () => subscribeToCommands(target, command => {
+    () => subscribeToCommands(targetCompId, command => {
       const action = actionsRef.current[command.action]
       if (action === undefined) {
         // eslint-disable-next-line no-console
-        console.warn(`"${target}" has no action named "${command.action}"`)
+        console.warn(`"${targetCompId}" has no action named "${command.action}"`)
         return
       }
       action(command.args)
     }),
-    [target]
+    [targetCompId]
   )
 }
