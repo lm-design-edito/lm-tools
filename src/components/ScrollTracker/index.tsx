@@ -16,6 +16,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { WithCompId } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { WithVisibility } from '../utils/visibility/types.js'
 import { scrollTracker as publicClassName } from '../public-classnames.js'
 import {
   getScrollProgress,
@@ -41,17 +43,28 @@ import cssModule from './styles.module.css'
  * it has fully left it. Never on mount.
  * @property onScrollDirectionChanged - Called after the document scroll
  * direction changed, with `'up'` or `'down'`. Never on mount.
+ * @property whenVisible - The command, or commands, sent once the component has
+ * settled into view. See `components/utils/visibility` for this and the seven that
+ * follow it.
+ * @property whenHidden - The same, once it has settled out of view.
+ * @property onVisibilityChanged - Called after the settled visibility changed.
+ * @property visibilityThreshold - How much of the component has to be in view
+ * before it counts as visible.
+ * @property visibilityRoot - The box visibility is measured against.
+ * @property visibilityRootMargin - Grows or shrinks that box before measuring.
+ * @property visibilityOnAfterMs - How long it has to stay in view to count as visible.
+ * @property visibilityOffAfterMs - The same, on the way out.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React nodes rendered inside the scroll tracker container.
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = WithVisibility<WithCompId<PropsWithChildren<WithClassName<{
   tracking?: boolean
   defaultTracking?: boolean
   onIsTrackingChanged?: (isTracking: boolean) => void
   onScrollStateChanged?: (scrollState?: ScrollState) => void
   onScrollProgressChanged?: (progress: number) => void
   onScrollDirectionChanged?: (direction: 'up' | 'down') => void
-}>>>
+}>>>>
 
 /**
  * Exposes scroll metrics — both the document's and its own — as CSS custom
@@ -65,10 +78,15 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  * - `--measured` — a first measurement landed, so the properties below are set.
  * - `--scrolling-up` / `--scrolling-down` — the document's last known direction.
  *   Neither is present before the first scroll.
+ * - `--visible` — the component has settled into view. Absent until something asks
+ *   about visibility, since nothing is observed before that.
  *
  * ### Commands
  * - `track` / `untrack` — start or stop measuring. Both are ignored while the
  *   `tracking` prop is set, which decides the state on its own.
+ *
+ * `whenVisible` and `whenHidden` are how they get sent without a line of JavaScript:
+ * `defaultTracking={false}` with `whenVisible='track'` measures only while in view.
  *
  * ### CSS custom properties on the root element
  * Each measurement comes as a `px` length under its bare name, and as a `-raw`
@@ -115,6 +133,14 @@ export const ScrollTracker: FunctionComponent<Props> = ({
   onScrollStateChanged,
   onScrollProgressChanged,
   onScrollDirectionChanged,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   className,
   children
 }) => {
@@ -152,6 +178,17 @@ export const ScrollTracker: FunctionComponent<Props> = ({
     untrack: () => setInternalTracking(false)
   })
 
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
+
   // Fx. dep. `scrollState` - derive the document scroll direction
   useEffect(() => {
     if (scrollState === undefined) return
@@ -177,6 +214,7 @@ export const ScrollTracker: FunctionComponent<Props> = ({
   const rootClss = mergeClassNames(
     c(null, {
       tracking: isTracking,
+      visible: isVisible === true,
       measured: scrollState !== undefined,
       'scrolling-up': scrollDirection === 'up',
       'scrolling-down': scrollDirection === 'down'
