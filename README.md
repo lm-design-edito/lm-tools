@@ -67,6 +67,16 @@ functions — a type-only cycle, accepted deliberately for this one component. D
 properly means moving the prop types of all of them at once and fixing the imports
 after, which is a pass of its own.
 
+**Un chantier ouvert aujourd'hui : faire courir les tests sur `src/components/`.**
+`npm run tests` ne couvre que `agnostic/` et `node/` — `tests:components` est commenté
+dans `package.json` — et la couche des commandes est la première à en souffrir vraiment.
+`parseCommand` a des règles d'ordre, des collisions et une dizaine de cas de rejet : c'est
+exactement ce qu'un test unitaire tient, et c'est le seul dossier que vitest ne regarde
+pas. `splitFirst` n'a eu ses six tests que parce qu'il est sorti dans `agnostic/`, et la
+grammaire ne peut pas l'y suivre. À faire plus tard, mais c'est de là que le chantier des
+tests de composants doit partir : `commands`, `comp-id`, `visibility`, qui sont des
+fonctions pures et des hooks avant d'être des composants.
+
 **And on the same shelf, in no hurry at all: what belongs in `agnostic/css` and what
 belongs in `agnostic/html`.** `mergeClassNames` moved to `css/merge-class-names`, next
 to `clss`, `bem` and `is-valid-css-class-name` — but a class name is an HTML attribute
