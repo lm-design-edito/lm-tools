@@ -6,7 +6,8 @@ import { splitFirst } from '../../../agnostic/strings/split-first/index.js'
 import { splitTrim } from '../../../agnostic/strings/split-trim/index.js'
 import type {
   AddressedCommand,
-  Command
+  Command,
+  CommandActions
 } from './types.js'
 
 const COMMAND_EVENT = 'lm-tools-command'
@@ -61,16 +62,24 @@ export function subscribeToCommands (
   return () => { commandBus.removeEventListener(COMMAND_EVENT, listener) }
 }
 
-/** `subscribeToCommands` for as long as a component is mounted. */
+/** Runs the action a command names, for as long as a component is mounted. */
 export function useCommands (
   target: string,
-  onCommand: (command: AddressedCommand) => void
+  actions: CommandActions
 ): void {
-  // Through a ref, so a handler rebuilt on every render doesn't resubscribe.
-  const onCommandRef = useRef(onCommand)
-  onCommandRef.current = onCommand
+  // Through a ref, so a table rebuilt on every render doesn't resubscribe.
+  const actionsRef = useRef(actions)
+  actionsRef.current = actions
   useEffect(
-    () => subscribeToCommands(target, command => onCommandRef.current(command)),
+    () => subscribeToCommands(target, command => {
+      const action = actionsRef.current[command.action]
+      if (action === undefined) {
+        // eslint-disable-next-line no-console
+        console.warn(`"${target}" has no action named "${command.action}"`)
+        return
+      }
+      action(command.args)
+    }),
     [target]
   )
 }
