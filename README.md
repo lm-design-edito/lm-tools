@@ -229,6 +229,41 @@ span qui contient son propre séparateur, et non une suite plate de jetons et de
 ponctuations. À noter aussi : les horloges se re-rendent à chaque `timeupdate`, donc ce
 composant multiplie par six ce qui est diffé à chaque tick.
 
+## `compId` — chaque composant a une identité
+
+**Every component takes a `compId`, and publishes it.** The prop is optional, a generated
+hash fills in when it is absent, and the resolved value lands on the root element as
+`lm-tools-comp-id`. So a component always has an identity, whether or not anyone named it,
+and that identity is visible in the inspector, selectable in CSS and quotable in a log.
+
+It is deliberately **not** part of the command layer. An identity is what a component *is*,
+not a detail of one subsystem that happens to need it: commands are the first consumer,
+others will follow. That is why `WithCompId` sits in `components/utils/types.ts` next to
+`WithClassName` — the one type every Props already reaches for — while the runtime lives in
+`components/utils/comp-id`: `useCompId`, which resolves the prop or generates once, and
+`compIdAttribute`, so the attribute name is written in exactly one place.
+
+The prop is destructured as `compId: givenCompId` and the resolved value keeps the plain
+name, which is the same shape `ControlledVideo` already used for `videoRef: givenVideoRef`.
+Three components carry it on their **controlled** half — `BeforeAfter`, `ListLoader`,
+`Video` — because that is where the root element is rendered; their uncontrolled wrapper
+inherits the prop from the controlled Props type and forwards it.
+
+## Les commandes — la grammaire et le bus
+
+`components/utils/commands` holds the layer that replaces the instruction grammar of the
+dismantled visibility layer, and nothing else yet: `parseCommand` /`formatCommand` for the
+`@target:action:arg,arg` form, `sendCommand` / `subscribeToCommands` / `useCommands` for a
+private `commandBus` — an `EventTarget` of its own, so no global name is taken. A command
+with no `@target` is addressed to the sender itself, resolved at the source, so a receiver
+only ever compares one id. There is **no registry**: a component filters what is addressed
+to it, two components sharing an id both answer, and that is the intended reading.
+
+What does not exist yet: the per-component vocabularies, any validation of an action
+against them, and the actuators that would send a command — visibility first. `force`,
+domains and surrender are deliberately out until arbitration has a second source to
+arbitrate.
+
 ## La couche de visibilité, démontée — et ce qu'il faut en garder
 
 **Il n'y a plus de conscience de la visibilité dans ce dépôt.** Le module
