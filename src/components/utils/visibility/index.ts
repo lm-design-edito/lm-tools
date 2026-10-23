@@ -3,10 +3,13 @@ import {
   useState,
   type RefObject
 } from 'react'
+import { useStateChangeDispatch } from '../../../agnostic/@react/effects/use-state-change-dispatch/index.js'
+import { sendCommands } from '../commands/index.js'
 import {
   useIntersectionObserver,
   type ObserverOptions
 } from '../intersection/index.js'
+import type { VisibilityProps } from './types.js'
 
 /** The intersection settings, plus how long a change has to hold before it counts. */
 export type VisibilityOptions = ObserverOptions & {
@@ -14,16 +17,21 @@ export type VisibilityOptions = ObserverOptions & {
   offAfterMs?: number
 }
 
-/** Whether the element is visible, once the intersection has held for its delay. */
+/**
+ * Whether the element is visible, once the intersection has held for its delay.
+ * `undefined` until the first observation lands, so a first answer is a change.
+ */
 export function useVisibility (
   targetRef: RefObject<Element | null>,
-  { onAfterMs, offAfterMs, ...observerOptions }: VisibilityOptions = {}
-): boolean {
-  const ioEntry = useIntersectionObserver(targetRef, observerOptions)
-  const isIntersecting = ioEntry?.isIntersecting ?? false
-  const [isVisible, setIsVisible] = useState(false)
+  { onAfterMs, offAfterMs, ...observerOptions }: VisibilityOptions = {},
+  enabled = true
+): boolean | undefined {
+  const ioEntry = useIntersectionObserver(targetRef, observerOptions, undefined, enabled)
+  const isIntersecting = ioEntry?.isIntersecting
+  const [isVisible, setIsVisible] = useState<boolean>()
 
   useEffect(() => {
+    if (isIntersecting === undefined) return
     const delay = isIntersecting ? onAfterMs : offAfterMs
     if (delay === undefined) {
       setIsVisible(isIntersecting)
@@ -33,6 +41,48 @@ export function useVisibility (
     const timeout = window.setTimeout(() => setIsVisible(isIntersecting), delay)
     return () => { window.clearTimeout(timeout) }
   }, [isIntersecting, onAfterMs, offAfterMs])
+
+  return isVisible
+}
+
+/** Sends a trigger's commands on each settled change, and hands the state back. */
+export function useVisibilityTriggers (
+  compId: string,
+  targetRef: RefObject<Element | null>,
+  {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  }: VisibilityProps
+): boolean | undefined {
+  const isAsked = whenVisible !== undefined
+    || whenHidden !== undefined
+    || onVisibilityChanged !== undefined
+
+  const isVisible = useVisibility(
+    targetRef,
+    {
+      threshold: visibilityThreshold,
+      root: visibilityRoot,
+      rootMargin: visibilityRootMargin,
+      onAfterMs: visibilityOnAfterMs,
+      offAfterMs: visibilityOffAfterMs
+    },
+    isAsked
+  )
+
+  useStateChangeDispatch(isVisible, visible => {
+    if (visible === undefined) return
+    onVisibilityChanged?.(visible)
+    const commands = visible ? whenVisible : whenHidden
+    if (commands === undefined) return
+    sendCommands(commands, compId)
+  })
 
   return isVisible
 }
