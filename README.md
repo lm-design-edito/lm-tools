@@ -279,10 +279,10 @@ Three decisions hold the receiving side together:
   mechanism — an action writes to the internal state, and a prop that is set makes that
   write invisible.
 
-`sendCommands(raw, from)` is the only exported sender: it takes a string or a list of
-them, warns about each one that is not a command, and sends the rest. The singular
-`sendCommand` is its internal helper, so nothing reaches the bus without going through the
-grammar.
+`sendCommands(raw, from)` is the only sender there is: it takes a string or a list of them,
+warns about each one that is not a command, and sends the rest. Dispatching a single
+command is a `sendOne` closure inside it, so nothing reaches the bus without going through
+the grammar.
 
 `ScrollTracker` is the first and so far only component wired, with `track` / `untrack`.
 What does not exist yet: the other components' vocabularies. `force`, domains and surrender
