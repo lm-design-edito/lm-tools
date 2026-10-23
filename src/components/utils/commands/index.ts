@@ -8,6 +8,15 @@ import {
   type Command
 } from './types.js'
 
+/** The target commands travel on, in place of `window`: nothing global is touched. */
+export const commandBus = new EventTarget()
+
+class CommandEvent extends CustomEvent<AddressedCommand> {
+  constructor (command: AddressedCommand) {
+    super(COMMAND_EVENT, { detail: command })
+  }
+}
+
 function splitOnce (value: string, separator: string): [string, string | undefined] {
   const index = value.indexOf(separator)
   if (index === -1) return [value, undefined]
@@ -38,8 +47,8 @@ export function formatCommand (command: Command): string {
 
 /** Dispatches a command, addressed to `from` when it names no target of its own. */
 export function sendCommand (command: Command, from: string): void {
-  const detail: AddressedCommand = { ...command, target: command.target ?? from }
-  window.dispatchEvent(new CustomEvent(COMMAND_EVENT, { detail }))
+  const addressed: AddressedCommand = { ...command, target: command.target ?? from }
+  commandBus.dispatchEvent(new CommandEvent(addressed))
 }
 
 /** Calls back on every command addressed to `target`, and returns the unsubscribe. */
@@ -47,11 +56,12 @@ export function subscribeToCommands (
   target: string,
   onCommand: (command: AddressedCommand) => void
 ): () => void {
-  const listener = (event: CustomEvent<AddressedCommand>): void => {
+  const listener = (event: Event): void => {
+    if (!(event instanceof CommandEvent)) return
     if (event.detail.target === target) onCommand(event.detail)
   }
-  window.addEventListener(COMMAND_EVENT, listener)
-  return () => { window.removeEventListener(COMMAND_EVENT, listener) }
+  commandBus.addEventListener(COMMAND_EVENT, listener)
+  return () => { commandBus.removeEventListener(COMMAND_EVENT, listener) }
 }
 
 /** `subscribeToCommands` for as long as a component is mounted. */
