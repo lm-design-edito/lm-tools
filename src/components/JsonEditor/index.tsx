@@ -9,6 +9,7 @@ import {
   type ZodType,
   type core
 } from 'zod'
+import type { WithClassName } from '../../agnostic/@react/types/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { isNonNullObject } from '../../agnostic/objects/is-object/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
@@ -17,12 +18,9 @@ import { Select } from '../Select/index.js'
 import { Textarea } from '../Textarea/index.js'
 import {
   compIdAttribute,
-  useCompId
+  useCompId,
+  type WithCompId
 } from '../utils/comp-id/index.js'
-import type {
-  WithClassName,
-  WithCompId
-} from '../utils/types.js'
 import type { JsonValue } from './types.js'
 import {
   c,

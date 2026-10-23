@@ -5,6 +5,7 @@ import {
   useState
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
+import type { WithClassName } from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { toError } from '../../agnostic/misc/cast/index.js'
 import { parseSrt } from '../../agnostic/subtitles/parse-srt/index.js'
@@ -12,12 +13,9 @@ import type { SrtCue } from '../../agnostic/subtitles/parse-srt/types.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   compIdAttribute,
-  useCompId
+  useCompId,
+  type WithCompId
 } from '../utils/comp-id/index.js'
-import type {
-  WithClassName,
-  WithCompId
-} from '../utils/types.js'
 import { subtitles as publicClassName } from '../public-classnames.js'
 import {
   lastElapsedPos as toLastElapsedPos,

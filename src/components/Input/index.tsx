@@ -5,18 +5,16 @@ import {
   type ReactNode,
   useState
 } from 'react'
+import type { WithClassName } from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   compIdAttribute,
-  useCompId
+  useCompId,
+  type WithCompId
 } from '../utils/comp-id/index.js'
-import type {
-  WithClassName,
-  WithCompId
-} from '../utils/types.js'
 import { input as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 

@@ -9,18 +9,16 @@ import {
   type ReactNode
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
+import type { WithClassName } from '../../agnostic/@react/types/index.js'
 import { absoluteModulo } from '../../agnostic/numbers/absolute-modulo/index.js'
 import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   compIdAttribute,
-  useCompId
+  useCompId,
+  type WithCompId
 } from '../utils/comp-id/index.js'
-import type {
-  WithClassName,
-  WithCompId
-} from '../utils/types.js'
 import { sequencer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 import {

@@ -7,6 +7,7 @@ import {
   useState
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
+import type { WithClassName } from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
@@ -28,12 +29,9 @@ import {
 } from '../ScrollTracker/utils.js'
 import {
   compIdAttribute,
-  useCompId
+  useCompId,
+  type WithCompId
 } from '../utils/comp-id/index.js'
-import type {
-  WithClassName,
-  WithCompId
-} from '../utils/types.js'
 import { scrllgngn as publicClassName } from '../public-classnames.js'
 import type {
   ForceStickMode,
