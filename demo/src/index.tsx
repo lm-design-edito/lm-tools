@@ -20,7 +20,7 @@ import { OverlayerDemo } from './components/demo/OverlayerDemo/index.js'
 import { PaginatorDemo } from './components/demo/PaginatorDemo/index.js'
 import { ResizeObserverDemo } from './components/demo/ResizeObserverDemo/index.js'
 import { ScrllgngnDemo } from './components/demo/ScrllgngnDemo/index.js'
-import { ScrollListenerDemo } from './components/demo/ScrollListenerDemo/index.js'
+import { ScrollTrackerDemo } from './components/demo/ScrollTrackerDemo/index.js'
 import { SelectDemo } from './components/demo/SelectDemo/index.js'
 import { SequencerDemo } from './components/demo/SequencerDemo/index.js'
 import { ShadowRootDemo } from './components/demo/ShadowRootDemo/index.js'
@@ -54,7 +54,7 @@ const components: Array<{
   { name: 'Paginator', comp: <PaginatorDemo /> },
   { name: 'ResizeObserver', comp: <ResizeObserverDemo /> },
   { name: 'Scrllgngn', comp: <ScrllgngnDemo /> },
-  { name: 'ScrollListener', comp: <ScrollListenerDemo /> },
+  { name: 'ScrollTracker', comp: <ScrollTrackerDemo /> },
   { name: 'Select', comp: <SelectDemo /> },
   { name: 'Sequencer', comp: <SequencerDemo /> },
   { name: 'ShadowRoot', comp: <ShadowRootDemo /> },

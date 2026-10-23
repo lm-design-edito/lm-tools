@@ -25,7 +25,7 @@ import {
 import {
   subscribe,
   unsubscribe
-} from '../ScrollListener/utils.js'
+} from '../ScrollTracker/utils.js'
 import {
   compIdAttribute,
   useCompId

@@ -1,13 +1,13 @@
 import { useEffect, useState, type FunctionComponent } from 'react'
 import {
-  ScrollListener,
-  type Props as ScrollListenerProps
-} from '~/components/ScrollListener/index.js'
+  ScrollTracker,
+  type Props as ScrollTrackerProps
+} from '~/components/ScrollTracker/index.js'
 import { random, randomInt } from '~/agnostic/random/random/index.js'
 import { CompDisplayer } from '../../utils/CompDisplayer/index.js'
-import { scrollListener } from '~/components/public-classnames.js'
+import { scrollTracker } from '~/components/public-classnames.js'
 
-const name = 'ScrollListener'
+const name = 'ScrollTracker'
 
 const description = `
 Exposes scroll metrics — both the document's and its own — as CSS custom
@@ -16,7 +16,7 @@ of its own.
 
 ### Root element modifiers
 - \`--tracking\` — it is measuring. The state, where \`--measured\` is its consequence:
-  a listener that has stopped keeps its last values.
+  a tracker that has stopped keeps its last values.
 - \`--measured\` — a first measurement landed.
 - \`--scrolling-up\` / \`--scrolling-down\` — the document's last known direction.
 
@@ -52,7 +52,7 @@ for everyone, each element only for itself. The listeners exist only while at
 least one instance is tracking.`
 
 const tsxDetails = `/**
- * Props for the {@link ScrollListener} component.
+ * Props for the {@link ScrollTracker} component.
  *
  * @property tracking - Whether it is measuring, taken over by the consumer.
  * @property defaultTracking - Whether it starts measuring on mount, \`true\` by default.
@@ -60,7 +60,7 @@ const tsxDetails = `/**
  * @property onScrollStateChanged - Called after the measured {@link ScrollState}
  * changed. Receives \`undefined\` until the first measurement lands.
  * @property className - Optional additional class name(s) applied to the root element.
- * @property children - React nodes rendered inside the scroll listener container.
+ * @property children - React nodes rendered inside the scroll tracker container.
  */
 export type Props = PropsWithChildren<WithClassName<{
   tracking?: boolean
@@ -73,19 +73,19 @@ export type Props = PropsWithChildren<WithClassName<{
 
 const demoStyles = ``
 
-const demoProps: ScrollListenerProps = {
+const demoProps: ScrollTrackerProps = {
   children: <div style={{
     backgroundColor: 'yellow',
       width: 700,
       height: 700
     }}>
     <div style={{
-      transform: `translateY(calc(var(--lm-scroll-listener-self-outer-scrolled-y-ratio) * 700px))`
+      transform: `translateY(calc(var(--lm-scroll-tracker-self-outer-scrolled-y-ratio) * 700px))`
     }}>SCROLL ME BABYYYY</div>
   </div>
 }
 
-export const ScrollListenerDemo: FunctionComponent = () => {
+export const ScrollTrackerDemo: FunctionComponent = () => {
   const [count, setCount] = useState(1)
   useEffect(() => {}, [])
   return <CompDisplayer
@@ -96,7 +96,7 @@ export const ScrollListenerDemo: FunctionComponent = () => {
     demoStyles={demoStyles}>
     {Array(Math.max(count, 0)).fill(null).map(e => <>
       <div style={{ height: '200vh' }}>Scroll down...</div>
-      <ScrollListener {...demoProps} />
+      <ScrollTracker {...demoProps} />
       <div style={{ height: '200vh' }}>Scroll down...</div>
     </>)}
   </CompDisplayer>

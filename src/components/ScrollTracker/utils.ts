@@ -45,7 +45,7 @@ export type LocalScrollData = {
 }
 
 /**
- * Combined scroll state handed to each subscribed {@link ScrollListener}.
+ * Combined scroll state handed to each subscribed {@link ScrollTracker}.
  *
  * @property global - Document-level scroll data, measured once per frame and
  * shared by every subscriber.
@@ -112,7 +112,7 @@ function measureLocal (element: HTMLElement): LocalScrollData {
  * * * * * * * * * * * * * * * * */
 
 /**
- * Every mounted {@link ScrollListener} shares one pair of `scroll` / `resize`
+ * Every mounted {@link ScrollTracker} shares one pair of `scroll` / `resize`
  * listeners and one measurement pass per animation frame, however many
  * components are on the page: the document is measured once, and only each
  * subscriber's own element is measured individually.
@@ -209,7 +209,7 @@ export function getScrollProgress (scrollState: ScrollState): { x: number, y: nu
 }
 
 /**
- * Builds the CSS custom properties exposed on a {@link ScrollListener} root.
+ * Builds the CSS custom properties exposed on a {@link ScrollTracker} root.
  *
  * Measurements are lengths and come with a `-raw` twin carrying the plain number
  * for `calc()`; ratios are unitless and have no twin.
@@ -226,31 +226,31 @@ export function toScrollCssProps (scrollState: ScrollState): Record<string, stri
   const selfInnerScrolledYRatio = progressIn(scroll.y, innerRange(local.offsetY, local.height, win.height))
   const selfOuterScrolledYRatio = progressIn(scroll.y, outerRange(local.offsetY, local.height, win.height))
   return {
-    '--lm-scroll-listener-window-width': `${win.width}px`,
-    '--lm-scroll-listener-window-width-raw': `${win.width}`,
-    '--lm-scroll-listener-window-height': `${win.height}px`,
-    '--lm-scroll-listener-window-height-raw': `${win.height}`,
-    '--lm-scroll-listener-html-width': `${html.width}px`,
-    '--lm-scroll-listener-html-width-raw': `${html.width}`,
-    '--lm-scroll-listener-html-height': `${html.height}px`,
-    '--lm-scroll-listener-html-height-raw': `${html.height}`,
-    '--lm-scroll-listener-scroll-x': `${scroll.x}px`,
-    '--lm-scroll-listener-scroll-x-raw': `${scroll.x}`,
-    '--lm-scroll-listener-scroll-y': `${scroll.y}px`,
-    '--lm-scroll-listener-scroll-y-raw': `${scroll.y}`,
-    '--lm-scroll-listener-width': `${local.width}px`,
-    '--lm-scroll-listener-width-raw': `${local.width}`,
-    '--lm-scroll-listener-height': `${local.height}px`,
-    '--lm-scroll-listener-height-raw': `${local.height}`,
-    '--lm-scroll-listener-offset-x': `${local.offsetX}px`,
-    '--lm-scroll-listener-offset-x-raw': `${local.offsetX}`,
-    '--lm-scroll-listener-offset-y': `${local.offsetY}px`,
-    '--lm-scroll-listener-offset-y-raw': `${local.offsetY}`,
-    '--lm-scroll-listener-window-scrolled-x-ratio': `${windowScrolledXRatio}`,
-    '--lm-scroll-listener-window-scrolled-y-ratio': `${windowScrolledYRatio}`,
-    '--lm-scroll-listener-self-inner-scrolled-x-ratio': `${selfInnerScrolledXRatio}`,
-    '--lm-scroll-listener-self-outer-scrolled-x-ratio': `${selfOuterScrolledXRatio}`,
-    '--lm-scroll-listener-self-inner-scrolled-y-ratio': `${selfInnerScrolledYRatio}`,
-    '--lm-scroll-listener-self-outer-scrolled-y-ratio': `${selfOuterScrolledYRatio}`
+    '--lm-scroll-tracker-window-width': `${win.width}px`,
+    '--lm-scroll-tracker-window-width-raw': `${win.width}`,
+    '--lm-scroll-tracker-window-height': `${win.height}px`,
+    '--lm-scroll-tracker-window-height-raw': `${win.height}`,
+    '--lm-scroll-tracker-html-width': `${html.width}px`,
+    '--lm-scroll-tracker-html-width-raw': `${html.width}`,
+    '--lm-scroll-tracker-html-height': `${html.height}px`,
+    '--lm-scroll-tracker-html-height-raw': `${html.height}`,
+    '--lm-scroll-tracker-scroll-x': `${scroll.x}px`,
+    '--lm-scroll-tracker-scroll-x-raw': `${scroll.x}`,
+    '--lm-scroll-tracker-scroll-y': `${scroll.y}px`,
+    '--lm-scroll-tracker-scroll-y-raw': `${scroll.y}`,
+    '--lm-scroll-tracker-width': `${local.width}px`,
+    '--lm-scroll-tracker-width-raw': `${local.width}`,
+    '--lm-scroll-tracker-height': `${local.height}px`,
+    '--lm-scroll-tracker-height-raw': `${local.height}`,
+    '--lm-scroll-tracker-offset-x': `${local.offsetX}px`,
+    '--lm-scroll-tracker-offset-x-raw': `${local.offsetX}`,
+    '--lm-scroll-tracker-offset-y': `${local.offsetY}px`,
+    '--lm-scroll-tracker-offset-y-raw': `${local.offsetY}`,
+    '--lm-scroll-tracker-window-scrolled-x-ratio': `${windowScrolledXRatio}`,
+    '--lm-scroll-tracker-window-scrolled-y-ratio': `${windowScrolledYRatio}`,
+    '--lm-scroll-tracker-self-inner-scrolled-x-ratio': `${selfInnerScrolledXRatio}`,
+    '--lm-scroll-tracker-self-outer-scrolled-x-ratio': `${selfOuterScrolledXRatio}`,
+    '--lm-scroll-tracker-self-inner-scrolled-y-ratio': `${selfInnerScrolledYRatio}`,
+    '--lm-scroll-tracker-self-outer-scrolled-y-ratio': `${selfOuterScrolledYRatio}`
   }
 }

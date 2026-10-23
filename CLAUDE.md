@@ -109,7 +109,7 @@ types. When the two disagree, Preact wins.
 ### Naming
 
 - Symbol is the folder name, suffixed with `Component` **only** to dodge a DOM global
-  (`IntersectionObserverComponent`); `ScrollListener`, `Video`, `Drawer` stay bare.
+  (`IntersectionObserverComponent`); `ScrollTracker`, `Video`, `Drawer` stay bare.
 - Controlled variant is prefixed: `ControlledVideo`.
 - Props type always exported as `Props`, in both files. Never `ControlledProps`.
 - Uncontrolled initial value is always `default<Something>`, never `initial…`.
@@ -179,7 +179,7 @@ so in the JSDoc.
   `-progression-ratio` — even when the stem already reads as a ratio. The suffix is
   mechanical on purpose: it removes the case-by-case call about whether the name is
   self-describing, and it keeps a ratio from being mistaken for the length that often
-  shares its stem (`--lm-scroll-listener-scroll-y` is px, `-window-scrolled-y-ratio`
+  shares its stem (`--lm-scroll-tracker-scroll-y` is px, `-window-scrolled-y-ratio`
   is not). Never name a variable after a unit it doesn't carry.
 - **A `data-` attribute and a custom property are not alternatives**, and the same
   value belongs in both whenever both are reachable. A custom property feeds

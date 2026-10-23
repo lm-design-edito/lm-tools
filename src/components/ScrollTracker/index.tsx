@@ -18,7 +18,7 @@ import type {
   WithClassName,
   WithCompId
 } from '../utils/types.js'
-import { scrollListener as publicClassName } from '../public-classnames.js'
+import { scrollTracker as publicClassName } from '../public-classnames.js'
 import {
   getScrollProgress,
   subscribe,
@@ -29,7 +29,7 @@ import {
 import cssModule from './styles.module.css'
 
 /**
- * Props for the {@link ScrollListener} component.
+ * Props for the {@link ScrollTracker} component.
  *
  * @property tracking - Whether the component is measuring, taken over by the consumer.
  * @property defaultTracking - Whether it starts measuring on mount. `true` by default,
@@ -44,7 +44,7 @@ import cssModule from './styles.module.css'
  * @property onScrollDirectionChanged - Called after the document scroll
  * direction changed, with `'up'` or `'down'`. Never on mount.
  * @property className - Optional additional class name(s) applied to the root element.
- * @property children - React nodes rendered inside the scroll listener container.
+ * @property children - React nodes rendered inside the scroll tracker container.
  */
 export type Props = WithCompId<PropsWithChildren<WithClassName<{
   tracking?: boolean
@@ -62,7 +62,7 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  *
  * ### Root element modifiers
  * - `--tracking` — the component is measuring. The state, where `--measured` is its
- *   consequence: a listener that has stopped keeps its last values, so it can be
+ *   consequence: a tracker that has stopped keeps its last values, so it can be
  *   measured and no longer tracking.
  * - `--measured` — a first measurement landed, so the properties below are set.
  * - `--scrolling-up` / `--scrolling-down` — the document's last known direction.
@@ -75,22 +75,22 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  * ### CSS custom properties on the root element
  * Each measurement comes as a `px` length under its bare name, and as a `-raw`
  * twin holding the plain number:
- * - `--lm-scroll-listener-window-width`, `--lm-scroll-listener-window-height`
- * - `--lm-scroll-listener-html-width`, `--lm-scroll-listener-html-height`
- * - `--lm-scroll-listener-scroll-x`, `--lm-scroll-listener-scroll-y`
- * - `--lm-scroll-listener-width`, `--lm-scroll-listener-height`
- * - `--lm-scroll-listener-offset-x`, `--lm-scroll-listener-offset-y`
+ * - `--lm-scroll-tracker-window-width`, `--lm-scroll-tracker-window-height`
+ * - `--lm-scroll-tracker-html-width`, `--lm-scroll-tracker-html-height`
+ * - `--lm-scroll-tracker-scroll-x`, `--lm-scroll-tracker-scroll-y`
+ * - `--lm-scroll-tracker-width`, `--lm-scroll-tracker-height`
+ * - `--lm-scroll-tracker-offset-x`, `--lm-scroll-tracker-offset-y`
  *
  * Ratios are unitless and have no twin:
- * - `--lm-scroll-listener-window-scrolled-x-ratio`,
- *   `--lm-scroll-listener-window-scrolled-y-ratio` — how far the document is
+ * - `--lm-scroll-tracker-window-scrolled-x-ratio`,
+ *   `--lm-scroll-tracker-window-scrolled-y-ratio` — how far the document is
  *   scrolled.
- * - `--lm-scroll-listener-self-inner-scrolled-x-ratio`,
- *   `--lm-scroll-listener-self-inner-scrolled-y-ratio` — `0` when the element's
+ * - `--lm-scroll-tracker-self-inner-scrolled-x-ratio`,
+ *   `--lm-scroll-tracker-self-inner-scrolled-y-ratio` — `0` when the element's
  *   start edge meets the viewport's start edge, `1` when its end edge meets the
  *   viewport's end edge. The span where it is fully visible.
- * - `--lm-scroll-listener-self-outer-scrolled-x-ratio`,
- *   `--lm-scroll-listener-self-outer-scrolled-y-ratio` — `0` when the element is
+ * - `--lm-scroll-tracker-self-outer-scrolled-x-ratio`,
+ *   `--lm-scroll-tracker-self-outer-scrolled-y-ratio` — `0` when the element is
  *   about to enter the viewport, `1` once it has fully left it. The span where it
  *   overlaps the viewport at all.
  *
@@ -109,7 +109,7 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  * for everyone, each element only for itself. The listeners exist only while at
  * least one instance is tracking.
  */
-export const ScrollListener: FunctionComponent<Props> = ({
+export const ScrollTracker: FunctionComponent<Props> = ({
   compId: givenCompId,
   tracking,
   defaultTracking,
@@ -166,7 +166,7 @@ export const ScrollListener: FunctionComponent<Props> = ({
 
   // Fx. dep. `isTracking` - the subscription follows the state, and nothing else opens
   // or closes it. The measurements are left on their last values when it closes: a
-  // stylesheet reading `--lm-scroll-listener-scroll-y` must not see it drop to zero
+  // stylesheet reading `--lm-scroll-tracker-scroll-y` must not see it drop to zero
   // because the element went off screen.
   useEffect(() => {
     if (!isTracking) return

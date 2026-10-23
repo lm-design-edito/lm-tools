@@ -274,11 +274,11 @@ Three decisions hold the receiving side together:
   duplication is accepted rather than factored out.
 - **A controlling prop beats a command.** Components are hybrid, not controlled or
   uncontrolled: each prop decides whether the aspect it governs is the consumer's. The
-  `isTracking = tracking ?? internalTracking` already in `ScrollListener` is the whole
+  `isTracking = tracking ?? internalTracking` already in `ScrollTracker` is the whole
   mechanism — an action writes to the internal state, and a prop that is set makes that
   write invisible.
 
-`ScrollListener` is the first and so far only component wired, with `track` / `untrack`.
+`ScrollTracker` is the first and so far only component wired, with `track` / `untrack`.
 What does not exist yet: the other components' vocabularies, and the actuators that would
 send a command — visibility first. `force`, domains and surrender are deliberately out
 until arbitration has a second source to arbitrate.
@@ -287,7 +287,7 @@ until arbitration has a second source to arbitrate.
 
 **Il n'y a plus de conscience de la visibilité dans ce dépôt.** Le module
 `components/utils/viewport-behaviours` et tout ce qui le consommait — les props
-`whenVisible` / `whenHidden` / `visibility…` de `Video`, `Sequencer` et `ScrollListener`,
+`whenVisible` / `whenHidden` / `visibility…` de `Video`, `Sequencer` et `ScrollTracker`,
 leurs vocabulaires de verbes, leurs tables d'actions — ont été retirés pour que le concept
 soit reconstruit depuis zéro, et non amendé en place. Ce qui a été retiré n'est pas perdu :
 le tag **`viewport-behaviours/v1`** marque le dernier commit où tout cela existe, et
@@ -307,7 +307,7 @@ eu besoin d'inventer une grammaire pour rendre une API lisible était le signe q
 pouvait la porter elle-même : c'est ce qui a été fait.
 
 La couche générique vivait dans `components/utils/viewport-behaviours/`, et `Video`,
-`Sequencer` et `ScrollListener` la consommaient. La conversion avait abouti : trois
+`Sequencer` et `ScrollTracker` la consommaient. La conversion avait abouti : trois
 grammaires pour la même idée au départ, il n'en restait qu'une — et c'est cette couche-là
 qui est démontée aujourd'hui.
 
@@ -496,7 +496,7 @@ Ce qui reste ouvert tient en deux lignes :
   que personne ne voulait. Un enfant placé après la marque et qui ne nomme aucun pas ne
   s'allume jamais, ce qui est la lecture honnête de « il ne fait pas partie de la
   séquence ».
-- **`ScrollListener` y est passé, et deux verbes suffisent** : `track` et `untrack`.
+- **`ScrollTracker` y est passé, et deux verbes suffisent** : `track` et `untrack`.
   Mesurer est tout ce que ce composant fait, donc commencer et arrêter est tout ce qu'une
   instruction peut toucher. Il a récupéré `tracking` / `defaultTracking` au passage —
   `defaultTracking` vaut **vrai**, ce que le composant a toujours fait, et l'ancien
@@ -514,8 +514,8 @@ Ce qui reste ouvert tient en deux lignes :
     `ViewportObserverOptions` reste pour `ListLoader`, qui observe une sentinelle pour
     charger la suite — pas de vocabulaire, pas d'instructions, juste un observateur.
 - **`ResizeObserver` n'a pas besoin des déclenchements de visibilité, et c'est tranché.**
-  La question se pose parce que `ScrollListener` en avait besoin, mais les deux ne coûtent
-  pas de la même façon : `ScrollListener` a un moteur qui **tourne** — des écouteurs et une
+  La question se pose parce que `ScrollTracker` en avait besoin, mais les deux ne coûtent
+  pas de la même façon : `ScrollTracker` a un moteur qui **tourne** — des écouteurs et une
   passe de mesure par image tant qu'une instance suit —, donc son coût est proportionnel au
   temps. `ResizeObserver` est une API qui ne rappelle qu'au **changement réel** de taille :
   un élément hors écran qui ne bouge pas ne coûte pas un cycle, et quand il bouge, c'est
@@ -535,7 +535,7 @@ Ce qui reste ouvert tient en deux lignes :
 This is the reading that ended the layer. One fact first, because everything below rests
 on it: the `verb:arg:modifier` grammar has **exactly
 one trigger**, viewport visibility, and three consumers — `Video`, `Sequencer` and
-`ScrollListener`. Nothing else in `src/` so much as splits a string on `:`. So this is a
+`ScrollTracker`. Nothing else in `src/` so much as splits a string on `:`. So this is a
 general mechanism that has never been tried against a second signal, and the parts that
 look general may only be general in intention.
 
@@ -546,7 +546,7 @@ Four weak points, in the order they matter:
    fire them, and the module's name, props and types all say so. « Do X when the sequence
    reaches step 3 » has no way in.
 2. **`domain` and `surrender` are inert for two consumers out of three.** `Sequencer` and
-   `ScrollListener` each declare a single domain and each document that nothing ever
+   `ScrollTracker` each declare a single domain and each document that nothing ever
    surrenders — which also makes `':force'` a no-op there.
 3. **A vocabulary is declared four to five times per component** — verbs array, verb type,
    argument validators, action type, action table — and `Video` and `Sequencer` duplicate
