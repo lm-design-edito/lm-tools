@@ -5,6 +5,7 @@ import {
   useState,
   type RefObject
 } from 'react'
+import { dedupe } from '../../../agnostic/arrays/dedupe/index.js'
 
 /** Alias for the native IntersectionObserver interface. */
 export type IO = IntersectionObserver
@@ -38,6 +39,23 @@ export type OnIntersected = (details: {
   observer: IO
 }) => void
 
+function useStableThreshold (
+  threshold: ObserverOptions['threshold']
+): ObserverOptions['threshold'] {
+  const stableRef = useRef(threshold)
+  const stable = stableRef.current
+  if (!Array.isArray(threshold)) {
+    stableRef.current = threshold
+    return threshold
+  }
+  const normalized = dedupe(threshold).sort((a, b) => a - b)
+  if (Array.isArray(stable)
+    && stable.length === normalized.length
+    && stable.every((value, index) => value === normalized[index])) return stable
+  stableRef.current = normalized
+  return normalized
+}
+
 /**
  * Observes an element a caller already renders, rather than one wrapped in a div of
  * our own.
@@ -68,6 +86,7 @@ export function useIntersectionObserver (
 ): IOE | null {
   const [ioEntry, setIoEntry] = useState<IOE | null>(null)
   const observerRef = useRef<IO | null>(null)
+  const stableThreshold = useStableThreshold(threshold)
 
   const observation = useCallback((entries: IOE[], observer: IO): void => {
     const thisEntry = entries[0]
@@ -92,11 +111,14 @@ export function useIntersectionObserver (
       console.warn('targetRef.current should not be null')
       return
     }
-    const observer = new IntersectionObserver(observation, { root, rootMargin, threshold })
+    const observer = new IntersectionObserver(
+      observation,
+      { root, rootMargin, threshold: stableThreshold }
+    )
     observerRef.current = observer
     observer.observe(targetEl)
     return () => observer.disconnect()
-  }, [enabled, targetRef, root, rootMargin, threshold, observation])
+  }, [enabled, targetRef, root, rootMargin, stableThreshold, observation])
 
   useEffect(() => {
     if (!enabled) return
