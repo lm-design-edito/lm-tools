@@ -11,7 +11,12 @@ import { useCommands } from '../utils/commands/index.js'
 import { useCompId } from '../utils/comp-id/index.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
 import type { WithVisibility } from '../utils/visibility/types.js'
-import { VIDEO_ACTION_VERB_ARGUMENTS } from './types.js'
+import {
+  VIDEO_ACTION_VERB_ARGUMENTS,
+  VIDEO_ACTION_VERB_DOMAINS,
+  type VideoActionDomain,
+  type VideoActionVerb
+} from './types.js'
 import {
   forceJumpTo,
   muteAttributeWorkaround
@@ -69,9 +74,10 @@ import {
  * @property children - React children rendered inside the `<video>` element itself
  * (e.g. fallback content).
  */
-// `isVisible` is measured here and handed down, so it is the one controlled value a
-// caller cannot set: there is nothing to drive, and the triggers would not fire for it.
-export type Props = WithVisibility<Omit<ControlledProps, 'isVisible'>> & {
+// `isVisible` and `surrenderedDomains` are measured here and handed down, so they are
+// the two controlled values a caller cannot set: there is nothing to drive, and the
+// component would go on computing them underneath.
+export type Props = WithVisibility<Omit<ControlledProps, 'isVisible' | 'surrenderedDomains'>> & {
   defaultSubtitlesOn?: boolean
   defaultVolume?: number
   defaultPlaybackRate?: number
@@ -121,6 +127,14 @@ export type Props = WithVisibility<Omit<ControlledProps, 'isVisible'>> & {
  * `whenVisible='play'` with `whenHidden='pause'` plays only while in view, and
  * `whenVisible='@legend:show'` addresses another component instead.
  *
+ * **A command also yields to the reader.** Using a control hands its domain over for
+ * the rest of the mount, and the commands of that domain stop firing: pressing pause
+ * silences `play` and `pause`, scrubbing the timeline silences the three `jump-*`,
+ * muting or moving the volume slider silences `loud`, `mute` and `volume`. The
+ * `:force` modifier opts out — `whenVisible='force:play'` — and is meant to be rare,
+ * which is why yielding is the silent form. What has been surrendered is readable from
+ * the outside: see the root modifiers and `data-surrendered`.
+ *
  * Browsers refuse an unmuted `play()` outside a user gesture, so asking for playback
  * without muting will usually have it rejected. The
  * refusal is caught rather than ignored — the element is read back once the attempt
@@ -151,6 +165,7 @@ export const Video: FunctionComponent<Props> = ({
   defaultVolume = 1,
   defaultPlaybackRate = 1,
   defaultMute = false,
+  onTimelineClicked,
   onVideoClicked,
   onPlayButtonClicked,
   onPauseButtonClicked,
@@ -188,6 +203,18 @@ export const Video: FunctionComponent<Props> = ({
   // is forwarded rather than guarded at each call site.
   const isTimeControlled = controlledProps.currentTimeMs !== undefined
 
+  // The reader's hand. Touching a control hands its domain over for the rest of the
+  // mount, because the failure modes are not symmetrical: not restarting on its own is
+  // a disappointment, restarting against someone who just pressed pause is a hostility
+  // they would meet at every pass. `force` is the written form for the same reason —
+  // yielding is the silent one.
+  const [surrenderedDomains, setSurrenderedDomains] = useState<VideoActionDomain[]>([])
+  const surrender = useCallback((domain: VideoActionDomain) => {
+    setSurrenderedDomains(current => current.includes(domain) ? current : [...current, domain])
+  }, [])
+  const isHeldBack = (verb: VideoActionVerb, force: boolean): boolean => !force
+    && surrenderedDomains.includes(VIDEO_ACTION_VERB_DOMAINS[verb])
+
   // Commands
   //
   // The table is written here rather than in a module of its own: every verb writes
@@ -211,29 +238,37 @@ export const Video: FunctionComponent<Props> = ({
   }
 
   useCommands(compId, {
-    play: () => { if (play === undefined) setInternalPlay(true) },
-    pause: () => { if (play === undefined) setInternalPlay(false) },
-    loud: () => { if (mute === undefined) setInternalMute(false) },
-    mute: () => { if (mute === undefined) setInternalMute(true) },
-    volume: args => {
+    play: ({ force }) => {
+      if (play === undefined && !isHeldBack('play', force)) setInternalPlay(true)
+    },
+    pause: ({ force }) => {
+      if (play === undefined && !isHeldBack('pause', force)) setInternalPlay(false)
+    },
+    loud: ({ force }) => {
+      if (mute === undefined && !isHeldBack('loud', force)) setInternalMute(false)
+    },
+    mute: ({ force }) => {
+      if (mute === undefined && !isHeldBack('mute', force)) setInternalMute(true)
+    },
+    volume: ({ args, force }) => {
       const arg = readArgument('volume', args)
-      if (arg === null || volume !== undefined) return
+      if (arg === null || volume !== undefined || isHeldBack('volume', force)) return
       setInternalVolume(Number(arg))
     },
-    rate: args => {
+    rate: ({ args, force }) => {
       const arg = readArgument('rate', args)
-      if (arg === null || playbackRate !== undefined) return
+      if (arg === null || playbackRate !== undefined || isHeldBack('rate', force)) return
       setInternalPlaybackRate(Number(arg))
     },
-    'jump-to': args => {
+    'jump-to': ({ args, force }) => {
       const arg = readArgument('jump-to', args)
-      if (arg === null) return
+      if (arg === null || isHeldBack('jump-to', force)) return
       const targetMs = parseDuration(arg)
       if (targetMs === null) return
       jumpTo(targetMs)
     },
-    'jump-start': () => jumpTo(0),
-    'jump-end': () => jumpTo(-1)
+    'jump-start': ({ force }) => { if (!isHeldBack('jump-start', force)) jumpTo(0) },
+    'jump-end': ({ force }) => { if (!isHeldBack('jump-end', force)) jumpTo(-1) }
   })
 
   const isVisible = useVisibilityTriggers(compId, rootRef, {
@@ -291,53 +326,69 @@ export const Video: FunctionComponent<Props> = ({
   // User actions
   const handlePlayButtonClick = useCallback<NonNullable<Props['onPlayButtonClicked']>>(payload => {
     onPlayButtonClicked?.(payload)
+    surrender('playback')
     setInternalPlay(true)
-  }, [onPlayButtonClicked])
+  }, [onPlayButtonClicked, surrender])
 
   const handlePauseButtonClick = useCallback<NonNullable<Props['onPauseButtonClicked']>>(payload => {
     onPauseButtonClicked?.(payload)
+    surrender('playback')
     setInternalPlay(false)
-  }, [onPauseButtonClicked])
+  }, [onPauseButtonClicked, surrender])
 
   // The picture toggles, where the two buttons each say one thing. It is the same gesture
   // as pressing one of them, and a consumer tracking playback has to count this one too.
   const handleVideoClick = useCallback<NonNullable<Props['onVideoClicked']>>(payload => {
     onVideoClicked?.(payload)
+    surrender('playback')
     setInternalPlay(!payload.isPlaying)
-  }, [onVideoClicked])
+  }, [onVideoClicked, surrender])
 
   const handleLoudButtonClick = useCallback<NonNullable<Props['onLoudButtonClicked']>>(payload => {
     onLoudButtonClicked?.(payload)
+    surrender('sound')
     setInternalMute(false)
-  }, [onLoudButtonClicked])
+  }, [onLoudButtonClicked, surrender])
 
   const handleMuteButtonClick = useCallback<NonNullable<Props['onMuteButtonClicked']>>(payload => {
     onMuteButtonClicked?.(payload)
+    surrender('sound')
     setInternalMute(true)
-  }, [onMuteButtonClicked])
+  }, [onMuteButtonClicked, surrender])
 
   const handleRateRangeChange = useCallback<NonNullable<Props['onRateRangeChanged']>>(payload => {
     onRateRangeChanged?.(payload)
+    surrender('rate')
     setInternalPlaybackRate(payload.targetRate)
-  }, [onRateRangeChanged])
+  }, [onRateRangeChanged, surrender])
 
   const handleVolumeRangeChange = useCallback<NonNullable<Props['onVolumeRangeChanged']>>(payload => {
     onVolumeRangeChanged?.(payload)
+    surrender('sound')
     setInternalVolume(payload.targetVolume)
-  }, [onVolumeRangeChanged])
+  }, [onVolumeRangeChanged, surrender])
 
   const handleFullscreenButtonClick = useCallback<NonNullable<Props['onFullscreenButtonClicked']>>(payload => {
     onFullscreenButtonClicked?.(payload)
+    surrender('fullscreen')
     setInternalFullscreen(!payload.isFullscreen)
-  }, [onFullscreenButtonClicked])
+  }, [onFullscreenButtonClicked, surrender])
 
   // One button for both directions, where play/pause and loud/mute get one each: those
   // carry two opposed glyphs, so both are rendered and the stylesheet shows one. The
   // subtitles button carries a single glyph whose styling alone changes.
   const handleSubtitlesButtonClick = useCallback<NonNullable<Props['onSubtitlesButtonClicked']>>(payload => {
     onSubtitlesButtonClicked?.(payload)
+    surrender('subtitles')
     setInternalSubtitlesOn(!payload.isSubtitlesOn)
-  }, [onSubtitlesButtonClicked])
+  }, [onSubtitlesButtonClicked, surrender])
+
+  // The one gesture this layer did not see before: the time belongs to the element, so
+  // the timeline click used to pass straight through to the controlled layer.
+  const handleTimelineClick = useCallback<NonNullable<Props['onTimelineClicked']>>(payload => {
+    onTimelineClicked?.(payload)
+    surrender('position')
+  }, [onTimelineClicked, surrender])
 
   // `autoPlay` is forwarded to the element, but the play state is owned here, so
   // it has to be seeded once on mount for the controls to agree with the element.
@@ -378,5 +429,7 @@ export const Video: FunctionComponent<Props> = ({
     onVolumeRangeChanged={handleVolumeRangeChange}
     onRateRangeChanged={handleRateRangeChange}
     onFullscreenButtonClicked={handleFullscreenButtonClick}
-    onSubtitlesButtonClicked={handleSubtitlesButtonClick} />
+    onSubtitlesButtonClicked={handleSubtitlesButtonClick}
+    onTimelineClicked={handleTimelineClick}
+    surrenderedDomains={surrenderedDomains} />
 }

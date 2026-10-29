@@ -27,7 +27,8 @@ import {
 } from '../Subtitles/index.js'
 import type {
   SourceData,
-  TrackData
+  TrackData,
+  VideoActionDomain
 } from './types.js'
 import {
   forceExitFullscreen,
@@ -156,6 +157,9 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
   // the `--visible` modifier and its attribute come of it here; `undefined` while
   // nothing asks about visibility, which is why neither ever appears unasked.
   isVisible?: boolean
+  // The controls the reader has taken over, as the layer above keeps count. Rendered and
+  // nothing more: what it holds back is decided up there.
+  surrenderedDomains?: readonly VideoActionDomain[]
   // The `<video>` itself, for a caller that has to reach it outside of a handler —
   // seeking on a viewport instruction, typically, which happens at no one's click. Given
   // one, this component uses it instead of its own rather than merging the two.
@@ -214,12 +218,17 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  * - `--ended` — playback reached the end and has not left it.
  * - `--visible` — the component has settled into view. Absent until something asks
  *   about visibility, since nothing is observed before that.
+ * - `--playback-surrendered`, `--position-surrendered`, `--sound-surrendered`,
+ *   `--rate-surrendered`, `--fullscreen-surrendered`, `--subtitles-surrendered` — the
+ *   reader has used that control, so the commands of its domain no longer fire.
  *
  * ### Data attributes on the root element
  * - `data-play-on` — present (empty string) when playing.
  * - `data-play-off` — present (empty string) when paused.
  * - `data-ended` — present (empty string) once playback reached the end.
  * - `data-visible` — present (empty string) while settled into view.
+ * - `data-surrendered` — the surrendered domains, space separated, so
+ *   `[data-surrendered~="sound"]` selects one. Absent while none is.
  * - `data-fullscreen-on` — present (empty string) when in fullscreen.
  * - `data-fullscreen-off` — present (empty string) when not in fullscreen.
  * - `data-loud` — present (empty string) when unmuted.
@@ -296,6 +305,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   className,
   rootRef,
   isVisible,
+  surrenderedDomains = [],
   videoRef: givenVideoRef,
   ...intrinsicVideoAttributes
 }) => {
@@ -465,7 +475,15 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     // carries `--open-on-click`: a surface that answers a click has to be able to say so
     // with a cursor.
     'toggle-play-on-click': togglePlayOnClick === true,
-    visible: isVisible === true
+    visible: isVisible === true,
+    // Written out one by one rather than built from the domain list: a consumer greps
+    // for the exact class name, so it has to exist in the source they read.
+    'playback-surrendered': surrenderedDomains.includes('playback'),
+    'position-surrendered': surrenderedDomains.includes('position'),
+    'sound-surrendered': surrenderedDomains.includes('sound'),
+    'rate-surrendered': surrenderedDomains.includes('rate'),
+    'fullscreen-surrendered': surrenderedDomains.includes('fullscreen'),
+    'subtitles-surrendered': surrenderedDomains.includes('subtitles')
   }), className)
 
   // Guarded: the duration is unknown until the metadata lands, and an unguarded
@@ -476,6 +494,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     'data-play-off': !isPlaying ? '' : undefined,
     'data-ended': isEnded ? '' : undefined,
     'data-visible': isVisible === true ? '' : undefined,
+    // Space separated, so a stylesheet can ask `[data-surrendered~="sound"]`.
+    'data-surrendered': surrenderedDomains.length === 0 ? undefined : surrenderedDomains.join(' '),
     'data-fullscreen-on': isFullscreen ? '' : undefined,
     'data-fullscreen-off': !isFullscreen ? '' : undefined,
     'data-loud': isLoud ? '' : undefined,

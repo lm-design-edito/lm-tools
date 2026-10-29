@@ -91,25 +91,43 @@ export const VIDEO_ACTION_VERB_ARGUMENTS = {
   rate: (arg: string) => /^\d+(?:\.\d+)?$/v.test(arg) && Number(arg) > 0
 } as const satisfies Partial<Record<VideoActionVerb, (arg: string) => boolean>>
 
-/** Which control of the player a verb reaches for. */
-export type VideoActionDomain = 'playback' | 'sound' | 'volume' | 'rate'
+/**
+ * The controls of the player a command can reach for, one per gesture a reader has.
+ *
+ * **A value and not a bare union**, so the component can walk them to render what has
+ * been surrendered. `fullscreen` and `subtitles` carry no verb yet and are here all the
+ * same: their buttons surrender them from the start, which silences nothing today and
+ * starts working by itself the day either gets one.
+ */
+export const VIDEO_ACTION_DOMAINS = [
+  'playback',
+  'position',
+  'sound',
+  'rate',
+  'fullscreen',
+  'subtitles'
+] as const
+
+/** One of {@link VIDEO_ACTION_DOMAINS}. */
+export type VideoActionDomain = typeof VIDEO_ACTION_DOMAINS[number]
 
 /**
- * The domain of each verb.
+ * The domain of each verb — **what a reader's gesture silences**. Touching a control
+ * hands its domain over for the rest of the mount, and the commands of that domain stop
+ * firing unless they carry `force`.
  *
- * **Declared and read by nothing yet.** It exists for the reader's hand — touching a
- * control silences the commands of its domain, which `:force` then opts out of — and
- * that layer is not written: `components/utils/commands` parses `force` and transports
- * it, but holds no ledger for it to override.
+ * Muting and setting a level are two ways of deciding the same thing, so `volume` sits
+ * with `loud` and `mute`: either gesture silences all three. Seeking is its own domain
+ * rather than part of `playback`, so scrubbing the timeline does not silence `play`.
  */
 export const VIDEO_ACTION_VERB_DOMAINS = {
   play: 'playback',
   pause: 'playback',
-  'jump-to': 'playback',
-  'jump-start': 'playback',
-  'jump-end': 'playback',
+  'jump-to': 'position',
+  'jump-start': 'position',
+  'jump-end': 'position',
   loud: 'sound',
   mute: 'sound',
-  volume: 'volume',
+  volume: 'sound',
   rate: 'rate'
 } as const satisfies Record<VideoActionVerb, VideoActionDomain>

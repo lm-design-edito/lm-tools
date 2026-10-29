@@ -380,9 +380,27 @@ the decision, and it is the cheaper half of « le transport n'interprète pas »
 `index.tsx`, over the hybrid layer's own setters — a sibling `commands.ts` was tried and
 undone, since it could only be handed every setter back — and **a verb never
 contradicts a prop** — each is inert while the value it writes arrived as one, the three
-`jump-*` while `currentTimeMs` did. `VIDEO_ACTION_VERB_DOMAINS` is declared and read by
-nothing: the reader's hand is its own chantier, and `force` is in the same state — parsed
-and transported by `utils/commands`, with no ledger to override.
+`jump-*` while `currentTimeMs` did.
+
+**And a command yields to the reader.** `VIDEO_ACTION_DOMAINS` holds six — `playback`,
+`position`, `sound`, `rate`, `fullscreen`, `subtitles` — one per gesture a reader has,
+and using a control hands its domain over for the rest of the mount. Pressing pause
+silences `play` and `pause`; scrubbing the timeline silences the three `jump-*`; muting
+or moving the volume slider silences `loud`, `mute` and `volume`, since muting and
+setting a level are two ways of deciding the same thing. `fullscreen` and `subtitles`
+carry no verb and are surrendered all the same, which silences nothing today and starts
+working by itself the day either gets one. Seeking is a domain of its own rather than
+part of `playback`, which is what settles the disagreement the old layer's two docs had
+about the timeline.
+
+`:force` opts out — `whenVisible='force:play'` — and that is what the modifier was
+parsed and transported for all along; it finally has a ledger to override. The ledger is
+**state and not a ref**, which answers the survey's last charge: a surrendered domain
+surfaces as a root modifier (`--sound-surrendered`) and in a space-separated
+`data-surrendered`, so a stylesheet can ask `[data-surrendered~="sound"]`. Under-
+surrendering is accepted: someone who pressed pause still gets `jump-start` on the way
+out, since `force` can repair an over-eager yield but no modifier can repair a partition
+that is too coarse.
 
 ## Les déclencheurs — la visibilité, première condition
 

@@ -128,7 +128,7 @@ export function useCommands (
         console.warn(`"${targetCompId}" has no action named "${command.action}"`)
         return
       }
-      action(command.args)
+      action(command)
     }),
     [targetCompId]
   )
