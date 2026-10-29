@@ -3,8 +3,12 @@ import {
   type ReactEventHandler,
   useCallback,
   useEffect,
+  useRef,
   useState
 } from 'react'
+import { useCommands } from '../utils/commands/index.js'
+import { useCompId } from '../utils/comp-id/index.js'
+import { makeVideoCommands } from './commands.js'
 import { muteAttributeWorkaround } from './utils.js'
 import {
   ControlledVideo,
@@ -81,6 +85,17 @@ export type Props = ControlledProps & {
  * consequence worth knowing: a looping element never fires `ended`, so the `--ended`
  * modifier and the `isEnded` it feeds to `Subtitles` simply never come.
  *
+ * ### Commands
+ * - `play` / `pause`, `loud` / `mute` — the four states a reader's buttons also reach.
+ * - `volume:<0–1>` and `rate:<n>` — a decimal argument, `rate` strictly positive.
+ * - `jump-to:<time>`, `jump-start`, `jump-end` — a time is milliseconds or a suffixed
+ *   duration (`jump-to:500`, `jump-to:1.2min`), and a negative value counts back from
+ *   the end, `jump-to:-1` being the last reachable timecode.
+ *
+ * **A command never contradicts a prop**: each verb is ignored while the value it
+ * writes arrived as one, the three `jump-*` while `currentTimeMs` did. A malformed
+ * argument is warned about and does nothing.
+ *
  * Browsers refuse an unmuted `play()` outside a user gesture, so asking for playback
  * without muting will usually have it rejected. The
  * refusal is caught rather than ignored — the element is read back once the attempt
@@ -90,6 +105,8 @@ export type Props = ControlledProps & {
  */
 
 export const Video: FunctionComponent<Props> = ({
+  compId: givenCompId,
+  videoRef: givenVideoRef,
   play,
   volume,
   mute,
@@ -111,6 +128,13 @@ export const Video: FunctionComponent<Props> = ({
   onSubtitlesButtonClicked,
   ...controlledProps
 }) => {
+  // The id is resolved here and handed down, so the two layers share one rather than
+  // minting one each. Same for the element: `jump-*` acts on it and no time state lives
+  // up here, so this layer needs a ref of its own when the caller passed none.
+  const compId = useCompId(givenCompId)
+  const ownVideoRef = useRef<HTMLVideoElement>(null)
+  const videoRef = givenVideoRef ?? ownVideoRef
+
   // State & refs
   //
   // Each of these six can also arrive as a prop, which wins where they are forwarded
@@ -127,6 +151,20 @@ export const Video: FunctionComponent<Props> = ({
   // them may win over a parent-owned time, so the invariant is applied where the state
   // is forwarded rather than guarded at each call site.
   const isTimeControlled = controlledProps.currentTimeMs !== undefined
+
+  // Commands
+  useCommands(compId, makeVideoCommands({
+    videoRef,
+    setInternalPlay,
+    setInternalMute,
+    setInternalVolume,
+    setInternalPlaybackRate,
+    isPlayControlled: play !== undefined,
+    isMuteControlled: mute !== undefined,
+    isVolumeControlled: volume !== undefined,
+    isPlaybackRateControlled: playbackRate !== undefined,
+    isTimeControlled
+  }))
 
   // Intrisic event handlers
   const handleOnPlayEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
@@ -234,6 +272,8 @@ export const Video: FunctionComponent<Props> = ({
   // prop to reach past it.
   return <ControlledVideo
     {...controlledProps}
+    compId={compId}
+    videoRef={videoRef}
     play={(play ?? internalPlay) && !isTimeControlled}
     volume={volume ?? internalVolume}
     mute={mute ?? internalMute}

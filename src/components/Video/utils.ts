@@ -119,6 +119,20 @@ export const getTimelineClickProgress = (
   return Math.min(1, Math.max(0, position / timelineRect.width))
 }
 
+// A negative target counts back from the duration, `-1` being the last reachable
+// timecode — not `-0`, which `===` makes indistinguishable from the start.
+export const forceJumpTo = (
+  video: HTMLVideoElement | null,
+  targetMs: number
+): void => {
+  if (video === null) return
+  const durationMs = secondsToMs(video.duration)
+  if (!Number.isFinite(durationMs)) return
+  const absolute = targetMs < 0 ? durationMs + targetMs : targetMs
+  // eslint-disable-next-line no-param-reassign
+  video.currentTime = msToSeconds(Math.min(Math.max(absolute, 0), durationMs))
+}
+
 /* Source lists */
 
 export function parseSrcSetSourcesList <T extends Record<string, unknown>> (
