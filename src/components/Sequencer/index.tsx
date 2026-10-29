@@ -163,7 +163,7 @@ export const Sequencer: FunctionComponent<Props> = ({
 }) => {
   const compId = useCompId(givenCompId)
 
-  const [internalStep, setInternalStep] = useState(step ?? defaultStep ?? 0)
+  const [internalStep, setInternalStep] = useState(defaultStep ?? 0)
   // No setter: nothing starts or stops the sequence any more, the `play` prop and this
   // seed are the two answers there are.
   const [internalPlay] = useState(defaultPlay ?? false)
