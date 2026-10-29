@@ -353,7 +353,16 @@ converts — `ms`, `s`, `sec`, `min`, `m`, `h`, `d`, `w`, `mo`, `mth`, `M`, `y`,
 longest match first, since `ms` has to be tried before `m`. **Case is load-bearing**:
 `m` is minutes, `M` is months. A bare number stays milliseconds, and anything else —
 `1e3`, `0x10`, `456f`, a suffix with no value — comes back `null`, which is how a caller
-tells a typo from a value. It sits in `agnostic` because `AudioQuote`, `Sequencer` and
+tells a typo from a value.
+
+**It forgives what a human types** and nothing else: whitespace wherever it falls, and a
+comma for a decimal point, so `'1 , 3 ms'` is `1.3`. A comma is therefore never a
+thousands separator — `'1,200'` is `1.2` — and a string carrying both separators is
+refused rather than guessed at. The leniency stops at the lexer: the command grammar
+splits an argument list on `,`, so `jump-to:1,2min` arrives as two arguments and never
+reaches it whole. Two readings of a month and a year are offered through
+`useApproximateMonthAndYear`, the option `formatDuration` already had — flat 30 and 365
+days by default, the Gregorian mean year otherwise. It sits in `agnostic` because `AudioQuote`, `Sequencer` and
 `Subtitles` will want it, and because vitest covers `agnostic` where it ignores
 `src/components`: seventeen tests, where a component would get none.
 
