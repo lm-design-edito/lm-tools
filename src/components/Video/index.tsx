@@ -14,7 +14,11 @@ import {
 /**
  * Props for the {@link Video} component.
  *
- * Extends all ControlledVideo props except play, mute, fullscreen, volume, playbackRate, and their associated event handlers
+ * Every {@link ControlledVideo} prop, plus the starting points below. Each value the
+ * component can hold itself — `play`, `mute`, `volume`, `playbackRate`, `fullscreen`,
+ * `subtitlesOn` — may be driven by the caller or left alone, per value. Provided, the
+ * prop is the source of truth: the controls still fire their handlers, but no longer
+ * change what the element does.
  * @property currentTimeMs - When provided, hands ownership of the current time
  * (in milliseconds) to the parent, which is then responsible for updating it —
  * typically to scrub the video from scroll position. A controlled time implies a
@@ -33,8 +37,7 @@ import {
  * @property children - React children rendered inside the `<video>` element itself
  * (e.g. fallback content).
  */
-export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mute' | 'playbackRate' | 'subtitlesOn'>
-  & { defaultSubtitlesOn?: boolean }
+export type Props = ControlledProps & { defaultSubtitlesOn?: boolean }
 
 /**
  * Full-featured video player component. Wraps a native `<video>` element with
@@ -73,6 +76,12 @@ export type Props = Omit<ControlledProps, 'play' | 'fullscreen' | 'volume' | 'mu
  */
 
 export const Video: FunctionComponent<Props> = ({
+  play,
+  volume,
+  mute,
+  playbackRate,
+  fullscreen,
+  subtitlesOn,
   defaultSubtitlesOn = true,
   onVideoClicked,
   onPlayButtonClicked,
@@ -86,12 +95,16 @@ export const Video: FunctionComponent<Props> = ({
   ...controlledProps
 }) => {
   // State & refs
-  const [play, setPlay] = useState(false)
-  const [volume, setVolume] = useState(1)
-  const [mute, setMute] = useState(false)
-  const [playbackRate, setPlaybackRate] = useState(1)
-  const [fullscreen, setFullscreen] = useState(false)
-  const [subtitlesOn, setSubtitlesOn] = useState(defaultSubtitlesOn)
+  //
+  // Each of these six can also arrive as a prop, which wins where they are forwarded
+  // below; the state is written either way, so a caller that stops driving one lands on
+  // what the reader last did rather than on a mount-time value.
+  const [internalPlay, setInternalPlay] = useState(false)
+  const [internalVolume, setInternalVolume] = useState(1)
+  const [internalMute, setInternalMute] = useState(false)
+  const [internalPlaybackRate, setInternalPlaybackRate] = useState(1)
+  const [internalFullscreen, setInternalFullscreen] = useState(false)
+  const [internalSubtitlesOn, setInternalSubtitlesOn] = useState(defaultSubtitlesOn)
 
   // Several paths below ask for playback — the play button, `autoPlay` itself. None of
   // them may win over a parent-owned time, so the invariant is applied where the state
@@ -101,11 +114,11 @@ export const Video: FunctionComponent<Props> = ({
   // Intrisic event handlers
   const handleOnPlayEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
     controlledProps.onPlay?.(e)
-    setPlay(true)
+    setInternalPlay(true)
   }, [controlledProps.onPlay])
 
   const handleOnPauseEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
-    setPlay(false)
+    setInternalPlay(false)
     controlledProps.onPause?.(e)
   }, [controlledProps.onPause])
 
@@ -114,23 +127,23 @@ export const Video: FunctionComponent<Props> = ({
   // which fires nothing at all. Without it the controls would stay on `--play-on`
   // over a media that never started.
   const handleIsPlayingChanged = useCallback((isPlaying: boolean) => {
-    setPlay(isPlaying)
+    setInternalPlay(isPlaying)
     controlledProps.onIsPlayingChanged?.(isPlaying)
   }, [controlledProps.onIsPlayingChanged])
 
   const handleOnVolumeChangeEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
-    setMute(e.currentTarget.muted)
-    setVolume(e.currentTarget.volume)
+    setInternalMute(e.currentTarget.muted)
+    setInternalVolume(e.currentTarget.volume)
     controlledProps.onVolumeChange?.(e)
   }, [controlledProps.onVolumeChange])
 
   const handleOnRateChangeEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
-    setPlaybackRate(e.currentTarget.playbackRate)
+    setInternalPlaybackRate(e.currentTarget.playbackRate)
     controlledProps.onRateChange?.(e)
   }, [controlledProps.onRateChange])
 
   const handleFullscreenChange = useCallback((isFullscreen: boolean) => {
-    if (!isFullscreen) setFullscreen(false)
+    if (!isFullscreen) setInternalFullscreen(false)
     controlledProps.onFullscreenChange?.(isFullscreen)
   }, [controlledProps.onFullscreenChange])
 
@@ -142,44 +155,44 @@ export const Video: FunctionComponent<Props> = ({
   // User actions
   const handlePlayButtonClick = useCallback<NonNullable<Props['onPlayButtonClicked']>>(payload => {
     onPlayButtonClicked?.(payload)
-    setPlay(true)
+    setInternalPlay(true)
   }, [onPlayButtonClicked])
 
   const handlePauseButtonClick = useCallback<NonNullable<Props['onPauseButtonClicked']>>(payload => {
     onPauseButtonClicked?.(payload)
-    setPlay(false)
+    setInternalPlay(false)
   }, [onPauseButtonClicked])
 
   // The picture toggles, where the two buttons each say one thing. It is the same gesture
   // as pressing one of them, and a consumer tracking playback has to count this one too.
   const handleVideoClick = useCallback<NonNullable<Props['onVideoClicked']>>(payload => {
     onVideoClicked?.(payload)
-    setPlay(!payload.isPlaying)
+    setInternalPlay(!payload.isPlaying)
   }, [onVideoClicked])
 
   const handleLoudButtonClick = useCallback<NonNullable<Props['onLoudButtonClicked']>>(payload => {
     onLoudButtonClicked?.(payload)
-    setMute(false)
+    setInternalMute(false)
   }, [onLoudButtonClicked])
 
   const handleMuteButtonClick = useCallback<NonNullable<Props['onMuteButtonClicked']>>(payload => {
     onMuteButtonClicked?.(payload)
-    setMute(true)
+    setInternalMute(true)
   }, [onMuteButtonClicked])
 
   const handleRateRangeChange = useCallback<NonNullable<Props['onRateRangeChanged']>>(payload => {
     onRateRangeChanged?.(payload)
-    setPlaybackRate(payload.targetRate)
+    setInternalPlaybackRate(payload.targetRate)
   }, [onRateRangeChanged])
 
   const handleVolumeRangeChange = useCallback<NonNullable<Props['onVolumeRangeChanged']>>(payload => {
     onVolumeRangeChanged?.(payload)
-    setVolume(payload.targetVolume)
+    setInternalVolume(payload.targetVolume)
   }, [onVolumeRangeChanged])
 
   const handleFullscreenButtonClick = useCallback<NonNullable<Props['onFullscreenButtonClicked']>>(payload => {
     onFullscreenButtonClicked?.(payload)
-    setFullscreen(!payload.isFullscreen)
+    setInternalFullscreen(!payload.isFullscreen)
   }, [onFullscreenButtonClicked])
 
   // One button for both directions, where play/pause and loud/mute get one each: those
@@ -187,13 +200,13 @@ export const Video: FunctionComponent<Props> = ({
   // subtitles button carries a single glyph whose styling alone changes.
   const handleSubtitlesButtonClick = useCallback<NonNullable<Props['onSubtitlesButtonClicked']>>(payload => {
     onSubtitlesButtonClicked?.(payload)
-    setSubtitlesOn(!payload.isSubtitlesOn)
+    setInternalSubtitlesOn(!payload.isSubtitlesOn)
   }, [onSubtitlesButtonClicked])
 
   // `autoPlay` is forwarded to the element, but the play state is owned here, so
   // it has to be seeded once on mount for the controls to agree with the element.
   useEffect(() => {
-    if (controlledProps.autoPlay === true) setPlay(true)
+    if (controlledProps.autoPlay === true) setInternalPlay(true)
   }, [])
 
   // Render
@@ -204,12 +217,12 @@ export const Video: FunctionComponent<Props> = ({
   // prop to reach past it.
   return <ControlledVideo
     {...controlledProps}
-    play={play && !isTimeControlled}
-    volume={volume}
-    mute={mute}
-    playbackRate={playbackRate}
-    fullscreen={fullscreen}
-    subtitlesOn={subtitlesOn}
+    play={(play ?? internalPlay) && !isTimeControlled}
+    volume={volume ?? internalVolume}
+    mute={mute ?? internalMute}
+    playbackRate={playbackRate ?? internalPlaybackRate}
+    fullscreen={fullscreen ?? internalFullscreen}
+    subtitlesOn={subtitlesOn ?? internalSubtitlesOn}
     onPlay={handleOnPlayEvent}
     onPause={handleOnPauseEvent}
     onIsPlayingChanged={handleIsPlayingChanged}
