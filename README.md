@@ -340,6 +340,40 @@ grammar now so the commands people write don't have to change when arbitration l
 What does not exist yet: the other components' vocabularies. `force`, domains and surrender
 are deliberately out until arbitration has a second source to arbitrate.
 
+### An argument carries its unit
+
+`jump-to:500` is milliseconds; `jump-to:1.2min` is 72 000 of them. The suffix is not the
+nicer notation but **the only one available**: `:` is the grammar's separator, so an
+`01:12:00` timecode cannot be written in an argument at all.
+
+**The lexing is not the component's.** `agnostic/time/duration/parse-duration/` reads a
+suffixed string into milliseconds and hands the number and the unit to the `Duration`
+class, so the arithmetic stays where it already lived. It covers every alias that class
+converts — `ms`, `s`, `sec`, `min`, `m`, `h`, `d`, `w`, `mo`, `mth`, `M`, `y`, `Y` —
+longest match first, since `ms` has to be tried before `m`. **Case is load-bearing**:
+`m` is minutes, `M` is months. A bare number stays milliseconds, and anything else —
+`1e3`, `0x10`, `456f`, a suffix with no value — comes back `null`, which is how a caller
+tells a typo from a value. It sits in `agnostic` because `AudioQuote`, `Sequencer` and
+`Subtitles` will want it, and because vitest covers `agnostic` where it ignores
+`src/components`: seventeen tests, where a component would get none.
+
+**Frames are dropped**, with a `[WIP]` next to the suffix list. Nothing in the DOM
+exposes a media's frame rate, so `456f` could only resolve against a rate declared by
+hand — 20% off on a 30fps file at the usual default of 25.
+
+**The only check that runs is a warning.** `VIDEO_ACTION_VERB_ARGUMENTS` stays exported
+for a consumer that wants to reject `jump-to:banana` before mount, but lm-link is not
+expected to: a malformed argument is warned about at runtime and does nothing. That is
+the decision, and it is the cheaper half of « le transport n'interprète pas ».
+
+**`Video` answers to nine verbs**, in `types.ts` as values: `play`, `pause`, `loud`,
+`mute`, `volume`, `rate`, `jump-to`, `jump-start`, `jump-end`. The table lives in
+`Video/commands.ts`, built over the hybrid layer's own setters, and **a verb never
+contradicts a prop** — each is inert while the value it writes arrived as one, the three
+`jump-*` while `currentTimeMs` did. `VIDEO_ACTION_VERB_DOMAINS` is declared and read by
+nothing: the reader's hand is its own chantier, and `force` is in the same state — parsed
+and transported by `utils/commands`, with no ledger to override.
+
 ## Les déclencheurs — la visibilité, première condition
 
 A **trigger** is a condition that sends commands. The component declares its verbs; a
