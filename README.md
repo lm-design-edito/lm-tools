@@ -660,9 +660,9 @@ Two smaller questions raised and not answered. **`dedupe` keys on verb *and* arg
 And **the `once` ledger includes the trigger**, so `play:once` holds one credit for visible
 and another for hidden, which is probably right and is written nowhere.
 
-## `Video` — deux idées à instruire sur la tête de lecture
+## `Video` — les bornes de lecture, à instruire
 
-Notées telles quelles, à reprendre en discussion : ni l'une ni l'autre n'est conçue.
+Notée telle quelle, à reprendre en discussion : elle n'est pas conçue.
 
 **Des bornes de lecture.** Délimiter une portion de la vidéo hors de laquelle on ne peut
 pas lire — la tête de lecture ne va pas avant la borne basse, ne dépasse pas la borne
@@ -680,24 +680,20 @@ Ce que la chose touche, et qui est le vrai travail :
 - **La fin de lecture** arrive à la borne haute, donc `.lm-video--ended` et l'événement
   qui va avec, sans que le média soit terminé. Et `loop` reboucle sur la borne basse.
 
-**Un timecode de départ.** Initialiser la vidéo ailleurs qu'à `0`. **Le nom devrait être
-`defaultCurrentTimeMs`** : `defaultSubtitlesOn` est déjà le précédent pour une valeur de
-départ non contrôlée, et le préfixe `default…` face à `currentTimeMs` dit exactement ce
-que React dit avec `defaultValue` face à `value` — une valeur initiale contre une valeur
-possédée.
+**The starting timecode is done**, and it is `defaultCurrentTimeMs`, on the controlled
+layer where the element lives. It places the playhead once the metadata has landed and
+leaves the time to the element, which is exactly what `currentTimeMs` cannot do: that one
+hands ownership to the parent and therefore implies a stopped video. Given both, the
+default is ignored and the controlled prop wins — the ordinary hybrid rule, no special
+case. The seek is one-shot, guarded by a ref, because `load()` re-fires the metadata
+event and a second seek would send a playing media back.
 
-C'est précisément ce que `currentTimeMs` ne sait pas faire : le renseigner donne le temps
-au parent et **implique une vidéo arrêtée**, puisqu'un élément qui joue avancerait une
-valeur qu'il ne possède pas. Ici on veut l'inverse — poser le point de départ, puis rendre
-la main. Les deux ensemble n'ont pas de sens, et c'est probablement une erreur à signaler
-plutôt qu'une précédence à trancher.
-
-**Et la prop ne descend pas dans les sous-titres.** `Subtitles` ne connaît qu'un
-`timecodeMs`, que le lecteur lui pousse à chaque image : c'est une position courante, pas
-un départ, et la notion de départ n'a donc rien à y faire. Une vidéo qui démarre à 4 000 ms
-pousse `4000` à sa première image, et les sous-titres sont au bon endroit sans rien avoir
-demandé. Le `subtitles` d'une vidéo ne doit pas exposer de `defaultCurrentTimeMs` — c'est
-le départ du lecteur qui pilote le leur, et il n'y a qu'une tête de lecture.
+**And it does not go down into the subtitles.** `Subtitles` only knows a `timecodeMs`,
+pushed to it on every frame: that is a current position, not a start, so the notion has
+nothing to do there. A video starting at 4 000 ms pushes `4000` on its first frame and the
+cues are in the right place without having asked. A video's `subtitles` must not expose a
+`defaultCurrentTimeMs` of its own — the player's start drives theirs, and there is only
+one playhead.
 
 ## `node/shells/@<vendor>` — un chantier à ouvrir
 
