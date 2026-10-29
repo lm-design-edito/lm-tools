@@ -158,7 +158,8 @@ function isToggleHit (event: MouseEvent<HTMLDivElement>, btnClassName: string): 
  *
  * @remarks
  * - In controlled mode (`isOpened` defined), the open state is fully driven by
- *   the parent and internal state is never updated.
+ *   the parent. The internal state goes on following the component's own controls, so
+ *   a parent that stops providing the prop lands on what the reader last did.
  * - `onOpenerClicked` and `onCloserClicked` fire in both modes — a controlled
  *   parent needs them to know a click happened at all.
  * - `onIsOpenedChanged` fires in both modes too, and never on mount.
@@ -196,7 +197,6 @@ export const Drawer: FunctionComponent<Props> = ({
   }>()
   const openerRef = useRef<HTMLDivElement | null>(null)
   const closerRef = useRef<HTMLDivElement | null>(null)
-  const isControlled = isOpenedProp !== undefined
   const isOpened = isOpenedProp ?? internalIsOpened
   // Une barre écrite une fois sert les deux états : le plus souvent un titre et une
   // bascule, identiques ouverts et fermés, que les modifieurs de la racine suffisent à
@@ -228,13 +228,11 @@ export const Drawer: FunctionComponent<Props> = ({
   const handleOpenerClick = (event: MouseEvent<HTMLDivElement>): void => {
     if (!isToggleHit(event, openerBtnClss)) return
     onOpenerClicked?.(isOpened)
-    if (isControlled) return
     setInternalIsOpened(true)
   }
   const handleCloserClick = (event: MouseEvent<HTMLDivElement>): void => {
     if (!isToggleHit(event, closerBtnClss)) return
     onCloserClicked?.(isOpened)
-    if (isControlled) return
     setInternalIsOpened(false)
   }
   const handleContentResized: ResizeObserverProps['onResized'] = ({ entry }): void => {

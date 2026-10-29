@@ -57,10 +57,11 @@ export type Props = WithCompId<SelectHTMLAttributes<HTMLSelectElement> & PropsWi
  * @returns A labelled select with optional error feedback.
  *
  * @remarks
- * - In controlled mode (`value` defined), the selection is fully driven by the
- *   parent and internal state is never updated.
- * - In uncontrolled mode, internal state is initialized from `defaultValue` and
- *   updated before `onChange` is forwarded.
+ * - In controlled mode (`value` defined), the selection is fully driven by
+ *   the parent. The internal state goes on following the component's own controls, so
+ *   a parent that stops providing the prop lands on what the reader last did.
+ * - The internal state starts from `defaultValue` and is updated before `onChange`
+ *   is forwarded, controlled or not.
  * - `onChange` fires in both modes.
  */
 export const Select: FunctionComponent<Props> = ({
@@ -80,11 +81,11 @@ export const Select: FunctionComponent<Props> = ({
   const [id] = useState(`_${randomHash(12)}`)
   const [internalValue, setInternalValue] = useState(defaultValue ?? '')
   const isControlled = value !== undefined
-  const currentValue = isControlled ? value : internalValue
+  const currentValue = value ?? internalValue
 
   // User action handlers
   const handleChange = (e: ChangeEvent<HTMLSelectElement>): void => {
-    if (!isControlled) setInternalValue(e.target.value)
+    setInternalValue(e.target.value)
     onChange?.(e)
   }
 

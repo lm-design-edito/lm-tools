@@ -61,8 +61,9 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  * @returns A root `<div>` holding the disclaimer panel and the withheld content.
  *
  * @remarks
- * - In controlled mode (`isOn` defined), visibility is fully driven by the
- *   parent and internal state is never updated.
+ * - In controlled mode (`isOn` defined), visibility is fully driven by
+ *   the parent. The internal state goes on following the component's own controls, so
+ *   a parent that stops providing the prop lands on what the reader last did.
  * - `onDismissClicked` fires in both modes — a controlled parent needs it to
  *   know a click happened at all.
  * - `onIsOnChanged` fires in both modes too, and never on mount.
@@ -82,7 +83,6 @@ export const Disclaimer: FunctionComponent<Props> = ({
 
   // State
   const [internalIsOn, setInternalIsOn] = useState(defaultIsOn)
-  const isControlled = isOnProp !== undefined
   const isOn = isOnProp ?? internalIsOn
 
   // State dispatch
@@ -91,7 +91,6 @@ export const Disclaimer: FunctionComponent<Props> = ({
   // User action handlers
   const handleDismissClick = (): void => {
     onDismissClicked?.(isOn)
-    if (isControlled) return
     setInternalIsOn(false)
   }
 

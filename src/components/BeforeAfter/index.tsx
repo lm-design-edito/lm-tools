@@ -50,8 +50,9 @@ export type Props = ControlledProps & {
  * internally when uncontrolled.
  *
  * @remarks
- * - In controlled mode (`ratio` defined), the divider position is fully driven
- *   by the parent and internal state is never updated.
+ * - In controlled mode (`ratio` defined), the divider position is fully driven by
+ *   the parent. The internal state goes on following the component's own controls, so
+ *   a parent that stops providing the prop lands on what the reader last did.
  * - `onDragged` and `onClicked` fire in both modes — a controlled parent needs
  *   them to know where the pointer went.
  * - `onRatioChanged` fires in both modes too, and never on mount.
@@ -67,15 +68,13 @@ export const BeforeAfter: FunctionComponent<Props> = ({
 }) => {
   // State
   const [internalRatio, setInternalRatio] = useState(defaultRatio)
-  const isControlled = ratio !== undefined
-  const effectiveRatio = isControlled ? ratio : internalRatio
+  const effectiveRatio = ratio ?? internalRatio
 
   // State dispatch
   useStateChangeDispatch(effectiveRatio, onRatioChanged)
 
   // User action handlers
   const moveDividerTo = (xRatio: number, yRatio: number): void => {
-    if (isControlled) return
     setInternalRatio(mode === 'horizontal' ? xRatio : yRatio)
   }
   const handleDrag = ({ xRatio, yRatio }: { xRatio: number, yRatio: number }): void => {
