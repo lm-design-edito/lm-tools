@@ -256,9 +256,9 @@ reaches for, is not ours in the same way: it is a React convention, so it lives 
 
 The prop is destructured as `compId: givenCompId` and the resolved value keeps the plain
 name, which is the same shape `ControlledVideo` already used for `videoRef: givenVideoRef`.
-Three components carry it on their **controlled** half — `BeforeAfter`, `ListLoader`,
-`Video` — because that is where the root element is rendered; their uncontrolled wrapper
-inherits the prop from the controlled Props type and forwards it.
+Two components carry it on their **controlled** half — `BeforeAfter` and `Video` —
+because that is where the root element is rendered; their hybrid wrapper inherits the
+prop from the controlled Props type and forwards it.
 
 ## Les commandes — la grammaire et le bus
 
@@ -351,9 +351,8 @@ Two modules, because there are two concepts and one depends on the other:
 
 - `components/utils/intersection` — the browser API and nothing else: `ObserverOptions`,
   `OnIntersected`, `useIntersectionObserver`. It is where the hook now lives, having been
-  moved out of the `IntersectionObserver` component's own folder, so the component,
-  `ListLoader` and visibility all speak one language. `ListLoader`'s
-  `ViewportObserverOptions` was a second name for `ObserverOptions` and is gone.
+  moved out of the `IntersectionObserver` component's own folder, so the component and
+  visibility speak one language.
 - `components/utils/visibility` — `VisibilityOptions` and `useVisibility`, which settles
   the raw intersection over an `onAfterMs` / `offAfterMs` delay, plus
   `useVisibilityTriggers`, which turns each settled change into commands. **Visibility
@@ -611,9 +610,9 @@ Ce qui reste ouvert tient en deux lignes :
     conséquence — un écouteur arrêté garde ses dernières valeurs, donc il peut être mesuré
     sans plus suivre. `onIsTrackingChanged` avec.
   - **`WithViewportObservation` est mort** avec la conversion, son dernier consommateur.
-    `ViewportObserverOptions` est resté un temps pour `ListLoader`, qui observe une
-    sentinelle pour charger la suite — pas de vocabulaire, pas d'instructions, juste un
-    observateur ; il a depuis fusionné dans l'`ObserverOptions` de `utils/intersection`.
+    `ViewportObserverOptions` lui a survécu un temps pour un composant qui n'observait
+    qu'une sentinelle — pas de vocabulaire, pas d'instructions, juste un observateur ;
+    il a depuis fusionné dans l'`ObserverOptions` de `utils/intersection`.
 - **`ResizeObserver` n'a pas besoin des déclenchements de visibilité, et c'est tranché.**
   La question se pose parce que `ScrollTracker` en avait besoin, mais les deux ne coûtent
   pas de la même façon : `ScrollTracker` a un moteur qui **tourne** — des écouteurs et une
@@ -730,7 +729,7 @@ complète des candidats.
 
 ## En sommeil
 
-Aucun des quatre n'a d'importance à court terme. Ils sont ici pour ne pas être
+Aucun des trois n'a d'importance à court terme. Ils sont ici pour ne pas être
 redécouverts par surprise, pas pour être traités.
 
 - **`Disclaimer` n'a pas reçu la passe d'alignement**, sur deux points, et lm-link
@@ -763,11 +762,6 @@ redécouverts par surprise, pas pour être traités.
   variables CSS et les `data-*`, sans handler, doit en déclarer un vide. Rouvrir un
   booléen si le cas se présente un jour. Marqué `[WIP]` sur `PropsCommonBlock`.
 
-- **`JsonEditor` en mode contrôlé.** Structurellement impossible aujourd'hui : chaque
-  éditeur amorce son état depuis `defaultValue` au montage et ne le relit jamais.
-  C'est une réécriture du modèle d'état, pas un alignement — et sa racine restera
-  sans modifieurs jusque-là, pour ne pas figer une API sur une structure qu'on sait
-  devoir changer. La limite est documentée en `@remarks` sur `JsonEditor`.
 
 ## Coverage roadmap
 
