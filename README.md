@@ -376,8 +376,9 @@ expected to: a malformed argument is warned about at runtime and does nothing. T
 the decision, and it is the cheaper half of « le transport n'interprète pas ».
 
 **`Video` answers to nine verbs**, in `types.ts` as values: `play`, `pause`, `loud`,
-`mute`, `volume`, `rate`, `jump-to`, `jump-start`, `jump-end`. The table lives in
-`Video/commands.ts`, built over the hybrid layer's own setters, and **a verb never
+`mute`, `volume`, `rate`, `jump-to`, `jump-start`, `jump-end`. The table is written in
+`index.tsx`, over the hybrid layer's own setters — a sibling `commands.ts` was tried and
+undone, since it could only be handed every setter back — and **a verb never
 contradicts a prop** — each is inert while the value it writes arrived as one, the three
 `jump-*` while `currentTimeMs` did. `VIDEO_ACTION_VERB_DOMAINS` is declared and read by
 nothing: the reader's hand is its own chantier, and `force` is in the same state — parsed

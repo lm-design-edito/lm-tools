@@ -43,6 +43,11 @@ it.
   modifier set. A `as const` array rather than a bare union whenever something outside
   will need the values at runtime, since a type has nothing to hand a validator.
 
+**A command table is written in `index.tsx`, never in a `commands.ts`.** Every verb
+writes the component's own state, so a sibling module could only be handed each setter
+back — plumbing that costs a type, an argument bag and a jump between files, and reads
+worse than the long file it was meant to relieve.
+
 **`utils.ts` and `data.ts` are tolerated, sparingly.** Only when the content is
 genuinely minimal, and only when the sibling `index.ts` is its **single** consumer — they
 are a way of keeping an entry point readable, not a third public surface. The moment two
