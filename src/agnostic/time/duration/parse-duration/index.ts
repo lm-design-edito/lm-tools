@@ -1,30 +1,5 @@
-import {
-  Duration,
-  type DurationTypeShort
-} from '../index.js'
-
-/**
- * The short unit aliases a duration string may end with, **longest first**: the first
- * suffix that matches wins, so `ms` has to be tried before `m` and `mth` before `mo`.
- *
- * Case is load-bearing — `m` is minutes where `M` is months — so nothing here is
- * lowercased on the way in.
- */
-const SUFFIXES = [
-  'mth',
-  'sec',
-  'min',
-  'ms',
-  'mo',
-  's',
-  'm',
-  'h',
-  'd',
-  'w',
-  'M',
-  'y',
-  'Y'
-] as const satisfies readonly DurationTypeShort[]
+import { Duration } from '../index.js'
+import { DURATION_SUFFIXES } from './types.js'
 
 // A decimal, with an optional minus. Deliberately not `Number`, which would also take
 // `1e3` and `0x10` — forms nobody means to write in an article.
@@ -47,7 +22,7 @@ const VALUE_PATTERN = /^-?\d+(?:\.\d+)?$/v
  */
 export function parseDuration (raw: string): number | null {
   const trimmed = raw.trim()
-  const suffix = SUFFIXES.find(candidate => trimmed.endsWith(candidate))
+  const suffix = DURATION_SUFFIXES.find(candidate => trimmed.endsWith(candidate))
   const value = suffix === undefined ? trimmed : trimmed.slice(0, -suffix.length)
   if (!VALUE_PATTERN.test(value)) return null
   return new Duration(Number(value), suffix ?? 'ms').toMilliseconds()
