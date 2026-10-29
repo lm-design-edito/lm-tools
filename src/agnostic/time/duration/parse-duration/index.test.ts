@@ -38,6 +38,36 @@ describe('parseDuration', () => {
     it('reads years, a flat 365 days each', () => { expect(parseDuration('1y')).toBe(31536000000) })
   })
 
+  describe('what it forgives', () => {
+    it('ignores whitespace wherever it falls', () => {
+      expect(parseDuration('1  , 3   ms')).toBe(1.3)
+      expect(parseDuration(' 12s ')).toBe(12000)
+    })
+    it('reads a comma as a decimal point', () => { expect(parseDuration('1,2min')).toBe(72000) })
+    it('reads a spaced-out number as one number, not two', () => {
+      expect(parseDuration('1 200')).toBe(1200)
+    })
+    it('never reads a comma as a thousands separator', () => {
+      expect(parseDuration('1,200')).toBe(1.2)
+    })
+  })
+
+  describe('months and years', () => {
+    it('approximates by default, as Duration does', () => {
+      expect(parseDuration('1y')).toBe(31536000000)
+      expect(parseDuration('1M')).toBe(2592000000)
+    })
+    it('uses the Gregorian mean year when asked not to approximate', () => {
+      // Close rather than equal: the shared 365.2425 float lands a few millionths of a
+      // millisecond short, as it does in `format-duration`.
+      expect(parseDuration('1y', { useApproximateMonthAndYear: false })).toBeCloseTo(31556952000, 3)
+      expect(parseDuration('1M', { useApproximateMonthAndYear: false })).toBeCloseTo(2629746000, 3)
+    })
+    it('leaves the other units alone under that option', () => {
+      expect(parseDuration('12s', { useApproximateMonthAndYear: false })).toBe(12000)
+    })
+  })
+
   describe('what it refuses', () => {
     it('refuses an exponent or a hexadecimal, which no article means to write', () => {
       expect(parseDuration('1e3')).toBeNull()
@@ -46,7 +76,8 @@ describe('parseDuration', () => {
     it('refuses an unknown unit', () => { expect(parseDuration('456f')).toBeNull() })
     it('refuses a suffix with no value', () => { expect(parseDuration('min')).toBeNull() })
     it('refuses an empty string', () => { expect(parseDuration('')).toBeNull() })
-    it('refuses a value with an inner space', () => { expect(parseDuration('1.2 min')).toBeNull() })
-    it('ignores surrounding whitespace', () => { expect(parseDuration(' 12s ')).toBe(12000) })
+    it('refuses a string carrying both separators rather than guessing', () => {
+      expect(parseDuration('1.2,3')).toBeNull()
+    })
   })
 })

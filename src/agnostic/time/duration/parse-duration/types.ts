@@ -30,3 +30,14 @@ export const DURATION_SUFFIXES = [
 
 /** One of {@link DURATION_SUFFIXES}. */
 export type DurationSuffix = typeof DURATION_SUFFIXES[number]
+
+/** Options for {@link parseDuration}. */
+export type ParseDurationOptions = {
+  /**
+   * Months and years have no fixed length, so they are approximated. `true` (the
+   * default) uses 30-day months and 365-day years, matching what `Duration` itself
+   * computes. `false` uses the Gregorian mean year of 365.2425 days and a month of
+   * exactly a twelfth of it — the same two readings `formatDuration` offers.
+   */
+  useApproximateMonthAndYear?: boolean
+}
