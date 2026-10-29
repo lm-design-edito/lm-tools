@@ -33,11 +33,22 @@ import {
  * an article that supplies cues means them to be read. The reader's button takes it from
  * there, so this is a starting point and not a setting: `default…` and never `initial…`,
  * as everywhere else here.
+ * @property defaultVolume - The volume the media starts at, `0` to `1`. `1` by default.
+ * @property defaultPlaybackRate - The speed the media starts at, `1` being normal.
+ * @property defaultMute - Whether the media starts muted, the reader's button taking it
+ * from there. This is how a muted start is asked for: the native `muted` attribute is
+ * what the autoplay exemption reads, but the mute state is applied to the element on
+ * mount, so a `muted` attribute alone is undone a frame later.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React children rendered inside the `<video>` element itself
  * (e.g. fallback content).
  */
-export type Props = ControlledProps & { defaultSubtitlesOn?: boolean }
+export type Props = ControlledProps & {
+  defaultSubtitlesOn?: boolean
+  defaultVolume?: number
+  defaultPlaybackRate?: number
+  defaultMute?: boolean
+}
 
 /**
  * Full-featured video player component. Wraps a native `<video>` element with
@@ -83,6 +94,9 @@ export const Video: FunctionComponent<Props> = ({
   fullscreen,
   subtitlesOn,
   defaultSubtitlesOn = true,
+  defaultVolume = 1,
+  defaultPlaybackRate = 1,
+  defaultMute = false,
   onVideoClicked,
   onPlayButtonClicked,
   onPauseButtonClicked,
@@ -100,9 +114,9 @@ export const Video: FunctionComponent<Props> = ({
   // below; the state is written either way, so a caller that stops driving one lands on
   // what the reader last did rather than on a mount-time value.
   const [internalPlay, setInternalPlay] = useState(false)
-  const [internalVolume, setInternalVolume] = useState(1)
-  const [internalMute, setInternalMute] = useState(false)
-  const [internalPlaybackRate, setInternalPlaybackRate] = useState(1)
+  const [internalVolume, setInternalVolume] = useState(defaultVolume)
+  const [internalMute, setInternalMute] = useState(defaultMute)
+  const [internalPlaybackRate, setInternalPlaybackRate] = useState(defaultPlaybackRate)
   const [internalFullscreen, setInternalFullscreen] = useState(false)
   const [internalSubtitlesOn, setInternalSubtitlesOn] = useState(defaultSubtitlesOn)
 
