@@ -210,16 +210,16 @@ export const Gallery: FunctionComponent<Props> = ({
     const scrollerElt = scrollerRef.current
     if (scrollerElt === null) return
     let animationFrame: number | null = null
-    const onScroll = (): void => {
+    const handleScroll = (): void => {
       if (animationFrame !== null) return
       animationFrame = requestAnimationFrame(() => {
         animationFrame = null
         readScroll()
       })
     }
-    scrollerElt.addEventListener('scroll', onScroll, { passive: true })
+    scrollerElt.addEventListener('scroll', handleScroll, { passive: true })
     return (): void => {
-      scrollerElt.removeEventListener('scroll', onScroll)
+      scrollerElt.removeEventListener('scroll', handleScroll)
       if (animationFrame !== null) cancelAnimationFrame(animationFrame)
     }
   }, [readScroll])

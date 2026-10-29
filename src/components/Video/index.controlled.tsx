@@ -568,11 +568,11 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   // event is the only way for a parent to keep its `fullscreen` prop truthful.
   useEffect(() => {
     if (onFullscreenChange === undefined) return
-    const onDocumentFullscreenChange = (): void => {
+    const handleDocumentFullscreenChange = (): void => {
       onFullscreenChange(document.fullscreenElement !== null)
     }
-    document.addEventListener('fullscreenchange', onDocumentFullscreenChange)
-    return () => { document.removeEventListener('fullscreenchange', onDocumentFullscreenChange) }
+    document.addEventListener('fullscreenchange', handleDocumentFullscreenChange)
+    return () => { document.removeEventListener('fullscreenchange', handleDocumentFullscreenChange) }
   }, [onFullscreenChange])
 
   // State handlers
