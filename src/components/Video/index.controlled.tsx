@@ -1,7 +1,6 @@
 import {
   type FunctionComponent,
   type PropsWithChildren,
-  type Ref,
   type RefObject,
   type VideoHTMLAttributes,
   useMemo,
@@ -150,9 +149,13 @@ export type VideoActionPayload<E, T> = {
 
 export type Props = WithCompId<PropsWithChildren<WithClassName<{
   // The `<figure>` handed back to whoever renders this component. It exists for the
-  // uncontrolled `Video` above it, which observes that element rather than wrapping it
-  // in a box of its own — see `useIntersectionObserver`.
-  rootRef?: Ref<HTMLElement>
+  // hybrid `Video` above it, which observes that element rather than wrapping it in a
+  // box of its own — hence a readable ref and not a callback one.
+  rootRef?: RefObject<HTMLElement | null>
+  // Whether the component has settled into view, as the layer above measures it. Only
+  // the `--visible` modifier and its attribute come of it here; `undefined` while
+  // nothing asks about visibility, which is why neither ever appears unasked.
+  isVisible?: boolean
   // The `<video>` itself, for a caller that has to reach it outside of a handler —
   // seeking on a viewport instruction, typically, which happens at no one's click. Given
   // one, this component uses it instead of its own rather than merging the two.
@@ -199,8 +202,8 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
 
 /**
  * Full-featured video player component. Wraps a native `<video>` element with
- * playback controls, volume, playback rate, a timeline, optional subtitles
- * and viewport-driven auto-play/mute behaviours.
+ * playback controls, volume, playback rate, a timeline and optional subtitles. Every
+ * value it shows comes from a prop: the layer above owns the state.
  *
  * ### Root element modifiers
  * The root `<figure>` receives the public class name defined by `video` and
@@ -209,11 +212,14 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  * - `--fullscreen-on` / `--fullscreen-off` — reflects fullscreen state.
  * - `--loud` / `--muted` — reflects mute state.
  * - `--ended` — playback reached the end and has not left it.
+ * - `--visible` — the component has settled into view. Absent until something asks
+ *   about visibility, since nothing is observed before that.
  *
  * ### Data attributes on the root element
  * - `data-play-on` — present (empty string) when playing.
  * - `data-play-off` — present (empty string) when paused.
  * - `data-ended` — present (empty string) once playback reached the end.
+ * - `data-visible` — present (empty string) while settled into view.
  * - `data-fullscreen-on` — present (empty string) when in fullscreen.
  * - `data-fullscreen-off` — present (empty string) when not in fullscreen.
  * - `data-loud` — present (empty string) when unmuted.
@@ -289,6 +295,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   children,
   className,
   rootRef,
+  isVisible,
   videoRef: givenVideoRef,
   ...intrinsicVideoAttributes
 }) => {
@@ -457,7 +464,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     // A capability rather than a state, and it is here for the same reason the lightbox
     // carries `--open-on-click`: a surface that answers a click has to be able to say so
     // with a cursor.
-    'toggle-play-on-click': togglePlayOnClick === true
+    'toggle-play-on-click': togglePlayOnClick === true,
+    visible: isVisible === true
   }), className)
 
   // Guarded: the duration is unknown until the metadata lands, and an unguarded
@@ -467,6 +475,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     'data-play-on': isPlaying ? '' : undefined,
     'data-play-off': !isPlaying ? '' : undefined,
     'data-ended': isEnded ? '' : undefined,
+    'data-visible': isVisible === true ? '' : undefined,
     'data-fullscreen-on': isFullscreen ? '' : undefined,
     'data-fullscreen-off': !isFullscreen ? '' : undefined,
     'data-loud': isLoud ? '' : undefined,

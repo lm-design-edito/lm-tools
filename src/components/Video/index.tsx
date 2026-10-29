@@ -8,6 +8,8 @@ import {
 } from 'react'
 import { useCommands } from '../utils/commands/index.js'
 import { useCompId } from '../utils/comp-id/index.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { WithVisibility } from '../utils/visibility/types.js'
 import { makeVideoCommands } from './commands.js'
 import { muteAttributeWorkaround } from './utils.js'
 import {
@@ -40,6 +42,19 @@ import {
  * an article that supplies cues means them to be read. The reader's button takes it from
  * there, so this is a starting point and not a setting: `default…` and never `initial…`,
  * as everywhere else here.
+ * @property whenVisible - The command, or commands, sent once the component has
+ * settled into view — `'play'`, `'jump-start'`, or `'@someone-else:pause'`. How a verb
+ * gets sent without a line of JavaScript.
+ * @property whenHidden - The same, once it has settled out of view.
+ * @property onVisibilityChanged - Called on every settled change, for a caller that
+ * wants the state rather than a command.
+ * @property visibilityThreshold - How much of the component has to be in view before
+ * it counts as visible.
+ * @property visibilityRoot - The observer's root. Defaults to the viewport.
+ * @property visibilityRootMargin - Grows or shrinks that root before measuring.
+ * @property visibilityOnAfterMs - How long it has to stay in view to count as visible,
+ * so a media crossed while scrolling fast never counts as seen.
+ * @property visibilityOffAfterMs - The same, out of view.
  * @property defaultVolume - The volume the media starts at, `0` to `1`. `1` by default.
  * @property defaultPlaybackRate - The speed the media starts at, `1` being normal.
  * @property defaultMute - Whether the media starts muted, the reader's button taking it
@@ -50,7 +65,9 @@ import {
  * @property children - React children rendered inside the `<video>` element itself
  * (e.g. fallback content).
  */
-export type Props = ControlledProps & {
+// `isVisible` is measured here and handed down, so it is the one controlled value a
+// caller cannot set: there is nothing to drive, and the triggers would not fire for it.
+export type Props = WithVisibility<Omit<ControlledProps, 'isVisible'>> & {
   defaultSubtitlesOn?: boolean
   defaultVolume?: number
   defaultPlaybackRate?: number
@@ -59,8 +76,8 @@ export type Props = ControlledProps & {
 
 /**
  * Full-featured video player component. Wraps a native `<video>` element with
- * playback controls, volume, playback rate, a timeline, optional subtitles, and
- * viewport-driven auto-play/mute behaviours.
+ * playback controls, volume, playback rate, a timeline, optional subtitles, and the
+ * visibility triggers that send its commands.
  *
  * @param props - Component properties.
  * @see {@link Props}
@@ -96,6 +113,10 @@ export type Props = ControlledProps & {
  * writes arrived as one, the three `jump-*` while `currentTimeMs` did. A malformed
  * argument is warned about and does nothing.
  *
+ * `whenVisible` and `whenHidden` are how they get sent without a line of JavaScript:
+ * `whenVisible='play'` with `whenHidden='pause'` plays only while in view, and
+ * `whenVisible='@legend:show'` addresses another component instead.
+ *
  * Browsers refuse an unmuted `play()` outside a user gesture, so asking for playback
  * without muting will usually have it rejected. The
  * refusal is caught rather than ignored — the element is read back once the attempt
@@ -106,7 +127,16 @@ export type Props = ControlledProps & {
 
 export const Video: FunctionComponent<Props> = ({
   compId: givenCompId,
+  rootRef: givenRootRef,
   videoRef: givenVideoRef,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   play,
   volume,
   mute,
@@ -132,6 +162,8 @@ export const Video: FunctionComponent<Props> = ({
   // minting one each. Same for the element: `jump-*` acts on it and no time state lives
   // up here, so this layer needs a ref of its own when the caller passed none.
   const compId = useCompId(givenCompId)
+  const ownRootRef = useRef<HTMLElement>(null)
+  const rootRef = givenRootRef ?? ownRootRef
   const ownVideoRef = useRef<HTMLVideoElement>(null)
   const videoRef = givenVideoRef ?? ownVideoRef
 
@@ -165,6 +197,17 @@ export const Video: FunctionComponent<Props> = ({
     isPlaybackRateControlled: playbackRate !== undefined,
     isTimeControlled
   }))
+
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
 
   // Intrisic event handlers
   const handleOnPlayEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
@@ -273,7 +316,9 @@ export const Video: FunctionComponent<Props> = ({
   return <ControlledVideo
     {...controlledProps}
     compId={compId}
+    rootRef={rootRef}
     videoRef={videoRef}
+    isVisible={isVisible}
     play={(play ?? internalPlay) && !isTimeControlled}
     volume={volume ?? internalVolume}
     mute={mute ?? internalMute}
