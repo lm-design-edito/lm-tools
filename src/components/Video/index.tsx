@@ -25,6 +25,9 @@ import {
  * stopped video, since a playing element would advance a value it does not own:
  * `autoPlay`, a `'play'` instruction and the play button have no effect for as
  * long as this prop is provided.
+ * @property defaultCurrentTimeMs - Where the playhead starts, without handing the time
+ * over: how a media opens elsewhere than `0` and still plays. Ignored when
+ * `currentTimeMs` is provided.
  * @property togglePlayOnClick - When `true`, a click on the picture plays or pauses it.
  * A **second** way to reach what the play and pause buttons already do, never the only
  * one: the element takes no focus stop, so the keyboard keeps using the buttons. The

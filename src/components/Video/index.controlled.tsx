@@ -70,6 +70,11 @@ import {
  * to update the prop instead. Because a playing element advances the time by
  * itself, a controlled time also implies a stopped video: `play` and `autoPlay`
  * are ignored for as long as this prop is provided.
+ * @property defaultCurrentTimeMs - Where the playhead starts, in milliseconds. A
+ * starting point and nothing more: the element keeps ownership of its time, so
+ * playback is left alone. Placed once the metadata has landed, and never replayed —
+ * which is what sets it apart from `currentTimeMs`, seeked on every change. Given
+ * both, this one is ignored.
  *
  * Every action handler below receives one {@link VideoActionPayload}: the `event` that
  * triggered it, the `videoElement` it acted on, and the values named in its own entry.
@@ -169,6 +174,7 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
   mute?: boolean
   playbackRate?: number
   currentTimeMs?: number
+  defaultCurrentTimeMs?: number
   timeFormat?: string
   onPlayButtonClicked?: (payload: VideoActionPayload<React.MouseEvent<HTMLButtonElement>, { isPlaying: boolean }>) => void
   onPauseButtonClicked?: (payload: VideoActionPayload<React.MouseEvent<HTMLButtonElement>, { isPlaying: boolean }>) => void
@@ -255,6 +261,7 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   volume = 1,
   playbackRate = 1,
   currentTimeMs: givenCurrentTimeMs,
+  defaultCurrentTimeMs,
   // Milliseconds by default, which is what this component has always rendered — a
   // default that changes under a consumer is a change nobody asked for. An article
   // usually wants `'{{mm}}:{{ss}}'` and says so.
@@ -293,7 +300,11 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   const [totalTime, setTotalTime] = useState(0)
   const totalTimeMs = useMemo(() => secondsToMs(totalTime), [totalTime])
 
-  const [internalCurrentTimeMs, setInternalCurrentTimeMs] = useState(0)
+  const [internalCurrentTimeMs, setInternalCurrentTimeMs] = useState(defaultCurrentTimeMs ?? 0)
+
+  // The starting point is placed on the element once and never again: `load()` re-fires
+  // the metadata event, and seeking there a second time would send a playing media back.
+  const hasSeededDefaultTimeRef = useRef(false)
 
   // Unlike play, mute and fullscreen, this one isn't a prop: nothing can *set* a
   // media to ended, it is something the element reports. So it is read from the
@@ -329,8 +340,12 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     // A seek asked for before the metadata landed was silently dropped by the
     // element — replay it now that it can be honoured.
     if (givenCurrentTimeMs !== undefined) video.currentTime = msToSeconds(givenCurrentTimeMs)
+    else if (defaultCurrentTimeMs !== undefined && !hasSeededDefaultTimeRef.current) {
+      hasSeededDefaultTimeRef.current = true
+      video.currentTime = msToSeconds(defaultCurrentTimeMs)
+    }
     intrinsicVideoAttributes.onLoadedMetadata?.(e)
-  }, [intrinsicVideoAttributes.onLoadedMetadata, givenCurrentTimeMs])
+  }, [intrinsicVideoAttributes.onLoadedMetadata, givenCurrentTimeMs, defaultCurrentTimeMs])
 
   const handleOnTimeUpdateEvent = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
     const video = e.currentTarget
