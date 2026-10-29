@@ -61,6 +61,7 @@ describe('Duration', () => {
     it('falls back to milliseconds on a unit it does not know', () => {
       // The fallback is unreachable through the types — only a caller in plain JS
       // gets there, and it is that caller the test stands in for.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- standing in for a plain-JS caller is the whole point of the case
       const duration = new Duration(5, 'fortnights' as DurationType)
       expect(duration.type).toBe('milliseconds')
       expect(duration.toMs()).toBe(5)
@@ -129,6 +130,7 @@ describe('Duration', () => {
     })
 
     it('keeps its conversions bound once they are detached from the instance', () => {
+      // eslint-disable-next-line @typescript-eslint/unbound-method -- the constructor binds every conversion, which is exactly what this asserts
       const { toMs, toMinutes } = hours(2)
       expect(toMs()).toBe(7200000)
       expect(toMinutes()).toBe(120)
