@@ -6,12 +6,16 @@ import {
   useRef,
   useState
 } from 'react'
+import { parseDuration } from '../../agnostic/time/duration/parse-duration/index.js'
 import { useCommands } from '../utils/commands/index.js'
 import { useCompId } from '../utils/comp-id/index.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
 import type { WithVisibility } from '../utils/visibility/types.js'
-import { makeVideoCommands } from './commands.js'
-import { muteAttributeWorkaround } from './utils.js'
+import { VIDEO_ACTION_VERB_ARGUMENTS } from './types.js'
+import {
+  forceJumpTo,
+  muteAttributeWorkaround
+} from './utils.js'
 import {
   ControlledVideo,
   type Props as ControlledProps
@@ -185,18 +189,52 @@ export const Video: FunctionComponent<Props> = ({
   const isTimeControlled = controlledProps.currentTimeMs !== undefined
 
   // Commands
-  useCommands(compId, makeVideoCommands({
-    videoRef,
-    setInternalPlay,
-    setInternalMute,
-    setInternalVolume,
-    setInternalPlaybackRate,
-    isPlayControlled: play !== undefined,
-    isMuteControlled: mute !== undefined,
-    isVolumeControlled: volume !== undefined,
-    isPlaybackRateControlled: playbackRate !== undefined,
-    isTimeControlled
-  }))
+  //
+  // The table is written here rather than in a module of its own: every verb writes
+  // this component's state, so a sibling file could only be handed each setter back.
+  const jumpTo = (targetMs: number): void => {
+    if (isTimeControlled) return
+    forceJumpTo(videoRef.current, targetMs)
+  }
+
+  // Only the first argument is read: the grammar carries a list, and no verb here takes
+  // more than one value. A malformed one is warned about and the verb does nothing.
+  const readArgument = (
+    verb: keyof typeof VIDEO_ACTION_VERB_ARGUMENTS,
+    args: string[]
+  ): string | null => {
+    const arg = args[0]
+    if (arg !== undefined && VIDEO_ACTION_VERB_ARGUMENTS[verb](arg)) return arg
+    // eslint-disable-next-line no-console
+    console.warn(`"${verb}" was sent an argument it cannot read: "${arg ?? ''}"`)
+    return null
+  }
+
+  useCommands(compId, {
+    play: () => { if (play === undefined) setInternalPlay(true) },
+    pause: () => { if (play === undefined) setInternalPlay(false) },
+    loud: () => { if (mute === undefined) setInternalMute(false) },
+    mute: () => { if (mute === undefined) setInternalMute(true) },
+    volume: args => {
+      const arg = readArgument('volume', args)
+      if (arg === null || volume !== undefined) return
+      setInternalVolume(Number(arg))
+    },
+    rate: args => {
+      const arg = readArgument('rate', args)
+      if (arg === null || playbackRate !== undefined) return
+      setInternalPlaybackRate(Number(arg))
+    },
+    'jump-to': args => {
+      const arg = readArgument('jump-to', args)
+      if (arg === null) return
+      const targetMs = parseDuration(arg)
+      if (targetMs === null) return
+      jumpTo(targetMs)
+    },
+    'jump-start': () => jumpTo(0),
+    'jump-end': () => jumpTo(-1)
+  })
 
   const isVisible = useVisibilityTriggers(compId, rootRef, {
     whenVisible,
