@@ -112,7 +112,13 @@ types. When the two disagree, Preact wins.
   (`IntersectionObserverComponent`); `ScrollTracker`, `Video`, `Drawer` stay bare.
 - Controlled variant is prefixed: `ControlledVideo`.
 - Props type always exported as `Props`, in both files. Never `ControlledProps`.
-- Uncontrolled initial value is always `default<Something>`, never `initial…`.
+- A value the component can hold itself always takes a `default<Something>` starting
+  point, never `initial…`.
+- **Three prefixes, each reserved.** `setX` and `setInternalX` are what `useState`
+  handed back, and nothing else may wear them — a guarded wrapper around a setter is
+  not a `set…`. `onX` is a prop. `handleX` is an internal handler, including the
+  listener handed to `addEventListener`. The prefix says where a function comes from,
+  so one that lies about it costs a reader the only cheap signal they have.
 
 ### Handlers
 
@@ -130,16 +136,42 @@ is, and a later field can be added without moving anything a consumer already re
   `onRatioChanged`. Dispatch with `useStateChangeDispatch`.
 - The past participle marks the component's own semantics; a prop that merely
   forwards a native handler keeps its native name (`onChange` on `Input`).
-- Both modes: action handlers always fire, only the state update is guarded by the
-  controlled check. State handlers always fire, and **never on mount**.
+- Both modes: action handlers always fire, and so does the state write behind them —
+  see « The exposed component is hybrid ». State handlers always fire, and **never on
+  mount**.
 
-### Controlled / uncontrolled
+### The exposed component is hybrid
 
-The `index.tsx` + `index.controlled.tsx` split is a readability tool, not an
-obligation. Split when the controlled layer reads on its own (`Video`,
-`BeforeAfter`); keep one hybrid file when the wrapper is a few lines (`Input`,
-`Drawer`, `Gallery`). Uncontrolled-only is fine when the structure imposes it — say
-so in the JSDoc.
+**`index.controlled.tsx` is the controlled layer and is not reachable from outside;
+`index.tsx` exposes a hybrid.** Each value it holds can be driven by the caller or left
+alone, per value — so an exported `Props` never omits a controlled value. `Video` did
+for a long time, which made the public component usable one way only.
+
+The file split is a readability tool, not an obligation. Split when the controlled layer
+reads on its own (`Video`, `BeforeAfter`); keep one file when the wrapper is a few lines
+(`Input`, `Drawer`, `Gallery`). A value the structure cannot hand over is fine — say so
+in the JSDoc, as `JsonEditor` does.
+
+**The `??` goes on the read side.** The state is `internalX`, the actuators write to it
+with `setInternalX`, and the arbitration happens once, where the value is consumed:
+
+```tsx
+<ControlledVideo play={play ?? internalPlay} … />
+```
+
+Never `setInternalX(prop ?? …)`: writing a prop into state is derived state, two
+sources of truth and a sync to keep. A `default<Something>` seeds the state and the
+controlling prop never does.
+
+**The internal state stays warm.** A write while controlled changes nothing visible, so
+it is not guarded: a caller that stops driving a value lands on what the reader last
+did rather than on a mount-time value. State dispatch reads the resolved value, so
+nothing fires spuriously.
+
+**What does stay guarded is an act, not a write.** Scrolling an element (`Gallery`),
+writing a store shared with other instances (`Lightbox`) or running a clock
+(`Sequencer`'s tempo) all reach past the component's own state, and doing them under a
+controlling prop would contradict the parent. The guard belongs there and nowhere else.
 
 ### Rendering
 
