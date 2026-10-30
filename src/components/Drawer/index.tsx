@@ -87,19 +87,13 @@ export type Props = {
   & CompIdProps
   & VisibilityProps
 
-// A `…BtnSelector` lets a consumer name which descendant of the bar is clickable — the
-// title stays inert, the chevron opens. The selector is resolved here into the public
-// `-btn` class, which is then the only answer to « what is the toggle »: `isToggleHit`
-// reads that class, a stylesheet reaches it. No selector means the whole bar, and the
-// class is written at render time instead; an invalid one falls back to the bar rather
-// than leaving a drawer that never opens.
+// A `…BtnSelector` names which descendant of the bar is clickable — the title stays
+// inert, the chevron opens. It resolves here into the public `-btn` class, the single
+// answer both `isToggleHit` and a stylesheet read. `content` is a dependency because this
+// writes into DOM React owns: a re-render of the bar takes the hand-written class with it.
 //
-// `content` is a dependency because this writes into DOM React owns: a re-render that
-// changes the bar's own `className` takes the hand-written class with it.
-//
-// [WIP] Naming a child through a CSS selector is this component's idea alone, and
-// nothing else in the library reaches into its children that way. Worth a second look
-// before anything copies it.
+// [WIP] Naming a child through a CSS selector is this component's idea alone — worth a
+// second look before anything copies it.
 function useToggleMarking (
   barRef: RefObject<HTMLDivElement | null>,
   selector: string | undefined,
