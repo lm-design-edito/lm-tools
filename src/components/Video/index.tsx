@@ -125,7 +125,8 @@ export type Props = {
  * - `volume:<0–1>` and `rate:<n>` — a decimal argument, `rate` strictly positive.
  * - `jump-to:<time>`, `jump-start`, `jump-end` — a time is milliseconds or a suffixed
  *   duration (`jump-to:500`, `jump-to:1.2min`), and a negative value counts back from
- *   the end, `jump-to:-1` being the last reachable timecode.
+ *   the end, `jump-to:-1` being the last reachable timecode. A time outside the video
+ *   lands on the nearest end, with a word in the console.
  *
  * **A command never contradicts a prop**: each verb is ignored while the value it
  * writes arrived as one, the three `jump-*` while `currentTimeMs` did. A malformed
@@ -223,9 +224,14 @@ export const Video: FunctionComponent<Props> = ({
   //
   // The table is written here rather than in a module of its own: every verb writes
   // this component's state, so a sibling file could only be handed each setter back.
+  // A time outside the video lands on the nearest end and says so: `jump-to:90min` on a
+  // two-minute clip is a written mistake, and a silent seek to the end reads as if it
+  // had worked.
   const jumpTo = (targetMs: number): void => {
     if (isTimeControlled) return
-    forceJumpTo(videoRef.current, targetMs)
+    const wasClamped = forceJumpTo(videoRef.current, targetMs)
+    // eslint-disable-next-line no-console
+    if (wasClamped) console.warn(`"jump-to" was sent a time outside this video: ${targetMs}ms`)
   }
 
   // Only the first argument is read: the grammar carries a list, and no verb here takes

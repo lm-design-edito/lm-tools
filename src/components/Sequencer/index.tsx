@@ -137,6 +137,10 @@ export type Props = {
  * as one, the four `jump-*` while `step` did. **A command never surrenders either** —
  * there is no control to touch here, so `:force` has nothing to override.
  *
+ * **Nothing is clamped here, and that is the exception in the library**: elsewhere a
+ * position outside the component lands on the nearest end, but a step past the last one
+ * is a real position in the next lap, so there is no outside to be brought back from.
+ *
  * `play` on a sequence that has ended does nothing, since ending is what stops it:
  * `['jump-start', 'play']` is how it starts again, and a `loop` sequence never ends so
  * never meets the case. An absolute jump stays in the lap it was made from, so it is not

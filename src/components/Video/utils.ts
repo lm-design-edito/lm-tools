@@ -119,18 +119,26 @@ export const getTimelineClickProgress = (
   return Math.min(1, Math.max(0, position / timelineRect.width))
 }
 
-// A negative target counts back from the duration, `-1` being the last reachable
-// timecode — not `-0`, which `===` makes indistinguishable from the start.
+/**
+ * Seeks the element, a negative target counting back from the duration — `-1` being the
+ * last reachable timecode, not `-0`, which `===` makes indistinguishable from the start.
+ *
+ * @returns Whether the target had to be brought back inside the timeline. Only the
+ * caller knows if that is worth a word: a written `jump-to` past the end is a typo, a
+ * drag of the timeline is not.
+ */
 export const forceJumpTo = (
   video: HTMLVideoElement | null,
   targetMs: number
-): void => {
-  if (video === null) return
+): boolean => {
+  if (video === null) return false
   const durationMs = secondsToMs(video.duration)
-  if (!Number.isFinite(durationMs)) return
+  if (!Number.isFinite(durationMs)) return false
   const absolute = targetMs < 0 ? durationMs + targetMs : targetMs
+  const clamped = Math.min(Math.max(absolute, 0), durationMs)
   // eslint-disable-next-line no-param-reassign
-  video.currentTime = msToSeconds(Math.min(Math.max(absolute, 0), durationMs))
+  video.currentTime = msToSeconds(clamped)
+  return clamped !== absolute
 }
 
 /* Source lists */

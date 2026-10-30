@@ -31,7 +31,8 @@ import { gallery as publicClassName } from '../public-classnames.js'
 import {
   GALLERY_ACTION_VERB_ARGUMENTS,
   GALLERY_ACTION_VERB_DOMAINS,
-  type GalleryActionDomain
+  type GalleryActionDomain,
+  type GalleryActionVerb
 } from './types.js'
 import {
   EMPTY_GEOMETRY,
@@ -125,7 +126,8 @@ export type Props = {
  * ### Commands
  * - `jump-to:<n>`, `jump-start`, `jump-end`, `jump-by:<n>` — a whole number, negative
  *   counting back from the end, so `jump-to:-1` is the last slot and `jump-by:1` is what
- *   the next button does. A position no slot answers to does nothing.
+ *   the next button does. A position outside the strip lands on the nearest slot, and an
+ *   absolute verb says so in the console where `jump-by` stays quiet.
  *
  * **A verb never contradicts a prop**: all four are inert while `active` arrived as one,
  * which is also when hand scrolling is disabled. **And a command yields to the reader** —
@@ -268,23 +270,30 @@ export const Gallery: FunctionComponent<Props> = ({
     return null
   }
 
-  const jumpToSlot = (targetSlot: number): void => {
+  // A position outside the strip lands on the nearest slot. An absolute verb says so —
+  // `jump-to:7` on three slots is a written mistake — where `jump-by` stays quiet, a
+  // next at the last slot being an ordinary end and not a typo.
+  const jumpToSlot = (targetSlot: number, verb: GalleryActionVerb): void => {
     if (isControlled) return
-    scrollToSlot(targetSlot < 0 ? childrenCount + targetSlot : targetSlot)
+    const resolved = targetSlot < 0 ? childrenCount + targetSlot : targetSlot
+    const clamped = Math.min(Math.max(resolved, 0), childrenCount - 1)
+    // eslint-disable-next-line no-console
+    if (clamped !== resolved && verb !== 'jump-by') console.warn(`"${verb}" was sent a slot this gallery has not got: ${targetSlot}`)
+    scrollToSlot(clamped)
   }
 
   useCommands(compId, {
     'jump-to': ({ args }) => {
       const arg = readArgument('jump-to', args)
       if (arg === null) return
-      jumpToSlot(Number(arg))
+      jumpToSlot(Number(arg), 'jump-to')
     },
-    'jump-start': () => { jumpToSlot(0) },
-    'jump-end': () => { jumpToSlot(childrenCount - 1) },
+    'jump-start': () => { jumpToSlot(0, 'jump-start') },
+    'jump-end': () => { jumpToSlot(childrenCount - 1, 'jump-end') },
     'jump-by': ({ args }) => {
       const arg = readArgument('jump-by', args)
       if (arg === null) return
-      jumpToSlot(activeIndex + Number(arg))
+      jumpToSlot(activeIndex + Number(arg), 'jump-by')
     }
   })
 
