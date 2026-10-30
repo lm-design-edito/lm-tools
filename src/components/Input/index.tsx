@@ -74,6 +74,10 @@ export type Props = {
  *   is forwarded, controlled or not.
  * - `onChange` fires in both modes.
  */
+// No verbs here, nor on `Select` and `Textarea`, decided rather than postponed: the
+// grammar splits on `:` and `,` so no verb can carry free text, `focus` would be an act
+// on the document rather than a write to this component, and `clear` — the one clean
+// candidate — answers a need nothing in the product has. A sender is all a field is.
 export const Input: FunctionComponent<Props> = ({
   compId: givenCompId,
   whenVisible,
