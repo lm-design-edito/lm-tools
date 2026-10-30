@@ -3,6 +3,7 @@ import {
   cloneElement,
   isValidElement,
   useEffect,
+  useRef,
   useState,
   type FunctionComponent,
   type ReactNode
@@ -21,8 +22,12 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { CompIdProps } from '../utils/comp-id/types.js'
+import { useCommands } from '../utils/commands/index.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { sequencer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
+import { SEQUENCER_ACTION_VERB_ARGUMENTS } from './types.js'
 import {
   getChildActiveSteps,
   hasDataLastStepAttribute
@@ -67,6 +72,9 @@ import {
  * @property onReachedLastStep - Called when the position becomes the last one. This is
  * the arrival, where `onIsEndedChanged` is the departure: on a playing sequence they are
  * one beat apart.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
 export type Props = {
   totalSteps?: number
@@ -87,6 +95,7 @@ export type Props = {
   & ChildrenProps
   & ClassNameProps
   & CompIdProps
+  & VisibilityProps
 
 /**
  * A sequencer over its children, which it classifies and never moves.
@@ -118,10 +127,25 @@ export type Props = {
  * Three steps, four children. A trailing child that names no step never lights up, which
  * is the honest reading of « it is not part of the sequence ».
  *
+ * ### Commands
+ * - `play` / `pause` — the tempo runs or stops.
+ * - `jump-to:<n>`, `jump-start`, `jump-end`, `jump-by:<n>` — a whole number, negative
+ *   counting back from the end, so `jump-to:-1` is the last step and `jump-by:-1` one
+ *   step back.
+ *
+ * **A verb never contradicts a prop**: `play` and `pause` are inert while `play` arrived
+ * as one, the four `jump-*` while `step` did. **A command never surrenders either** —
+ * there is no control to touch here, so `:force` has nothing to override.
+ *
+ * `play` on a sequence that has ended does nothing, since ending is what stops it:
+ * `['jump-start', 'play']` is how it starts again, and a `loop` sequence never ends so
+ * never meets the case. An absolute jump stays in the lap it was made from, so it is not
+ * a wrap and `onLooped` does not fire.
+ *
  * @remarks
  * ### On the root
- * `--playing`, `--at-start`, `--at-end`, `--ended`, plus `data-step`, `data-active-step`,
- * `data-total-steps`, `data-tempo` and `data-lap`.
+ * `--playing`, `--at-start`, `--at-end`, `--ended`, `--visible`, plus `data-step`,
+ * `data-active-step`, `data-total-steps`, `data-tempo` and `data-lap`.
  *
  * The same five numbers are also published as custom properties —
  * `--lm-sequencer-step`, `--lm-sequencer-active-step`, `--lm-sequencer-total-steps`,
@@ -149,6 +173,14 @@ export type Props = {
  */
 export const Sequencer: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   totalSteps,
   stepMap,
   step,
@@ -168,10 +200,20 @@ export const Sequencer: FunctionComponent<Props> = ({
 }) => {
   const compId = useCompId(givenCompId)
 
+  const rootRef = useRef<HTMLDivElement>(null)
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
+
   const [internalStep, setInternalStep] = useState(defaultStep ?? 0)
-  // No setter: nothing starts or stops the sequence any more, the `play` prop and this
-  // seed are the two answers there are.
-  const [internalPlay] = useState(defaultPlay ?? false)
+  const [internalPlay, setInternalPlay] = useState(defaultPlay ?? false)
   const [hasLapped, setHasLapped] = useState(0)
 
   const childrenArr = Children.toArray(children)
@@ -194,6 +236,55 @@ export const Sequencer: FunctionComponent<Props> = ({
   const isEnded = loop !== true && stepsCount > 0 && rawStep >= stepsCount
   const isPlaying = (play ?? internalPlay) && !isEnded
 
+  // A lap counter rather than a comparison of steps: `onLooped` has to fire on the wrap
+  // itself, and the position on either side of it says nothing about having crossed.
+  const lap = stepsCount > 0 ? Math.floor(rawStep / stepsCount) : 0
+  // A lap is a wrap, so there is none without `loop` — where the internal counter would
+  // report `1` past the end.
+  const publishedLap = loop === true ? lap : 0
+
+  // Commands
+  //
+  // Written here rather than in a module of its own: every verb writes this component's
+  // state, so a sibling file could only be handed each setter back.
+  const readArgument = (
+    verb: keyof typeof SEQUENCER_ACTION_VERB_ARGUMENTS,
+    args: string[]
+  ): string | null => {
+    const arg = args[0]
+    if (arg !== undefined && SEQUENCER_ACTION_VERB_ARGUMENTS[verb](arg)) return arg
+    // eslint-disable-next-line no-console
+    console.warn(`"${verb}" was sent an argument it cannot read: "${arg ?? ''}"`)
+    return null
+  }
+
+  // An absolute jump writes the position of the lap it was made from, so it never reads
+  // as a wrap. A negative step counts back from the end, `-1` being the last one.
+  const jumpTo = (targetStep: number): void => {
+    if (step !== undefined) return
+    const inLap = targetStep < 0 ? stepsCount + targetStep : targetStep
+    setInternalStep(publishedLap * stepsCount + inLap)
+  }
+
+  useCommands(compId, {
+    play: () => { if (play === undefined) setInternalPlay(true) },
+    pause: () => { if (play === undefined) setInternalPlay(false) },
+    'jump-to': ({ args }) => {
+      const arg = readArgument('jump-to', args)
+      if (arg === null) return
+      jumpTo(Number(arg))
+    },
+    'jump-start': () => { jumpTo(0) },
+    'jump-end': () => { jumpTo(Math.max(stepsCount - 1, 0)) },
+    // Relative to the counter and not to the position, so it keeps the lap it is in and
+    // stepping back from an ended sequence lands on the last step rather than nowhere.
+    'jump-by': ({ args }) => {
+      const arg = readArgument('jump-by', args)
+      if (arg === null || step !== undefined) return
+      setInternalStep(current => current + Number(arg))
+    }
+  })
+
   useEffect(() => {
     if (!isPlaying || step !== undefined || stepsCount <= 0) return
     const interval = window.setInterval(
@@ -203,9 +294,6 @@ export const Sequencer: FunctionComponent<Props> = ({
     return () => window.clearInterval(interval)
   }, [isPlaying, step, stepsCount, tempo])
 
-  // A lap counter rather than a comparison of steps: `onLooped` has to fire on the wrap
-  // itself, and the position on either side of it says nothing about having crossed.
-  const lap = stepsCount > 0 ? Math.floor(rawStep / stepsCount) : 0
   useEffect(() => {
     if (loop !== true) return
     if (lap === hasLapped) return
@@ -229,7 +317,8 @@ export const Sequencer: FunctionComponent<Props> = ({
     playing: isPlaying,
     'at-start': position === 0,
     'at-end': stepsCount > 0 && position === stepsCount - 1,
-    ended: isEnded
+    ended: isEnded,
+    visible: isVisible === true
   }), className)
 
   const positionsOf = (steps: number[]): number[] => {
@@ -240,9 +329,8 @@ export const Sequencer: FunctionComponent<Props> = ({
     return positions
   }
 
-  // A lap is a wrap, so there is none without `loop` — where the internal counter would
-  // report `1` past the end. Both numbers below are rebuilt from it rather than `rawStep`.
-  const publishedLap = loop === true ? lap : 0
+  // Rebuilt from the published lap rather than from `rawStep`, which runs one past the
+  // end on a sequence that does not loop.
   const rawStepProp = publishedLap * stepsCount + position
   const cssCustomProps: Record<string, string> = {
     '--lm-sequencer-step': `${position}`,
@@ -256,6 +344,7 @@ export const Sequencer: FunctionComponent<Props> = ({
   let elementIndex = -1
   return <div
     {...compIdAttribute(compId)}
+    ref={rootRef}
     className={rootClss}
     data-step={position}
     data-active-step={activeStep}
