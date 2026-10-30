@@ -59,7 +59,9 @@ import cssModule from './styles.module.css'
  * always rendered; the root's `navigable` modifier says whether it has anywhere to go.
  * @property nextBtnContent - Content rendered inside the next button, same.
  * @property isOn - Controlled state. When defined, this lightbox is driven by the
- * parent and the shared store never opens or closes it.
+ * parent and the shared store never opens or closes it. Its own controls stop acting
+ * too, the two navigation buttons included: a value the parent holds is the parent's to
+ * move, and the group walk writes the same store.
  * @property defaultIsOn - Whether the lightbox starts open, in uncontrolled mode.
  * Ignored when `isOn` is provided. Defaults to `false`.
  * @property exitOnEscape - When `true`, pressing `Escape` closes the lightbox.
@@ -301,10 +303,18 @@ export const Lightbox: FunctionComponent<Props> = ({
     if (isControlled) return
     openLightbox(primaryGroup, id)
   }, [isControlled, primaryGroup, id])
+  // Closing and walking reach the store, which holds whichever group is open and knows
+  // nothing of who called. A lightbox that is not the open one would therefore shut or
+  // move a sibling — and it has the controls to do it, since all four are rendered at
+  // all times.
   const requestClose = useCallback((): void => {
-    if (isControlled) return
+    if (isControlled || !isOn) return
     closeLightbox()
-  }, [isControlled])
+  }, [isControlled, isOn])
+  const requestGroupNavigation = useCallback((offset: number): void => {
+    if (isControlled || !isOn) return
+    navigateOpenGroupBy(offset)
+  }, [isControlled, isOn])
 
   // Commands
   useCommands(compId, {
@@ -325,11 +335,11 @@ export const Lightbox: FunctionComponent<Props> = ({
   }
   const handlePrevButtonClick: MouseEventHandler<HTMLButtonElement> = () => {
     onPrevButtonClicked?.(isOn)
-    navigateOpenGroupBy(-1)
+    requestGroupNavigation(-1)
   }
   const handleNextButtonClick: MouseEventHandler<HTMLButtonElement> = () => {
     onNextButtonClicked?.(isOn)
-    navigateOpenGroupBy(1)
+    requestGroupNavigation(1)
   }
   const handleContentClick: MouseEventHandler<HTMLDivElement> = () => {
     if (openOnClick !== true || isOn) return
@@ -361,7 +371,7 @@ export const Lightbox: FunctionComponent<Props> = ({
   }, [exitOnEscape, isOn, requestClose, onEscapePressed, surrender])
 
   // Fx. dep. navOnArrowKeys, isOn, openGroupSize, onPrevArrowPressed,
-  // onNextArrowPressed - The arrow keys walk the open group. Bound only while the
+  // onNextArrowPressed, requestGroupNavigation - The arrow keys walk the open group. Bound only while the
   // lightbox is open and the group holds someone else, so the keys stay the page's the
   // rest of the time.
   useEffect(() => {
@@ -369,15 +379,22 @@ export const Lightbox: FunctionComponent<Props> = ({
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'ArrowLeft') {
         onPrevArrowPressed?.(isOn)
-        navigateOpenGroupBy(-1)
+        requestGroupNavigation(-1)
       } else if (e.key === 'ArrowRight') {
         onNextArrowPressed?.(isOn)
-        navigateOpenGroupBy(1)
+        requestGroupNavigation(1)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [navOnArrowKeys, isOn, openGroupSize, onPrevArrowPressed, onNextArrowPressed])
+  }, [
+    navOnArrowKeys,
+    isOn,
+    openGroupSize,
+    onPrevArrowPressed,
+    onNextArrowPressed,
+    requestGroupNavigation
+  ])
 
   // Fx. dep. hasAppliedDefault, isControlled, defaultIsOn, primaryGroup, id - An
   // uncontrolled lightbox asked to start open says so once, and never again: the
