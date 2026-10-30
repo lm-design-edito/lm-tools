@@ -17,6 +17,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { CompIdProps } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { paginator as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -76,6 +78,9 @@ type DirectionState = 'forwards' | 'backwards' | null
  * Lets a parent measure the pages without reaching into this component's DOM.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Each direct child is treated as an individual page slot.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
 export type Props = {
   thresholdOffsetPercent?: number
@@ -86,6 +91,7 @@ export type Props = {
   & ChildrenProps
   & ClassNameProps
   & CompIdProps
+  & VisibilityProps
 
 /**
  * A scroll-driven pagination component that tracks which child page is currently
@@ -94,6 +100,12 @@ export type Props = {
  * Each direct child is wrapped in a page slot and observed via
  * {@link IntersectionObserver}. Page slots receive `'prev'`, `'curr'`, or `'next'`
  * positional modifier classes based on their visibility.
+ *
+ * ### CSS modifiers
+ * - `forwards` / `backwards` — the direction of the last scroll detected. Neither
+ *   until a first scroll settles the question.
+ * - `visible` — the component has settled into view. Absent until something asks
+ *   about visibility, since nothing is observed before that.
  *
  * @param props - Component properties.
  * @see {@link Props}
@@ -115,6 +127,14 @@ export type Props = {
  */
 export const Paginator: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   thresholdOffsetPercent,
   onDirectionChanged,
   onPagesChanged,
@@ -127,8 +147,19 @@ export const Paginator: FunctionComponent<Props> = ({
   // State, refs, effects
   const [pagesState, setPagesState] = useState<PagesState>(new Map())
   const [directionState, setDirectionState] = useState<DirectionState>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
   const pagesRef = useRef<HTMLDivElement>(null)
   const directionRef = useRef<DirectionState>(null)
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
   const childrenArr = Children.toArray(children)
   const pagesCount = childrenArr.length
   const thresholdPercent = toThresholdPercent(thresholdOffsetPercent)
@@ -229,13 +260,15 @@ export const Paginator: FunctionComponent<Props> = ({
   const rootClss = mergeClassNames(
     c(null, {
       forwards: directionState === 'forwards',
-      backwards: directionState === 'backwards'
+      backwards: directionState === 'backwards',
+      visible: isVisible === true
     }),
     className
   )
   const pagesClss = c('pages')
   return <div
     {...compIdAttribute(compId)}
+    ref={rootRef}
     className={rootClss}>
     <div
       className={pagesClss}
