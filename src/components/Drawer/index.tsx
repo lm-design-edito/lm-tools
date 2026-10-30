@@ -87,27 +87,19 @@ export type Props = {
   & CompIdProps
   & VisibilityProps
 
-/**
- * Marks whatever a `…BtnSelector` points at with the command's `-btn` public class.
- *
- * **The class is the single source of truth**, for CSS and for the click handler alike:
- * without it, a stylesheet would have no way to reach the toggle — the selector is a
- * JavaScript prop and leaves no trace in the markup — and the two would answer the
- * question « what is the toggle » by different means.
- *
- * The no-selector case never gets here: the class is then written straight into the
- * bar's own `className`, because the whole bar *is* the toggle. So this hook only ever
- * runs to narrow that down to a few descendants.
- *
- * **It writes into DOM that React owns.** React does not reset an attribute it has not
- * diffed, so the class survives an ordinary re-render — but a bar whose own `className`
- * changes would be rewritten, class included. Hence `content` among the dependencies:
- * whatever makes the content change is also what repairs the marking, before paint.
- *
- * An invalid selector marks the bar itself. A consumer typo would otherwise leave no
- * toggle at all and a drawer that no longer opens; falling back to the whole bar is the
- * behaviour they had before writing the selector.
- */
+// A `…BtnSelector` lets a consumer name which descendant of the bar is clickable — the
+// title stays inert, the chevron opens. The selector is resolved here into the public
+// `-btn` class, which is then the only answer to « what is the toggle »: `isToggleHit`
+// reads that class, a stylesheet reaches it. No selector means the whole bar, and the
+// class is written at render time instead; an invalid one falls back to the bar rather
+// than leaving a drawer that never opens.
+//
+// `content` is a dependency because this writes into DOM React owns: a re-render that
+// changes the bar's own `className` takes the hand-written class with it.
+//
+// [WIP] Naming a child through a CSS selector is this component's idea alone, and
+// nothing else in the library reaches into its children that way. Worth a second look
+// before anything copies it.
 function useToggleMarking (
   barRef: RefObject<HTMLDivElement | null>,
   selector: string | undefined,
@@ -128,13 +120,9 @@ function useToggleMarking (
   }, [barRef, selector, btnClassName, content])
 }
 
-/**
- * Whether a click on a command should toggle the drawer.
- *
- * The test is « did the click land inside a marked element », never the selector itself:
- * {@link useToggleMarking} has already resolved what the toggle is. `contains` comes on
- * top of `closest` because a marked element could, in principle, sit outside this bar.
- */
+// Did the click land inside a marked element — never the selector itself, which
+// `useToggleMarking` has already resolved. `contains` on top of `closest`, since a
+// marked element could in principle sit outside this bar.
 function isToggleHit (event: MouseEvent<HTMLDivElement>, btnClassName: string): boolean {
   const { target, currentTarget } = event
   if (!(target instanceof Element)) return false
