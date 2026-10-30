@@ -74,10 +74,14 @@ import {
  * @property children - React children rendered inside the `<video>` element itself
  * (e.g. fallback content).
  */
-// `isVisible` and `surrenderedDomains` are measured here and handed down, so they are
-// the two controlled values a caller cannot set: there is nothing to drive, and the
-// component would go on computing them underneath.
-export type Props = WithVisibility<Omit<ControlledProps, 'isVisible' | 'surrenderedDomains'>> & {
+// What this layer owns rather than forwards. `isVisible` and `surrenderedDomains` are
+// measured here, and the two refs are how it reaches elements it does not render itself
+// — plumbing between the two files, never a way in: a caller holding the `<video>` would
+// act behind the command layer's back.
+export type Props = WithVisibility<Omit<
+  ControlledProps,
+  'isVisible' | 'surrenderedDomains' | 'rootRef' | 'videoRef'
+>> & {
   defaultSubtitlesOn?: boolean
   defaultVolume?: number
   defaultPlaybackRate?: number
@@ -145,8 +149,6 @@ export type Props = WithVisibility<Omit<ControlledProps, 'isVisible' | 'surrende
 
 export const Video: FunctionComponent<Props> = ({
   compId: givenCompId,
-  rootRef: givenRootRef,
-  videoRef: givenVideoRef,
   whenVisible,
   whenHidden,
   onVisibilityChanged,
@@ -178,13 +180,11 @@ export const Video: FunctionComponent<Props> = ({
   ...controlledProps
 }) => {
   // The id is resolved here and handed down, so the two layers share one rather than
-  // minting one each. Same for the element: `jump-*` acts on it and no time state lives
-  // up here, so this layer needs a ref of its own when the caller passed none.
+  // minting one each. The refs go the same way: this layer observes the root and seeks
+  // on the element, both rendered below, so it mints the boxes and hands them down.
   const compId = useCompId(givenCompId)
-  const ownRootRef = useRef<HTMLElement>(null)
-  const rootRef = givenRootRef ?? ownRootRef
-  const ownVideoRef = useRef<HTMLVideoElement>(null)
-  const videoRef = givenVideoRef ?? ownVideoRef
+  const rootRef = useRef<HTMLElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   // State & refs
   //
