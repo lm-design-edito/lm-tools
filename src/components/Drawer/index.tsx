@@ -23,8 +23,18 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { CompIdProps } from '../utils/comp-id/types.js'
+import {
+  useCommandSurrender,
+  useCommands
+} from '../utils/commands/index.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { drawer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
+import {
+  DRAWER_ACTION_VERB_DOMAINS,
+  type DrawerActionDomain
+} from './types.js'
 
 /**
  * Props for the {@link Drawer} component.
@@ -56,6 +66,9 @@ import cssModule from './styles.module.css'
  * with the new width and height in pixels. Never on mount.
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Drawer content.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`
+ * and the five `visibility*` settings.
  */
 export type Props = {
   openerContent?: ReactNode
@@ -72,6 +85,7 @@ export type Props = {
   & ChildrenProps
   & ClassNameProps
   & CompIdProps
+  & VisibilityProps
 
 /**
  * Marks whatever a `…BtnSelector` points at with the command's `-btn` public class.
@@ -134,9 +148,21 @@ function isToggleHit (event: MouseEvent<HTMLDivElement>, btnClassName: string): 
  * The content is measured through a {@link ResizeObserverComponent} so its
  * dimensions can drive the open/close transition from CSS alone.
  *
+ * ### Commands
+ * - `open` / `close` — the two states a reader's controls also reach. There is no
+ *   `toggle`: `whenVisible='open'` with `whenHidden='close'` says it, and a verb that
+ *   reads the state before writing it would undo itself when sent twice.
+ *
+ * **A verb never contradicts a prop**: both are inert while `isOpened` arrived as one.
+ * **And a command yields to the reader** — clicking either control hands the `opening`
+ * domain over for the rest of the mount, which silences `open` and `close` together, so
+ * a drawer the reader dismissed is not reopened on the next pass. `:force` opts out.
+ *
  * ### CSS modifiers
  * - `opened` — the drawer is open.
  * - `closed` — the drawer is closed.
+ * - `--visible` — the component has settled into view. Absent until something asks
+ *   about visibility, since nothing is observed before that.
  *
  * - `--measured` — the content has been measured, so the properties below are set.
  *
@@ -179,6 +205,14 @@ function isToggleHit (event: MouseEvent<HTMLDivElement>, btnClassName: string): 
  */
 export const Drawer: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   openerContent,
   closerContent,
   openerBtnSelector,
@@ -200,9 +234,33 @@ export const Drawer: FunctionComponent<Props> = ({
     width: number
     height: number
   }>()
+  const rootRef = useRef<HTMLDivElement>(null)
   const openerRef = useRef<HTMLDivElement | null>(null)
   const closerRef = useRef<HTMLDivElement | null>(null)
   const isOpened = isOpenedProp ?? internalIsOpened
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
+
+  // Commands
+  //
+  // Annotated with this component's vocabulary: the layer takes any name, so the
+  // annotation is what keeps a misspelled domain from compiling.
+  const surrender: (domain: DrawerActionDomain) => void = useCommandSurrender(
+    compId,
+    DRAWER_ACTION_VERB_DOMAINS
+  )
+  useCommands(compId, {
+    open: () => { if (isOpenedProp === undefined) setInternalIsOpened(true) },
+    close: () => { if (isOpenedProp === undefined) setInternalIsOpened(false) }
+  })
   // Une barre écrite une fois sert les deux états : le plus souvent un titre et une
   // bascule, identiques ouverts et fermés, que les modifieurs de la racine suffisent à
   // distinguer en CSS. `undefined` seul retombe — un `null` explicite reste un closer
@@ -233,11 +291,13 @@ export const Drawer: FunctionComponent<Props> = ({
   const handleOpenerClick = (event: MouseEvent<HTMLDivElement>): void => {
     if (!isToggleHit(event, openerBtnClss)) return
     onOpenerClicked?.(isOpened)
+    surrender('opening')
     setInternalIsOpened(true)
   }
   const handleCloserClick = (event: MouseEvent<HTMLDivElement>): void => {
     if (!isToggleHit(event, closerBtnClss)) return
     onCloserClicked?.(isOpened)
+    surrender('opening')
     setInternalIsOpened(false)
   }
   const handleContentResized: ResizeObserverProps['onResized'] = ({ entry }): void => {
@@ -249,7 +309,8 @@ export const Drawer: FunctionComponent<Props> = ({
   const rootClss = mergeClassNames(c(null, {
     'opened': isOpened,
     'closed': !isOpened,
-    measured: contentDimensions !== undefined
+    'measured': contentDimensions !== undefined,
+    'visible': isVisible === true
   }), className)
   const openerClss = openerBtnSelector === undefined
     ? mergeClassNames(c('opener'), openerBtnClss)
@@ -275,6 +336,7 @@ export const Drawer: FunctionComponent<Props> = ({
   }
   return <div
     {...compIdAttribute(compId)}
+    ref={rootRef}
     className={rootClss}
     {...dataAttributes}
     style={{ ...customCssProps }}>
