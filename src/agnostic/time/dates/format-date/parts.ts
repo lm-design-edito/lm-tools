@@ -1,25 +1,8 @@
+import { monthNames, weekdayNames } from '../calendar-names/index.js'
 import type {
   DateParts,
   DateTokenParts
 } from './types.js'
-
-/**
- * The localised weekday names, indexed the way `Date.prototype.getDay` numbers
- * them. January 1st 2023 was a Sunday, so the week is walked from there.
- */
-function weekdayNames (locale: string, weekday: 'short' | 'long'): string[] {
-  const formatter = new Intl.DateTimeFormat(locale, { weekday })
-  return [...Array<string>(7)].map((_, i) => formatter.format(new Date(2023, 0, i + 1)))
-}
-
-/**
- * The localised month names, indexed the way `Date.prototype.getMonth` numbers
- * them — January at 0.
- */
-function monthNames (locale: string, month: 'short' | 'long'): string[] {
-  const formatter = new Intl.DateTimeFormat(locale, { month })
-  return [...Array<string>(12)].map((_, i) => formatter.format(new Date(2023, i, 1)))
-}
 
 /** The ordinal suffix a locale appends to a day number, empty when it has none. */
 function dayOrdinalSuffix (day: number, locale: string): string {
