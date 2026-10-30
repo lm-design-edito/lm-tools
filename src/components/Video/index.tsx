@@ -15,9 +15,9 @@ import { useCompId } from '../utils/comp-id/index.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
 import type { WithVisibility } from '../utils/visibility/types.js'
 import {
-  VIDEO_ACTION_DOMAINS,
   VIDEO_ACTION_VERB_ARGUMENTS,
-  VIDEO_ACTION_VERB_DOMAINS
+  VIDEO_ACTION_VERB_DOMAINS,
+  type VideoActionDomain
 } from './types.js'
 import {
   forceJumpTo,
@@ -76,13 +76,13 @@ import {
  * @property children - React children rendered inside the `<video>` element itself
  * (e.g. fallback content).
  */
-// What this layer owns rather than forwards. `isVisible` and `surrenderedDomains` are
-// measured here, and the two refs are how it reaches elements it does not render itself
-// — plumbing between the two files, never a way in: a caller holding the `<video>` would
-// act behind the command layer's back.
+// What this layer owns rather than forwards. `isVisible` is measured here, and the two
+// refs are how it reaches elements it does not render itself — plumbing between the two
+// files, never a way in: a caller holding the `<video>` would act behind the command
+// layer's back.
 export type Props = WithVisibility<Omit<
   ControlledProps,
-  'isVisible' | 'surrenderedDomains' | 'rootRef' | 'videoRef'
+  'isVisible' | 'rootRef' | 'videoRef'
 >> & {
   defaultSubtitlesOn?: boolean
   defaultVolume?: number
@@ -138,8 +138,8 @@ export type Props = WithVisibility<Omit<
  * silences `play` and `pause`, scrubbing the timeline silences the three `jump-*`,
  * muting or moving the volume slider silences `loud`, `mute` and `volume`. The
  * `:force` modifier opts out — `whenVisible='force:play'` — and is meant to be rare,
- * which is why yielding is the silent form. What has been surrendered is readable from
- * the outside: see the root modifiers.
+ * which is why yielding is the silent form. What has been surrendered is the command
+ * layer's own business and shows nowhere in the DOM.
  *
  * Browsers refuse an unmuted `play()` outside a user gesture, so asking for playback
  * without muting will usually have it rejected. The
@@ -210,11 +210,12 @@ export const Video: FunctionComponent<Props> = ({
   // a disappointment, restarting against someone who just pressed pause is a hostility
   // they would meet at every pass. `force` is the written form for the same reason —
   // yielding is the silent one.
-  const {
-    surrenderedDomains,
-    surrenderedActions,
-    surrender
-  } = useCommandSurrender(VIDEO_ACTION_DOMAINS, VIDEO_ACTION_VERB_DOMAINS)
+  // Annotated with this component's vocabulary: the layer takes any name, so the
+  // annotation is what keeps a misspelled domain from compiling.
+  const surrender: (domain: VideoActionDomain) => void = useCommandSurrender(
+    compId,
+    VIDEO_ACTION_VERB_DOMAINS
+  )
 
   // Commands
   //
@@ -264,7 +265,7 @@ export const Video: FunctionComponent<Props> = ({
     },
     'jump-start': () => { jumpTo(0) },
     'jump-end': () => { jumpTo(-1) }
-  }, surrenderedActions)
+  })
 
   const isVisible = useVisibilityTriggers(compId, rootRef, {
     whenVisible,
@@ -425,6 +426,5 @@ export const Video: FunctionComponent<Props> = ({
     onRateRangeChanged={handleRateRangeChange}
     onFullscreenButtonClicked={handleFullscreenButtonClick}
     onSubtitlesButtonClicked={handleSubtitlesButtonClick}
-    onTimelineClicked={handleTimelineClick}
-    surrenderedDomains={surrenderedDomains} />
+    onTimelineClicked={handleTimelineClick} />
 }

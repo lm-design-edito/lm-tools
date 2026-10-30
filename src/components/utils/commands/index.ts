@@ -1,9 +1,7 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
-  useRef,
-  useState
+  useRef
 } from 'react'
 import { splitTrim } from '../../../agnostic/strings/split-trim/index.js'
 import type {
@@ -73,21 +71,25 @@ export function formatCommand (command: Command): string {
   ].join(':')
 }
 
-// Keyed on the trio a send limit counts, built through JSON so no id can forge a key.
-const sendCounts = new Map<string, number>()
+// Both ledgers are keyed by a component and emptied when it unsubscribes, so a remount
+// starts clean. The inner key is built through JSON so no id can forge one.
+const sendCounts = new Map<string, Map<string, number>>()
+const surrenderedActions = new Map<string, Set<string>>()
 
 /**
  * Dispatches every command in `raw`, addressed to the sender when one names no target.
  * A command carrying a send limit is dropped once its origin, target and action have
- * been sent that many times — a count that lasts as long as the page.
+ * been sent that many times — a count that lasts as long as the sender is mounted.
  */
 export function sendCommands (raw: string | string[], fromCompId: string): void {
   const sendOne = (command: Command): void => {
     const addressed: AddressedCommand = { ...command, target: command.target ?? fromCompId }
-    const countKey = JSON.stringify([fromCompId, addressed.target, addressed.action])
-    const sentCount = sendCounts.get(countKey) ?? 0
+    const countKey = JSON.stringify([addressed.target, addressed.action])
+    const senderCounts = sendCounts.get(fromCompId) ?? new Map<string, number>()
+    const sentCount = senderCounts.get(countKey) ?? 0
     if (addressed.sendLimit !== undefined && sentCount >= addressed.sendLimit) return
-    sendCounts.set(countKey, sentCount + 1)
+    senderCounts.set(countKey, sentCount + 1)
+    sendCounts.set(fromCompId, senderCounts)
     commandBus.dispatchEvent(new CommandEvent(addressed))
   }
   const rawCommands = typeof raw === 'string' ? [raw] : raw
@@ -116,73 +118,74 @@ export function subscribeToCommands (
 }
 
 /**
+ * Holds back the actions a reader has taken over, for the component they address.
+ *
+ * They stop firing until that component unsubscribes, unless a command carries `force`.
+ * The ledger is this layer's, not the component's: nothing is returned, nothing
+ * re-renders, and a command sent in the same tick as the gesture is already refused.
+ * @param targetCompId - The component the actions belong to.
+ * @param actions - The action names to hold back.
+ */
+export function surrenderCommands (targetCompId: string, actions: readonly string[]): void {
+  const held = surrenderedActions.get(targetCompId) ?? new Set<string>()
+  actions.forEach(action => { held.add(action) })
+  surrenderedActions.set(targetCompId, held)
+}
+
+/**
  * Runs the action a command names, for as long as a component is mounted.
  *
- * An action named in `surrenderedActions` is dropped unless the command carries
- * `force`, which is where that modifier takes effect — see {@link useCommandSurrender}.
+ * A surrendered action is dropped unless the command carries `force`, which is where
+ * that modifier takes effect — see {@link surrenderCommands}. Unsubscribing empties both
+ * of this component's ledgers, so what it surrendered and what it has already sent last
+ * the mount and no longer.
  * @param targetCompId - The id commands are addressed to.
  * @param actions - What to run for each action name.
- * @param surrenderedActions - The actions the reader has taken over.
  */
 export function useCommands (
   targetCompId: string,
-  actions: CommandActions,
-  surrenderedActions: readonly string[] = []
+  actions: CommandActions
 ): void {
   // Through a ref, so a table rebuilt on every render doesn't resubscribe.
   const actionsRef = useRef(actions)
   actionsRef.current = actions
-  const surrenderedActionsRef = useRef(surrenderedActions)
-  surrenderedActionsRef.current = surrenderedActions
-  useEffect(
-    () => subscribeToCommands(targetCompId, command => {
+  useEffect(() => {
+    const unsubscribe = subscribeToCommands(targetCompId, command => {
       const action = actionsRef.current[command.action]
       if (action === undefined) {
         // eslint-disable-next-line no-console
         console.warn(`"${targetCompId}" has no action named "${command.action}"`)
         return
       }
-      if (!command.force && surrenderedActionsRef.current.includes(command.action)) return
+      if (!command.force && surrenderedActions.get(targetCompId)?.has(command.action) === true) return
       action(command)
-    }),
-    [targetCompId]
-  )
+    })
+    return () => {
+      unsubscribe()
+      surrenderedActions.delete(targetCompId)
+      sendCounts.delete(targetCompId)
+    }
+  }, [targetCompId])
 }
 
 /**
- * Holds what the reader has taken over, and hands a domain over for good.
+ * Binds a component's own vocabulary to {@link surrenderCommands}.
  *
- * A domain groups the actions one control governs, so surrendering `sound` silences
- * `loud`, `mute` and `volume` at once. A domain no action carries yet is surrendered
- * all the same: it silences nothing today and starts working the day a verb joins it.
- * @template D - The component's domains.
- * @param domains - Every domain the component knows. It also orders what comes back, so
- * a rendered list never depends on the order the reader clicked in.
+ * A domain groups the actions one control governs, so `surrender('sound')` holds back
+ * every action mapped to it at once. A domain no action carries yet holds back nothing
+ * and starts working on its own the day a verb joins it.
+ * @param targetCompId - The component's own id.
  * @param actionDomains - The domain of each action.
- * @returns `surrenderedDomains` to render, `surrenderedActions` to hand to
- * {@link useCommands}, and `surrender` to call from a handler.
+ * @returns What to call from the handler of a control the reader has just used. It takes
+ * any name, so a caller annotates it with its own domain type to have typos caught.
  */
-export function useCommandSurrender<D extends string> (
-  domains: readonly D[],
-  actionDomains: Readonly<Record<string, D>>
-): {
-  surrenderedDomains: D[]
-  surrenderedActions: string[]
-  surrender: (domain: D) => void
-} {
-  const [claimedDomains, setClaimedDomains] = useState<D[]>([])
-  const surrender = useCallback((domain: D) => {
-    setClaimedDomains(current => current.includes(domain) ? current : [...current, domain])
-  }, [])
-  const surrenderedDomains = useMemo(
-    () => domains.filter(domain => claimedDomains.includes(domain)),
-    [domains, claimedDomains]
-  )
-  const surrenderedActions = useMemo(
-    () => Object.entries(actionDomains)
-      .filter(([, domain]) => surrenderedDomains.includes(domain))
-      .map(([action]) => action),
-    [actionDomains, surrenderedDomains]
-  )
-  return { surrenderedDomains, surrenderedActions, surrender }
+export function useCommandSurrender (
+  targetCompId: string,
+  actionDomains: Readonly<Record<string, string>>
+): (domain: string) => void {
+  return useCallback((domain: string) => {
+    surrenderCommands(targetCompId, Object.entries(actionDomains)
+      .filter(([, actionDomain]) => actionDomain === domain)
+      .map(([action]) => action))
+  }, [targetCompId, actionDomains])
 }
