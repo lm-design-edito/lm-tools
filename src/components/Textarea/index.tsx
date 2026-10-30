@@ -17,6 +17,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { CompIdProps } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { textarea as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -31,6 +33,9 @@ import cssModule from './styles.module.css'
  * @property autoHeight - When `true`, grows and shrinks the textarea to fit its
  * content on every value change. Defaults to `false`.
  * @property className - Additional class name(s) applied to the textarea element.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
 export type Props = {
   label?: ReactNode
@@ -40,6 +45,7 @@ export type Props = {
   & TextareaHTMLAttributes<HTMLTextAreaElement>
   & ClassNameProps
   & CompIdProps
+  & VisibilityProps
 
 /**
  * Textarea field supporting controlled and uncontrolled usage.
@@ -53,6 +59,8 @@ export type Props = {
  * ### Root element modifiers
  * - `--controlled` — the value comes from the parent, not from inside.
  * - `--empty` / `--filled` — whether the current value is the empty string.
+ * - `--visible` — the field has settled into view. Absent until something asks about
+ * visibility, since nothing is observed before that.
  *
  * ### CSS elements
  * - `label`
@@ -72,6 +80,14 @@ export type Props = {
  */
 export const Textarea: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   label,
   error,
   autoHeight = false,
@@ -89,6 +105,16 @@ export const Textarea: FunctionComponent<Props> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const isControlled = value !== undefined
   const currentValue = value ?? internalValue
+  const isVisible = useVisibilityTriggers(compId, textareaRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
 
   // Fx. dep. `autoHeight`, `currentValue` - fit the height to the content
   useLayoutEffect(() => {
@@ -110,7 +136,8 @@ export const Textarea: FunctionComponent<Props> = ({
     c(null, {
       controlled: isControlled,
       empty: currentValue === '',
-      filled: currentValue !== ''
+      filled: currentValue !== '',
+      visible: isVisible === true
     }),
     className
   )

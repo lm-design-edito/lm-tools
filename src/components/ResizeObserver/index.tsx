@@ -16,6 +16,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { CompIdProps } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { resizeObserver as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -31,6 +33,9 @@ type ROEntryWithBoundingRect = {
  * @property onResized - Callback invoked when the element is resized.
  * Receives the `ResizeObserverEntry` from the observed element, or `undefined` if none.
  * @property children - React children rendered inside the root element. Only the root element is observed
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
 export type Props = {
   onResized?: (entry: ROEntryWithBoundingRect) => void
@@ -38,6 +43,7 @@ export type Props = {
   & ChildrenProps
   & ClassNameProps
   & CompIdProps
+  & VisibilityProps
 
 /**
  * Component that observes its own size changes and exposes the measured content
@@ -46,6 +52,8 @@ export type Props = {
  *
  * ### Root element modifiers
  * - `--measured` — a first measurement landed, so the sets below are populated.
+ * - `--visible` — the component has settled into view. Absent until something asks
+ * about visibility, since nothing is observed before that.
  *
  * ### Data attributes
  * `data-x`, `data-y`, `data-top`, `data-left`, `data-bottom`, `data-right`,
@@ -65,6 +73,14 @@ export type Props = {
  */
 export const ResizeObserverComponent: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   className,
   onResized,
   children
@@ -75,6 +91,16 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
   const [roEntry, setRoEntry] = useState<ROEntryWithBoundingRect>()
   const rootRef = useRef<HTMLDivElement | null>(null)
   const observerRef = useRef<ResizeObserver | null>(null)
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
   const createObserver = (): void => {
     const root = rootRef.current
     observerRef.current?.disconnect()
@@ -135,7 +161,10 @@ export const ResizeObserverComponent: FunctionComponent<Props> = ({
     }
   }
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null, { measured: contentRect !== undefined }), className)
+  const rootClss = mergeClassNames(c(null, {
+    measured: contentRect !== undefined,
+    visible: isVisible === true
+  }), className)
   return <div
     {...dataAttributes}
     {...compIdAttribute(compId)}

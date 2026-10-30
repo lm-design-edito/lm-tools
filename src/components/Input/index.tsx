@@ -3,6 +3,7 @@ import {
   type FunctionComponent,
   type InputHTMLAttributes,
   type ReactNode,
+  useRef,
   useState
 } from 'react'
 import type { ClassNameProps } from '../../agnostic/@react/types/index.js'
@@ -15,6 +16,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { CompIdProps } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { input as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -27,6 +30,9 @@ import cssModule from './styles.module.css'
  * @property label - Content rendered as an associated `<label>`. When omitted, no label is rendered.
  * @property error - Content rendered as an error message below the input. When omitted, no error is rendered.
  * @property className - Additional class name(s) applied to the input element.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
 export type Props = {
   label?: ReactNode
@@ -35,6 +41,7 @@ export type Props = {
   & InputHTMLAttributes<HTMLInputElement>
   & ClassNameProps
   & CompIdProps
+  & VisibilityProps
 
 /**
  * Input field supporting controlled and uncontrolled usage.
@@ -48,6 +55,8 @@ export type Props = {
  * ### Root element modifiers
  * - `--controlled` — the value comes from the parent, not from inside.
  * - `--empty` / `--filled` — whether the current value is the empty string.
+ * - `--visible` — the field has settled into view. Absent until something asks about
+ * visibility, since nothing is observed before that.
  *
  * ### CSS elements
  * - `label`
@@ -67,6 +76,14 @@ export type Props = {
  */
 export const Input: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   label,
   error,
   value,
@@ -80,8 +97,19 @@ export const Input: FunctionComponent<Props> = ({
   // State
   const [id] = useState(`_${randomHash(12)}`)
   const [internalValue, setInternalValue] = useState(defaultValue ?? '')
+  const inputRef = useRef<HTMLInputElement>(null)
   const isControlled = value !== undefined
   const currentValue = value ?? internalValue
+  const isVisible = useVisibilityTriggers(compId, inputRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
 
   // User action handlers
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
@@ -95,7 +123,8 @@ export const Input: FunctionComponent<Props> = ({
     c(null, {
       controlled: isControlled,
       empty: currentValue === '',
-      filled: currentValue !== ''
+      filled: currentValue !== '',
+      visible: isVisible === true
     }),
     className
   )
@@ -104,6 +133,7 @@ export const Input: FunctionComponent<Props> = ({
     <input
       {...rest}
       {...compIdAttribute(compId)}
+      ref={inputRef}
       id={id}
       className={rootClss}
       value={currentValue}

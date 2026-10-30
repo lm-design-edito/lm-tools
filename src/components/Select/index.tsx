@@ -3,6 +3,7 @@ import {
   type FunctionComponent,
   type ReactNode,
   type SelectHTMLAttributes,
+  useRef,
   useState
 } from 'react'
 import type {
@@ -18,6 +19,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { CompIdProps } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { select as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -31,6 +34,9 @@ import cssModule from './styles.module.css'
  * @property error - Content rendered as an error message below the select. When omitted, no error is rendered.
  * @property className - Additional class name(s) applied to the select element.
  * @property children - `<option>` or `<optgroup>` elements rendered inside the select.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
 export type Props = {
   label?: ReactNode
@@ -40,6 +46,7 @@ export type Props = {
   & ChildrenProps
   & ClassNameProps
   & CompIdProps
+  & VisibilityProps
 
 /**
  * Select field supporting controlled and uncontrolled usage.
@@ -53,6 +60,8 @@ export type Props = {
  * ### Root element modifiers
  * - `--controlled` — the value comes from the parent, not from inside.
  * - `--empty` / `--filled` — whether the current value is the empty string.
+ * - `--visible` — the field has settled into view. Absent until something asks about
+ * visibility, since nothing is observed before that.
  *
  * ### CSS elements
  * - `label`
@@ -72,6 +81,14 @@ export type Props = {
  */
 export const Select: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   label,
   error,
   value,
@@ -86,8 +103,19 @@ export const Select: FunctionComponent<Props> = ({
   // State
   const [id] = useState(`_${randomHash(12)}`)
   const [internalValue, setInternalValue] = useState(defaultValue ?? '')
+  const selectRef = useRef<HTMLSelectElement>(null)
   const isControlled = value !== undefined
   const currentValue = value ?? internalValue
+  const isVisible = useVisibilityTriggers(compId, selectRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
 
   // User action handlers
   const handleChange = (e: ChangeEvent<HTMLSelectElement>): void => {
@@ -101,7 +129,8 @@ export const Select: FunctionComponent<Props> = ({
     c(null, {
       controlled: isControlled,
       empty: currentValue === '',
-      filled: currentValue !== ''
+      filled: currentValue !== '',
+      visible: isVisible === true
     }),
     className
   )
@@ -110,6 +139,7 @@ export const Select: FunctionComponent<Props> = ({
     <select
       {...rest}
       {...compIdAttribute(compId)}
+      ref={selectRef}
       id={id}
       className={rootClss}
       value={currentValue}

@@ -15,6 +15,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { CompIdProps } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { eventListener as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -28,6 +30,9 @@ import cssModule from './styles.module.css'
  * @property onEvent - Callback invoked when one of the specified events is triggered.
  * Receives the native DOM Event object.
  * @property children - React children rendered inside the root element.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
 export type Props = {
   type?: string | string[]
@@ -37,16 +42,30 @@ export type Props = {
   & ChildrenProps
   & ClassNameProps
   & CompIdProps
+  & VisibilityProps
 
 /**
  * Component that attaches one or multiple DOM event listeners to its root element
  * or to matching descendants.
+ *
+ * ### Root element modifiers
+ * - `--visible` — the component has settled into view. Absent until something asks
+ * about visibility, since nothing is observed before that.
+ *
  * @param props - Component properties
  * @see {@link Props}
  * @returns A span element wrapping `children`, with configured event listeners.
  */
 export const EventListenerComponent: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   className,
   type,
   targetSelector,
@@ -57,6 +76,16 @@ export const EventListenerComponent: FunctionComponent<Props> = ({
 
   // Effects & refs
   const rootRef = useRef<HTMLDivElement>(null)
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
   useEffect(() => {
     const root = rootRef.current
     if (onEvent === undefined || type === undefined || root === null) return
@@ -68,7 +97,7 @@ export const EventListenerComponent: FunctionComponent<Props> = ({
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(), className)
+  const rootClss = mergeClassNames(c(null, { visible: isVisible === true }), className)
   return <div
     {...compIdAttribute(compId)}
     className={rootClss}
