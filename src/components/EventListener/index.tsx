@@ -54,7 +54,7 @@ export type Props = {
  *
  * @param props - Component properties
  * @see {@link Props}
- * @returns A span element wrapping `children`, with configured event listeners.
+ * @returns A div element wrapping `children`, with configured event listeners.
  */
 export const EventListenerComponent: FunctionComponent<Props> = ({
   compId: givenCompId,

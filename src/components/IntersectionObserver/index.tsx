@@ -56,6 +56,10 @@ export type Props = {
  * @remarks
  * - Adds an `is-intersecting` modifier class when the element is intersecting.
  */
+// [WIP] The only component of the library with neither visibility triggers nor verbs.
+// `whenVisible` here would mean a second observer on the box this one already watches,
+// answering a settled version of the same question, and the two would disagree. Worth a
+// thought one day, probably alongside the generalized `when*` family.
 export const IntersectionObserverComponent: FunctionComponent<Props> = ({
   compId: givenCompId,
   onIntersected,
