@@ -239,6 +239,134 @@ span qui contient son propre séparateur, et non une suite plate de jetons et de
 ponctuations. À noter aussi : les horloges se re-rendent à chaque `timeupdate`, donc ce
 composant multiplie par six ce qui est diffé à chaque tick.
 
+## Reading a time — `parseDate` is in, `inferDate` is not written yet
+
+**`parseDate` is written**: `agnostic/time/dates/parse-date`, the exact mirror of
+`formatDate` — the same token grammar, read backwards. `parseDate(raw, format,
+locale = 'en', { reference })` gives a `Date` or `null`. The token table is a
+`satisfies Record<DateToken, TokenReader>` and the `{{…}}` alternation is built from its
+keys, so a token added to `format-date` stops compiling here until it is read too. Commits
+`fc79ef0` and `edb400c`.
+
+Three decisions are settled there, and they hold for `inferDate` as well:
+
+- **What the template does not name comes from the reference date**, except the parts finer
+  than the finest one it does name, which take their minimum (0, or 1 for month and day). A
+  year alone is therefore the first instant of that year, a time alone is that time today,
+  and a template naming no part of a date reads as `null`.
+- **Reading is lenient about what writing had to settle** — case ignored, a bare token
+  accepting the padded form, any run of whitespace — and **strict about what is not an
+  instant**: a part out of range, a 31st of February, a part named twice that contradicts
+  itself, an hour daylight saving skips. All of it reads as `null`; nothing throws.
+- A two-digit year takes the `strptime` pivot (69–99 → 1969+), and a 12-hour clock with no
+  meridiem reads as the morning.
+
+`monthNames` and `weekdayNames` were private to `format-date/parts.ts` and both modules want
+them, so they moved to `dates/calendar-names`.
+
+### `inferDate` — what is decided, and what is left to do
+
+The need comes from dlbbm's post-creation script, which asks for a publication date in
+`YYYY-MM-DD HH:MM`: one wants to write `next thursday at 9:20pm`, `in 3 days, at midnight`,
+`yesterday`. It would go in `agnostic/time/dates/infer-date`, as `inferDate(raw,
+locale = 'en', { reference })` → `Date | null` — the same shape as `parseDate`, minus the
+template. **Nothing is written.**
+
+**The strategy is token by token**, and the roles are the grammar: the token table is data,
+and the engine does not move when a row is added to it.
+
+| Role | Tokens | What it does |
+|---|---|---|
+| value | `tomorrow`, `december`, `thursday`, `6th`, `2019`, `9:20pm`, `noon`, `3`, `two`, `days` | names fields (`december` → M=12), or a quantity, or a unit |
+| orientation | `in`, `next`, `last`, `this`, `ago`, `from now` | gives a value a sign and a mode — shift or seek |
+| qualifier | `at`, `on`, `of` | says what the next value is: `at 9` is an hour, `on 9` a day |
+| filler | `the`, `a`, `,`, `and` | dropped, except `a` before a unit, where it is the quantity 1 |
+
+The fold carries **two pieces of state only** — a pending orientation and a pending
+qualifier — and walks left to right. An orientation can arrive before its value (`in 3
+days`, `next thursday`) or after it (`3 days ago`, `3 days from now`), so a quantity+unit
+pair waits for a sign on either side and is refused if none comes: a bare `3 days` is not a
+date. An orientation on a field-setter is a seek (`next december`); on a unit it is a
+calendar step (`next week`). Every op records the finest field it touches, and that is what
+feeds the consolidation `parseDate` already has.
+
+**A seek never lands back on where it started.** That is the rule lifting the three
+ambiguities: in October 2026 `last december` is December 2025 and `next december` is
+December 2026; asked on a Thursday, `next thursday` is seven days out. A bare `december`,
+with no orientation, simply sets the month in the reference year — nothing asked for a seek.
+
+The taxonomy to recognise, and what is out of scope for a v1:
+
+| Family | Operation | Examples |
+|---|---|---|
+| Day anchor | set, or shift ±1 day | `today`, `yesterday`, `tomorrow` |
+| Offset | shift by a `Duration` | `in 3 days`, `two weeks ago`, `in half an hour` |
+| Calendar step | shift by one calendar unit | `next week`, `last month`, `next year` |
+| Seek | shift until a field matches | `next thursday`, `last friday`, `last december` |
+| Month & year | set M, Y | `december`, `in december`, `dec 2019`, `in 2019` |
+| Calendar date | set D, M, Y | `6 january`, `january 6th 2019`, `the 6th` |
+| Clock time | set H, m | `9:20pm`, `21:20`, `9pm`, `at 9` |
+| Named time | set H, m | `midnight`, `midday`, `noon`, `morning`, `evening`, `night`, `tonight` |
+| Compound | fold several ops, in order | `next thursday at 9:20pm`, `in 3 days, at midnight`, `tomorrow morning` |
+| Out of v1 | — | `christmas`, `Q3`, `end of the month`, `the last friday of july`, `week 32` |
+
+**The named times are arbitrary, and owned as such**: `morning` 08:00, `evening` / `night` /
+`tonight` 20:00, `midnight` 00:00, `midday` / `noon` 12:00. `tonight` carries two things —
+today, *and* 20:00 — which the role table takes without a special case. `the day after
+tomorrow` is not in: we do not go that far.
+
+**Lenient means five precise things.** Runs of whitespace and punctuation are separators and
+are dropped, so `in 3 days, at midnight` and `in  3 days — at midnight` tokenize alike; a
+token no table knows is skipped rather than fatal, which is what makes `please publish this
+tomorrow at 9pm` work; nothing is positional, `9pm next thursday` and `next thursday at 9pm`
+land on the same instant; when two ops set the same field, **the later one wins**; and
+`null` is reserved for the case where no token named a date at all. The compound shapes that
+must survive the split — `9:20pm`, `21:20`, `6th` — are recognised before it, not after.
+
+Two reuses fall out on their own: the month and weekday tokens come from `calendar-names`,
+so `inferDate('en décembre', 'fr')` works without a second table, and the unit tokens come
+from `Duration`'s own suffixes, so `in 3 d` and `in 3 days` are one row each.
+
+The out-of-v1 rows are reachable from this shape, which is the real argument for it:
+`christmas` and `easter` are only more `value` tokens, `the last friday of july` is a seek
+joined by `of` to a period — the grammar already has `of` —, and `week 32` and `Q3` want a
+period that is not a Y/M/D field. Only `end of the month` wants a genuinely new op:
+collapsing to the **end** of the named precision rather than to its start.
+
+### Partial dates — afterwards, and why in that order
+
+dlbbm carries a `PartialDate` of three nullable fields (`shared/types`), with no precision,
+no time of day, and holes allowed anywhere (`{ year: null, month: 1 }` = *January of an
+unknown year*). Too light to be generalised as it stands, and the question is not urgent:
+neither `parseDate` nor `inferDate` needs it, both consolidate against a reference and give
+a `Date`.
+
+**The order is deliberate.** The concept's real questions — holes or no holes, a precision
+field, intervals, how comparison works — are answered by what consumes it, and there is one
+and a half consumer today. `inferDate` will be the second, and it will say whether `next
+december` has to stay month-precise or may land on the 1st. Designing the concept first is
+guessing; designing it second is two working consumers dictating the shape. The parts record
+inside `parse-date` is already a partial date under another name: with two producers instead
+of one, that is what it gets extracted from.
+
+What is already known about consolidation, and it is half the answer: the fields **below**
+the known precision are not missing, they are the extent of an interval — `2019` is the
+whole year, and consolidating means **picking a point in it** (start, end, middle; `before
+2019` in a filter wants the end). The fields **above** it are unknown and have to be
+**anchored from outside**, and the reference is the only anchor available: zeroing
+everything would mean year 0, or `strptime`'s arbitrary 1900, which turns `09:20` into
+1900-01-01T09:20. So one rule, two mechanisms — anchor above, collapse below — and the
+honest primitive is `toInterval(partial) → { start, end }`, with `resolve()` as sugar over
+it. The one arbitrary part left is a hole *in the middle* (year and day, no month), which
+only exists if the type allows holes at all.
+
+Confronted with the registry: schema.org has nothing (`Date`, `DateTime`), but **EDTF /
+ISO 8601-2** is exactly this concept, and it separates the two cases dlbbm conflates —
+truncation (`1968`, `1968-01`, which is also the W3C-DTF dlbbm already writes) and
+unspecified digits (`XXXX-01`, `196X`). Truncation is an interval, the second is a set of
+intervals, and `toInterval`, `compare` and `resolve` are only definable on the first — an
+argument for making the truncated form the main type and the hole-y one a separate matter.
+
 ## `compId` — chaque composant a une identité
 
 **Every component takes a `compId`, and publishes it.** The prop is optional, a generated
