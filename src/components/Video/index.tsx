@@ -215,6 +215,14 @@ export const Video: FunctionComponent<Props> = ({
   const isHeldBack = (verb: VideoActionVerb, force: boolean): boolean => !force
     && surrenderedDomains.includes(VIDEO_ACTION_VERB_DOMAINS[verb])
 
+  // The two refusals a verb meets, asked as one question: a parent that owns the value,
+  // then a reader who has claimed its domain.
+  const mayWrite = (
+    verb: VideoActionVerb,
+    controllingProp: unknown,
+    force: boolean
+  ): boolean => controllingProp === undefined && !isHeldBack(verb, force)
+
   // Commands
   //
   // The table is written here rather than in a module of its own: every verb writes
@@ -238,26 +246,18 @@ export const Video: FunctionComponent<Props> = ({
   }
 
   useCommands(compId, {
-    play: ({ force }) => {
-      if (play === undefined && !isHeldBack('play', force)) setInternalPlay(true)
-    },
-    pause: ({ force }) => {
-      if (play === undefined && !isHeldBack('pause', force)) setInternalPlay(false)
-    },
-    loud: ({ force }) => {
-      if (mute === undefined && !isHeldBack('loud', force)) setInternalMute(false)
-    },
-    mute: ({ force }) => {
-      if (mute === undefined && !isHeldBack('mute', force)) setInternalMute(true)
-    },
+    play: ({ force }) => { if (mayWrite('play', play, force)) setInternalPlay(true) },
+    pause: ({ force }) => { if (mayWrite('pause', play, force)) setInternalPlay(false) },
+    loud: ({ force }) => { if (mayWrite('loud', mute, force)) setInternalMute(false) },
+    mute: ({ force }) => { if (mayWrite('mute', mute, force)) setInternalMute(true) },
     volume: ({ args, force }) => {
       const arg = readArgument('volume', args)
-      if (arg === null || volume !== undefined || isHeldBack('volume', force)) return
+      if (arg === null || !mayWrite('volume', volume, force)) return
       setInternalVolume(Number(arg))
     },
     rate: ({ args, force }) => {
       const arg = readArgument('rate', args)
-      if (arg === null || playbackRate !== undefined || isHeldBack('rate', force)) return
+      if (arg === null || !mayWrite('rate', playbackRate, force)) return
       setInternalPlaybackRate(Number(arg))
     },
     'jump-to': ({ args, force }) => {
