@@ -21,6 +21,12 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { CompIdProps } from '../utils/comp-id/types.js'
+import {
+  useCommandSurrender,
+  useCommands
+} from '../utils/commands/index.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { lightbox as publicClassName } from '../public-classnames.js'
 import {
   closeLightbox,
@@ -32,6 +38,11 @@ import {
   unregisterLightbox,
   watchLightboxesStoreState
 } from './store.js'
+import {
+  LIGHTBOX_ACTION_VERB_ARGUMENTS,
+  LIGHTBOX_ACTION_VERB_DOMAINS,
+  type LightboxActionDomain
+} from './types.js'
 import cssModule from './styles.module.css'
 
 /**
@@ -79,6 +90,9 @@ import cssModule from './styles.module.css'
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - The content, rendered in place while closed and moved onto the
  * inside the lightbox while open.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
 export type Props = {
   group?: string | string[]
@@ -106,6 +120,7 @@ export type Props = {
   & ChildrenProps
   & ClassNameProps
   & CompIdProps
+  & VisibilityProps
 
 /**
  * Lightbox component. Holds content in a box that a stylesheet lifts over the page
@@ -119,6 +134,8 @@ export type Props = {
  *   have somewhere to go.
  * - `open-on-click` - the content itself opens the lightbox, so a stylesheet can say
  *   so with a cursor. Named after the prop it mirrors, as modifiers are.
+ * - `visible` - the component has settled into view. Absent until something asks about
+ *   visibility, since nothing is observed before that.
  *
  * ### CSS elements
  * - `placeholder` - holds the content's last measured size while it is out of flow.
@@ -126,6 +143,25 @@ export type Props = {
  *   flow and over the page while the root carries `--on`.
  * - `content` - wraps the content inside the backdrop.
  * - `open-btn`, `close-btn`, `prev-btn`, `next-btn`
+ *
+ * ### Commands
+ * - `open`, `close` — this lightbox, and no other.
+ * - `jump-to:<n>`, `jump-start`, `jump-end`, `jump-by:<n>` — a member of the group, a
+ *   whole number counting back from the end when negative, so `jump-to:-1` is the last
+ *   one and `jump-by:1` is what the next button does. A member no lightbox answers to
+ *   does nothing, and `jump-by` stops at either end as the buttons do.
+ *
+ * **A command names a lightbox, never a group**, and every verb but `open` is inert sent
+ * to one that is not the open one: closing or walking from a closed lightbox would reach
+ * a sibling with nothing of its own on screen. `open` is the exception by nature — it is
+ * what makes this one the open one, and the group's previous occupant closes by
+ * consequence.
+ *
+ * **A verb never contradicts a prop**: all six are inert while `isOn` arrived as one,
+ * which is where a click is already refused — the store is shared with the other
+ * lightboxes of the page, and writing it under a controlling prop would answer for a
+ * parent that did not ask. **And a command yields to the reader**, per domain: see
+ * {@link LIGHTBOX_ACTION_VERB_DOMAINS} for which gesture claims which. `:force` opts out.
  *
  * @param props - Component properties.
  * @see {@link Props}
@@ -162,6 +198,14 @@ export type Props = {
  */
 export const Lightbox: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   group,
   closeBtnContent,
   openBtnContent,
@@ -238,7 +282,25 @@ export const Lightbox: FunctionComponent<Props> = ({
   // State dispatch
   useStateChangeDispatch(isOn, onIsOnChanged)
 
-  // User action handlers
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
+
+  // Annotated with this component's vocabulary: the layer takes any name, so the
+  // annotation is what keeps a misspelled domain from compiling.
+  const surrender: (domain: LightboxActionDomain) => void = useCommandSurrender(
+    compId,
+    LIGHTBOX_ACTION_VERB_DOMAINS
+  )
+
+  // Actuators
   const requestOpen = useCallback((): void => {
     if (isControlled) return
     openLightbox(primaryGroup, id)
@@ -248,35 +310,89 @@ export const Lightbox: FunctionComponent<Props> = ({
     closeLightbox()
   }, [isControlled])
 
+  // Commands
+  const readArgument = (
+    verb: keyof typeof LIGHTBOX_ACTION_VERB_ARGUMENTS,
+    args: string[]
+  ): string | null => {
+    const arg = args[0]
+    if (arg !== undefined && LIGHTBOX_ACTION_VERB_ARGUMENTS[verb](arg)) return arg
+    // eslint-disable-next-line no-console
+    console.warn(`"${verb}" was sent an argument it cannot read: "${arg ?? ''}"`)
+    return null
+  }
+
+  // A jump moves the open lightbox of the group, so one reaching a closed lightbox does
+  // nothing: it would walk a group this instance has nothing on screen in.
+  const jumpToMember = (targetMember: number): void => {
+    if (isControlled || !isOn || openGroup === null) return
+    const ordered = getGroupLightboxes(openGroup)
+    const member = targetMember < 0 ? ordered.length + targetMember : targetMember
+    const target = ordered[member]
+    if (target === undefined) return
+    openLightbox(openGroup, target.id)
+  }
+  const jumpByMembers = (offset: number): void => {
+    if (isControlled || !isOn) return
+    navigateOpenGroupBy(offset)
+  }
+
+  useCommands(compId, {
+    open: () => { requestOpen() },
+    close: () => {
+      if (!isOn) return
+      requestClose()
+    },
+    'jump-to': ({ args }) => {
+      const arg = readArgument('jump-to', args)
+      if (arg === null) return
+      jumpToMember(Number(arg))
+    },
+    'jump-start': () => { jumpToMember(0) },
+    'jump-end': () => { jumpToMember(-1) },
+    'jump-by': ({ args }) => {
+      const arg = readArgument('jump-by', args)
+      if (arg === null) return
+      jumpByMembers(Number(arg))
+    }
+  })
+
+  // User action handlers
   const handleOpenButtonClick: MouseEventHandler<HTMLButtonElement> = () => {
     onOpenButtonClicked?.(isOn)
+    surrender('opening')
     requestOpen()
   }
   const handleCloseButtonClick: MouseEventHandler<HTMLButtonElement> = () => {
     onCloseButtonClicked?.(isOn)
+    surrender('opening')
     requestClose()
   }
   const handlePrevButtonClick: MouseEventHandler<HTMLButtonElement> = () => {
     onPrevButtonClicked?.(isOn)
+    surrender('position')
     navigateOpenGroupBy(-1)
   }
   const handleNextButtonClick: MouseEventHandler<HTMLButtonElement> = () => {
     onNextButtonClicked?.(isOn)
+    surrender('position')
     navigateOpenGroupBy(1)
   }
   const handleContentClick: MouseEventHandler<HTMLDivElement> = () => {
     if (openOnClick !== true || isOn) return
     onContentClicked?.(isOn)
+    surrender('opening')
     requestOpen()
   }
   const handleBackdropClick: MouseEventHandler<HTMLDivElement> = e => {
     if (exitOnBgClick !== true) return
     if (e.target !== backdropRef.current) return
     onBackgroundClicked?.(isOn)
+    surrender('opening')
     requestClose()
   }
 
-  // Fx. dep. exitOnEscape, isOn, requestClose, onEscapePressed - Escape closes the
+  // Fx. dep. exitOnEscape, isOn, requestClose, onEscapePressed, surrender - Escape closes the
   // lightbox. Listens only while open, so a page of closed lightboxes holds no
   // listener.
   useEffect(() => {
@@ -284,14 +400,15 @@ export const Lightbox: FunctionComponent<Props> = ({
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key !== 'Escape') return
       onEscapePressed?.(isOn)
+      surrender('opening')
       requestClose()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [exitOnEscape, isOn, requestClose, onEscapePressed])
+  }, [exitOnEscape, isOn, requestClose, onEscapePressed, surrender])
 
   // Fx. dep. navOnArrowKeys, isOn, openGroupSize, onPrevArrowPressed,
-  // onNextArrowPressed - The arrow keys walk the open group. Bound only while the
+  // onNextArrowPressed, surrender - The arrow keys walk the open group. Bound only while the
   // lightbox is open and the group holds someone else, so the keys stay the page's the
   // rest of the time.
   useEffect(() => {
@@ -299,15 +416,17 @@ export const Lightbox: FunctionComponent<Props> = ({
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'ArrowLeft') {
         onPrevArrowPressed?.(isOn)
+        surrender('position')
         navigateOpenGroupBy(-1)
       } else if (e.key === 'ArrowRight') {
         onNextArrowPressed?.(isOn)
+        surrender('position')
         navigateOpenGroupBy(1)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [navOnArrowKeys, isOn, openGroupSize, onPrevArrowPressed, onNextArrowPressed])
+  }, [navOnArrowKeys, isOn, openGroupSize, onPrevArrowPressed, onNextArrowPressed, surrender])
 
   // Fx. dep. hasAppliedDefault, isControlled, defaultIsOn, primaryGroup, id - An
   // uncontrolled lightbox asked to start open says so once, and never again: the
@@ -325,7 +444,8 @@ export const Lightbox: FunctionComponent<Props> = ({
     off: !isOn,
     grouped: isGrouped,
     navigable: openGroupSize > 1,
-    'open-on-click': openOnClick === true && !isOn
+    'open-on-click': openOnClick === true && !isOn,
+    visible: isVisible === true
   }), className)
   const size = sizeRef.current
   // Nothing here is conditional. React reconciles by position, so a branch that
