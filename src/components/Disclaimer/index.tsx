@@ -1,4 +1,5 @@
 import {
+  useRef,
   useState,
   type ReactNode,
   type FunctionComponent
@@ -15,8 +16,18 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { CompIdProps } from '../utils/comp-id/types.js'
+import {
+  useCommandSurrender,
+  useCommands
+} from '../utils/commands/index.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { disclaimer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
+import {
+  DISCLAIMER_ACTION_VERB_DOMAINS,
+  type DisclaimerActionDomain
+} from './types.js'
 
 /**
  * Props for the {@link Disclaimer} component.
@@ -35,6 +46,9 @@ import cssModule from './styles.module.css'
  * @property onIsOnChanged - Called after the visibility state changed, with the
  * new value.
  * @property className - Optional additional class name(s) applied to the root element.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`
+ * and the five `visibility*` settings.
  */
 export type Props = {
   undisclosedContent?: ReactNode
@@ -47,13 +61,26 @@ export type Props = {
   & ChildrenProps
   & ClassNameProps
   & CompIdProps
+  & VisibilityProps
 
 /**
  * Dismissible disclaimer panel, gating the content it wraps.
  *
+ * ### Commands
+ * - `dismiss` / `restore` — the panel goes, or comes back. Only `dismiss` has a gesture
+ *   behind it, so `restore` is for an article re-arming the gate itself.
+ *
+ * **A verb never contradicts a prop**: both are inert while `isOn` arrived as one. **And
+ * a command yields to the reader** — dismissing the panel hands the `disclosure` domain
+ * over for the rest of the mount, which silences `restore` too, since putting a gate back
+ * over content someone chose to reveal is exactly what this rule prevents. `:force` opts
+ * out.
+ *
  * ### CSS modifiers
  * - `on` — the disclaimer is showing.
  * - `off` — the disclaimer has been dismissed.
+ * - `--visible` — the component has settled into view. Absent until something asks
+ *   about visibility, since nothing is observed before that.
  *
  * ### CSS elements
  * - `panel`
@@ -75,6 +102,14 @@ export type Props = {
  */
 export const Disclaimer: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   children,
   undisclosedContent,
   togglerContent,
@@ -89,6 +124,30 @@ export const Disclaimer: FunctionComponent<Props> = ({
   // State
   const [internalIsOn, setInternalIsOn] = useState(defaultIsOn)
   const isOn = isOnProp ?? internalIsOn
+  const rootRef = useRef<HTMLDivElement>(null)
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
+
+  // Commands
+  //
+  // Annotated with this component's vocabulary: the layer takes any name, so the
+  // annotation is what keeps a misspelled domain from compiling.
+  const surrender: (domain: DisclaimerActionDomain) => void = useCommandSurrender(
+    compId,
+    DISCLAIMER_ACTION_VERB_DOMAINS
+  )
+  useCommands(compId, {
+    dismiss: () => { if (isOnProp === undefined) setInternalIsOn(false) },
+    restore: () => { if (isOnProp === undefined) setInternalIsOn(true) }
+  })
 
   // State dispatch
   useStateChangeDispatch(isOn, onIsOnChanged)
@@ -96,6 +155,7 @@ export const Disclaimer: FunctionComponent<Props> = ({
   // User action handlers
   const handleDismissClick = (): void => {
     onDismissClicked?.(isOn)
+    surrender('disclosure')
     setInternalIsOn(false)
   }
 
@@ -103,7 +163,8 @@ export const Disclaimer: FunctionComponent<Props> = ({
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null, {
     on: isOn,
-    off: !isOn
+    off: !isOn,
+    visible: isVisible === true
   }), className)
   const panelClss = c('panel')
   const contentClss = c('content')
@@ -111,6 +172,7 @@ export const Disclaimer: FunctionComponent<Props> = ({
   const sensitiveClss = c('sensitive')
   return <div
     {...compIdAttribute(compId)}
+    ref={rootRef}
     className={rootClss}>
     <div className={panelClss}>
       {undisclosedContent !== undefined && <div className={contentClss}>
