@@ -563,6 +563,13 @@ et le plein écran ne comptent pas** — chercher un passage ou passer en grand 
 décider de la lecture. Le composant appelle `surrender(domain)` depuis les handlers
 concernés, et la liste se documente chez lui.
 
+**[WIP] Does a surrendered domain belong in the DOM?** `Video` publishes it twice —
+six `--<domain>-surrendered` root modifiers and a `data-surrendered` attribute listing
+the domains, space separated —, both decided while surrender was the component's own
+business. Nothing reads either one today, and a component holding commands back is
+arguably not something a stylesheet has business seeing. To settle before a second
+component gets domains; dropping both is the current inclination.
+
 **Les modifieurs forment un ensemble, pas une séquence.** `'play:once:force'` et
 `'play:force:once'` sont la même instruction. L'analyse en découle : on retire les segments
 de fin tant que ce sont des modifieurs connus, et tout ce qui reste est le verbe — quelle
