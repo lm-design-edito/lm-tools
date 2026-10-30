@@ -1,4 +1,7 @@
-/** Extends a type with the optional `compId` every component takes. */
-export type WithCompId <T> = T & {
+/** The optional `compId` every component takes. */
+export type CompIdProps = {
   compId?: string
 }
+
+/** Extends a type with {@link CompIdProps}. */
+export type WithCompId <T> = T & CompIdProps
