@@ -13,7 +13,8 @@ export type AddressedCommand = Command & { target: string }
 /**
  * The actions a component reacts to, by name, each taking the whole command.
  *
- * The command and not just its `args`, because an action has to read `force` to know
- * whether it may run over a control the reader has taken over.
+ * The command and not just its `args`, so an action can read the modifiers it arrived
+ * with. Honouring `force` is not its business: a surrendered action is dropped before
+ * it is ever called.
  */
 export type CommandActions = Record<string, (command: Command) => void>

@@ -7,15 +7,17 @@ import {
   useState
 } from 'react'
 import { parseDuration } from '../../agnostic/time/duration/parse-duration/index.js'
-import { useCommands } from '../utils/commands/index.js'
+import {
+  useCommandSurrender,
+  useCommands
+} from '../utils/commands/index.js'
 import { useCompId } from '../utils/comp-id/index.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
 import type { WithVisibility } from '../utils/visibility/types.js'
 import {
+  VIDEO_ACTION_DOMAINS,
   VIDEO_ACTION_VERB_ARGUMENTS,
-  VIDEO_ACTION_VERB_DOMAINS,
-  type VideoActionDomain,
-  type VideoActionVerb
+  VIDEO_ACTION_VERB_DOMAINS
 } from './types.js'
 import {
   forceJumpTo,
@@ -208,20 +210,11 @@ export const Video: FunctionComponent<Props> = ({
   // a disappointment, restarting against someone who just pressed pause is a hostility
   // they would meet at every pass. `force` is the written form for the same reason —
   // yielding is the silent one.
-  const [surrenderedDomains, setSurrenderedDomains] = useState<VideoActionDomain[]>([])
-  const surrender = useCallback((domain: VideoActionDomain) => {
-    setSurrenderedDomains(current => current.includes(domain) ? current : [...current, domain])
-  }, [])
-  const isHeldBack = (verb: VideoActionVerb, force: boolean): boolean => !force
-    && surrenderedDomains.includes(VIDEO_ACTION_VERB_DOMAINS[verb])
-
-  // The two refusals a verb meets, asked as one question: a parent that owns the value,
-  // then a reader who has claimed its domain.
-  const mayWrite = (
-    verb: VideoActionVerb,
-    controllingProp: unknown,
-    force: boolean
-  ): boolean => controllingProp === undefined && !isHeldBack(verb, force)
+  const {
+    surrenderedDomains,
+    surrenderedActions,
+    surrender
+  } = useCommandSurrender(VIDEO_ACTION_DOMAINS, VIDEO_ACTION_VERB_DOMAINS)
 
   // Commands
   //
@@ -245,31 +238,33 @@ export const Video: FunctionComponent<Props> = ({
     return null
   }
 
+  // What is left in each verb is the one refusal the command layer cannot make for it:
+  // a value that arrived as a prop belongs to the parent, and not even `force` takes it.
   useCommands(compId, {
-    play: ({ force }) => { if (mayWrite('play', play, force)) setInternalPlay(true) },
-    pause: ({ force }) => { if (mayWrite('pause', play, force)) setInternalPlay(false) },
-    loud: ({ force }) => { if (mayWrite('loud', mute, force)) setInternalMute(false) },
-    mute: ({ force }) => { if (mayWrite('mute', mute, force)) setInternalMute(true) },
-    volume: ({ args, force }) => {
+    play: () => { if (play === undefined) setInternalPlay(true) },
+    pause: () => { if (play === undefined) setInternalPlay(false) },
+    loud: () => { if (mute === undefined) setInternalMute(false) },
+    mute: () => { if (mute === undefined) setInternalMute(true) },
+    volume: ({ args }) => {
       const arg = readArgument('volume', args)
-      if (arg === null || !mayWrite('volume', volume, force)) return
+      if (arg === null || volume !== undefined) return
       setInternalVolume(Number(arg))
     },
-    rate: ({ args, force }) => {
+    rate: ({ args }) => {
       const arg = readArgument('rate', args)
-      if (arg === null || !mayWrite('rate', playbackRate, force)) return
+      if (arg === null || playbackRate !== undefined) return
       setInternalPlaybackRate(Number(arg))
     },
-    'jump-to': ({ args, force }) => {
+    'jump-to': ({ args }) => {
       const arg = readArgument('jump-to', args)
-      if (arg === null || isHeldBack('jump-to', force)) return
+      if (arg === null) return
       const targetMs = parseDuration(arg)
       if (targetMs === null) return
       jumpTo(targetMs)
     },
-    'jump-start': ({ force }) => { if (!isHeldBack('jump-start', force)) jumpTo(0) },
-    'jump-end': ({ force }) => { if (!isHeldBack('jump-end', force)) jumpTo(-1) }
-  })
+    'jump-start': () => { jumpTo(0) },
+    'jump-end': () => { jumpTo(-1) }
+  }, surrenderedActions)
 
   const isVisible = useVisibilityTriggers(compId, rootRef, {
     whenVisible,

@@ -1,6 +1,9 @@
 import {
+  useCallback,
   useEffect,
-  useRef
+  useMemo,
+  useRef,
+  useState
 } from 'react'
 import { splitTrim } from '../../../agnostic/strings/split-trim/index.js'
 import type {
@@ -112,14 +115,25 @@ export function subscribeToCommands (
   return () => { commandBus.removeEventListener(COMMAND_EVENT, listener) }
 }
 
-/** Runs the action a command names, for as long as a component is mounted. */
+/**
+ * Runs the action a command names, for as long as a component is mounted.
+ *
+ * An action named in `surrenderedActions` is dropped unless the command carries
+ * `force`, which is where that modifier takes effect — see {@link useCommandSurrender}.
+ * @param targetCompId - The id commands are addressed to.
+ * @param actions - What to run for each action name.
+ * @param surrenderedActions - The actions the reader has taken over.
+ */
 export function useCommands (
   targetCompId: string,
-  actions: CommandActions
+  actions: CommandActions,
+  surrenderedActions: readonly string[] = []
 ): void {
   // Through a ref, so a table rebuilt on every render doesn't resubscribe.
   const actionsRef = useRef(actions)
   actionsRef.current = actions
+  const surrenderedActionsRef = useRef(surrenderedActions)
+  surrenderedActionsRef.current = surrenderedActions
   useEffect(
     () => subscribeToCommands(targetCompId, command => {
       const action = actionsRef.current[command.action]
@@ -128,8 +142,47 @@ export function useCommands (
         console.warn(`"${targetCompId}" has no action named "${command.action}"`)
         return
       }
+      if (!command.force && surrenderedActionsRef.current.includes(command.action)) return
       action(command)
     }),
     [targetCompId]
   )
+}
+
+/**
+ * Holds what the reader has taken over, and hands a domain over for good.
+ *
+ * A domain groups the actions one control governs, so surrendering `sound` silences
+ * `loud`, `mute` and `volume` at once. A domain no action carries yet is surrendered
+ * all the same: it silences nothing today and starts working the day a verb joins it.
+ * @template D - The component's domains.
+ * @param domains - Every domain the component knows. It also orders what comes back, so
+ * a rendered list never depends on the order the reader clicked in.
+ * @param actionDomains - The domain of each action.
+ * @returns `surrenderedDomains` to render, `surrenderedActions` to hand to
+ * {@link useCommands}, and `surrender` to call from a handler.
+ */
+export function useCommandSurrender<D extends string> (
+  domains: readonly D[],
+  actionDomains: Readonly<Record<string, D>>
+): {
+  surrenderedDomains: D[]
+  surrenderedActions: string[]
+  surrender: (domain: D) => void
+} {
+  const [claimedDomains, setClaimedDomains] = useState<D[]>([])
+  const surrender = useCallback((domain: D) => {
+    setClaimedDomains(current => current.includes(domain) ? current : [...current, domain])
+  }, [])
+  const surrenderedDomains = useMemo(
+    () => domains.filter(domain => claimedDomains.includes(domain)),
+    [domains, claimedDomains]
+  )
+  const surrenderedActions = useMemo(
+    () => Object.entries(actionDomains)
+      .filter(([, domain]) => surrenderedDomains.includes(domain))
+      .map(([action]) => action),
+    [actionDomains, surrenderedDomains]
+  )
+  return { surrenderedDomains, surrenderedActions, surrender }
 }
