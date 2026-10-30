@@ -633,19 +633,23 @@ la logique **n'appartient pas à `Video`** mais à `viewport-behaviours/`, qui n
 des chaînes ; et **la direction compte**, portée par le `kind` de la table plutôt que laissée à
 l'appelant.
 
-Ce qui reste ouvert tient en deux lignes :
+Both points below are in the code now.
 
-- **`Sequencer` y est passé.** Six verbes, dans la famille de `Video` mot pour mot :
-  `play`, `pause`, `jump-to:<n>`, `jump-start`, `jump-end`, `jump-by:<n>`. Un saut nomme
-  une **position**, jamais un step actif, et un négatif compte depuis la fin comme chez
-  `Video` — `jump-by:-1` recule donc d'un pas quand `jump-to:-1` va au dernier, ce qui est
-  le prix d'une seule famille plutôt que d'un `next` / `prev` à côté. Pas de `reset` :
-  l'ancien `resetOnVisible` **est** `jump-start`. Pas de `stop` non plus —
-  `['pause', 'jump-start']` compose, et l'ordre de la liste est l'ordre d'exécution.
-  **Pas de reddition à gérer** : aucun contrôle à toucher, donc `:force` n'a rien à
-  outrepasser et le domaine unique `playback` est une formalité. Le composant a récupéré
-  `defaultPlay` au passage — sans état de lecture interne, `play` et `pause` n'avaient
-  rien à écrire.
+- **`Sequencer` is wired**, with six verbs in `Video`'s family word for word: `play`,
+  `pause`, `jump-to:<n>`, `jump-start`, `jump-end`, `jump-by:<n>`. A jump names a
+  **position**, never an active step, and a negative one counts back from the end as it
+  does on `Video` — so `jump-by:-1` steps back one where `jump-to:-1` goes to the last,
+  which is the price of a single family rather than a `next` / `prev` pair beside it. No
+  `reset`: the old `resetOnVisible` **is** `jump-start`. No `stop` either —
+  `['pause', 'jump-start']` composes, and a list runs in order.
+  **Nothing surrenders**, there being no control to touch, so `:force` has nothing to
+  override here; the domains are `playback` and `position` all the same, so that a verb
+  carries the same domain wherever it appears. Two consequences worth knowing: `play` on
+  an ended sequence does nothing — ending is what stopped it, and `['jump-start', 'play']`
+  is how it starts again, a looping sequence never meeting the case — and an absolute jump
+  writes the position of the lap it was made from, so it never reads as a wrap and
+  `onLooped` stays silent. `internalPlay` got the setter it had been refused: a command is
+  an actuator like any other, which is what it was missing.
 - **La fin de la séquence a changé de définition au passage**, et c'est une correction :
   `ended` arrive quand le compteur **quitte** le dernier pas, pas quand il y arrive. Le
   dernier pas a droit à son temps comme les autres, donc le compteur court d'un cran
