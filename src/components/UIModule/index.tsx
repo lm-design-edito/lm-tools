@@ -16,6 +16,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { WithCompId } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { WithVisibility } from '../utils/visibility/types.js'
 import { uiModule as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -79,15 +81,18 @@ type LiveInstance = {
  * @property onModuleTargetChanged - Called after the hosted element changed,
  * with the `Element` returned by `init`, or `null` once unloaded or errored.
  * @property className - Optional additional class name(s) applied to the root element.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
-export type Props = WithCompId<WithClassName<{
+export type Props = WithVisibility<WithCompId<WithClassName<{
   src?: string
   props?: Record<string, unknown>
   onIdGenerated?: (id: string) => void
   onIsLoadingChanged?: (isLoading: boolean) => void
   onLoadedModuleChanged?: (loadedModule: ModuleData | Error | null) => void
   onModuleTargetChanged?: (moduleTarget: Element | null) => void
-}>>
+}>>>
 
 /**
  * Dynamic UI module host. Asynchronously imports an ES module by URL, validates
@@ -113,6 +118,8 @@ export type Props = WithCompId<WithClassName<{
  * - `error` — the import, the validation, or the `init` call failed.
  * - `loaded` — the module passed validation and `init` returned successfully.
  * - `initialized` — the `Element` returned by `init` has been appended.
+ * - `visible` — the component has settled into view. Absent until something asks
+ *   about visibility, since nothing is observed before that.
  *
  * ### Root element attributes
  * - `id` — a stable generated id, assigned once on mount and used to scope the
@@ -126,6 +133,14 @@ export type Props = WithCompId<WithClassName<{
  */
 export const UIModule: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   src,
   props,
   onIdGenerated,
@@ -142,6 +157,16 @@ export const UIModule: FunctionComponent<Props> = ({
   const [loadedModule, setLoadedModule] = useState<ModuleData | Error | null>(null)
   const [moduleTarget, setModuleTarget] = useState<Element | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
   // What the teardown needs, held outside state so the load effect can depend on
   // `src` alone and still destroy whatever is actually live at cleanup time.
   const liveInstanceRef = useRef<LiveInstance | null>(null)
@@ -242,7 +267,8 @@ export const UIModule: FunctionComponent<Props> = ({
       'no-module': loadedModule === null,
       'error': hasErrored,
       'loaded': !isLoading && loadedModule !== null && !hasErrored,
-      'initialized': moduleTarget !== null
+      'initialized': moduleTarget !== null,
+      'visible': isVisible === true
     }),
     className
   )

@@ -1,7 +1,8 @@
-import type {
-  FunctionComponent,
-  PropsWithChildren,
-  ReactNode
+import {
+  type FunctionComponent,
+  type PropsWithChildren,
+  type ReactNode,
+  useRef
 } from 'react'
 import type { WithClassName } from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
@@ -12,6 +13,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { WithCompId } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { WithVisibility } from '../utils/visibility/types.js'
 import { overlayer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -45,16 +48,23 @@ type Overlay = {
  * the base content. Overlays with falsy `children` are skipped.
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Content rendered in the base layer, below all overlays.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = WithVisibility<WithCompId<PropsWithChildren<WithClassName<{
   overlays?: Overlay[]
-}>>>
+}>>>>
 
 /**
  * Positions overlays over a base layer — **by publishing where they go, not by placing
  * them**. Each overlay carries its anchor and its shift as custom properties, and a
  * consumer's stylesheet turns them into a position. Naked like the rest of the library:
  * without such a sheet, the overlays render in the flow, under the base.
+ *
+ * ### Root element modifiers
+ * - `--visible` — the component has settled into view. Absent until something asks
+ *   about visibility, since nothing is observed before that.
  *
  * ### Child elements
  * - `__base` — wrapping `<div>` that contains `children`.
@@ -77,17 +87,37 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  */
 export const Overlayer: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   overlays,
   children,
   className
 }) => {
   const compId = useCompId(givenCompId)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
 
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(), className)
+  const rootClss = mergeClassNames(c(null, { visible: isVisible === true }), className)
   const baseClss = c('base')
   return <div
     {...compIdAttribute(compId)}
+    ref={rootRef}
     className={rootClss}>
     <div className={baseClss}>{children}</div>
     {overlays?.map(({

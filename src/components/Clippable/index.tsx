@@ -14,6 +14,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { WithCompId } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { WithVisibility } from '../utils/visibility/types.js'
 import { clippable as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -43,8 +45,11 @@ const clippedModifierDurationMs = 3000
  * error. When set, the error is no longer logged to the console.
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Content rendered inside the copyable container.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = WithVisibility<WithCompId<PropsWithChildren<WithClassName<{
   toClip?: string | ((curr: string | undefined) => string | undefined)
   copyBtnContent?: ReactNode
   clippedBtnContent?: ReactNode
@@ -54,7 +59,7 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
   }) => void
   onClipped?: (content: string) => void
   onCopyFailed?: (error: unknown) => void
-}>>>
+}>>>>
 
 /**
  * Clipboard-enabled container. Renders arbitrary content alongside a copy
@@ -62,6 +67,8 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  *
  * ### CSS modifiers
  * - `clipped` — on during the 3 seconds following a successful write.
+ * - `visible` — the component has settled into view. Absent until something asks
+ *   about visibility, since nothing is observed before that.
  *
  * ### CSS elements
  * - `copy`
@@ -78,6 +85,14 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  */
 export const Clippable: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   className,
   children,
   toClip,
@@ -91,8 +106,20 @@ export const Clippable: FunctionComponent<Props> = ({
 
   // State & refs
   const [hasBeenRecentlyClipped, setHasBeenRecentlyClipped] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const clippedTimeoutRef = useRef<ReturnType<typeof setTimeout>>(null)
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
+
 
   // User action handlers
   const handleCopyClick = async (e: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>): Promise<void> => {
@@ -129,12 +156,14 @@ export const Clippable: FunctionComponent<Props> = ({
   // Rendering
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null, {
-    clipped: hasBeenRecentlyClipped
+    clipped: hasBeenRecentlyClipped,
+    visible: isVisible === true
   }), className)
   const copyClss = c('copy')
   const contentClss = c('content')
   return <div
     {...compIdAttribute(compId)}
+    ref={rootRef}
     className={rootClss}>
     <button
       type='button'

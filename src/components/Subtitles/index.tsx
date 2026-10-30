@@ -16,6 +16,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { WithCompId } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { WithVisibility } from '../utils/visibility/types.js'
 import { subtitles as publicClassName } from '../public-classnames.js'
 import {
   lastElapsedPos as toLastElapsedPos,
@@ -50,8 +52,11 @@ import cssModule from './styles.module.css'
  * @property onLoadFailed - Called with an `Error` when the fetch fails, the response
  * is not ok, or the parse throws.
  * @property className - Optional additional class name(s) applied to the root element.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
-export type Props = WithCompId<WithClassName<{
+export type Props = WithVisibility<WithCompId<WithClassName<{
   cues?: SrtCue[]
   srtFileContent?: string
   src?: string
@@ -61,12 +66,16 @@ export type Props = WithCompId<WithClassName<{
   onLoaded?: (subs: string) => void
   onParsed?: (subs: SrtCue[]) => void
   onLoadFailed?: (error: Error) => void
-}>>
+}>>>
 
 /**
  * Subtitle synchronization component. Takes an SRT source — parsed cues, a raw
  * string, or a URL to fetch — and renders its cues in groups, marking where the
  * media currently is.
+ *
+ * ### Root element modifiers
+ * - `--visible` — the component has settled into view. Absent until something asks
+ *   about visibility, since nothing is observed before that.
  *
  * ### CSS elements
  * - `lm-subtitles` — the root. Carries `--loading` while a fetch is in flight, and
@@ -97,6 +106,14 @@ export type Props = WithCompId<WithClassName<{
  */
 export const Subtitles: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   cues,
   srtFileContent,
   src,
@@ -114,6 +131,18 @@ export const Subtitles: FunctionComponent<Props> = ({
   const [isLoading, setIsLoading] = useState(false)
   const [loadError, setLoadError] = useState<Error | null>(null)
   const [parsedSubs, setParsedSubs] = useState<SrtCue[]>([])
+
+  const rootRef = useRef<HTMLDivElement>(null)
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
 
   const onLoadedRef = useRef(onLoaded)
   const onLoadFailedRef = useRef(onLoadFailed)
@@ -163,7 +192,8 @@ export const Subtitles: FunctionComponent<Props> = ({
   const rootClss = mergeClassNames(
     c(null, {
       loading: isLoading,
-      error: loadError !== null
+      error: loadError !== null,
+      visible: isVisible === true
     }),
     className
   )
@@ -173,6 +203,7 @@ export const Subtitles: FunctionComponent<Props> = ({
   const currentGroup = toCurrentGroup(groups, lastElapsedPos, isEnded)
   return <div
     {...compIdAttribute(compId)}
+    ref={rootRef}
     className={rootClss}>
     {timecodeMs !== undefined && groups.map(group => {
       const groupClss = c('group', { curr: currentGroup?.startPos === group.startPos })

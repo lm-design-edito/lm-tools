@@ -16,6 +16,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { WithCompId } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { WithVisibility } from '../utils/visibility/types.js'
 import { iframe as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -50,10 +52,13 @@ const innerAutoHeightNotifier = (messageType: string): string => `<script>
  * @property className - Optional additional class names applied to the iframe.
  * @property style - Optional inline style applied to the iframe.
  * @property srcDoc - Raw HTML string rendered inside the iframe.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
-export type Props = WithCompId<WithClassName<{
+export type Props = WithVisibility<WithCompId<WithClassName<{
   autoHeight?: boolean
-}> & Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'children'>>
+}> & Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'children'>>>
 
 /**
  * Iframe component with optional automatic height adjustment.
@@ -67,12 +72,22 @@ export type Props = WithCompId<WithClassName<{
  * ### Root element modifiers
  * - `--auto-height` — the component is listening for a height from inside the frame.
  * - `--measured` — one has arrived, and the frame is sized to it.
+ * - `--visible` — the component has settled into view. Absent until something asks
+ * about visibility, since nothing is observed before that.
  *
  * @param props - Component properties.
  * @see {@link Props}
  */
 export const Iframe: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   autoHeight = false,
   className,
   srcDoc,
@@ -82,6 +97,16 @@ export const Iframe: FunctionComponent<Props> = ({
   const compId = useCompId(givenCompId)
 
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const isVisible = useVisibilityTriggers(compId, iframeRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
   const [height, setHeight] = useState<number | null>(null)
   const [innerMessageType] = useState(`_${randomHash(10)}`)
 
@@ -116,7 +141,8 @@ export const Iframe: FunctionComponent<Props> = ({
   const rootClss = mergeClassNames(
     c(null, {
       'auto-height': autoHeight,
-      measured: height !== null
+      measured: height !== null,
+      visible: isVisible === true
     }),
     className
   )

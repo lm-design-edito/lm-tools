@@ -1,7 +1,8 @@
 import {
   type FunctionComponent,
   type ImgHTMLAttributes,
-  useMemo
+  useMemo,
+  useRef
 } from 'react'
 import type { WithClassName } from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
@@ -12,6 +13,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { WithCompId } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { WithVisibility } from '../utils/visibility/types.js'
 import { image as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -49,14 +52,21 @@ type SourceData = {
  * - an array of srcSet strings,
  * - an array of {@link SourceData} objects for full `<source>` control.
  * @property className - Optional additional class name(s) applied to the root element.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
-export type Props = WithCompId<WithClassName<{
+export type Props = WithVisibility<WithCompId<WithClassName<{
   sources?: string | string[] | SourceData[]
-}> & ImgHTMLAttributes<HTMLImageElement>>
+}> & ImgHTMLAttributes<HTMLImageElement>>>
 
 /**
  * Image component. Wraps a native `<img>` (or `<picture>`) element with
  * optional responsive sources.
+ *
+ * ### Root element modifiers
+ * - `--visible` — the component has settled into view. Absent until something asks
+ *   about visibility, since nothing is observed before that.
  *
  * ### CSS elements
  * - `picture` — wrapping `<picture>` element, always rendered. Contains the
@@ -69,11 +79,30 @@ export type Props = WithCompId<WithClassName<{
  */
 export const Image: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   sources,
   className,
   ...intrinsicImgAttributes
 }) => {
   const compId = useCompId(givenCompId)
+  const rootRef = useRef<HTMLElement>(null)
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
 
   // State
   const parsedSources = useMemo(
@@ -83,7 +112,7 @@ export const Image: FunctionComponent<Props> = ({
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(), className)
+  const rootClss = mergeClassNames(c(null, { visible: isVisible === true }), className)
   const pictureClss = c('picture')
   const imgClss = c('image')
 
@@ -102,6 +131,7 @@ export const Image: FunctionComponent<Props> = ({
 
   return <figure
     {...compIdAttribute(compId)}
+    ref={rootRef}
     className={rootClss}>
     {pictureContent}
   </figure>

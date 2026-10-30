@@ -15,6 +15,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { WithCompId } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { WithVisibility } from '../utils/visibility/types.js'
 import cssModule from './styles.module.css'
 
 /**
@@ -33,14 +35,17 @@ import cssModule from './styles.module.css'
  * @property injectedStyles - Raw CSS string injected into the Shadow Root inside a `<style>` element.
  * Useful as a fallback when constructable stylesheets are not used.
  * @property children - React children rendered inside the Shadow Root via a React portal.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = WithVisibility<WithCompId<PropsWithChildren<WithClassName<{
   mode?: 'open' | 'closed'
   delegatesFocus?: boolean
   slotAssignment?: 'named' | 'manual'
   adoptedStyleSheets?: CSSStyleSheet[]
   injectedStyles?: string
-}>>>
+}>>>>
 
 /**
  * Component that creates a Shadow Root on its host element and renders
@@ -49,6 +54,8 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  * ### Root element modifiers
  * - `--attached` — the shadow root exists and the children are rendered into it.
  * Absent on the first render, before the host element is in the document.
+ * - `--visible` — the component has settled into view. Absent until something asks
+ * about visibility, since nothing is observed before that.
  *
  * @param props - Component properties
  * @see {@link Props}
@@ -56,6 +63,14 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  */
 export const ShadowRootComponent: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   mode = 'open',
   delegatesFocus,
   slotAssignment,
@@ -68,6 +83,16 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
 
   // Refs, state & effects
   const hostRef = useRef<HTMLDivElement | null>(null)
+  const isVisible = useVisibilityTriggers(compId, hostRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
   const [shadowRoot, setShadowRoot] = useState<ShadowRoot | null>(null)
   const [styles, setStyles] = useState<string | undefined>(injectedStyles)
   useEffect(() => {
@@ -89,7 +114,10 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
-  const rootClss = mergeClassNames(c(null, { attached: shadowRoot !== null }), className)
+  const rootClss = mergeClassNames(c(null, {
+    attached: shadowRoot !== null,
+    visible: isVisible === true
+  }), className)
   return <div
     {...compIdAttribute(compId)}
     ref={hostRef}
