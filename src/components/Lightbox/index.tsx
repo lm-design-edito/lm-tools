@@ -39,7 +39,6 @@ import {
   watchLightboxesStoreState
 } from './store.js'
 import {
-  LIGHTBOX_ACTION_VERB_ARGUMENTS,
   LIGHTBOX_ACTION_VERB_DOMAINS,
   type LightboxActionDomain
 } from './types.js'
@@ -145,23 +144,20 @@ export type Props = {
  * - `open-btn`, `close-btn`, `prev-btn`, `next-btn`
  *
  * ### Commands
- * - `open`, `close` — this lightbox, and no other.
- * - `jump-to:<n>`, `jump-start`, `jump-end`, `jump-by:<n>` — a member of the group, a
- *   whole number counting back from the end when negative, so `jump-to:-1` is the last
- *   one and `jump-by:1` is what the next button does. A member no lightbox answers to
- *   does nothing, and `jump-by` stops at either end as the buttons do.
+ * - `open`, `close` — this lightbox, and no other. There is no verb for walking a group:
+ *   see {@link LIGHTBOX_ACTION_VERBS}, where `@another-lightbox:open` is what an absolute
+ *   jump would have been.
  *
- * **A command names a lightbox, never a group**, and every verb but `open` is inert sent
- * to one that is not the open one: closing or walking from a closed lightbox would reach
- * a sibling with nothing of its own on screen. `open` is the exception by nature — it is
- * what makes this one the open one, and the group's previous occupant closes by
- * consequence.
+ * **A command names a lightbox, never a group.** `close` is inert sent to one that is not
+ * the open one, since closing from a closed lightbox would shut a sibling. `open` is the
+ * other way round by nature: it is what makes this one the open one, and the group's
+ * previous occupant closes by consequence.
  *
- * **A verb never contradicts a prop**: all six are inert while `isOn` arrived as one,
- * which is where a click is already refused — the store is shared with the other
- * lightboxes of the page, and writing it under a controlling prop would answer for a
- * parent that did not ask. **And a command yields to the reader**, per domain: see
- * {@link LIGHTBOX_ACTION_VERB_DOMAINS} for which gesture claims which. `:force` opts out.
+ * **A verb never contradicts a prop**: both are inert while `isOn` arrived as one, which
+ * is where a click is already refused — the store is shared with the other lightboxes of
+ * the page, and writing it under a controlling prop would answer for a parent that did
+ * not ask. **And a command yields to the reader**: any gesture that opens or closes this
+ * lightbox hands the `opening` domain over for the rest of the mount. `:force` opts out.
  *
  * @param props - Component properties.
  * @see {@link Props}
@@ -311,50 +307,9 @@ export const Lightbox: FunctionComponent<Props> = ({
   }, [isControlled])
 
   // Commands
-  const readArgument = (
-    verb: keyof typeof LIGHTBOX_ACTION_VERB_ARGUMENTS,
-    args: string[]
-  ): string | null => {
-    const arg = args[0]
-    if (arg !== undefined && LIGHTBOX_ACTION_VERB_ARGUMENTS[verb](arg)) return arg
-    // eslint-disable-next-line no-console
-    console.warn(`"${verb}" was sent an argument it cannot read: "${arg ?? ''}"`)
-    return null
-  }
-
-  // A jump moves the open lightbox of the group, so one reaching a closed lightbox does
-  // nothing: it would walk a group this instance has nothing on screen in.
-  const jumpToMember = (targetMember: number): void => {
-    if (isControlled || !isOn || openGroup === null) return
-    const ordered = getGroupLightboxes(openGroup)
-    const member = targetMember < 0 ? ordered.length + targetMember : targetMember
-    const target = ordered[member]
-    if (target === undefined) return
-    openLightbox(openGroup, target.id)
-  }
-  const jumpByMembers = (offset: number): void => {
-    if (isControlled || !isOn) return
-    navigateOpenGroupBy(offset)
-  }
-
   useCommands(compId, {
     open: () => { requestOpen() },
-    close: () => {
-      if (!isOn) return
-      requestClose()
-    },
-    'jump-to': ({ args }) => {
-      const arg = readArgument('jump-to', args)
-      if (arg === null) return
-      jumpToMember(Number(arg))
-    },
-    'jump-start': () => { jumpToMember(0) },
-    'jump-end': () => { jumpToMember(-1) },
-    'jump-by': ({ args }) => {
-      const arg = readArgument('jump-by', args)
-      if (arg === null) return
-      jumpByMembers(Number(arg))
-    }
+    close: () => { requestClose() }
   })
 
   // User action handlers
@@ -370,12 +325,10 @@ export const Lightbox: FunctionComponent<Props> = ({
   }
   const handlePrevButtonClick: MouseEventHandler<HTMLButtonElement> = () => {
     onPrevButtonClicked?.(isOn)
-    surrender('position')
     navigateOpenGroupBy(-1)
   }
   const handleNextButtonClick: MouseEventHandler<HTMLButtonElement> = () => {
     onNextButtonClicked?.(isOn)
-    surrender('position')
     navigateOpenGroupBy(1)
   }
   const handleContentClick: MouseEventHandler<HTMLDivElement> = () => {
@@ -408,7 +361,7 @@ export const Lightbox: FunctionComponent<Props> = ({
   }, [exitOnEscape, isOn, requestClose, onEscapePressed, surrender])
 
   // Fx. dep. navOnArrowKeys, isOn, openGroupSize, onPrevArrowPressed,
-  // onNextArrowPressed, surrender - The arrow keys walk the open group. Bound only while the
+  // onNextArrowPressed - The arrow keys walk the open group. Bound only while the
   // lightbox is open and the group holds someone else, so the keys stay the page's the
   // rest of the time.
   useEffect(() => {
@@ -416,17 +369,15 @@ export const Lightbox: FunctionComponent<Props> = ({
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'ArrowLeft') {
         onPrevArrowPressed?.(isOn)
-        surrender('position')
         navigateOpenGroupBy(-1)
       } else if (e.key === 'ArrowRight') {
         onNextArrowPressed?.(isOn)
-        surrender('position')
         navigateOpenGroupBy(1)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [navOnArrowKeys, isOn, openGroupSize, onPrevArrowPressed, onNextArrowPressed, surrender])
+  }, [navOnArrowKeys, isOn, openGroupSize, onPrevArrowPressed, onNextArrowPressed])
 
   // Fx. dep. hasAppliedDefault, isControlled, defaultIsOn, primaryGroup, id - An
   // uncontrolled lightbox asked to start open says so once, and never again: the
