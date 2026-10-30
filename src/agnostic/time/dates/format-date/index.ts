@@ -92,6 +92,7 @@ const renderers: Record<DateToken, (parts: DateParts) => string> = {
  * @returns Formatted date string. An unknown token is left untouched, braces
  * included.
  * @see {@link getDateParts} to reach the same parts as plain values, unpadded.
+ * @see {@link parseDate} — the same template grammar, read back into a `Date`.
  * @see {@link formatDuration} — the same template grammar, for a length of time
  * rather than a point in it.
  *
