@@ -321,24 +321,23 @@ convention for our own code, which is the one place that trade is acceptable.
 ### Les limites d'envoi
 
 A send limit is counted **by the sender**, not honoured by the receiver: `sendCommands`
-keeps a map keyed on the trio *origin, target, action* — arguments and modifiers excluded,
-so `@hero:play:once` and `@hero:play:3ce` share a count — and declines to dispatch once the
-limit is reached. That is why it belongs here rather than in a trigger's props: every
-future trigger gets it for nothing, and a component receiving `@other:play:once` never has
-to know the restriction was about the sender.
+keeps one bucket per sender, each keyed on the pair *target, action* — arguments and
+modifiers excluded, so `@hero:play:once` and `@hero:play:3ce` share a count — and declines
+to dispatch once the limit is reached. That is why it belongs here rather than in a
+trigger's props: every future trigger gets it for nothing, and a component receiving
+`@other:play:once` never has to know the restriction was about the sender.
 
-The count lives at module scope, so it lasts as long as the page. The consequence is worth
-wanting on purpose: a component with an **author-given** `compId` that unmounts and
-remounts resumes its count, so its `once` does not fire again — while a component with a
-**generated** id gets a fresh id and a fresh count.
+**A count lasts the mount.** The bucket is emptied when a component unsubscribes from
+`useCommands`, so one that unmounts and remounts starts fresh and its `once` fires again,
+author-given `compId` or generated. Page-lifetime counting was the earlier rule and went
+with the ledger sweep — the same cleanup that drops what a component had surrendered. The
+sweep hangs off the receiving subscription, so a component that only ever sends would keep
+its bucket for the page; none does today, both senders being receivers too.
 
-`force` is parsed and carried, and **nothing enforces it yet**: there is no second source
-of truth to arbitrate against until reader actions can deactivate a command. It is in the
-grammar now so the commands people write don't have to change when arbitration lands.
-
-`ScrollTracker` is the first and so far only component wired, with `track` / `untrack`.
-What does not exist yet: the other components' vocabularies. `force`, domains and surrender
-are deliberately out until arbitration has a second source to arbitrate.
+`force` is enforced in the dispatch, which is the one place it means anything: a
+surrendered action is dropped unless the command carries it. What does not exist yet is
+the other components' vocabularies — the mechanism is general, and `Video` is the only
+component declaring domains today.
 
 ### An argument carries its unit
 
@@ -394,9 +393,13 @@ part of `playback`, which is what settles the disagreement the old layer's two d
 about the timeline.
 
 `:force` opts out — `whenVisible='force:play'` — and that is what the modifier was
-parsed and transported for all along; it finally has a ledger to override. The ledger is
-**state and not a ref**, which answers the survey's last charge: a surrendered domain
-surfaces as a root modifier (`--sound-surrendered`). Under-
+parsed and transported for all along; it finally has a ledger to override. **The ledger
+belongs to the commands layer, not to the component**: a module map keyed by `compId`,
+written by `surrenderCommands` and read in the dispatch, emptied when the component
+unsubscribes. So a component reports a gesture and holds nothing, a surrender triggers no
+render, and a command sent in the same tick as the click is already refused. It also
+settles the survey's last charge the other way round: nothing surfaces in the DOM, since
+what a component does not hold is not a state it owes a modifier. Under-
 surrendering is accepted: someone who pressed pause still gets `jump-start` on the way
 out, since `force` can repair an over-eager yield but no modifier can repair a partition
 that is too coarse.
@@ -555,12 +558,15 @@ composant entier — le disclaimer de lm-link est le cas type — ne passe pas p
 lui passe pas les props qui déclenchent quelque chose. La couche n'a donc aucune notion de
 contenu retenu, et `:force` n'a qu'une chose à contourner.
 
-**Ce qui compte comme une prise de main est une décision du composant**, pas de la couche
-générique. lm-link a déjà tranché pour la vidéo, et le jugement est bon : les boutons
-lecture, pause, son, coupure et le curseur de volume comptent ; **la timeline, la vitesse
-et le plein écran ne comptent pas** — chercher un passage ou passer en grand n'est pas
-décider de la lecture. Le composant appelle `surrender(domain)` depuis les handlers
-concernés, et la liste se documente chez lui.
+**What counts as the reader taking over is the component's decision**, not the generic
+layer's. `Video` counts every control it renders: the play, pause, loud and mute buttons
+and a click on the picture surrender `playback`, the volume slider and the two sound
+buttons `sound`, the rate slider `rate`, the timeline `position`, and the last two buttons
+`fullscreen` and `subtitles`. An earlier reading left the timeline, the rate and
+fullscreen out — scrubbing is not deciding on playback — but the domains are narrow enough
+that counting them costs nothing elsewhere, and a reader who scrubs has taken the position
+in hand. The component calls `surrender(domain)` from the handlers concerned, and the list
+is documented there.
 
 **Les modifieurs forment un ensemble, pas une séquence.** `'play:once:force'` et
 `'play:force:once'` sont la même instruction. L'analyse en découle : on retire les segments

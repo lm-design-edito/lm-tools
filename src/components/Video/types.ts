@@ -94,10 +94,10 @@ export const VIDEO_ACTION_VERB_ARGUMENTS = {
 /**
  * The controls of the player a command can reach for, one per gesture a reader has.
  *
- * **A value and not a bare union**, so the component can walk them to render what has
- * been surrendered. `fullscreen` and `subtitles` carry no verb yet and are here all the
- * same: their buttons surrender them from the start, which silences nothing today and
- * starts working by itself the day either gets one.
+ * `fullscreen` and `subtitles` carry no verb yet and are here all the same: their buttons
+ * surrender them from the start, which holds back nothing today and starts working by
+ * itself the day either gets one. A value and not a bare union so the list stays
+ * greppable, now that nothing walks it at runtime.
  */
 export const VIDEO_ACTION_DOMAINS = [
   'playback',
