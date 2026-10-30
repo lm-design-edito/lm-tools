@@ -75,7 +75,7 @@ export type Props = {
  *   does nothing.
  *
  * **A verb never contradicts a prop**: it is inert while `ratio` arrived as one. **And a
- * command yields to the reader** — dragging the separator or clicking in the component
+ * command yields to the reader** — dragging the divider or clicking in the component
  * hands the `ratio` domain over for the rest of the mount. `:force` opts out.
  *
  * @remarks

@@ -39,7 +39,7 @@ export type BeforeAfterActionDomain = typeof BEFORE_AFTER_ACTION_DOMAINS[number]
 /**
  * The domain of each verb — **what a reader's gesture silences**.
  *
- * Dragging the separator or clicking anywhere in the component moves the divider, so
+ * Dragging the divider or clicking anywhere in the component moves it, so
  * either gesture claims the domain and `ratio` stops firing. `:force` opts out.
  */
 export const BEFORE_AFTER_ACTION_VERB_DOMAINS = {

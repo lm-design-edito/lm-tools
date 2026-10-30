@@ -79,7 +79,7 @@ export type Props = {
  * ### CSS elements
  * - `before`
  * - `after`
- * - `separator`
+ * - `divider`
  *
  * @param props - Component properties.
  * @see {@link Props}
@@ -186,7 +186,7 @@ export const ControlledBeforeAfter: FunctionComponent<Props> = ({
     data-ratio={roundedRatio}>
     <div className={c('before')}>{before}</div>
     <div className={c('after')}>{after}</div>
-    <div className={c('separator')} />
+    <div className={c('divider')} />
     {children}
   </div>
 }
