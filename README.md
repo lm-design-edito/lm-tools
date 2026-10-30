@@ -396,8 +396,7 @@ about the timeline.
 `:force` opts out — `whenVisible='force:play'` — and that is what the modifier was
 parsed and transported for all along; it finally has a ledger to override. The ledger is
 **state and not a ref**, which answers the survey's last charge: a surrendered domain
-surfaces as a root modifier (`--sound-surrendered`) and in a space-separated
-`data-surrendered`, so a stylesheet can ask `[data-surrendered~="sound"]`. Under-
+surfaces as a root modifier (`--sound-surrendered`). Under-
 surrendering is accepted: someone who pressed pause still gets `jump-start` on the way
 out, since `force` can repair an over-eager yield but no modifier can repair a partition
 that is too coarse.
@@ -562,13 +561,6 @@ lecture, pause, son, coupure et le curseur de volume comptent ; **la timeline, l
 et le plein écran ne comptent pas** — chercher un passage ou passer en grand n'est pas
 décider de la lecture. Le composant appelle `surrender(domain)` depuis les handlers
 concernés, et la liste se documente chez lui.
-
-**[WIP] Does a surrendered domain belong in the DOM?** `Video` publishes it twice —
-six `--<domain>-surrendered` root modifiers and a `data-surrendered` attribute listing
-the domains, space separated —, both decided while surrender was the component's own
-business. Nothing reads either one today, and a component holding commands back is
-arguably not something a stylesheet has business seeing. To settle before a second
-component gets domains; dropping both is the current inclination.
 
 **Les modifieurs forment un ensemble, pas une séquence.** `'play:once:force'` et
 `'play:force:once'` sont la même instruction. L'analyse en découle : on retire les segments

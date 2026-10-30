@@ -227,8 +227,6 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
  * - `data-play-off` — present (empty string) when paused.
  * - `data-ended` — present (empty string) once playback reached the end.
  * - `data-visible` — present (empty string) while settled into view.
- * - `data-surrendered` — the surrendered domains, space separated, so
- *   `[data-surrendered~="sound"]` selects one. Absent while none is.
  * - `data-fullscreen-on` — present (empty string) when in fullscreen.
  * - `data-fullscreen-off` — present (empty string) when not in fullscreen.
  * - `data-loud` — present (empty string) when unmuted.
@@ -494,8 +492,6 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     'data-play-off': !isPlaying ? '' : undefined,
     'data-ended': isEnded ? '' : undefined,
     'data-visible': isVisible === true ? '' : undefined,
-    // Space separated, so a stylesheet can ask `[data-surrendered~="sound"]`.
-    'data-surrendered': surrenderedDomains.length === 0 ? undefined : surrenderedDomains.join(' '),
     'data-fullscreen-on': isFullscreen ? '' : undefined,
     'data-fullscreen-off': !isFullscreen ? '' : undefined,
     'data-loud': isLoud ? '' : undefined,

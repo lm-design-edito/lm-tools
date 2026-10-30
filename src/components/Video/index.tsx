@@ -139,7 +139,7 @@ export type Props = WithVisibility<Omit<
  * muting or moving the volume slider silences `loud`, `mute` and `volume`. The
  * `:force` modifier opts out — `whenVisible='force:play'` — and is meant to be rare,
  * which is why yielding is the silent form. What has been surrendered is readable from
- * the outside: see the root modifiers and `data-surrendered`.
+ * the outside: see the root modifiers.
  *
  * Browsers refuse an unmuted `play()` outside a user gesture, so asking for playback
  * without muting will usually have it rejected. The
