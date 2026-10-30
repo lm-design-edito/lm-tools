@@ -2,6 +2,7 @@ import {
   type FunctionComponent,
   type MouseEventHandler,
   type ReactNode,
+  type RefObject,
   type TouchEventHandler,
   useRef
 } from 'react'
@@ -43,6 +44,14 @@ export type Props = {
   after?: ReactNode
   onDragged?: (payload: { xRatio: number, yRatio: number }) => void
   onClicked?: (payload: { xRatio: number, yRatio: number }) => void
+  // The root handed back to whoever renders this component. It exists for the hybrid
+  // `BeforeAfter` above it, which observes that element rather than wrapping it in a box
+  // of its own — hence a readable ref and not a callback one.
+  rootRef?: RefObject<HTMLDivElement | null>
+  // Whether the component has settled into view, as the layer above measures it. Only
+  // the `--visible` modifier comes of it here; `undefined` while nothing asks about
+  // visibility, which is why it never appears unasked.
+  isVisible?: boolean
 }
   & ChildrenProps
   & ClassNameProps
@@ -64,6 +73,8 @@ export type Props = {
  * ### CSS modifiers
  * - `horizontal` — applied when `mode` is `'horizontal'`.
  * - `vertical` — applied when `mode` is `'vertical'`.
+ * - `visible` — the component has settled into view. Absent until something asks about
+ *   visibility, since nothing is observed before that.
  *
  * ### CSS elements
  * - `before`
@@ -87,13 +98,16 @@ export const ControlledBeforeAfter: FunctionComponent<Props> = ({
   after,
   className,
   children,
+  rootRef: givenRootRef,
+  isVisible,
   onDragged,
   onClicked
 }) => {
   const compId = useCompId(givenCompId)
 
   // State & refs
-  const rootRef = useRef<HTMLDivElement>(null)
+  const ownRootRef = useRef<HTMLDivElement>(null)
+  const rootRef = givenRootRef ?? ownRootRef
   const isPointerDown = useRef(false)
   const hasDragged = useRef(false)
 
@@ -151,7 +165,8 @@ export const ControlledBeforeAfter: FunctionComponent<Props> = ({
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null, {
     horizontal: mode === 'horizontal',
-    vertical: mode === 'vertical'
+    vertical: mode === 'vertical',
+    visible: isVisible === true
   }), className)
   const roundedRatio = round(clampedRatio, 4)
   const customProps: Record<string, string> = {
