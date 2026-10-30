@@ -5,7 +5,7 @@ import {
   useState
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type { ClassNameProps } from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { toError } from '../../agnostic/misc/cast/index.js'
 import { parseSrt } from '../../agnostic/subtitles/parse-srt/index.js'
@@ -15,9 +15,9 @@ import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
-import type { WithVisibility } from '../utils/visibility/types.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { subtitles as publicClassName } from '../public-classnames.js'
 import {
   lastElapsedPos as toLastElapsedPos,
@@ -56,7 +56,7 @@ import cssModule from './styles.module.css'
  * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
  * `onVisibilityChanged` and the five `visibility*` settings.
  */
-export type Props = WithVisibility<WithCompId<WithClassName<{
+export type Props = {
   cues?: SrtCue[]
   srtFileContent?: string
   src?: string
@@ -66,7 +66,10 @@ export type Props = WithVisibility<WithCompId<WithClassName<{
   onLoaded?: (subs: string) => void
   onParsed?: (subs: SrtCue[]) => void
   onLoadFailed?: (error: Error) => void
-}>>>
+}
+  & ClassNameProps
+  & CompIdProps
+  & VisibilityProps
 
 /**
  * Subtitle synchronization component. Takes an SRT source — parsed cues, a raw

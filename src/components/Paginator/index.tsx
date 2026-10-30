@@ -1,5 +1,4 @@
 import {
-  type PropsWithChildren,
   type FunctionComponent,
   useEffect,
   useRef,
@@ -7,14 +6,17 @@ import {
   useState
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { paginator as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -75,12 +77,15 @@ type DirectionState = 'forwards' | 'backwards' | null
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - Each direct child is treated as an individual page slot.
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = {
   thresholdOffsetPercent?: number
   onDirectionChanged?: (direction: DirectionState) => void
   onPagesChanged?: (pages: PageState[]) => void
   onPageElementsChanged?: (pageElements: HTMLElement[]) => void
-}>>>
+}
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * A scroll-driven pagination component that tracks which child page is currently

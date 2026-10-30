@@ -2,18 +2,20 @@ import {
   useRef,
   useEffect,
   useState,
-  type PropsWithChildren,
   type JSX,
   type FunctionComponent
 } from 'react'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { resizeObserver as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -30,9 +32,12 @@ type ROEntryWithBoundingRect = {
  * Receives the `ResizeObserverEntry` from the observed element, or `undefined` if none.
  * @property children - React children rendered inside the root element. Only the root element is observed
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = {
   onResized?: (entry: ROEntryWithBoundingRect) => void
-}>>>
+}
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * Component that observes its own size changes and exposes the measured content

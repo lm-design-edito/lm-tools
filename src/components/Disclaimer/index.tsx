@@ -1,18 +1,20 @@
 import {
   useState,
   type ReactNode,
-  type PropsWithChildren,
   type FunctionComponent
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { disclaimer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -34,14 +36,17 @@ import cssModule from './styles.module.css'
  * new value.
  * @property className - Optional additional class name(s) applied to the root element.
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = {
   undisclosedContent?: ReactNode
   togglerContent?: ReactNode
   isOn?: boolean
   defaultIsOn?: boolean
   onDismissClicked?: (isOn: boolean) => void
   onIsOnChanged?: (isOn: boolean) => void
-}>>>
+}
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * Dismissible disclaimer panel, gating the content it wraps.

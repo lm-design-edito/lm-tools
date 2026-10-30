@@ -1,12 +1,14 @@
 import {
   type FunctionComponent,
   type MouseEventHandler,
-  type PropsWithChildren,
   type ReactNode,
   type TouchEventHandler,
   useRef
 } from 'react'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import { round } from '../../agnostic/numbers/round/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
@@ -15,7 +17,7 @@ import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { beforeAfter as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -34,14 +36,17 @@ import cssModule from './styles.module.css'
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Arbitrary content to inject inside the component.
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = {
   mode?: 'vertical' | 'horizontal'
   ratio?: number
   before?: ReactNode
   after?: ReactNode
   onDragged?: (payload: { xRatio: number, yRatio: number }) => void
   onClicked?: (payload: { xRatio: number, yRatio: number }) => void
-}>>>
+}
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * Controlled before/after comparison component.

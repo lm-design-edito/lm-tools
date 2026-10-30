@@ -7,18 +7,20 @@ import {
   useState,
   type FunctionComponent,
   type MouseEventHandler,
-  type PropsWithChildren,
   type ReactNode
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { lightbox as publicClassName } from '../public-classnames.js'
 import {
   closeLightbox,
@@ -78,7 +80,7 @@ import cssModule from './styles.module.css'
  * @property children - The content, rendered in place while closed and moved onto the
  * inside the lightbox while open.
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = {
   group?: string | string[]
   closeBtnContent?: ReactNode
   openBtnContent?: ReactNode
@@ -100,7 +102,10 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
   onPrevArrowPressed?: (isOn: boolean) => void
   onNextArrowPressed?: (isOn: boolean) => void
   onIsOnChanged?: (isOn: boolean) => void
-}>>>
+}
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * Lightbox component. Holds content in a box that a stylesheet lifts over the page

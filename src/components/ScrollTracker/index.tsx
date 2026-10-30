@@ -2,11 +2,13 @@ import {
   useEffect,
   useRef,
   useState,
-  type FunctionComponent,
-  type PropsWithChildren
+  type FunctionComponent
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
@@ -15,9 +17,9 @@ import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
-import type { WithVisibility } from '../utils/visibility/types.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { scrollTracker as publicClassName } from '../public-classnames.js'
 import {
   getScrollProgress,
@@ -57,14 +59,18 @@ import cssModule from './styles.module.css'
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React nodes rendered inside the scroll tracker container.
  */
-export type Props = WithVisibility<WithCompId<PropsWithChildren<WithClassName<{
+export type Props = {
   tracking?: boolean
   defaultTracking?: boolean
   onIsTrackingChanged?: (isTracking: boolean) => void
   onScrollStateChanged?: (scrollState?: ScrollState) => void
   onScrollProgressChanged?: (progress: number) => void
   onScrollDirectionChanged?: (direction: 'up' | 'down') => void
-}>>>>
+}
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
+  & VisibilityProps
 
 /**
  * Exposes scroll metrics — both the document's and its own — as CSS custom

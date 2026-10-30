@@ -13,7 +13,7 @@ import {
 } from '../utils/commands/index.js'
 import { useCompId } from '../utils/comp-id/index.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
-import type { WithVisibility } from '../utils/visibility/types.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import {
   VIDEO_ACTION_VERB_ARGUMENTS,
   VIDEO_ACTION_VERB_DOMAINS,
@@ -80,15 +80,17 @@ import {
 // refs are how it reaches elements it does not render itself — plumbing between the two
 // files, never a way in: a caller holding the `<video>` would act behind the command
 // layer's back.
-export type Props = WithVisibility<Omit<
-  ControlledProps,
-  'isVisible' | 'rootRef' | 'videoRef'
->> & {
+export type Props = {
   defaultSubtitlesOn?: boolean
   defaultVolume?: number
   defaultPlaybackRate?: number
   defaultMute?: boolean
 }
+  & Omit<
+    ControlledProps,
+    'isVisible' | 'rootRef' | 'videoRef'
+  >
+  & VisibilityProps
 
 /**
  * Full-featured video player component. Wraps a native `<video>` element with

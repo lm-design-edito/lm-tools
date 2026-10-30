@@ -1,12 +1,14 @@
 import {
   type ChangeEvent,
   type FunctionComponent,
-  type PropsWithChildren,
   type ReactNode,
   type SelectHTMLAttributes,
   useState
 } from 'react'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
@@ -15,14 +17,14 @@ import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { select as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
 /**
  * Props for the {@link Select} component.
  *
- * Extends all native {@link SelectHTMLAttributes} and {@link WithClassName}
+ * Extends all native {@link SelectHTMLAttributes} and {@link ClassNameProps}
  * with optional label, error content, and option children.
  *
  * @property label - Content rendered as an associated `<label>`. When omitted, no label is rendered.
@@ -30,10 +32,14 @@ import cssModule from './styles.module.css'
  * @property className - Additional class name(s) applied to the select element.
  * @property children - `<option>` or `<optgroup>` elements rendered inside the select.
  */
-export type Props = WithCompId<SelectHTMLAttributes<HTMLSelectElement> & PropsWithChildren<WithClassName<{
+export type Props = {
   label?: ReactNode
   error?: ReactNode
-}>>>
+}
+  & SelectHTMLAttributes<HTMLSelectElement>
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * Select field supporting controlled and uncontrolled usage.

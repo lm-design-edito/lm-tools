@@ -1,6 +1,5 @@
 import {
   type MouseEvent,
-  type PropsWithChildren,
   type FunctionComponent,
   type ReactNode,
   type RefObject,
@@ -9,7 +8,10 @@ import {
   useState
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
@@ -20,7 +22,7 @@ import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { drawer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -55,7 +57,7 @@ import cssModule from './styles.module.css'
  * @property className - Additional class name(s) applied to the root element.
  * @property children - Drawer content.
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = {
   openerContent?: ReactNode
   closerContent?: ReactNode
   openerBtnSelector?: string
@@ -66,7 +68,10 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
   onCloserClicked?: (isOpened: boolean) => void
   onIsOpenedChanged?: (isOpened: boolean) => void
   onContentResized?: (dimensions: { width: number, height: number }) => void
-}>>>
+}
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * Marks whatever a `…BtnSelector` points at with the command's `-btn` public class.

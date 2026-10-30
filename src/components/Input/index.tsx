@@ -5,7 +5,7 @@ import {
   type ReactNode,
   useState
 } from 'react'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type { ClassNameProps } from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
@@ -14,24 +14,27 @@ import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { input as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
 /**
  * Props for the {@link Input} component.
  *
- * Extends all native {@link InputHTMLAttributes} and {@link WithClassName}
+ * Extends all native {@link InputHTMLAttributes} and {@link ClassNameProps}
  * with optional label and error content.
  *
  * @property label - Content rendered as an associated `<label>`. When omitted, no label is rendered.
  * @property error - Content rendered as an error message below the input. When omitted, no error is rendered.
  * @property className - Additional class name(s) applied to the input element.
  */
-export type Props = WithCompId<InputHTMLAttributes<HTMLInputElement> & WithClassName<{
+export type Props = {
   label?: ReactNode
   error?: ReactNode
-}>>
+}
+  & InputHTMLAttributes<HTMLInputElement>
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * Input field supporting controlled and uncontrolled usage.

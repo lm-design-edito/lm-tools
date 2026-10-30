@@ -2,11 +2,13 @@ import {
   useRef,
   useEffect,
   useState,
-  type PropsWithChildren,
   type FunctionComponent
 } from 'react'
 import { createPortal } from 'react-dom'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import { shadowRoot as publicClassName } from '../public-classnames.js'
@@ -14,9 +16,9 @@ import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
-import type { WithVisibility } from '../utils/visibility/types.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import cssModule from './styles.module.css'
 
 /**
@@ -39,13 +41,17 @@ import cssModule from './styles.module.css'
  * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
  * `onVisibilityChanged` and the five `visibility*` settings.
  */
-export type Props = WithVisibility<WithCompId<PropsWithChildren<WithClassName<{
+export type Props = {
   mode?: 'open' | 'closed'
   delegatesFocus?: boolean
   slotAssignment?: 'named' | 'manual'
   adoptedStyleSheets?: CSSStyleSheet[]
   injectedStyles?: string
-}>>>>
+}
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
+  & VisibilityProps
 
 /**
  * Component that creates a Shadow Root on its host element and renders

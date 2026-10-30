@@ -1,18 +1,20 @@
 import {
-  type PropsWithChildren,
   useRef,
   useEffect,
   type JSX,
   type FunctionComponent
 } from 'react'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { eventListener as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -27,11 +29,14 @@ import cssModule from './styles.module.css'
  * Receives the native DOM Event object.
  * @property children - React children rendered inside the root element.
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = {
   type?: string | string[]
   targetSelector?: string
   onEvent?: (e: Event) => void
-}>>>
+}
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * Component that attaches one or multiple DOM event listeners to its root element

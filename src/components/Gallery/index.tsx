@@ -1,6 +1,5 @@
 import {
   type FunctionComponent,
-  type PropsWithChildren,
   type ReactNode,
   Children,
   useCallback,
@@ -9,14 +8,17 @@ import {
   useState
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { gallery as publicClassName } from '../public-classnames.js'
 import {
   EMPTY_GEOMETRY,
@@ -62,7 +64,7 @@ function resolveOffset (
  * @property className - Added to the root element.
  * @property children - One slot per child.
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = {
   offsetLeft?: string | number
   offsetRight?: string | number
   offset?: string | number
@@ -78,7 +80,10 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
   onActiveSlotChanged?: (activePos: number) => void
   onCanGoLeftChanged?: (canGoLeft: boolean) => void
   onCanGoRightChanged?: (canGoRight: boolean) => void
-}>>>
+}
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * Horizontally scrollable gallery, with navigation controls and pagination.

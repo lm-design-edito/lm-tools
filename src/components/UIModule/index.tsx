@@ -5,7 +5,7 @@ import {
   useState
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type { ClassNameProps } from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { unknownToString } from '../../agnostic/errors/unknown-to-string/index.js'
 import { isNonNullObject } from '../../agnostic/objects/is-object/index.js'
@@ -15,9 +15,9 @@ import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
-import type { WithVisibility } from '../utils/visibility/types.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { uiModule as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -85,14 +85,17 @@ type LiveInstance = {
  * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
  * `onVisibilityChanged` and the five `visibility*` settings.
  */
-export type Props = WithVisibility<WithCompId<WithClassName<{
+export type Props = {
   src?: string
   props?: Record<string, unknown>
   onIdGenerated?: (id: string) => void
   onIsLoadingChanged?: (isLoading: boolean) => void
   onLoadedModuleChanged?: (loadedModule: ModuleData | Error | null) => void
   onModuleTargetChanged?: (moduleTarget: Element | null) => void
-}>>>
+}
+  & ClassNameProps
+  & CompIdProps
+  & VisibilityProps
 
 /**
  * Dynamic UI module host. Asynchronously imports an ES module by URL, validates

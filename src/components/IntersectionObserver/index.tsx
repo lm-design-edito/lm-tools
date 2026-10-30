@@ -1,17 +1,19 @@
 import {
   useRef,
   type JSX,
-  type PropsWithChildren,
   type FunctionComponent
 } from 'react'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
 import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import {
   useIntersectionObserver,
   type ObserverOptions,
@@ -30,9 +32,13 @@ import cssModule from './styles.module.css'
  * @property className - Optional additional class name(s) applied to the root element.
  * @property children - React children rendered inside the observed element.
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = {
   onIntersected?: OnIntersected
-} & ObserverOptions>>>
+}
+  & ObserverOptions
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * Component that observes its root element using the IntersectionObserver API

@@ -1,6 +1,5 @@
 import {
   type FunctionComponent,
-  type PropsWithChildren,
   type RefObject,
   type VideoHTMLAttributes,
   useMemo,
@@ -10,7 +9,10 @@ import {
   useEffect
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { formatDuration } from '../../agnostic/time/duration/format-duration/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
@@ -18,7 +20,7 @@ import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import cssModule from './styles.module.css'
 import { video as publicClassName } from '../public-classnames.js'
 import {
@@ -147,7 +149,7 @@ export type VideoActionPayload<E, T> = {
   videoElement: HTMLVideoElement | null
 } & T
 
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = {
   // The `<figure>` handed back to whoever renders this component. It exists for the
   // hybrid `Video` above it, which observes that element rather than wrapping it in a
   // box of its own — hence a readable ref and not a callback one.
@@ -198,7 +200,11 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
   onPlaybackRateChanged?: (playbackRate: number) => void
   onCurrentTimeMsChanged?: (currentTimeMs: number) => void
   onFullscreenChange?: (isFullscreen: boolean) => void
-}> & VideoHTMLAttributes<HTMLVideoElement>>>
+}
+  & VideoHTMLAttributes<HTMLVideoElement>
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * Full-featured video player component. Wraps a native `<video>` element with

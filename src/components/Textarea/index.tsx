@@ -7,7 +7,7 @@ import {
   useRef,
   useState
 } from 'react'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type { ClassNameProps } from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { isNotFalsy } from '../../agnostic/booleans/is-falsy/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
@@ -16,14 +16,14 @@ import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { textarea as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
 /**
  * Props for the {@link Textarea} component.
  *
- * Extends all native {@link TextareaHTMLAttributes} and {@link WithClassName}
+ * Extends all native {@link TextareaHTMLAttributes} and {@link ClassNameProps}
  * with optional label, error content, and automatic height adjustment.
  *
  * @property label - Content rendered as an associated `<label>`. When omitted, no label is rendered.
@@ -32,11 +32,14 @@ import cssModule from './styles.module.css'
  * content on every value change. Defaults to `false`.
  * @property className - Additional class name(s) applied to the textarea element.
  */
-export type Props = WithCompId<TextareaHTMLAttributes<HTMLTextAreaElement> & WithClassName<{
+export type Props = {
   label?: ReactNode
   error?: ReactNode
   autoHeight?: boolean
-}>>
+}
+  & TextareaHTMLAttributes<HTMLTextAreaElement>
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * Textarea field supporting controlled and uncontrolled usage.

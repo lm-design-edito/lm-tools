@@ -7,7 +7,7 @@ import {
   useState
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type { ClassNameProps } from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
@@ -31,7 +31,7 @@ import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { scrllgngn as publicClassName } from '../public-classnames.js'
 import type {
   ForceStickMode,
@@ -164,7 +164,7 @@ export type PropsPage = {
  * @property className - Optional additional class name(s) applied to the root
  * element.
  */
-export type Props = WithCompId<WithClassName<{
+export type Props = {
   pages?: PropsPage[]
   thresholdOffsetPercent?: number
   viewportOffsetTop?: ViewportOffset
@@ -175,7 +175,9 @@ export type Props = WithCompId<WithClassName<{
   forceStickBlocks?: ForceStickMode
   onPageChanged?: (payload: { currentPagePos: number, pageData?: PropsPage }) => void
   onContentVisibilityChanged?: (isVisible: boolean) => void
-}>>
+}
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * Scrollytelling engine component. Orchestrates layered sticky blocks (`back`

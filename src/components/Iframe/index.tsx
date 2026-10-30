@@ -7,7 +7,7 @@ import {
   useRef,
   useState
 } from 'react'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type { ClassNameProps } from '../../agnostic/@react/types/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
 import { randomHash } from '../../agnostic/random/uuid/index.js'
 import { mergeClassNames } from '../../agnostic/css/merge-class-names/index.js'
@@ -15,9 +15,9 @@ import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
-import type { WithVisibility } from '../utils/visibility/types.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { iframe as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 
@@ -56,9 +56,13 @@ const innerAutoHeightNotifier = (messageType: string): string => `<script>
  * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
  * `onVisibilityChanged` and the five `visibility*` settings.
  */
-export type Props = WithVisibility<WithCompId<WithClassName<{
+export type Props = {
   autoHeight?: boolean
-}> & Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'children'>>>
+}
+  & Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'children'>
+  & ClassNameProps
+  & CompIdProps
+  & VisibilityProps
 
 /**
  * Iframe component with optional automatic height adjustment.

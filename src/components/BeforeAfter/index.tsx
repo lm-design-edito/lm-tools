@@ -31,10 +31,11 @@ function toDividerRatio (pointerRatio: number): number {
  * @property onRatioChanged - Called after the divider position changed, with the
  * new ratio.
  */
-export type Props = ControlledProps & {
+export type Props = {
   defaultRatio?: number
   onRatioChanged?: (ratio: number) => void
 }
+  & ControlledProps
 
 /**
  * Before/after comparison component supporting controlled and uncontrolled usage.

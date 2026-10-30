@@ -5,11 +5,13 @@ import {
   useEffect,
   useState,
   type FunctionComponent,
-  type PropsWithChildren,
   type ReactNode
 } from 'react'
 import { useStateChangeDispatch } from '../../agnostic/@react/effects/use-state-change-dispatch/index.js'
-import type { WithClassName } from '../../agnostic/@react/types/index.js'
+import type {
+  ChildrenProps,
+  ClassNameProps
+} from '../../agnostic/@react/types/index.js'
 import { absoluteModulo } from '../../agnostic/numbers/absolute-modulo/index.js'
 import { clamp } from '../../agnostic/numbers/clamp/index.js'
 import { clss } from '../../agnostic/css/clss/index.js'
@@ -18,7 +20,7 @@ import {
   compIdAttribute,
   useCompId
 } from '../utils/comp-id/index.js'
-import type { WithCompId } from '../utils/comp-id/types.js'
+import type { CompIdProps } from '../utils/comp-id/types.js'
 import { sequencer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
 import {
@@ -66,7 +68,7 @@ import {
  * the arrival, where `onIsEndedChanged` is the departure: on a playing sequence they are
  * one beat apart.
  */
-export type Props = WithCompId<PropsWithChildren<WithClassName<{
+export type Props = {
   totalSteps?: number
   stepMap?: number[]
   step?: number
@@ -81,7 +83,10 @@ export type Props = WithCompId<PropsWithChildren<WithClassName<{
   onLooped?: () => void
   onReachedFirstStep?: () => void
   onReachedLastStep?: () => void
-}>>>
+}
+  & ChildrenProps
+  & ClassNameProps
+  & CompIdProps
 
 /**
  * A sequencer over its children, which it classifies and never moves.
