@@ -66,11 +66,11 @@ export function readActiveIndex (geometry: Geometry, scrollLeft: number): number
 
 /** Whether there is track left on each side, within {@link EDGE_TOLERANCE}. */
 export function readReach (geometry: Geometry, scrollLeft: number): {
-  canGoLeft: boolean
-  canGoRight: boolean
+  canGoPrev: boolean
+  canGoNext: boolean
 } {
   return {
-    canGoLeft: scrollLeft > EDGE_TOLERANCE,
-    canGoRight: scrollLeft < geometry.maxScroll - EDGE_TOLERANCE
+    canGoPrev: scrollLeft > EDGE_TOLERANCE,
+    canGoNext: scrollLeft < geometry.maxScroll - EDGE_TOLERANCE
   }
 }

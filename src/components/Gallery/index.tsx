@@ -1,6 +1,8 @@
 import {
   type FunctionComponent,
+  type PointerEvent,
   type ReactNode,
+  type WheelEvent,
   Children,
   useCallback,
   useEffect,
@@ -19,7 +21,18 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { CompIdProps } from '../utils/comp-id/types.js'
+import {
+  useCommandSurrender,
+  useCommands
+} from '../utils/commands/index.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { gallery as publicClassName } from '../public-classnames.js'
+import {
+  GALLERY_ACTION_VERB_ARGUMENTS,
+  GALLERY_ACTION_VERB_DOMAINS,
+  type GalleryActionDomain
+} from './types.js'
 import {
   EMPTY_GEOMETRY,
   measureGeometry,
@@ -28,6 +41,10 @@ import {
   type Geometry
 } from './utils.js'
 import cssModule from './styles.module.css'
+
+// Enough to clear the sideways jitter at the start of a vertical swipe, short of a
+// deliberate nudge: under it, a horizontal movement is not read as an intent.
+const HORIZONTAL_INTENT_PX = 8
 
 /** Resolves one side's offset to a CSS length, falling back to the shorthand then to `0px`. */
 function resolveOffset (
@@ -58,9 +75,9 @@ function resolveOffset (
  * @property onPaginationClicked - Fires before the gallery reacts, with `activePos`
  * as it was and `targetPos`, the one aimed at.
  * @property onActiveSlotChanged - Fires after the active slot changed, with the new index.
- * @property onCanGoLeftChanged - Fires after the ability to scroll further left changed.
+ * @property onCanGoPrevChanged - Fires after the ability to go back a slot changed.
  * Never on mount.
- * @property onCanGoRightChanged - Same, to the right.
+ * @property onCanGoNextChanged - Same, forward.
  * @property className - Added to the root element.
  * @property children - One slot per child.
  */
@@ -78,12 +95,13 @@ export type Props = {
   onNextClicked?: (activePos: number) => void
   onPaginationClicked?: (payload: { activePos: number, targetPos: number }) => void
   onActiveSlotChanged?: (activePos: number) => void
-  onCanGoLeftChanged?: (canGoLeft: boolean) => void
-  onCanGoRightChanged?: (canGoRight: boolean) => void
+  onCanGoPrevChanged?: (canGoPrev: boolean) => void
+  onCanGoNextChanged?: (canGoNext: boolean) => void
 }
   & ChildrenProps
   & ClassNameProps
   & CompIdProps
+  & VisibilityProps
 
 /**
  * Horizontally scrollable gallery, with navigation controls and pagination.
@@ -102,7 +120,24 @@ export type Props = {
  * - `pagination`, `page`, `page--active`
  *
  * Root modifiers: `controlled`, `no-snap`, `measured`, `at-first`, `at-last`,
- * `can-go-left`, `can-go-right`.
+ * `can-go-prev`, `can-go-next`, `visible`.
+ *
+ * ### Commands
+ * - `jump-to:<n>`, `jump-start`, `jump-end`, `jump-by:<n>` — a whole number, negative
+ *   counting back from the end, so `jump-to:-1` is the last slot and `jump-by:1` is what
+ *   the next button does. A position no slot answers to does nothing.
+ *
+ * **A verb never contradicts a prop**: all four are inert while `active` arrived as one,
+ * which is also when hand scrolling is disabled. **And a command yields to the reader** —
+ * a click on either control or on a pagination item hands the `position` domain over for
+ * the rest of the mount, and so does the reader's own hand on the strip. `:force` opts
+ * out.
+ *
+ * Telling that hand from a vertical scroll is the one subtlety: a programmatic scroll
+ * fires the same `scroll` events a reader does, so neither is read. What counts is a
+ * **horizontal intent** — a wheel or a drag whose sideways movement dominates and clears
+ * {@link HORIZONTAL_INTENT_PX} — or **a slot change this component did not ask for**,
+ * which is what catches arrow keys and a browser scrolling a focused link into view.
  *
  * @param props - Component properties.
  * @see {@link Props}
@@ -116,6 +151,14 @@ export type Props = {
  */
 export const Gallery: FunctionComponent<Props> = ({
   compId: givenCompId,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   offsetLeft,
   offsetRight,
   offset,
@@ -129,8 +172,8 @@ export const Gallery: FunctionComponent<Props> = ({
   onNextClicked,
   onPaginationClicked,
   onActiveSlotChanged,
-  onCanGoLeftChanged,
-  onCanGoRightChanged,
+  onCanGoPrevChanged,
+  onCanGoNextChanged,
   children,
   className
 }) => {
@@ -141,8 +184,15 @@ export const Gallery: FunctionComponent<Props> = ({
   const geometryRef = useRef<Geometry>(EMPTY_GEOMETRY)
   const [scrolledIndex, setScrolledIndex] = useState(0)
   const [isMeasured, setIsMeasured] = useState(false)
-  const [canGoLeft, setCanGoLeft] = useState(false)
-  const [canGoRight, setCanGoRight] = useState(false)
+  const [canGoPrev, setCanGoPrev] = useState(false)
+  const [canGoNext, setCanGoNext] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
+  // The slot a programmatic scroll is on its way to. Every index crossed before it
+  // belongs to that scroll; an index change with none pending is the reader's.
+  const pendingTargetRef = useRef<number | null>(null)
+  const lastIndexRef = useRef(0)
+  // Where a pointer went down on the strip, until its movement says what it meant.
+  const dragOriginRef = useRef<{ x: number, y: number } | null>(null)
   const childrenCount = Children.count(children)
   const isControlled = active !== undefined
   // Controlled, the prop is the answer: the class names and `data-active` say where the
@@ -151,19 +201,44 @@ export const Gallery: FunctionComponent<Props> = ({
 
   // State dispatch
   useStateChangeDispatch(activeIndex, onActiveSlotChanged)
-  useStateChangeDispatch(canGoLeft, onCanGoLeftChanged)
-  useStateChangeDispatch(canGoRight, onCanGoRightChanged)
+  useStateChangeDispatch(canGoPrev, onCanGoPrevChanged)
+  useStateChangeDispatch(canGoNext, onCanGoNextChanged)
+
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
+
+  // Annotated with this component's vocabulary: the layer takes any name, so the
+  // annotation is what keeps a misspelled domain from compiling.
+  const surrender: (domain: GalleryActionDomain) => void = useCommandSurrender(
+    compId,
+    GALLERY_ACTION_VERB_DOMAINS
+  )
 
   const readScroll = useCallback((): void => {
     const scrollerElt = scrollerRef.current
     if (scrollerElt === null) return
     const { scrollLeft } = scrollerElt
     const geometry = geometryRef.current
-    setScrolledIndex(readActiveIndex(geometry, scrollLeft))
-    const { canGoLeft, canGoRight } = readReach(geometry, scrollLeft)
-    setCanGoLeft(canGoLeft)
-    setCanGoRight(canGoRight)
-  }, [])
+    const index = readActiveIndex(geometry, scrollLeft)
+    if (index !== lastIndexRef.current) {
+      lastIndexRef.current = index
+      const pendingTarget = pendingTargetRef.current
+      if (pendingTarget === null) surrender('position')
+      else if (pendingTarget === index) pendingTargetRef.current = null
+    }
+    setScrolledIndex(index)
+    const { canGoPrev, canGoNext } = readReach(geometry, scrollLeft)
+    setCanGoPrev(canGoPrev)
+    setCanGoNext(canGoNext)
+  }, [surrender])
 
   const measure = useCallback((): void => {
     const scrollerElt = scrollerRef.current
@@ -177,25 +252,89 @@ export const Gallery: FunctionComponent<Props> = ({
     const scrollerElt = scrollerRef.current
     const scrollPosition = geometryRef.current.scrollPositions[pos]
     if (scrollerElt === null || scrollPosition === undefined) return
+    pendingTargetRef.current = pos
     scrollerElt.scrollTo({ left: scrollPosition, behavior: smooth ? 'smooth' : 'instant' })
   }, [])
+
+  // Commands
+  const readArgument = (
+    verb: keyof typeof GALLERY_ACTION_VERB_ARGUMENTS,
+    args: string[]
+  ): string | null => {
+    const arg = args[0]
+    if (arg !== undefined && GALLERY_ACTION_VERB_ARGUMENTS[verb](arg)) return arg
+    // eslint-disable-next-line no-console
+    console.warn(`"${verb}" was sent an argument it cannot read: "${arg ?? ''}"`)
+    return null
+  }
+
+  const jumpToSlot = (targetSlot: number): void => {
+    if (isControlled) return
+    scrollToSlot(targetSlot < 0 ? childrenCount + targetSlot : targetSlot)
+  }
+
+  useCommands(compId, {
+    'jump-to': ({ args }) => {
+      const arg = readArgument('jump-to', args)
+      if (arg === null) return
+      jumpToSlot(Number(arg))
+    },
+    'jump-start': () => { jumpToSlot(0) },
+    'jump-end': () => { jumpToSlot(childrenCount - 1) },
+    'jump-by': ({ args }) => {
+      const arg = readArgument('jump-by', args)
+      if (arg === null) return
+      jumpToSlot(activeIndex + Number(arg))
+    }
+  })
 
   // User actions handlers
   const handlePrevClick = (): void => {
     onPrevClicked?.(activeIndex)
+    surrender('position')
     if (isControlled) return
     scrollToSlot(activeIndex - 1)
   }
   const handleNextClick = (): void => {
     onNextClicked?.(activeIndex)
+    surrender('position')
     if (isControlled) return
     scrollToSlot(activeIndex + 1)
   }
   const handlePaginationClick = (pos: number): void => {
     onPaginationClicked?.({ activePos: activeIndex, targetPos: pos })
+    surrender('position')
     if (isControlled) return
     scrollToSlot(pos)
   }
+
+  // A horizontal intent, and not a scroll: a programmatic scroll fires the same events
+  // the reader does. Dominance is what tells a swipe along the strip from the jitter of
+  // one down the article.
+  const takeOverPosition = (): void => {
+    pendingTargetRef.current = null
+    surrender('position')
+  }
+  const handleScrollerWheel = (event: WheelEvent<HTMLDivElement>): void => {
+    const { deltaX, deltaY } = event
+    if (Math.abs(deltaX) <= Math.abs(deltaY)) return
+    if (Math.abs(deltaX) < HORIZONTAL_INTENT_PX) return
+    takeOverPosition()
+  }
+  const handleScrollerPointerDown = (event: PointerEvent<HTMLDivElement>): void => {
+    dragOriginRef.current = { x: event.clientX, y: event.clientY }
+  }
+  const handleScrollerPointerMove = (event: PointerEvent<HTMLDivElement>): void => {
+    const origin = dragOriginRef.current
+    if (origin === null) return
+    const movedX = event.clientX - origin.x
+    const movedY = event.clientY - origin.y
+    if (Math.abs(movedX) <= Math.abs(movedY)) return
+    if (Math.abs(movedX) < HORIZONTAL_INTENT_PX) return
+    dragOriginRef.current = null
+    takeOverPosition()
+  }
+  const handleScrollerPointerUp = (): void => { dragOriginRef.current = null }
 
   // Fx. dep. childrenCount - Measure, and measure again whenever a box changes size.
   // Watching the slots and not only the scroller is what makes a late image or font
@@ -251,8 +390,9 @@ export const Gallery: FunctionComponent<Props> = ({
       'measured': isMeasured,
       'at-first': activeIndex === 0,
       'at-last': activeIndex === childrenCount - 1,
-      'can-go-left': canGoLeft,
-      'can-go-right': canGoRight
+      'can-go-prev': canGoPrev,
+      'can-go-next': canGoNext,
+      'visible': isVisible === true
     }),
     className
   )
@@ -266,11 +406,19 @@ export const Gallery: FunctionComponent<Props> = ({
   const actualOffsetRight = resolveOffset(offsetRight, offset)
   return <div
     {...compIdAttribute(compId)}
+    ref={rootRef}
     className={rootClss}
     {...dataAttributes}>
 
     {/* Scroller */}
-    <div className={scrollerClss} ref={scrollerRef}>
+    <div
+      className={scrollerClss}
+      ref={scrollerRef}
+      onWheel={handleScrollerWheel}
+      onPointerDown={handleScrollerPointerDown}
+      onPointerMove={handleScrollerPointerMove}
+      onPointerUp={handleScrollerPointerUp}
+      onPointerCancel={handleScrollerPointerUp}>
       {Children.map(children, (child, pos) => {
         const slotClss = c('slot', { active: pos === activeIndex })
         const style: Record<string, string | undefined> = {
