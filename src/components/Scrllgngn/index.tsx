@@ -32,6 +32,8 @@ import {
   useCompId
 } from '../utils/comp-id/index.js'
 import type { CompIdProps } from '../utils/comp-id/types.js'
+import { useVisibilityTriggers } from '../utils/visibility/index.js'
+import type { VisibilityProps } from '../utils/visibility/types.js'
 import { scrllgngn as publicClassName } from '../public-classnames.js'
 import type {
   ForceStickMode,
@@ -163,6 +165,9 @@ export type PropsPage = {
  * area entered or left the viewport, with the new value. Never on mount.
  * @property className - Optional additional class name(s) applied to the root
  * element.
+ *
+ * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
+ * `onVisibilityChanged` and the five `visibility*` settings.
  */
 export type Props = {
   pages?: PropsPage[]
@@ -178,6 +183,7 @@ export type Props = {
 }
   & ClassNameProps
   & CompIdProps
+  & VisibilityProps
 
 /**
  * Scrollytelling engine component. Orchestrates layered sticky blocks (`back`
@@ -193,6 +199,10 @@ export type Props = {
  * - `--force-stick-blocks-before` — when `forceStickBlocks === 'before'`.
  * - `--force-stick-blocks-after` — when `forceStickBlocks === 'after'`.
  * - `--force-stick-blocks-both` — when `forceStickBlocks === 'both'`.
+ * - `--visible` — the root has settled into view, through the observer every component
+ * of the library shares. Not to be read as one of the three above: those are this
+ * component's own sentinels, and a scrollytelling root being several screens tall, the
+ * first pixel is enough unless `visibilityThreshold` says otherwise.
  *
  * ### Data attributes
  * Both are updated on every page change reported by the internal
@@ -284,6 +294,14 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   forceStickBlocks,
   onPageChanged,
   onContentVisibilityChanged,
+  whenVisible,
+  whenHidden,
+  onVisibilityChanged,
+  visibilityThreshold,
+  visibilityRoot,
+  visibilityRootMargin,
+  visibilityOnAfterMs,
+  visibilityOffAfterMs,
   className
 }) => {
   const compId = useCompId(givenCompId)
@@ -309,6 +327,17 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   const currentPagePosRef = useRef(currentPagePos)
   const visibleZoneRef = useRef(visibleZone)
   const probeRef = useRef<Element | null>(null)
+
+  const isVisible = useVisibilityTriggers(compId, rootRef, {
+    whenVisible,
+    whenHidden,
+    onVisibilityChanged,
+    visibilityThreshold,
+    visibilityRoot,
+    visibilityRootMargin,
+    visibilityOnAfterMs,
+    visibilityOffAfterMs
+  })
 
   // Sticky blocks calculations
   useEffect(() => {
@@ -476,7 +505,8 @@ export const Scrllgngn: FunctionComponent<Props> = ({
       'bottom-visible': bottomVisible,
       'force-stick-blocks-before': forceStickBlocks === 'before',
       'force-stick-blocks-after': forceStickBlocks === 'after',
-      'force-stick-blocks-both': forceStickBlocks === 'both'
+      'force-stick-blocks-both': forceStickBlocks === 'both',
+      'visible': isVisible === true
     }),
     className
   )
