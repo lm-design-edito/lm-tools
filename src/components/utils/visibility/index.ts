@@ -5,6 +5,7 @@ import {
 } from 'react'
 import { useStateChangeDispatch } from '../../../agnostic/@react/effects/use-state-change-dispatch/index.js'
 import { sendCommands } from '../commands/index.js'
+import { useDisclosure } from '../disclosure/index.js'
 import {
   useIntersectionObserver,
   type ObserverOptions
@@ -45,7 +46,14 @@ export function useVisibility (
   return isVisible
 }
 
-/** Sends a trigger's commands on each settled change, and hands the state back. */
+/**
+ * Sends a trigger's commands on each settled change, and hands the state back.
+ *
+ * **A component withheld by a disclaimer sends nothing**: it is behind a panel the reader
+ * has not accepted, and driving the rest of the page from there is the same overreach as
+ * answering a verb. `onVisibilityChanged` still fires — it informs a parent, it does not
+ * act.
+ */
 export function useVisibilityTriggers (
   compId: string,
   targetRef: RefObject<Element | null>,
@@ -63,6 +71,7 @@ export function useVisibilityTriggers (
   const isAsked = whenVisible !== undefined
     || whenHidden !== undefined
     || onVisibilityChanged !== undefined
+  const { isDisclosed } = useDisclosure()
 
   const isVisible = useVisibility(
     targetRef,
@@ -79,6 +88,7 @@ export function useVisibilityTriggers (
   useStateChangeDispatch(isVisible, visible => {
     if (visible === undefined) return
     onVisibilityChanged?.(visible)
+    if (!isDisclosed) return
     const commands = visible ? whenVisible : whenHidden
     if (commands === undefined) return
     sendCommands(commands, compId)

@@ -4,6 +4,7 @@ import {
   useRef
 } from 'react'
 import { splitTrim } from '../../../agnostic/strings/split-trim/index.js'
+import { useDisclosure } from '../disclosure/index.js'
 import type {
   AddressedCommand,
   Command,
@@ -139,6 +140,11 @@ export function surrenderCommands (targetCompId: string, actions: readonly strin
  * that modifier takes effect — see {@link surrenderCommands}. Unsubscribing empties both
  * of this component's ledgers, so what it surrendered and what it has already sent last
  * the mount and no longer.
+ *
+ * **A component withheld by a disclaimer answers nothing at all**, and `force` does not
+ * change that: that modifier overrides a reader's take-over, never their consent. The
+ * check is made here rather than per component, so no receiver can be written without
+ * it.
  * @param targetCompId - The id commands are addressed to.
  * @param actions - What to run for each action name.
  */
@@ -149,8 +155,15 @@ export function useCommands (
   // Through a ref, so a table rebuilt on every render doesn't resubscribe.
   const actionsRef = useRef(actions)
   actionsRef.current = actions
+  // The disclosure goes through a ref for the same reason: the subscription is keyed on
+  // the id alone, and a reader accepting a disclaimer must not tear it down and rebuild
+  // it.
+  const { isDisclosed } = useDisclosure()
+  const isDisclosedRef = useRef(isDisclosed)
+  isDisclosedRef.current = isDisclosed
   useEffect(() => {
     const unsubscribe = subscribeToCommands(targetCompId, command => {
+      if (!isDisclosedRef.current) return
       const action = actionsRef.current[command.action]
       if (action === undefined) {
         // eslint-disable-next-line no-console

@@ -20,6 +20,7 @@ import {
   useCommandSurrender,
   useCommands
 } from '../utils/commands/index.js'
+import { DisclosureProvider } from '../utils/disclosure/index.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
 import type { VisibilityProps } from '../utils/visibility/types.js'
 import { disclaimer as publicClassName } from '../public-classnames.js'
@@ -75,6 +76,17 @@ export type Props = {
  * over for the rest of the mount, which silences `restore` too, since putting a gate back
  * over content someone chose to reveal is exactly what this rule prevents. `:force` opts
  * out.
+ *
+ * ### Disclosure
+ * **What this component withholds, the library knows about.** Its children are rendered
+ * under a disclosure the whole subtree can read, so while the panel stands none of them
+ * answers a command, none of them sends one, and the few that can start something — a
+ * video's playback, a sequence's tempo — stay put. Dismissing the panel discloses them;
+ * `restore` withholds them again.
+ *
+ * A disclaimer nested in another's children is withheld like anything else, so its own
+ * `dismiss` is dropped while the outer panel stands. Accepting the inner one first is
+ * exactly what an outer decision should prevent.
  *
  * ### CSS modifiers
  * - `on` — the disclaimer is showing.
@@ -185,7 +197,9 @@ export const Disclaimer: FunctionComponent<Props> = ({
       </div>}
     </div>
     <div className={sensitiveClss}>
-      {children}
+      <DisclosureProvider isDisclosed={!isOn}>
+        {children}
+      </DisclosureProvider>
     </div>
   </div>
 }
