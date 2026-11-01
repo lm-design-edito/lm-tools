@@ -934,9 +934,10 @@ Both points below are in the code now.
   attributs et seize propriétés. Vingt instances pendant un redimensionnement de fenêtre
   font du bruit. Si ça se voit un jour, la réponse est un throttle ou une comparaison de
   valeurs — pas un interrupteur de visibilité.
-- **`Scrllgngn` a un problème voisin, pas le même** — son tracking s'active à la seule
-  présence de `onScrolled`, faute d'interrupteur. À regarder quand son tour viendra ;
-  `onVisibilityChanged` est peut-être déjà la réponse.
+- **`Scrllgngn` had the neighbouring problem, and it is settled**: a block now asks to be
+  measured with `trackScroll`, where only `onScrolled`'s presence could say it. The flag
+  and the handler each ask for the same thing, and tracking stays off until one of them
+  does.
 
 ### The survey — why it is being rebuilt rather than amended
 
@@ -1060,11 +1061,6 @@ redécouverts par surprise, pas pour être traités.
   propriété supprimée parce qu'un ratio n'a pas de jumeau — remplacer par
   `calc(var(--lm-before-after-ratio) * 100%)`. Elle compile, elle s'affiche de
   travers.
-
-- **`Scrllgngn` — pas d'interrupteur pour le scrollytelling CSS pur.** Le tracking
-  s'active à la seule présence de `onScrolled`, donc un bloc qui ne voudrait que les
-  variables CSS et les `data-*`, sans handler, doit en déclarer un vide. Rouvrir un
-  booléen si le cas se présente un jour. Marqué `[WIP]` sur `PropsCommonBlock`.
 
 
 ## Coverage roadmap
