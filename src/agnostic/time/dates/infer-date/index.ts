@@ -15,6 +15,11 @@ type Field = typeof FIELDS[number]
 type Op = {
   precision: Field | null
   /**
+   * The period this op names, when that is coarser than what it collapses — a calendar
+   * step names a month without writing one, and `the end of the month` has to know.
+   */
+  period?: Field
+  /**
    * @param scope - The period the op is being resolved inside, when it was set aside by
    * an operator — `of july` resolves its left-hand side within a month. `null` for
    * everything read straight through.
@@ -28,6 +33,22 @@ function finestOf (list: Op[]): number {
     (deepest, op) => Math.max(deepest, op.precision === null ? -1 : FIELDS.indexOf(op.precision)),
     -1
   )
+}
+
+/** The depth of the finest clock part a list of ops names, `-1` when it names none. */
+function finestTimeOf (list: Op[]): number {
+  const depth = finestOf(list)
+  return depth < FIELDS.indexOf('hours') ? -1 : depth
+}
+
+/** The narrowest period a list of ops names outright — `of july 2019` is July's. */
+function finestPeriodOf (list: Op[]): Field | null {
+  let found: Field | null = null
+  for (const op of list) {
+    if (op.period === undefined) continue
+    if (found === null || FIELDS.indexOf(op.period) > FIELDS.indexOf(found)) found = op.period
+  }
+  return found
 }
 
 /** Whether an op places the date itself, rather than the time or a mere offset. */
@@ -146,6 +167,55 @@ const ORDINAL_WORDS: Record<string, number> = {
   thirtieth: 30
 }
 
+/**
+ * The days of the year that have a name, as the month and day they fall on. Keys are
+ * read as they come out of the lexer, so a possessive is already gone and a phrase is
+ * space-joined — `new year's day` looks up `new year`.
+ */
+const HOLIDAYS: Record<string, [number, number]> = {
+  'new year': [1, 1],
+  'new years': [1, 1],
+  epiphany: [1, 6],
+  valentine: [2, 14],
+  valentines: [2, 14],
+  'april fool': [4, 1],
+  'april fools': [4, 1],
+  'may day': [5, 1],
+  'bastille day': [7, 14],
+  halloween: [10, 31],
+  'all saints': [11, 1],
+  'all souls': [11, 2],
+  armistice: [11, 11],
+  remembrance: [11, 11],
+  veterans: [11, 11],
+  christmas: [12, 25],
+  xmas: [12, 25],
+  'boxing day': [12, 26]
+}
+
+/** The named days that move with Easter, as the days between them and Easter Sunday. */
+const EASTER_OFFSETS: Record<string, number> = {
+  'palm sunday': -7,
+  'good friday': -2,
+  easter: 0,
+  'easter monday': 1,
+  ascension: 39,
+  pentecost: 49
+}
+
+/** One end of a period, as a word in front of `of` — `the end of july`. */
+const EDGE_WORDS: Record<string, boolean> = {
+  end: true,
+  beginning: false,
+  start: false
+}
+
+/** The units that name a period something else can be counted inside. */
+const UNIT_PERIODS: Partial<Record<DurationType, Field>> = {
+  months: 'month',
+  years: 'year'
+}
+
 const SEEK_WORDS: Record<string, Direction> = {
   next: 1,
   coming: 1,
@@ -188,7 +258,11 @@ const MERIDIEM = /^([ap])m$/v
 const ATOM = /\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}h(?:\d{1,2}(?:min(?:\d{1,2}(?:sec)?)?)?)?|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}(?:st|nd|rd|th)|\d+|\p{L}+|[+\-]/gv
 
 function lex (raw: string): string[] {
-  return [...raw.toLowerCase().matchAll(ATOM)].map(match => match[0])
+  // A lone `s` is the possessive the separators left behind — `new year's eve` is three
+  // words, and nothing in the vocabulary is spelt `s`.
+  return [...raw.toLowerCase().matchAll(ATOM)]
+    .map(match => match[0])
+    .filter(atom => atom !== 's')
 }
 
 function daysInMonth (year: number, month: number): number {
@@ -252,6 +326,14 @@ function seekWeekday (date: Date, target: number, direction: Direction): void {
   date.setDate(date.getDate() + (forward === 0 && direction === 1 ? 7 : forward))
 }
 
+/**
+ * Moves the cursor onto another date's day, leaving the time of day where it was — a
+ * seek inside a period lands on a day, and `the end of july at 6pm` still names an hour.
+ */
+function writeDate (date: Date, landing: Date): void {
+  date.setFullYear(landing.getFullYear(), landing.getMonth(), landing.getDate())
+}
+
 /** The last day of the period the cursor sits in, at the given granularity. */
 function periodEnd (start: Date, scope: Field): Date {
   const end = new Date(start)
@@ -289,12 +371,12 @@ function seekInPeriod (
   truncate(start, FIELDS.indexOf(scope))
   if (fromEnd) {
     const end = periodEnd(start, scope)
-    date.setTime(end.getTime())
-    date.setDate(end.getDate() - ((end.getDay() - target + 7) % 7))
+    end.setDate(end.getDate() - ((end.getDay() - target + 7) % 7))
+    writeDate(date, end)
     return
   }
-  date.setTime(start.getTime())
-  date.setDate(start.getDate() + ((target - start.getDay() + 7) % 7) + ((nth ?? 1) - 1) * 7)
+  start.setDate(start.getDate() + ((target - start.getDay() + 7) % 7) + ((nth ?? 1) - 1) * 7)
+  writeDate(date, start)
 }
 
 /** One end of the period the cursor sits in — `the last day of july`, `the first of 2019`. */
@@ -302,7 +384,7 @@ function seekEdgeOfPeriod (date: Date, fromEnd: boolean, scope: Field | null): v
   if (scope === null) return
   const start = new Date(date)
   truncate(start, FIELDS.indexOf(scope))
-  date.setTime(fromEnd ? periodEnd(start, scope).getTime() : start.getTime())
+  writeDate(date, fromEnd ? periodEnd(start, scope) : start)
 }
 
 /** `true` when the target month or day is reachable without leaving the current period. */
@@ -317,6 +399,54 @@ function seekMonth (date: Date, target: number, direction: Direction): void {
     setYear(date, date.getFullYear() + (direction === -1 ? -1 : 1))
   }
   setMonth(date, target)
+}
+
+/**
+ * Easter Sunday, by the anonymous Gregorian computus — the one named day of the year
+ * that has to be computed rather than looked up.
+ */
+function easterSunday (year: number): Date {
+  const metonic = year % 19
+  const century = Math.floor(year / 100)
+  const inCentury = year % 100
+  const correction = Math.floor((century + 8) / 25)
+  const epact = (19 * metonic
+    + century
+    - Math.floor(century / 4)
+    - Math.floor((century - correction + 1) / 3)
+    + 15) % 30
+  const weekShift = (32
+    + 2 * (century % 4)
+    + 2 * Math.floor(inCentury / 4)
+    - epact
+    - inCentury % 4) % 7
+  const fix = Math.floor((metonic + 11 * epact + 22 * weekShift) / 451)
+  // Days counted from March 1st, which is how the computus comes out — past 31 it is
+  // April, and the month falls out of the division.
+  const march = epact + weekShift - 7 * fix + 114
+  return new Date(year, Math.floor(march / 31) - 1, (march % 31) + 1)
+}
+
+/**
+ * A day that comes back every year: the one ahead by default, the reference year's on
+ * `this`, and the year before or after on `last` and `next`.
+ *
+ * @param dayOf - The month and day the occasion falls on in a given year, since Easter
+ * and everything hanging off it move.
+ */
+function seekAnnual (date: Date, dayOf: (year: number) => [number, number], direction: Direction | null): void {
+  const year = date.getFullYear()
+  const [month, day] = dayOf(year)
+  const here = (date.getMonth() + 1) * 100 + date.getDate()
+  const there = month * 100 + day
+  let landing = year
+  if (direction === null && there < here) landing = year + 1
+  else if (direction === 1 && there <= here) landing = year + 1
+  else if (direction === -1 && there >= here) landing = year - 1
+  const [landedMonth, landedDay] = dayOf(landing)
+  if (landing !== year) setYear(date, landing)
+  setMonth(date, landedMonth)
+  setDayClamped(date, landedDay)
 }
 
 function seekDayOfMonth (date: Date, target: number, direction: Direction): void {
@@ -365,6 +495,9 @@ function nameTable (long: string[], short: string[]): Record<string, number> {
 function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], deferred: Op[], ignored: string[] } {
   const months = nameTable(monthNames(locale, 'long'), monthNames(locale, 'short'))
   const weekdays = nameTable(weekdayNames(locale, 'long'), weekdayNames(locale, 'short'))
+  // A weekend reads as its Saturday, so `next weekend`, `last weekend` and `the last
+  // weekend of july` all come out of the weekday path below.
+  weekdays.weekend = 6
   const ops: Op[] = []
   // What an operator set aside, re-appended once the right-hand side has had its say.
   const deferred: Op[] = []
@@ -448,6 +581,41 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
     takeHours(hours)
     if (minutes !== null) ops.push({ precision: 'minutes', apply: date => { date.setMinutes(minutes) } })
     if (seconds !== null) ops.push({ precision: 'seconds', apply: date => { date.setSeconds(seconds) } })
+  }
+
+  /**
+   * The occasion a run of atoms names — a phrase of two words before a single one, with
+   * an optional trailing `day`, and an `eve` that moves it back a day and into the
+   * evening. `false` when no table knows it, so the atom goes on being read.
+   */
+  function takeHoliday (atom: string): boolean {
+    const ahead = atoms[index]
+    const pair = ahead === undefined ? '' : `${atom} ${ahead}`
+    const paired = HOLIDAYS[pair] !== undefined || EASTER_OFFSETS[pair] !== undefined
+    const key = paired ? pair : atom
+    const fixed = HOLIDAYS[key]
+    const offset = EASTER_OFFSETS[key]
+    if (fixed === undefined && offset === undefined) return false
+    if (paired) index += 1
+    if (atoms[index] === 'day') index += 1
+    const eve = atoms[index] === 'eve'
+    if (eve) index += 1
+    const direction = seek
+    seek = null
+    const dayOf = (year: number): [number, number] => {
+      const landing = fixed === undefined
+        ? easterSunday(year)
+        : new Date(year, fixed[0] - 1, fixed[1])
+      if (offset !== undefined) landing.setDate(landing.getDate() + offset)
+      // The eve of a day is the day before it, which is also how `new year's eve` ends
+      // up in December rather than January.
+      if (eve) landing.setDate(landing.getDate() - 1)
+      return [landing.getMonth() + 1, landing.getDate()]
+    }
+    ops.push({ precision: 'day', apply: date => { seekAnnual(date, dayOf, direction) } })
+    // An eve is an evening, so it names an hour too — the one `evening` names.
+    if (eve) takeHours(20)
+    return true
   }
 
   /** The meridiem a number is followed by, if any, consumed on the spot. */
@@ -544,7 +712,7 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       }
       if (takeQuantity(value, atom)) continue
       if (atom.length === 4) {
-        ops.push({ precision: 'year', apply: date => { setYear(date, value) } })
+        ops.push({ precision: 'year', period: 'year', apply: date => { setYear(date, value) } })
         continue
       }
       qualifier = null
@@ -562,6 +730,8 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       ordinal = { value: ordinalWord, at: ops.length - 1 }
       continue
     }
+
+    if (takeHoliday(atom)) continue
 
     const namedTime = NAMED_TIMES[atom]
     if (namedTime !== undefined) {
@@ -592,8 +762,15 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       const direction = seek
       seek = null
       const value = month + 1
-      if (direction === null) ops.push({ precision: 'month', apply: date => { setMonth(date, value) } })
-      else ops.push({ precision: 'month', apply: date => { seekMonth(date, value, direction) } })
+      if (direction === null) {
+        ops.push({ precision: 'month', period: 'month', apply: date => { setMonth(date, value) } })
+        continue
+      }
+      ops.push({
+        precision: 'month',
+        period: 'month',
+        apply: date => { seekMonth(date, value, direction) }
+      })
       continue
     }
 
@@ -643,6 +820,7 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
     if (unit !== undefined) {
       const direction = seek
       seek = null
+      const period = UNIT_PERIODS[unit]
       // `the last day of july` is July's end, not a day off its start — a direction on a
       // bare `day` in front of `of` names one end of the period. Coarser units have no
       // such reading here, and keep the calendar step below.
@@ -657,7 +835,7 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       // A calendar step, not an offset: `next week` moves one week and says nothing
       // about the time of day, where `in a week` had to be signed to mean anything.
       if (direction !== null && direction !== 0) {
-        pushShift(direction, unit)
+        ops.push({ precision: null, period, apply: date => { shift(date, direction, unit) } })
         continue
       }
       // `the day after tomorrow`: a bare unit in front of an operator is one of it.
@@ -665,7 +843,24 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
         waiting.push({ amount: 1, unit, atoms: [atom] })
         continue
       }
+      // `the end of the month`, `the end of this year`: on the right of an operator, a
+      // unit no number reached names the period the cursor already sits in.
+      if (period !== undefined && deferred.length > 0) {
+        ops.push({ precision: null, period, apply: () => undefined })
+        continue
+      }
       ignored.push(atom)
+      continue
+    }
+
+    // `the end of july`, `the beginning of next month` — a word for one end of a period,
+    // on the mechanism `the last day of july` already uses.
+    const edge = EDGE_WORDS[atom]
+    if (edge !== undefined && atoms[index] === 'of') {
+      ops.push({
+        precision: 'day',
+        apply: (date, scope) => { seekEdgeOfPeriod(date, edge, scope) }
+      })
       continue
     }
 
@@ -769,6 +964,25 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
  * ends: `the last day of july`, `the first day of 2019`. Without a period to count in —
  * `the last friday` on its own — it is an ordinary seek again.
  *
+ * **`end`, `beginning` and `start` name those ends in a word**: `the end of july` is the
+ * 31st and `the beginning of next month` is its 1st. On the right of an operator a unit
+ * no number reached is the period the cursor already sits in — `the end of the month`,
+ * `the end of this year`. A clock named anywhere in the string survives the move, so
+ * `the end of the month at 6pm` keeps its hour.
+ *
+ * **The named days of the year are read as days**: `christmas`, `new year`, `halloween`,
+ * `all saints`, `all souls`, `valentine's day`, `epiphany`, `april fools`, `may day`,
+ * `bastille day`, `armistice day`, `boxing day`, and `easter` with `palm sunday`, `good
+ * friday`, `easter monday`, `ascension` and `pentecost` moving with it. One of them on
+ * its own is the next occurrence, today included; `this` is the reference year's and
+ * `next` and `last` step a year. They are days like any other, so everything above
+ * composes with them — `the friday before christmas`, `christmas + one week, on monday`,
+ * `2 days after easter`, `the end of easter month`. An `eve` is the evening before, 8pm
+ * on the 24th for `christmas eve` and on the 31st for `new year's eve`.
+ *
+ * **A weekend reads as its saturday**, so every weekday rule above holds of `this
+ * weekend`, `next weekend` and `the last weekend of july`.
+ *
  * **Reading is lax by construction.** Whitespace and punctuation are separators, a token
  * no table knows is skipped rather than fatal, and nothing is positional: `9pm next
  * thursday` and `next thursday at 9pm` are the same instant. When two tokens name the
@@ -794,12 +1008,17 @@ export function inferDate (
   // the end would undo what the left-hand side then did, so the second pass only reaches
   // as deep as that side itself named.
   const scopeDepth = finestOf(ops)
-  const scope = scopeDepth === -1 ? null : FIELDS[scopeDepth] ?? null
+  // A period named outright wins over the one a precision implies: `of next month` is a
+  // month even though a calendar step collapses nothing, and `of july at 6pm` is July.
+  const scope = finestPeriodOf(ops) ?? (scopeDepth === -1 ? null : FIELDS[scopeDepth] ?? null)
   if (scopeDepth !== -1) truncate(date, scopeDepth)
   if (deferred.length > 0) {
     for (const op of deferred) op.apply(date, scope)
-    const deferredDepth = finestOf(deferred)
-    if (deferredDepth !== -1) truncate(date, deferredDepth)
+    // Truncating to the whole string's depth would undo what the deferred side did on a
+    // coarser field — `2 days after july` is not July 1st again. A clock the other side
+    // named still has to survive, and collapsing below an hour never moves a day.
+    const depth = Math.max(finestOf(deferred), finestTimeOf(ops))
+    if (depth !== -1) truncate(date, depth)
   }
   return Number.isFinite(date.getTime()) ? date : null
 }

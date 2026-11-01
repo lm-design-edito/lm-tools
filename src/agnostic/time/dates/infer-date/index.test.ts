@@ -357,6 +357,90 @@ describe('inferDate', () => {
   // One line per string, so that adding a token costs one line to pin and touching the
   // lexer re-checks every form at once. The behaviours above state the rules; this
   // states the coverage.
+  describe('the named days of the year', () => {
+    it('reads one as the occurrence ahead, today included', () => {
+      expect(infer('christmas')).toEqual(new Date(2026, 11, 25))
+      expect(infer('halloween')).toEqual(new Date(2026, 9, 31))
+      expect(infer('all saints')).toEqual(new Date(2026, 10, 1))
+      expect(infer('new year')).toEqual(new Date(2026, 0, 1))
+    })
+
+    it('takes a phrase, a possessive and a trailing day', () => {
+      expect(infer("new year's day")).toEqual(new Date(2026, 0, 1))
+      expect(infer('christmas day')).toEqual(new Date(2026, 11, 25))
+      expect(infer("valentine's day")).toEqual(new Date(2026, 1, 14))
+      expect(infer("all saints' day")).toEqual(new Date(2026, 10, 1))
+      expect(infer('may day')).toEqual(new Date(2026, 4, 1))
+      expect(infer('bastille day')).toEqual(new Date(2026, 6, 14))
+    })
+
+    it('steps a year on a direction, and stays on the reference year for this', () => {
+      expect(infer('last christmas')).toEqual(new Date(2025, 11, 25))
+      expect(infer('this christmas')).toEqual(new Date(2026, 11, 25))
+      expect(infer('next new year')).toEqual(new Date(2027, 0, 1))
+    })
+
+    it('computes easter and what hangs off it', () => {
+      expect(infer('easter')).toEqual(new Date(2026, 3, 5))
+      expect(infer('palm sunday')).toEqual(new Date(2026, 2, 29))
+      expect(infer('good friday')).toEqual(new Date(2026, 3, 3))
+      expect(infer('easter monday')).toEqual(new Date(2026, 3, 6))
+      expect(infer('ascension')).toEqual(new Date(2026, 4, 14))
+      expect(infer('pentecost')).toEqual(new Date(2026, 4, 24))
+    })
+
+    it('reads an eve as the evening before', () => {
+      expect(infer('christmas eve')).toEqual(new Date(2026, 11, 24, 20))
+      expect(infer("new year's eve")).toEqual(new Date(2026, 11, 31, 20))
+    })
+
+    it('composes with the rest of the vocabulary', () => {
+      expect(infer('the friday before christmas')).toEqual(new Date(2026, 11, 18))
+      expect(infer('2 days after christmas')).toEqual(new Date(2026, 11, 27))
+      expect(infer('christmas + one week, on monday')).toEqual(new Date(2026, 11, 28))
+      expect(infer('christmas at 9pm')).toEqual(new Date(2026, 11, 25, 21))
+    })
+  })
+
+  describe('the ends of a period', () => {
+    it('names one in a word', () => {
+      expect(infer('the end of july')).toEqual(new Date(2026, 6, 31))
+      expect(infer('end of july')).toEqual(new Date(2026, 6, 31))
+      expect(infer('the beginning of july')).toEqual(new Date(2026, 6, 1))
+      expect(infer('the start of 2019')).toEqual(new Date(2019, 0, 1))
+      expect(infer('the end of february 2028')).toEqual(new Date(2028, 1, 29))
+    })
+
+    it('takes the period from a unit no number reached', () => {
+      expect(infer('the end of the month')).toEqual(new Date(2026, 0, 31))
+      expect(infer('the end of this month')).toEqual(new Date(2026, 0, 31))
+      expect(infer('the end of next month')).toEqual(new Date(2026, 1, 28))
+      expect(infer('the end of the year')).toEqual(new Date(2026, 11, 31))
+      expect(infer('the beginning of next year')).toEqual(new Date(2027, 0, 1))
+    })
+
+    it('reports a period it has no reading for', () => {
+      const ignored: string[] = []
+      inferDate('the end of the week', 'en', { reference, onIgnored: atoms => { ignored.push(...atoms) } })
+      expect(ignored).toEqual(['week'])
+    })
+
+    it('keeps a clock named on the way', () => {
+      expect(infer('the end of the month at 6pm')).toEqual(new Date(2026, 0, 31, 18))
+      expect(infer('the last day of july at 6pm')).toEqual(new Date(2026, 6, 31, 18))
+      expect(infer('the last friday of july at 6pm')).toEqual(new Date(2026, 6, 31, 18))
+    })
+  })
+
+  describe('a weekend', () => {
+    it('reads as its saturday', () => {
+      expect(infer('this weekend')).toEqual(new Date(2026, 0, 3))
+      expect(infer('last weekend')).toEqual(new Date(2025, 11, 27))
+      expect(infer('next weekend at 9pm')).toEqual(new Date(2026, 0, 3, 21))
+      expect(infer('the last weekend of july')).toEqual(new Date(2026, 6, 25))
+    })
+  })
+
   describe('corpus', () => {
     const corpus: Array<[string, Date | null]> = [
       ['today', new Date(2026, 0, 1)],
@@ -442,6 +526,19 @@ describe('inferDate', () => {
       ['3 days', null],
       ['hello world', null],
       ['week 32', null],
+      ['christmas', new Date(2026, 11, 25)],
+      ['xmas', new Date(2026, 11, 25)],
+      ['christmas eve', new Date(2026, 11, 24, 20)],
+      ["new year's eve", new Date(2026, 11, 31, 20)],
+      ['epiphany', new Date(2026, 0, 6)],
+      ['april fools', new Date(2026, 3, 1)],
+      ['armistice day', new Date(2026, 10, 11)],
+      ['boxing day', new Date(2026, 11, 26)],
+      ['easter', new Date(2026, 3, 5)],
+      ['the end of july', new Date(2026, 6, 31)],
+      ['the end of the month', new Date(2026, 0, 31)],
+      ['this weekend', new Date(2026, 0, 3)],
+      ['thanksgiving', null],
       ['', null]
     ]
 
