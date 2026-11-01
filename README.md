@@ -247,7 +247,7 @@ span qui contient son propre séparateur, et non une suite plate de jetons et de
 ponctuations. À noter aussi : les horloges se re-rendent à chaque `timeupdate`, donc ce
 composant multiplie par six ce qui est diffé à chaque tick.
 
-## Reading a time — `parseDate` is in, `inferDate` is not written yet
+## Reading a time — `parseDate` and `inferDate` are both in
 
 **`parseDate` is written**: `agnostic/time/dates/parse-date`, the exact mirror of
 `formatDate` — the same token grammar, read backwards. `parseDate(raw, format,
@@ -325,7 +325,7 @@ The taxonomy to recognise, and what is out of scope for a v1:
 | Clock time | set H, m | `9:20pm`, `21:20`, `9pm`, `at 9` |
 | Named time | set H, m | `midnight`, `midday`, `noon`, `morning`, `evening`, `night`, `tonight` |
 | Compound | fold several ops, in order | `next thursday at 9:20pm`, `in 3 days, at midnight`, `tomorrow morning` |
-| Out of v1 | — | `christmas`, `Q3`, `end of the month`, `the last friday of july`, `week 32` |
+| Out of v1 | — | `Q3`, `week 32`, `from monday to friday`, `demain` |
 
 **The named times are arbitrary, and owned as such**: `morning` 08:00, `evening` / `night` /
 `tonight` 20:00, `midnight` 00:00, `midday` / `noon` 12:00. `tonight` carries two things —
@@ -380,20 +380,73 @@ of a number that *was* read.
 
 **The tests carry a corpus**, one line per string, next to the behaviour-named ones. The
 rules are stated by the latter; coverage is stated by the former, which is what catches a
-`9h30` turning into the 30th when the lexer is touched. 103 tests on the module, and
-`inferDate` weighs 2.9 kB gzipped at 0.006 ms a call.
+`9h30` turning into the 30th when the lexer is touched.
 
-**Forms it still does not read**, in the order they are worth doing: `2 days after next
-friday` — the inverse of what now works — because the sign has to reach forward to a value
-not yet read. Ordinal words (`the first of next month`), which want two things: a table
-where `second` collides head-on with the time unit and needs `the` to tell them apart, and
-an `of` promoted from filler to operator, since the period has to resolve before the
-day-of-period is written (`the 31st of next month` clamps differently depending on the
-order). That same operator is what `the last friday of july` wants, and the `end of the
-month` / `mid december` family wants one more op on top: collapsing to the end or the middle
-of the named precision rather than to its start — the knob the partial-date consolidation
-raises below. Then `christmas` and `easter`, which are only more `value` tokens, and `week
-32` / `Q3`, which want a period that is not a Y/M/D field.
+**A third pass turned `after`, `before`, `from` and `of` into operators read right to
+left** (`c6487f8`, `89fd03e`, `5faac57`). What follows the operator places the date and what
+precedes it is applied to that, so the left-hand phrase is set aside and replayed once the
+right-hand side has resolved: `2 days after next friday` finds the Friday first, and `the
+1st of next month` moves the month before writing the day — which is where a day the month
+has not got is clamped to its last rather than rolling over (`the 31st of next month` asked
+in January is February's end, not March 3rd). Ordinal words came in with it, and `second` is
+told from the time unit by whether a quantity precedes it. The week a weekday scopes to when
+a date has already been placed opens on Monday, and `weekStartsOn` says otherwise —
+`Intl.Locale.prototype.getWeekInfo` carries it per locale but TypeScript ships no
+declaration and Node has not implemented it, so an argument says it out loud instead.
+
+**And what `of` names is a period, which its left-hand side counts inside.** `the last
+friday of july` is the 31st and `the second friday of july` the 10th, where a plain backward
+seek walks out of July altogether. An op now receives the scope it is being resolved in, the
+period is collapsed before the left-hand side acts, and the second pass only truncates as
+deep as that side itself named — otherwise `2 days after july` came back to July 1st. A bare
+`day` names either end of the period (`the last day of july`), and a weekday in front of an
+operator reads the way the operator points, so `the friday before the 20th` looks back from
+the 20th. `the day after tomorrow` and `the day before yesterday` fell out for free.
+
+**A fourth pass put in the named days of the year and the ends of a period** (`f63c1d4`).
+`christmas`, `new year`, `halloween`, `all saints`, `all souls`, `valentine's day`,
+`epiphany`, `april fools`, `may day`, `bastille day`, `armistice day`, `boxing day`, and
+`easter` with `palm sunday`, `good friday`, `easter monday`, `ascension` and `pentecost`
+hanging off an anonymous Gregorian computus — the one date in the tables that is computed
+rather than looked up. One of them alone is the next occurrence, today included, where
+`this` stays in the reference year and `next` and `last` step one. A phrase of two words is
+matched before a single one so that `may day` is not May, a trailing `day` is absorbed, and
+the lexer drops the possessive `s` so that `new year's eve` is three words. An `eve` is the
+evening before — the day before at 20:00, which is what puts `new year's eve` on December
+31st. They are days like any other, so the whole vocabulary composes with them: `the friday
+before christmas`, `christmas + one week, on monday`, `2 days after easter`, `the end of
+easter month`.
+
+`end`, `beginning` and `start` name the edges of a period in a word — `the end of july`,
+`the beginning of next month` — on the mechanism `the last day of july` had already built.
+Two things had to move for it: a calendar step now declares the period it names without
+collapsing to it, so that `the end of next month` has a month to work in, and a unit no
+number reached names the period the cursor already sits in (`the end of the month`, `the end
+of this year`). A clock named anywhere in the string now survives a period seek, where it
+used to be overwritten — `the end of the month at 6pm` keeps its hour. `week` is not a
+Y/M/D field, so `the end of the week` hands `week` to `onIgnored` and answers as if it had
+not been said. And `weekend` reads as its Saturday, which makes every weekday rule hold of
+`this weekend`, `next weekend` and `the last weekend of july` without a line of its own.
+
+**Where the weight sits.** 167 tests on the module; 12.7 kB minified, 4.4 kB gzipped, of
+which the 124 token-table rows are 1.5 kB / 0.65 kB and `Duration` 1.8 kB / 0.48 kB. The
+named days are 0.4 kB / 0.21 kB of table and about as much engine again. A call is 6.5 to
+9.7 µs depending on the string; the fourth pass costs 3 to 7 % over the third, measured
+A/B in one run — the absolute figure moves with the machine and is not comparable from one
+session to the next.
+
+**What is worth reading next**, in the order of what it costs:
+
+| Form | What it needs |
+|---|---|
+| `thanksgiving` | a named day that is an nth weekday of a month — a third table shape, over the counting `seekInPeriod` already does |
+| `in twenty days`, `twenty-first` | number words past twelve, and a tens-plus-units composer. Digits already cover it (`in 20 days`), and `twenty-first` reads as the 1st today |
+| `the end of the week`, `the week of the 6th` | a period that is not a Y/M/D field: a week scope through `truncate` and `periodEnd`, which `weekStartsOn` then reaches |
+| `week 32`, `Q3`, `the 3rd quarter` | the same, one step further out. `the 3rd quarter` reads as the 3rd and reports `quarter` |
+| `this monday` as the current week's | a period-scoped seek word. English usage is split, so it is a decision before it is code |
+| `by friday`, `before 9pm` as a deadline | range semantics — `before X` answers X — so it waits for the partial dates below |
+| `mid july`, `early march`, `late july` | the edge op with a middle, and a modifier taking its period on the right rather than after `of`. **Set aside on purpose** |
+| `every monday`, `UTC`, `+02:00` | recurrence, and zones a `Date` cannot hold. Non-goals |
 
 **Two things are parked on purpose.** The vocabulary is English-only: month and weekday names
 localise through `Intl`, but `tomorrow`, `next`, `at` and `days` do not, so `demain` reads as
