@@ -23,6 +23,7 @@ import {
 } from '../utils/comp-id/index.js'
 import type { CompIdProps } from '../utils/comp-id/types.js'
 import { useCommands } from '../utils/commands/index.js'
+import { useDisclosure } from '../utils/disclosure/index.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
 import type { VisibilityProps } from '../utils/visibility/types.js'
 import { sequencer as publicClassName } from '../public-classnames.js'
@@ -126,6 +127,11 @@ export type Props = {
  *
  * Three steps, four children. A trailing child that names no step never lights up, which
  * is the honest reading of « it is not part of the sequence ».
+ *
+ * ### Disclosure
+ * Under a standing `Disclaimer` the tempo does not run, from `defaultPlay` no more than
+ * from a verb, and the component sends nothing. The step is kept, so dismissing the panel
+ * resumes where the article left it instead of restarting.
  *
  * ### Commands
  * - `play` / `pause` — the tempo runs or stops.
@@ -238,7 +244,11 @@ export const Sequencer: FunctionComponent<Props> = ({
   // The counter runs one past the end so the last step gets its beat, and the position
   // clamps to it. Ended is therefore leaving the last step, not arriving on it.
   const isEnded = loop !== true && stepsCount > 0 && rawStep >= stepsCount
-  const isPlaying = (play ?? internalPlay) && !isEnded
+  // A sequence withheld by a disclaimer does not advance. Read here rather than in the
+  // clock, so the `playing` modifier and `onIsPlayingChanged` say the same thing the
+  // tempo does — and so the step is kept, the reader landing where the article left it.
+  const { isDisclosed } = useDisclosure()
+  const isPlaying = (play ?? internalPlay) && !isEnded && isDisclosed
 
   // A lap counter rather than a comparison of steps: `onLooped` has to fire on the wrap
   // itself, and the position on either side of it says nothing about having crossed.
