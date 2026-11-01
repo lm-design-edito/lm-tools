@@ -267,6 +267,14 @@ describe('inferDate', () => {
     it('lets an explicit direction win over both readings', () => {
       expect(infer('2026-03-14 next monday')).toEqual(new Date(2026, 2, 16))
     })
+
+    it('opens the week where the caller says', () => {
+      // Saturday the 14th. Under ISO the week's Sunday is the 15th, the day after;
+      // where a week opens on Sunday it is the 8th, the week's own first day.
+      const onSunday = { reference, weekStartsOn: 7 } as const
+      expect(inferDate('2026-03-14 on sunday', 'en', onSunday)).toEqual(new Date(2026, 2, 8))
+      expect(infer('2026-03-14 on sunday')).toEqual(new Date(2026, 2, 15))
+    })
   })
 
   // One line per string, so that adding a token costs one line to pin and touching the

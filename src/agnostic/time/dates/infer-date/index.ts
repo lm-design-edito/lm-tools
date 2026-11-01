@@ -177,14 +177,14 @@ function addMonths (date: Date, amount: number): void {
  * The weekday of the week the cursor is already in, rather than the next one — what
  * `on monday` means once another token has established a date.
  *
- * The week is the ISO one, starting on a Monday, rather than the locale's own:
- * `Intl.Locale.prototype.getWeekInfo` carries that but is not everywhere yet, and a
- * reading that changes with the runtime is worse than one that is merely British. It
- * only makes a difference for a cursor sitting on a Sunday.
+ * @param firstDay - Where the week opens, Monday (`1`) through Sunday (`7`). It only
+ * changes the answer for a cursor sitting on a Sunday.
  */
-function seekWithinWeek (date: Date, target: number): void {
-  const fromMonday = (day: number): number => (day + 6) % 7
-  date.setDate(date.getDate() + fromMonday(target) - fromMonday(date.getDay()))
+function seekWithinWeek (date: Date, target: number, firstDay: number): void {
+  // `getDay` numbers Sunday 0, where `firstDay` numbers it 7 — the modulo is the bridge.
+  const start = firstDay % 7
+  const fromStart = (day: number): number => (day - start + 7) % 7
+  date.setDate(date.getDate() + fromStart(target) - fromStart(date.getDay()))
 }
 
 function seekWeekday (date: Date, target: number, direction: Direction): void {
@@ -255,7 +255,7 @@ function nameTable (long: string[], short: string[]): Record<string, number> {
   return table
 }
 
-function fold (atoms: string[], locale: string): { ops: Op[], ignored: string[] } {
+function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], ignored: string[] } {
   const months = nameTable(monthNames(locale, 'long'), monthNames(locale, 'short'))
   const weekdays = nameTable(weekdayNames(locale, 'long'), weekdayNames(locale, 'short'))
   const ops: Op[] = []
@@ -466,7 +466,7 @@ function fold (atoms: string[], locale: string): { ops: Op[], ignored: string[] 
       // cursor is somewhere we travelled to rather than now, and the weekday scopes to
       // that week: `the 6th, on monday` is the Monday of the 6th's week.
       if (direction === null && ops.some(placesDate)) {
-        ops.push({ precision: 'day', apply: date => { seekWithinWeek(date, weekday) } })
+        ops.push({ precision: 'day', apply: date => { seekWithinWeek(date, weekday, firstDay) } })
         continue
       }
       ops.push({ precision: 'day', apply: date => { seekWeekday(date, weekday, direction ?? 0) } })
@@ -544,7 +544,8 @@ function fold (atoms: string[], locale: string): { ops: Op[], ignored: string[] 
  * leans when nothing says otherwise. But once another token has established a date, the
  * weekday scopes to that date's week instead of running off into the next one — so
  * `2026-03-14, on monday` is the Monday of that Saturday's week. An explicit `next` or
- * `last` always wins over both readings.
+ * `last` always wins over both readings, and where that week opens is
+ * {@link InferDateOptions.weekStartsOn} — Monday unless the caller says otherwise.
  *
  * **A seek never lands back on where it started**: asked on a Thursday, `next thursday`
  * is seven days out, and in October `last december` is the December before. A bare
@@ -573,7 +574,7 @@ export function inferDate (
   locale = 'en',
   options: InferDateOptions = {}
 ): Date | null {
-  const { ops, ignored } = fold(lex(raw), locale)
+  const { ops, ignored } = fold(lex(raw), locale, options.weekStartsOn ?? 1)
   if (ignored.length > 0) options.onIgnored?.(ignored)
   if (ops.length === 0) return null
   const date = new Date(options.reference ?? new Date())
