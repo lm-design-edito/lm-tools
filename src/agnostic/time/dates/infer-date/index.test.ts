@@ -247,6 +247,28 @@ describe('inferDate', () => {
     })
   })
 
+  describe('a weekday against what has already been placed', () => {
+    it('reads forward when nothing has established a date', () => {
+      expect(infer('on monday')).toEqual(new Date(2026, 0, 5))
+      expect(infer('monday')).toEqual(new Date(2026, 0, 5))
+    })
+
+    it('scopes to the week of a date another token established', () => {
+      // Saturday the 14th of March, whose ISO week opens on Monday the 9th.
+      expect(infer('2026-03-14 on monday')).toEqual(new Date(2026, 2, 9))
+      expect(infer('2026-03-14 on sunday')).toEqual(new Date(2026, 2, 15))
+      expect(infer('the 6th on monday')).toEqual(new Date(2026, 0, 5))
+    })
+
+    it('does not count a time of day as a date', () => {
+      expect(infer('9pm on monday')).toEqual(new Date(2026, 0, 5, 21))
+    })
+
+    it('lets an explicit direction win over both readings', () => {
+      expect(infer('2026-03-14 next monday')).toEqual(new Date(2026, 2, 16))
+    })
+  })
+
   // One line per string, so that adding a token costs one line to pin and touching the
   // lexer re-checks every form at once. The behaviours above state the rules; this
   // states the coverage.
@@ -309,6 +331,10 @@ describe('inferDate', () => {
       ['TOMORROW AT 9PM', new Date(2026, 0, 2, 21)],
       ['in  3 days — at midnight', new Date(2026, 0, 4)],
       ['january february', new Date(2026, 1, 1)],
+      ['on monday', new Date(2026, 0, 5)],
+      ['2026-03-14 on monday', new Date(2026, 2, 9)],
+      ['2026-03-14 next monday', new Date(2026, 2, 16)],
+      ['9pm on monday', new Date(2026, 0, 1 + 4, 21)],
       ['the 3rd quarter', new Date(2026, 0, 3)],
       ['3 days', null],
       ['hello world', null],

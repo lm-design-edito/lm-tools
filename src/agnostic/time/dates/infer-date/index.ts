@@ -17,6 +17,11 @@ type Op = {
   apply: (date: Date) => void
 }
 
+/** Whether an op places the date itself, rather than the time or a mere offset. */
+function placesDate (op: Op): boolean {
+  return op.precision !== null && FIELDS.indexOf(op.precision) <= FIELDS.indexOf('day')
+}
+
 /** How far a seek looks: forward, backward, or forward from today included. */
 type Direction = -1 | 0 | 1
 
@@ -166,6 +171,20 @@ function setYear (date: Date, year: number): void {
 
 function addMonths (date: Date, amount: number): void {
   writeClamped(date, parked => { parked.setMonth(parked.getMonth() + amount) })
+}
+
+/**
+ * The weekday of the week the cursor is already in, rather than the next one — what
+ * `on monday` means once another token has established a date.
+ *
+ * The week is the ISO one, starting on a Monday, rather than the locale's own:
+ * `Intl.Locale.prototype.getWeekInfo` carries that but is not everywhere yet, and a
+ * reading that changes with the runtime is worse than one that is merely British. It
+ * only makes a difference for a cursor sitting on a Sunday.
+ */
+function seekWithinWeek (date: Date, target: number): void {
+  const fromMonday = (day: number): number => (day + 6) % 7
+  date.setDate(date.getDate() + fromMonday(target) - fromMonday(date.getDay()))
 }
 
 function seekWeekday (date: Date, target: number, direction: Direction): void {
@@ -439,11 +458,18 @@ function fold (atoms: string[], locale: string): { ops: Op[], ignored: string[] 
 
     const weekday = weekdays[atom]
     if (weekday !== undefined) {
-      // A weekday is not a field anyone can set, so a bare one is still a seek — the
-      // coming one, today included.
-      const direction = seek ?? 0
+      const direction = seek
       seek = null
-      ops.push({ precision: 'day', apply: date => { seekWeekday(date, weekday, direction) } })
+      // A weekday is not a field anyone can set, so it is always a seek. With no date
+      // established yet it is the coming one, today included — `monday` and `on monday`
+      // both mean the Monday ahead. Once another token has established a date, the
+      // cursor is somewhere we travelled to rather than now, and the weekday scopes to
+      // that week: `the 6th, on monday` is the Monday of the 6th's week.
+      if (direction === null && ops.some(placesDate)) {
+        ops.push({ precision: 'day', apply: date => { seekWithinWeek(date, weekday) } })
+        continue
+      }
+      ops.push({ precision: 'day', apply: date => { seekWeekday(date, weekday, direction ?? 0) } })
       continue
     }
 
@@ -512,6 +538,13 @@ function fold (atoms: string[], locale: string): { ops: Op[], ignored: string[] 
  * while `in 3 days` is this same hour three days out — which is why `in 3 days, at
  * midnight` has something to add. More generally, every part finer than the finest one
  * named falls to its minimum, and every part left unnamed comes from the reference.
+ *
+ * **A weekday reads forward until something else has placed the date.** `monday` and
+ * `on monday` are the Monday ahead, today included, because that is the way the language
+ * leans when nothing says otherwise. But once another token has established a date, the
+ * weekday scopes to that date's week instead of running off into the next one — so
+ * `2026-03-14, on monday` is the Monday of that Saturday's week. An explicit `next` or
+ * `last` always wins over both readings.
  *
  * **A seek never lands back on where it started**: asked on a Thursday, `next thursday`
  * is seven days out, and in October `last december` is the December before. A bare
