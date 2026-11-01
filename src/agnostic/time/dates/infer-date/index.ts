@@ -20,6 +20,13 @@ type Op = {
 /** How far a seek looks: forward, backward, or forward from today included. */
 type Direction = -1 | 0 | 1
 
+/** A quantity and its unit, waiting for the sign that will make it an offset. */
+type Quantity = {
+  amount: number
+  unit: DurationType
+  atoms: string[]
+}
+
 const DAY_ANCHORS: Record<string, number> = {
   today: 0,
   yesterday: -1,
@@ -34,6 +41,7 @@ const NAMED_TIMES: Record<string, number> = {
   morning: 8,
   noon: 12,
   midday: 12,
+  afternoon: 14,
   evening: 20,
   night: 20,
   tonight: 20
@@ -99,25 +107,34 @@ const SEEK_WORDS: Record<string, Direction> = {
   this: 0
 }
 
-/** A sign that waits for the quantity it signs, on one side or the other. */
-const PREFIX_SIGNS: Record<string, number> = { in: 1 }
-const POSTFIX_SIGNS: Record<string, number> = { ago: -1, later: 1, from: 1 }
+// A sign arms the quantities that follow it and stays armed, so one `in` carries a whole
+// sentence: `in 2 days and 3 hours` is both. A postfix sign reaches the other way, over
+// the quantities read before it — `2 days and 3 hours ago` is also both.
+const PREFIX_SIGNS: Record<string, number> = { in: 1, plus: 1, '+': 1, minus: -1, '-': -1 }
+const POSTFIX_SIGNS: Record<string, number> = { ago: -1, later: 1, from: 1, hence: 1 }
 
 const QUALIFIERS: Record<string, 'time' | 'date'> = { at: 'time', on: 'date' }
 
 /** Skipped while looking ahead for the unit a quantity belongs to. */
 const ARTICLES = ['a', 'an', 'the']
 
+/** What a sentence is held together with, and what is never worth reporting as ignored. */
+const NOISE = [...ARTICLES, 'and', 'of', 'oclock']
+
 const CLOCK = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/v
+// `9h`, `9h30`, `9h30min`, `9h30min20`, `9h30min20sec` — the form a clock takes when the
+// colon is dropped. A bare `9h` is the only ambiguous one: `in 9h` is nine hours and
+// `at 9h` is nine o'clock, which the fold settles on the sign rather than here.
+const COMPACT_CLOCK = /^(\d{1,2})h(?:(\d{1,2})(?:min(?:(\d{1,2})(?:sec)?)?)?)?$/v
 const NUMERIC_DATE = /^(\d{4})-(\d{1,2})-(\d{1,2})$/v
 const ORDINAL = /^(\d{1,2})(?:st|nd|rd|th)$/v
 const DIGITS = /^\d+$/v
 const MERIDIEM = /^([ap])m$/v
 
 // Compound shapes first, so a clock, a numeric date and an ordinal survive a split that
-// drops every separator. Everything else is a run of digits or a run of letters, and
-// whatever falls between the two — spaces, commas, dashes, anything — is a separator.
-const ATOM = /\d{1,2}:\d{2}(?::\d{2})?|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}(?:st|nd|rd|th)|\d+|\p{L}+/gv
+// drops every separator. Everything else is a run of digits, a run of letters or a lone
+// sign, and whatever falls between them — spaces, commas, dashes — is a separator.
+const ATOM = /\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}h(?:\d{1,2}(?:min(?:\d{1,2}(?:sec)?)?)?)?|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}(?:st|nd|rd|th)|\d+|\p{L}+|[+\-]/gv
 
 function lex (raw: string): string[] {
   return [...raw.toLowerCase().matchAll(ATOM)].map(match => match[0])
@@ -219,10 +236,12 @@ function nameTable (long: string[], short: string[]): Record<string, number> {
   return table
 }
 
-function fold (atoms: string[], locale: string): Op[] {
+function fold (atoms: string[], locale: string): { ops: Op[], ignored: string[] } {
   const months = nameTable(monthNames(locale, 'long'), monthNames(locale, 'short'))
   const weekdays = nameTable(weekdayNames(locale, 'long'), weekdayNames(locale, 'short'))
   const ops: Op[] = []
+  const ignored: string[] = []
+  const waiting: Quantity[] = []
   let seek: Direction | null = null
   let sign: number | null = null
   let qualifier: 'time' | 'date' | null = null
@@ -238,19 +257,28 @@ function fold (atoms: string[], locale: string): Op[] {
     return unit === undefined ? null : { unit, at: position }
   }
 
-  /** An offset, when a quantity has a unit and a sign on either side of it. */
-  function takeOffset (amount: number): boolean {
+  function pushShift (amount: number, unit: DurationType): void {
+    ops.push({ precision: null, apply: date => { shift(date, amount, unit) } })
+  }
+
+  /** Signs everything read so far, and stays armed for everything after it. */
+  function applySign (direction: number): void {
+    for (const held of waiting) pushShift(held.amount * direction, held.unit)
+    waiting.length = 0
+    sign = direction
+  }
+
+  /** An offset when the quantity has a unit — signed now, or parked until a sign comes. */
+  function takeQuantity (amount: number, text: string): boolean {
     const ahead = unitAhead(index)
     if (ahead === null) return false
-    const postfix = POSTFIX_SIGNS[atoms[ahead.at + 1] ?? '']
-    const signed = sign ?? postfix ?? null
+    const unitAtom = atoms[ahead.at] ?? ''
     index = ahead.at + 1
-    sign = null
-    // A quantity nobody signed is not a date: `3 days` on its own says nothing about
-    // which three days, so the whole phrase is dropped rather than guessed forward.
-    if (signed === null) return true
-    if (postfix !== undefined) index += 1
-    ops.push({ precision: null, apply: date => shift(date, amount * signed, ahead.unit) })
+    if (sign === null) {
+      waiting.push({ amount, unit: ahead.unit, atoms: [text, unitAtom] })
+      return true
+    }
+    pushShift(amount * sign, ahead.unit)
     return true
   }
 
@@ -261,11 +289,20 @@ function fold (atoms: string[], locale: string): Op[] {
       ops.push({ precision: 'day', apply: date => { date.setDate(value) } })
       return
     }
-    ops.push({ precision: 'day', apply: date => seekDayOfMonth(date, value, direction) })
+    ops.push({ precision: 'day', apply: date => { seekDayOfMonth(date, value, direction) } })
   }
 
   function takeHours (value: number): void {
     ops.push({ precision: 'hours', apply: date => { date.setHours(value) } })
+  }
+
+  function takeClock (hours: number, minutes: number | null, seconds: number | null): void {
+    if (hours > 23 || (minutes !== null && minutes > 59) || (seconds !== null && seconds > 59)) {
+      return
+    }
+    takeHours(hours)
+    if (minutes !== null) ops.push({ precision: 'minutes', apply: date => { date.setMinutes(minutes) } })
+    if (seconds !== null) ops.push({ precision: 'seconds', apply: date => { date.setSeconds(seconds) } })
   }
 
   /** The meridiem a number is followed by, if any, consumed on the spot. */
@@ -286,14 +323,30 @@ function fold (atoms: string[], locale: string): Op[] {
       const hours = Number.parseInt(clock[1] ?? '', 10)
       const minutes = Number.parseInt(clock[2] ?? '', 10)
       const seconds = clock[3] === undefined ? null : Number.parseInt(clock[3], 10)
-      if (hours > 23 || minutes > 59 || (seconds !== null && seconds > 59)) continue
       const meridiem = meridiemAhead()
       const onTheClock = meridiem === null || hours > 12
         ? hours
         : (hours % 12) + (meridiem === 'p' ? 12 : 0)
-      takeHours(onTheClock)
-      ops.push({ precision: 'minutes', apply: date => { date.setMinutes(minutes) } })
-      if (seconds !== null) ops.push({ precision: 'seconds', apply: date => { date.setSeconds(seconds) } })
+      const before = ops.length
+      takeClock(onTheClock, minutes, seconds)
+      if (ops.length === before) ignored.push(atom)
+      continue
+    }
+
+    const compact = COMPACT_CLOCK.exec(atom)
+    if (compact !== null) {
+      const hours = Number.parseInt(compact[1] ?? '', 10)
+      const minutes = compact[2] === undefined ? null : Number.parseInt(compact[2], 10)
+      const seconds = compact[3] === undefined ? null : Number.parseInt(compact[3], 10)
+      // `in 9h` is a quantity of hours; `9h` and `at 9h` are an hour of the day. Only the
+      // form with no minutes is in any doubt.
+      if (minutes === null && sign !== null) {
+        pushShift(hours * sign, 'hours')
+        continue
+      }
+      const before = ops.length
+      takeClock(hours, minutes, seconds)
+      if (ops.length === before) ignored.push(atom)
       continue
     }
 
@@ -302,9 +355,12 @@ function fold (atoms: string[], locale: string): Op[] {
       const year = Number.parseInt(numeric[1] ?? '', 10)
       const month = Number.parseInt(numeric[2] ?? '', 10)
       const day = Number.parseInt(numeric[3] ?? '', 10)
-      if (month < 1 || month > 12 || day < 1 || day > 31) continue
-      ops.push({ precision: 'year', apply: date => setYear(date, year) })
-      ops.push({ precision: 'month', apply: date => setMonth(date, month) })
+      if (month < 1 || month > 12 || day < 1 || day > 31) {
+        ignored.push(atom)
+        continue
+      }
+      ops.push({ precision: 'year', apply: date => { setYear(date, year) } })
+      ops.push({ precision: 'month', apply: date => { setMonth(date, month) } })
       ops.push({ precision: 'day', apply: date => { date.setDate(day) } })
       continue
     }
@@ -313,6 +369,7 @@ function fold (atoms: string[], locale: string): Op[] {
     if (ordinal !== null) {
       const value = Number.parseInt(ordinal[1] ?? '', 10)
       if (value >= 1 && value <= 31) takeDay(value)
+      else ignored.push(atom)
       continue
     }
 
@@ -321,28 +378,40 @@ function fold (atoms: string[], locale: string): Op[] {
       const meridiem = meridiemAhead()
       if (meridiem !== null) {
         if (value >= 1 && value <= 12) takeHours((value % 12) + (meridiem === 'p' ? 12 : 0))
+        else ignored.push(atom)
         continue
       }
-      if (takeOffset(value)) continue
-      if (atom.length === 4) {
-        ops.push({ precision: 'year', apply: date => setYear(date, value) })
-        continue
-      }
+      // `at` has already said what the number is, so it is not a quantity even when a
+      // unit follows it: `at 9 h` is nine o'clock, and the `h` is noise.
       if (qualifier === 'time') {
         qualifier = null
         if (value <= 23) takeHours(value)
+        else ignored.push(atom)
+        continue
+      }
+      if (takeQuantity(value, atom)) continue
+      if (atom.length === 4) {
+        ops.push({ precision: 'year', apply: date => { setYear(date, value) } })
         continue
       }
       qualifier = null
       if (value >= 1 && value <= 31) takeDay(value)
+      else ignored.push(atom)
       continue
     }
 
     const quantity = QUANTITY_WORDS[atom]
-    if (quantity !== undefined && takeOffset(quantity)) continue
+    if (quantity !== undefined && takeQuantity(quantity, atom)) continue
 
     const namedTime = NAMED_TIMES[atom]
     if (namedTime !== undefined) {
+      // `last night` is yesterday evening, `next morning` tomorrow's — a direction on a
+      // time of day moves the day it belongs to.
+      const direction = seek
+      seek = null
+      if (direction !== null && direction !== 0) {
+        ops.push({ precision: 'day', apply: date => { date.setDate(date.getDate() + direction) } })
+      }
       takeHours(namedTime)
       continue
     }
@@ -363,8 +432,8 @@ function fold (atoms: string[], locale: string): Op[] {
       const direction = seek
       seek = null
       const value = month + 1
-      if (direction === null) ops.push({ precision: 'month', apply: date => setMonth(date, value) })
-      else ops.push({ precision: 'month', apply: date => seekMonth(date, value, direction) })
+      if (direction === null) ops.push({ precision: 'month', apply: date => { setMonth(date, value) } })
+      else ops.push({ precision: 'month', apply: date => { seekMonth(date, value, direction) } })
       continue
     }
 
@@ -374,7 +443,7 @@ function fold (atoms: string[], locale: string): Op[] {
       // coming one, today included.
       const direction = seek ?? 0
       seek = null
-      ops.push({ precision: 'day', apply: date => seekWeekday(date, weekday, direction) })
+      ops.push({ precision: 'day', apply: date => { seekWeekday(date, weekday, direction) } })
       continue
     }
 
@@ -384,9 +453,8 @@ function fold (atoms: string[], locale: string): Op[] {
       seek = null
       // A calendar step, not an offset: `next week` moves one week and says nothing
       // about the time of day, where `in a week` had to be signed to mean anything.
-      if (direction !== null && direction !== 0) {
-        ops.push({ precision: null, apply: date => shift(date, direction, unit) })
-      }
+      if (direction !== null && direction !== 0) pushShift(direction, unit)
+      else ignored.push(atom)
       continue
     }
 
@@ -402,16 +470,32 @@ function fold (atoms: string[], locale: string): Op[] {
       continue
     }
 
+    const postfix = POSTFIX_SIGNS[atom]
+    if (postfix !== undefined) {
+      applySign(postfix)
+      continue
+    }
+
     const asked = QUALIFIERS[atom]
-    if (asked !== undefined) qualifier = asked
+    if (asked !== undefined) {
+      qualifier = asked
+      continue
+    }
+
+    if (!NOISE.includes(atom)) ignored.push(atom)
   }
 
-  return ops
+  // A quantity nobody ever signed says nothing about which three days it means, so it
+  // is dropped — and reported, since dropping it silently is how `21h30` used to read
+  // as the 30th.
+  for (const held of waiting) ignored.push(...held.atoms)
+
+  return { ops, ignored }
 }
 
 /**
  * Reads a date the way it is spoken — `next thursday at 9:20pm`, `in 3 days, at
- * midnight`, `yesterday`, `next december` — into a `Date`.
+ * midnight`, `yesterday`, `next december`, `21h30` — into a `Date`.
  *
  * @param raw - The string to read. Nothing in it has to be a date, and nothing in it
  * has to be in any particular order.
@@ -435,11 +519,17 @@ function fold (atoms: string[], locale: string): Op[] {
  * bare weekday is always a seek — the coming one, today included — because a weekday is
  * not a part a date can be told to have.
  *
+ * **A sign carries across the whole string**, forwards from `in`, `plus`, `minus`, `+`
+ * and `-`, and backwards from `ago`, `later`, `from` and `hence` over everything read
+ * before them. So `in 2 days and 3 hours` is both, and so is `2 days and 3 hours ago`. A
+ * quantity no sign ever reached is dropped, since `3 days` says nothing about which
+ * three days.
+ *
  * **Reading is lax by construction.** Whitespace and punctuation are separators, a token
  * no table knows is skipped rather than fatal, and nothing is positional: `9pm next
  * thursday` and `next thursday at 9pm` are the same instant. When two tokens name the
- * same part, the later one wins. A quantity with no sign — a bare `3 days` — says
- * nothing about which three days and is dropped whole.
+ * same part, the later one wins. Nothing here ever throws, and what the read could not
+ * use reaches `onIgnored` rather than changing the answer.
  *
  * @example
  * inferDate('next thursday at 9:20pm')
@@ -450,7 +540,8 @@ export function inferDate (
   locale = 'en',
   options: InferDateOptions = {}
 ): Date | null {
-  const ops = fold(lex(raw), locale)
+  const { ops, ignored } = fold(lex(raw), locale)
+  if (ignored.length > 0) options.onIgnored?.(ignored)
   if (ops.length === 0) return null
   const date = new Date(options.reference ?? new Date())
   for (const op of ops) op.apply(date)

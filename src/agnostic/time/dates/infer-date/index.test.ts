@@ -168,4 +168,158 @@ describe('inferDate', () => {
       expect(infer('décembre', 'en')).toBeNull()
     })
   })
+
+  describe('the compact clock', () => {
+    it('reads an hour written with an h', () => {
+      expect(infer('21h30')).toEqual(new Date(2026, 0, 1, 21, 30))
+      expect(infer('9h30')).toEqual(new Date(2026, 0, 1, 9, 30))
+      expect(infer('9h30min20sec')).toEqual(new Date(2026, 0, 1, 9, 30, 20))
+    })
+
+    it('settles a bare 9h on the sign in front of it', () => {
+      expect(infer('9h')).toEqual(new Date(2026, 0, 1, 9))
+      expect(infer('at 9h')).toEqual(new Date(2026, 0, 1, 9))
+      expect(infer('in 9h')).toEqual(new Date(2026, 0, 2, 0, 5, 9, 42))
+    })
+
+    it('reads a number as an hour when at has already said so', () => {
+      expect(infer('at 9 h')).toEqual(new Date(2026, 0, 1, 9))
+    })
+  })
+
+  describe('signs', () => {
+    it('carries one sign across the whole string', () => {
+      expect(infer('in 2 days and 3 hours')).toEqual(new Date(2026, 0, 3, 18, 5, 9, 42))
+      expect(infer('in 1 week and 2 days')).toEqual(new Date(2026, 0, 10, 15, 5, 9, 42))
+    })
+
+    it('reaches backwards from a postfix sign', () => {
+      expect(infer('2 days and 3 hours ago')).toEqual(new Date(2025, 11, 30, 12, 5, 9, 42))
+    })
+
+    it('takes plus and minus, written or spelt', () => {
+      expect(infer('next friday + 2 days')).toEqual(new Date(2026, 0, 4))
+      expect(infer('next friday plus 2 days')).toEqual(new Date(2026, 0, 4))
+      expect(infer('next friday - 2 days')).toEqual(new Date(2025, 11, 31))
+    })
+  })
+
+  describe('a direction on a time of day', () => {
+    it('moves the day the time belongs to', () => {
+      expect(infer('last night')).toEqual(new Date(2025, 11, 31, 20))
+      expect(infer('next morning')).toEqual(new Date(2026, 0, 2, 8))
+      expect(infer('this morning')).toEqual(new Date(2026, 0, 1, 8))
+    })
+
+    it('reads the afternoon at its agreed hour', () => {
+      expect(infer('afternoon')).toEqual(new Date(2026, 0, 1, 14))
+    })
+  })
+
+  describe('onIgnored', () => {
+    it('hands over what the read could not use, without changing the answer', () => {
+      const ignored: string[][] = []
+      const read = inferDate('the 3rd quarter', 'en', {
+        reference,
+        onIgnored: atoms => { ignored.push(atoms) }
+      })
+      expect(read).toEqual(new Date(2026, 0, 3))
+      expect(ignored).toEqual([['quarter']])
+    })
+
+    it('reports a quantity no sign ever reached', () => {
+      const ignored: string[][] = []
+      const read = inferDate('3 days', 'en', {
+        reference,
+        onIgnored: atoms => { ignored.push(atoms) }
+      })
+      expect(read).toBeNull()
+      expect(ignored).toEqual([['3', 'days']])
+    })
+
+    it('stays silent when everything landed', () => {
+      const ignored: string[][] = []
+      inferDate('next thursday at 9:20pm', 'en', {
+        reference,
+        onIgnored: atoms => { ignored.push(atoms) }
+      })
+      expect(ignored).toEqual([])
+    })
+  })
+
+  // One line per string, so that adding a token costs one line to pin and touching the
+  // lexer re-checks every form at once. The behaviours above state the rules; this
+  // states the coverage.
+  describe('corpus', () => {
+    const corpus: Array<[string, Date | null]> = [
+      ['today', new Date(2026, 0, 1)],
+      ['tomorrow', new Date(2026, 0, 2)],
+      ['yesterday', new Date(2025, 11, 31)],
+      ['now', new Date(2026, 0, 1, 15, 5, 9, 42)],
+      ['in 3 days', new Date(2026, 0, 4, 15, 5, 9, 42)],
+      ['in 3 days, at midnight', new Date(2026, 0, 4)],
+      ['3 days ago', new Date(2025, 11, 29, 15, 5, 9, 42)],
+      ['3 days from now', new Date(2026, 0, 4, 15, 5, 9, 42)],
+      ['in half an hour', new Date(2026, 0, 1, 15, 35, 9, 42)],
+      ['in 2 days and 3 hours', new Date(2026, 0, 3, 18, 5, 9, 42)],
+      ['2 days and 3 hours ago', new Date(2025, 11, 30, 12, 5, 9, 42)],
+      ['in 3 d', new Date(2026, 0, 4, 15, 5, 9, 42)],
+      ['in 3 hrs', new Date(2026, 0, 1, 18, 5, 9, 42)],
+      ['next week', new Date(2026, 0, 8, 15, 5, 9, 42)],
+      ['last month', new Date(2025, 11, 1, 15, 5, 9, 42)],
+      ['next year', new Date(2027, 0, 1, 15, 5, 9, 42)],
+      ['next thursday', new Date(2026, 0, 8)],
+      ['this thursday', new Date(2026, 0, 1)],
+      ['last friday', new Date(2025, 11, 26)],
+      ['friday', new Date(2026, 0, 2)],
+      ['2 weeks from monday', new Date(2026, 0, 19)],
+      ['december', new Date(2026, 11, 1)],
+      ['next december', new Date(2026, 11, 1)],
+      ['last december', new Date(2025, 11, 1)],
+      ['dec 2019', new Date(2019, 11, 1)],
+      ['2019', new Date(2019, 0, 1)],
+      ['january 6th 2019', new Date(2019, 0, 6)],
+      ['6 january', new Date(2026, 0, 6)],
+      ['the 6th', new Date(2026, 0, 6)],
+      ['2026-03-14', new Date(2026, 2, 14)],
+      ['2026-03-14 21:30', new Date(2026, 2, 14, 21, 30)],
+      ['9:20pm', new Date(2026, 0, 1, 21, 20)],
+      ['21:20', new Date(2026, 0, 1, 21, 20)],
+      ['12:30 am', new Date(2026, 0, 1, 0, 30)],
+      ['9pm', new Date(2026, 0, 1, 21)],
+      ['at 9', new Date(2026, 0, 1, 9)],
+      ['9:30:20', new Date(2026, 0, 1, 9, 30, 20)],
+      ['21h30', new Date(2026, 0, 1, 21, 30)],
+      ['9h30', new Date(2026, 0, 1, 9, 30)],
+      ['9h', new Date(2026, 0, 1, 9)],
+      ['at 9h', new Date(2026, 0, 1, 9)],
+      ['in 9h', new Date(2026, 0, 2, 0, 5, 9, 42)],
+      ['9h30min20sec', new Date(2026, 0, 1, 9, 30, 20)],
+      ['midnight', new Date(2026, 0, 1)],
+      ['noon', new Date(2026, 0, 1, 12)],
+      ['tonight', new Date(2026, 0, 1, 20)],
+      ['afternoon', new Date(2026, 0, 1, 14)],
+      ['last night', new Date(2025, 11, 31, 20)],
+      ['tomorrow morning', new Date(2026, 0, 2, 8)],
+      ['next thursday at 9:20pm', new Date(2026, 0, 8, 21, 20)],
+      ['9pm next thursday', new Date(2026, 0, 8, 21)],
+      ['next friday + 2 days', new Date(2026, 0, 4)],
+      ['next friday - 2 days', new Date(2025, 11, 31)],
+      ['please publish this tomorrow at 9pm', new Date(2026, 0, 2, 21)],
+      ['TOMORROW AT 9PM', new Date(2026, 0, 2, 21)],
+      ['in  3 days — at midnight', new Date(2026, 0, 4)],
+      ['january february', new Date(2026, 1, 1)],
+      ['the 3rd quarter', new Date(2026, 0, 3)],
+      ['3 days', null],
+      ['hello world', null],
+      ['week 32', null],
+      ['', null]
+    ]
+
+    for (const [raw, expected] of corpus) {
+      it(`reads ${raw === '' ? 'an empty string' : raw}`, () => {
+        expect(infer(raw)).toEqual(expected)
+      })
+    }
+  })
 })
