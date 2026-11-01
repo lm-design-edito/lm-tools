@@ -12,6 +12,7 @@ import {
   useCommands
 } from '../utils/commands/index.js'
 import { useCompId } from '../utils/comp-id/index.js'
+import { useDisclosure } from '../utils/disclosure/index.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
 import type { VisibilityProps } from '../utils/visibility/types.js'
 import {
@@ -120,6 +121,12 @@ export type Props = {
  * consequence worth knowing: a looping element never fires `ended`, so the `--ended`
  * modifier and the `isEnded` it feeds to `Subtitles` simply never come.
  *
+ * ### Disclosure
+ * Under a standing `Disclaimer`, the element does not play — not from `autoPlay`, not
+ * from a verb, not from the play button — and the component sends nothing. The playback
+ * state is kept all the same, so dismissing the panel lands the reader on what the
+ * article asked for rather than on a stopped video.
+ *
  * ### Commands
  * - `play` / `pause`, `loud` / `mute` — the four states a reader's buttons also reach.
  * - `volume:<0–1>` and `rate:<n>` — a decimal argument, `rate` strictly positive.
@@ -207,6 +214,11 @@ export const Video: FunctionComponent<Props> = ({
   // them may win over a parent-owned time, so the invariant is applied where the state
   // is forwarded rather than guarded at each call site.
   const isTimeControlled = controlledProps.currentTimeMs !== undefined
+
+  // A video withheld by a disclaimer does not play, whoever asked. Read where the state
+  // is forwarded rather than written, as the controlling props are, so the reader lands
+  // on what they had once they accept instead of on a mount-time value.
+  const { isDisclosed } = useDisclosure()
 
   // The reader's hand. Touching a control hands its domain over for the rest of the
   // mount, because the failure modes are not symmetrical: not restarting on its own is
@@ -396,9 +408,13 @@ export const Video: FunctionComponent<Props> = ({
 
   // `autoPlay` is forwarded to the element, but the play state is owned here, so
   // it has to be seeded once on mount for the controls to agree with the element.
+  //
+  // Fx. dep. isDisclosed - and seeded again when a disclaimer is dismissed: the autoplay
+  // was the article's instruction, consent was the only thing in its way.
   useEffect(() => {
+    if (!isDisclosed) return
     if (controlledProps.autoPlay === true) setInternalPlay(true)
-  }, [])
+  }, [isDisclosed])
 
   // Render
   //
@@ -412,7 +428,8 @@ export const Video: FunctionComponent<Props> = ({
     rootRef={rootRef}
     videoRef={videoRef}
     isVisible={isVisible}
-    play={(play ?? internalPlay) && !isTimeControlled}
+    autoPlay={isDisclosed ? controlledProps.autoPlay : false}
+    play={(play ?? internalPlay) && !isTimeControlled && isDisclosed}
     volume={volume ?? internalVolume}
     mute={mute ?? internalMute}
     playbackRate={playbackRate ?? internalPlaybackRate}
