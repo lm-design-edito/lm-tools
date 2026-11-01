@@ -25,6 +25,7 @@ import {
   useCommandSurrender,
   useCommands
 } from '../utils/commands/index.js'
+import { useDisclosure } from '../utils/disclosure/index.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
 import type { VisibilityProps } from '../utils/visibility/types.js'
 import { lightbox as publicClassName } from '../public-classnames.js'
@@ -145,6 +146,12 @@ export type Props = {
  * - `content` - wraps the content inside the backdrop.
  * - `open-btn`, `close-btn`, `prev-btn`, `next-btn`
  *
+ * ### Disclosure
+ * Under a standing `Disclaimer` it does not open — not from `defaultIsOn`, not from a
+ * verb, not from its own button — because opening writes the store shared with every
+ * other lightbox of the page, over a page the reader has not accepted. `defaultIsOn` is
+ * not lost: it applies the moment the panel is dismissed.
+ *
  * ### Commands
  * - `open`, `close` — this lightbox, and no other. There is no verb for walking a group:
  *   see {@link LIGHTBOX_ACTION_VERBS}, where `@another-lightbox:open` is what an absolute
@@ -245,6 +252,7 @@ export const Lightbox: FunctionComponent<Props> = ({
   const groupsKey = groups.join(' ')
 
   const [storeState, setStoreState] = useState(getLightboxesStoreState)
+  const { isDisclosed } = useDisclosure()
 
   // Fx. dep. none - The read catches a store that moved before this effect ran.
   useEffect(() => {
@@ -300,9 +308,9 @@ export const Lightbox: FunctionComponent<Props> = ({
 
   // Actuators
   const requestOpen = useCallback((): void => {
-    if (isControlled) return
+    if (isControlled || !isDisclosed) return
     openLightbox(primaryGroup, id)
-  }, [isControlled, primaryGroup, id])
+  }, [isControlled, isDisclosed, primaryGroup, id])
   // Closing and walking reach the store, which holds whichever group is open and knows
   // nothing of who called. A lightbox that is not the open one would therefore shut or
   // move a sibling — and it has the controls to do it, since all four are rendered at
@@ -396,14 +404,15 @@ export const Lightbox: FunctionComponent<Props> = ({
     requestGroupNavigation
   ])
 
-  // Fx. dep. hasAppliedDefault, isControlled, defaultIsOn, primaryGroup, id - An
-  // uncontrolled lightbox asked to start open says so once, and never again: the
-  // registry owns the state from then on.
+  // Fx. dep. hasAppliedDefault, isControlled, defaultIsOn, isDisclosed, primaryGroup,
+  // id - An uncontrolled lightbox asked to start open says so once, and never again: the
+  // registry owns the state from then on. Withheld by a disclaimer, it says nothing and
+  // waits: the once it gets is the first moment it is allowed to take it.
   useEffect(() => {
-    if (hasAppliedDefault || isControlled || !defaultIsOn) return
+    if (hasAppliedDefault || isControlled || !defaultIsOn || !isDisclosed) return
     setHasAppliedDefault(true)
     openLightbox(primaryGroup, id)
-  }, [hasAppliedDefault, isControlled, defaultIsOn, primaryGroup, id])
+  }, [hasAppliedDefault, isControlled, defaultIsOn, isDisclosed, primaryGroup, id])
 
   // Rendering
   const c = clss(publicClassName, { cssModule })
