@@ -270,7 +270,16 @@ The need comes from dlbbm's post-creation script, which asks for a publication d
 `YYYY-MM-DD HH:MM`: one wants to write `next thursday at 9:20pm`, `in 3 days, at midnight`,
 `yesterday`. It would go in `agnostic/time/dates/infer-date`, as `inferDate(raw,
 locale = 'en', { reference })` → `Date | null` — the same shape as `parseDate`, minus the
-template. **Nothing is written.**
+template. **It is written**, commit `5339b1e`, in three stages: a lexer down to atoms, a
+fold into ops, and one application onto a cursor started from the reference.
+
+**One rule was settled while writing it, and it is the one to remember: naming a day gives
+that day at midnight, offsetting by a duration keeps the time of day.** So `tomorrow` is
+tomorrow at 00:00 and `next december` is the 1st at 00:00, while `in 3 days` is this same
+hour three days out — which is what gives `in 3 days, at midnight` something to add. It
+falls out of the op model: every op carries the finest part it names, an offset names none,
+and the truncation at the end only reaches below the finest part named. GNU `date` draws the
+same line between a relative item and a day-of-week one.
 
 **The strategy is token by token**, and the roles are the grammar: the token table is data,
 and the engine does not move when a row is added to it.
@@ -332,6 +341,17 @@ The out-of-v1 rows are reachable from this shape, which is the real argument for
 joined by `of` to a period — the grammar already has `of` —, and `week 32` and `Q3` want a
 period that is not a Y/M/D field. Only `end of the month` wants a genuinely new op:
 collapsing to the **end** of the named precision rather than to its start.
+
+**Forms it does not read yet**, raised and left for later: `next friday plus 2 days` only
+wants `plus` / `minus` as prefix signs beside `in` — one row, since a seek followed by an
+offset already composes in the fold —, but `2 days after next friday` is genuinely new,
+because the sign would have to reach forward to a value it has not read yet. `the first of
+next month` wants two things: ordinal words (`first`, `second`, …), where `second` collides
+head-on with the time unit and needs `the` to disambiguate it, and an `of` that stops being
+a filler and becomes an operator, since the right-hand period has to resolve before the
+day-of-period is written — `the 31st of next month` clamps differently depending on the
+order. That is the same mechanism `the last friday of july` wants, so the two arrive
+together.
 
 ### Partial dates — afterwards, and why in that order
 
