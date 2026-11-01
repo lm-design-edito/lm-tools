@@ -21,6 +21,7 @@ import type { CompIdProps } from '../utils/comp-id/types.js'
 import { useVisibilityTriggers } from '../utils/visibility/index.js'
 import type { VisibilityProps } from '../utils/visibility/types.js'
 import { scrollTracker as publicClassName } from '../public-classnames.js'
+import type { ScrollTrackerAction } from './types.js'
 import {
   getScrollProgress,
   subscribe,
@@ -88,8 +89,9 @@ export type Props = {
  *   about visibility, since nothing is observed before that.
  *
  * ### Commands
- * - `track` / `untrack` — start or stop measuring. Both are ignored while the
- *   `tracking` prop is set, which decides the state on its own.
+ * - `track` / `untrack` — start or stop measuring, the `tracking` domain. Both are
+ *   ignored while the `tracking` prop is set, which decides the state on its own, and
+ *   no gesture ever takes the domain over: this component renders no control.
  *
  * `whenVisible` and `whenHidden` are how they get sent without a line of JavaScript:
  * `defaultTracking={false}` with `whenVisible='track'` measures only while in view.
@@ -178,11 +180,12 @@ export const ScrollTracker: FunctionComponent<Props> = ({
     direction => { if (direction !== null) onScrollDirectionChanged?.(direction) }
   )
 
-  // Commands
+  // Commands. The table is checked against the vocabulary rather than holding it, so the
+  // verbs a consumer reads in `types.ts` and the ones answered here cannot drift.
   useCommands(compId, {
     track: () => setInternalTracking(true),
     untrack: () => setInternalTracking(false)
-  })
+  } satisfies Record<ScrollTrackerAction, () => void>)
 
   const isVisible = useVisibilityTriggers(compId, rootRef, {
     whenVisible,
