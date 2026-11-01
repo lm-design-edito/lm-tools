@@ -380,7 +380,8 @@ of a number that *was* read.
 
 **The tests carry a corpus**, one line per string, next to the behaviour-named ones. The
 rules are stated by the latter; coverage is stated by the former, which is what catches a
-`9h30` turning into the 30th when the lexer is touched.
+`9h30` turning into the 30th when the lexer is touched — see the last paragraph of this
+section for what the file holds now.
 
 **A third pass turned `after`, `before`, `from` and `of` into operators read right to
 left** (`c6487f8`, `89fd03e`, `5faac57`). What follows the operator places the date and what
@@ -428,25 +429,58 @@ Y/M/D field, so `the end of the week` hands `week` to `onIgnored` and answers as
 not been said. And `weekend` reads as its Saturday, which makes every weekday rule hold of
 `this weekend`, `next weekend` and `the last weekend of july` without a line of its own.
 
-**Where the weight sits.** 167 tests on the module; 12.7 kB minified, 4.4 kB gzipped, of
-which the 124 token-table rows are 1.5 kB / 0.65 kB and `Duration` 1.8 kB / 0.48 kB. The
-named days are 0.4 kB / 0.21 kB of table and about as much engine again. A call is 6.5 to
-9.7 µs depending on the string; the fourth pass costs 3 to 7 % over the third, measured
-A/B in one run — the absolute figure moves with the machine and is not comparable from one
-session to the next.
+**A fifth pass read the forms a machine or a form field writes** (`efb75d9`). A date in
+digits is now taken in three parts with `-`, `/` or `.` between them: a four-digit head is
+a year and the order is the one it opens (`2026-03-14`, `2026/3/4`), anything else is read
+day first (`14/03/2026`, `14.03.26`), and a two-digit year takes the `strptime` pivot.
+**The American month-first order is deliberately not read**: the same string means two
+different days, and the locale could not settle it either — the module reads a locale for
+names, not for digit order, so inferring the order from a tag nobody set deliberately
+would be worse than refusing. `03/14/2026` is therefore impossible as a day-first date and
+reaches `onIgnored` whole rather than being quietly re-read. Two parts work too: `2026-03`
+and `3/2026` are a month, `14/03` a day of this year's March. If the US order is ever
+needed it should be an explicit option, not a guess.
 
-**What is worth reading next**, in the order of what it costs:
+A clock now reads down to the millisecond (`09:20:05.123`, and `,12` padded to the right),
+which put a sixth step on the precision scale, so a whole ISO instant goes through with its
+`T` — counted as noise rather than reported. Its zone does not: a `Date` holds no zone of
+its own and the whole `dates` family is wall-clock, so `Z` and `+02:00` are recognised **in
+order to be reported**, which is what stopped `+02:00` from landing as two o'clock. A
+decimal is a quantity (`in 1.5 hours`), a fraction with no unit of its own is counted in the
+one before it (`in an hour and a half`) while a whole number never is, and `same time` names
+the reference's own clock so that it survives the midnight a named day imposes — `same time
+tomorrow`, `this time next week`. `veterans day` came out of the table in the same pass:
+Armistice Day and Remembrance Day already name the 11th of November, and a holiday of one
+country alone does not belong in a table that reads as international.
 
-| Form | What it needs |
+**Where the weight sits.** 14.4 kB minified, 4.9 kB gzipped, of which the token tables are
+1.5 kB / 0.65 kB and `Duration` 1.8 kB / 0.48 kB. A call is 7.5 to 11 µs depending on the
+string, and the fifth pass costs about 8 % over the fourth — the bigger lexer alternation —
+measured A/B in one run. The absolute figure moves with the machine and is not comparable
+from one session to the next.
+
+**The vocabulary is considered complete**, and what is left out is left out on purpose:
+
+| Form | Why not |
 |---|---|
-| `thanksgiving` | a named day that is an nth weekday of a month — a third table shape, over the counting `seekInPeriod` already does |
-| `in twenty days`, `twenty-first` | number words past twelve, and a tens-plus-units composer. Digits already cover it (`in 20 days`), and `twenty-first` reads as the 1st today |
-| `the end of the week`, `the week of the 6th` | a period that is not a Y/M/D field: a week scope through `truncate` and `periodEnd`, which `weekStartsOn` then reaches |
+| `nine o'clock`, `half past nine`, `quarter to five` | the spoken clock: number words as hours, then a `past`/`to` operator. Set aside — a date field is typed, not spoken |
+| `the end of the week`, `the week of the 6th` | a period that is not a Y/M/D field: a week scope through `truncate` and `periodEnd`, which `weekStartsOn` would then reach. Set aside; `week` is reported |
 | `week 32`, `Q3`, `the 3rd quarter` | the same, one step further out. `the 3rd quarter` reads as the 3rd and reports `quarter` |
+| `in twenty days`, `twenty-first` | number words past twelve. Digits cover it (`in 20 days`); `twenty-first` reads as the 1st |
+| `mid july`, `early march`, `late july` | the edge op with a middle, and a modifier taking its period on the right rather than after `of` |
+| `thanksgiving`, `veterans day`, `independence day` | holidays of one country. Out by the same rule that keeps `christmas` in |
+| `ramadan`, `diwali`, `lunar new year` | a calendar each, not a table row. Note that `lunar new year` reads as `new year` today, which is an argument for blocking the phrase |
 | `this monday` as the current week's | a period-scoped seek word. English usage is split, so it is a decision before it is code |
 | `by friday`, `before 9pm` as a deadline | range semantics — `before X` answers X — so it waits for the partial dates below |
-| `mid july`, `early march`, `late july` | the edge op with a middle, and a modifier taking its period on the right rather than after `of`. **Set aside on purpose** |
 | `every monday`, `UTC`, `+02:00` | recurrence, and zones a `Date` cannot hold. Non-goals |
+
+**The test file is the specification.** 214 cases, read against two fixed references — a
+Thursday that is also New Year's Day, so that `next thursday` has to step over today and
+`last december` over the year's edge, and a Wednesday in mid-July, for the forms whose
+answer is only interesting once they have a past (`easter` after Easter, `the end of the
+month` in a month with a middle). One `describe` per rule the JSDoc states, a `never
+throwing` block over nineteen junk strings, and a corpus of one line per string so that
+adding a token costs one line to pin and touching the lexer re-checks every form at once.
 
 **Two things are parked on purpose.** The vocabulary is English-only: month and weekday names
 localise through `Intl`, but `tomorrow`, `next`, `at` and `days` do not, so `demain` reads as
