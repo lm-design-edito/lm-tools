@@ -317,6 +317,37 @@ describe('inferDate', () => {
     })
   })
 
+  describe('counting inside the period an operator names', () => {
+    // July 2026 opens on a Wednesday, so its Fridays are the 3rd, 10th, 17th, 24th and
+    // 31st — the last one being the month's own last day.
+    it('counts a weekday from the end of the period when asked for the last', () => {
+      expect(infer('the last friday of july')).toEqual(new Date(2026, 6, 31))
+      expect(infer('the last friday of 2019')).toEqual(new Date(2019, 11, 27))
+    })
+
+    it('counts a weekday from the start of the period otherwise', () => {
+      expect(infer('the first friday of july')).toEqual(new Date(2026, 6, 3))
+      expect(infer('the second friday of july')).toEqual(new Date(2026, 6, 10))
+      expect(infer('the 2nd friday of july')).toEqual(new Date(2026, 6, 10))
+    })
+
+    it('names one end of the period with a bare day', () => {
+      expect(infer('the last day of july')).toEqual(new Date(2026, 6, 31))
+      expect(infer('the first day of july')).toEqual(new Date(2026, 6, 1))
+      expect(infer('the last day of 2019')).toEqual(new Date(2019, 11, 31))
+    })
+
+    it('falls back to an ordinary seek with no period to count in', () => {
+      expect(infer('the last friday')).toEqual(new Date(2025, 11, 26))
+    })
+
+    it('keeps an offset that lands outside the period', () => {
+      // The period is collapsed before the left-hand side acts, and not collapsed again
+      // after — or the two days would be undone by July's own first instant.
+      expect(infer('2 days after july')).toEqual(new Date(2026, 6, 3))
+    })
+  })
+
   // One line per string, so that adding a token costs one line to pin and touching the
   // lexer re-checks every form at once. The behaviours above state the rules; this
   // states the coverage.
@@ -379,6 +410,12 @@ describe('inferDate', () => {
       ['TOMORROW AT 9PM', new Date(2026, 0, 2, 21)],
       ['in  3 days — at midnight', new Date(2026, 0, 4)],
       ['january february', new Date(2026, 1, 1)],
+      ['the last friday of july', new Date(2026, 6, 31)],
+      ['the first friday of july', new Date(2026, 6, 3)],
+      ['the second friday of july', new Date(2026, 6, 10)],
+      ['the last day of july', new Date(2026, 6, 31)],
+      ['the last friday of 2019', new Date(2019, 11, 27)],
+      ['2 days after july', new Date(2026, 6, 3)],
       ['2 days after next friday', new Date(2026, 0, 4)],
       ['the day after tomorrow', new Date(2026, 0, 3)],
       ['2 days before 2026-03-14', new Date(2026, 2, 12)],

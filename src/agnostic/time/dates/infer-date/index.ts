@@ -14,7 +14,20 @@ type Field = typeof FIELDS[number]
  */
 type Op = {
   precision: Field | null
-  apply: (date: Date) => void
+  /**
+   * @param scope - The period the op is being resolved inside, when it was set aside by
+   * an operator — `of july` resolves its left-hand side within a month. `null` for
+   * everything read straight through.
+   */
+  apply: (date: Date, scope: Field | null) => void
+}
+
+/** The depth of the finest part a list of ops names, `-1` when it names none. */
+function finestOf (list: Op[]): number {
+  return list.reduce(
+    (deepest, op) => Math.max(deepest, op.precision === null ? -1 : FIELDS.indexOf(op.precision)),
+    -1
+  )
 }
 
 /** Whether an op places the date itself, rather than the time or a mere offset. */
@@ -239,6 +252,59 @@ function seekWeekday (date: Date, target: number, direction: Direction): void {
   date.setDate(date.getDate() + (forward === 0 && direction === 1 ? 7 : forward))
 }
 
+/** The last day of the period the cursor sits in, at the given granularity. */
+function periodEnd (start: Date, scope: Field): Date {
+  const end = new Date(start)
+  if (scope === 'year') {
+    end.setMonth(11)
+    end.setDate(31)
+    return end
+  }
+  if (scope === 'month') end.setDate(daysInMonth(end.getFullYear(), end.getMonth() + 1))
+  return end
+}
+
+/**
+ * The nth weekday of a period, or its last one — `the last friday of july`, `the second
+ * friday of july`. Walking back from the cursor would leave the period altogether, which
+ * is why this starts from one of its ends rather than from where the cursor landed.
+ *
+ * @param nth - Which occurrence, counting from the period's start. `null` with `fromEnd`
+ * means the last one.
+ * @param scope - The period's granularity. Without one there is no period to count in,
+ * and the seek falls back to the ordinary one.
+ */
+function seekInPeriod (
+  date: Date,
+  target: number,
+  nth: number | null,
+  fromEnd: boolean,
+  scope: Field | null
+): void {
+  if (scope === null) {
+    seekWeekday(date, target, fromEnd ? -1 : 0)
+    return
+  }
+  const start = new Date(date)
+  truncate(start, FIELDS.indexOf(scope))
+  if (fromEnd) {
+    const end = periodEnd(start, scope)
+    date.setTime(end.getTime())
+    date.setDate(end.getDate() - ((end.getDay() - target + 7) % 7))
+    return
+  }
+  date.setTime(start.getTime())
+  date.setDate(start.getDate() + ((target - start.getDay() + 7) % 7) + ((nth ?? 1) - 1) * 7)
+}
+
+/** One end of the period the cursor sits in — `the last day of july`, `the first of 2019`. */
+function seekEdgeOfPeriod (date: Date, fromEnd: boolean, scope: Field | null): void {
+  if (scope === null) return
+  const start = new Date(date)
+  truncate(start, FIELDS.indexOf(scope))
+  date.setTime(fromEnd ? periodEnd(start, scope).getTime() : start.getTime())
+}
+
 /** `true` when the target month or day is reachable without leaving the current period. */
 function withinPeriod (target: number, current: number, direction: Direction): boolean {
   if (direction === -1) return target < current
@@ -296,7 +362,7 @@ function nameTable (long: string[], short: string[]): Record<string, number> {
   return table
 }
 
-function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], ignored: string[] } {
+function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], deferred: Op[], ignored: string[] } {
   const months = nameTable(monthNames(locale, 'long'), monthNames(locale, 'short'))
   const weekdays = nameTable(weekdayNames(locale, 'long'), weekdayNames(locale, 'short'))
   const ops: Op[] = []
@@ -308,6 +374,8 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
   let sign: number | null = null
   let qualifier: 'time' | 'date' | null = null
   let phraseStart = 0
+  /** The day of the month a spelt or suffixed ordinal just asked for, and where it sits. */
+  let ordinal: { value: number, at: number } | null = null
   let index = 0
 
   /** The unit a quantity belongs to, past the articles between the two. */
@@ -446,11 +514,15 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       continue
     }
 
-    const ordinal = ORDINAL.exec(atom)
-    if (ordinal !== null) {
-      const value = Number.parseInt(ordinal[1] ?? '', 10)
-      if (value >= 1 && value <= 31) takeDay(value)
-      else ignored.push(atom)
+    const suffixed = ORDINAL.exec(atom)
+    if (suffixed !== null) {
+      const value = Number.parseInt(suffixed[1] ?? '', 10)
+      if (value < 1 || value > 31) {
+        ignored.push(atom)
+        continue
+      }
+      takeDay(value)
+      ordinal = { value, at: ops.length - 1 }
       continue
     }
 
@@ -487,6 +559,7 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
     const ordinalWord = ORDINAL_WORDS[atom]
     if (ordinalWord !== undefined) {
       takeDay(ordinalWord)
+      ordinal = { value: ordinalWord, at: ops.length - 1 }
       continue
     }
 
@@ -533,6 +606,23 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       // both mean the Monday ahead. Once another token has established a date, the
       // cursor is somewhere we travelled to rather than now, and the weekday scopes to
       // that week: `the 6th, on monday` is the Monday of the 6th's week.
+      // `the last friday of july` counts inside July, so a weekday standing in front of
+      // `of` is resolved within the period that follows rather than from the cursor —
+      // and an ordinal just before it says which occurrence, instead of a day number.
+      if (atoms[index] === 'of') {
+        let nth: number | null = null
+        if (ordinal !== null && ordinal.at === ops.length - 1) {
+          nth = ordinal.value
+          ops.splice(ordinal.at, 1)
+        }
+        ordinal = null
+        const fromEnd = direction === -1
+        ops.push({
+          precision: 'day',
+          apply: (date, scope) => { seekInPeriod(date, weekday, nth, fromEnd, scope) }
+        })
+        continue
+      }
       if (direction === null && ops.some(placesDate)) {
         ops.push({ precision: 'day', apply: date => { seekWithinWeek(date, weekday, firstDay) } })
         continue
@@ -545,6 +635,17 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
     if (unit !== undefined) {
       const direction = seek
       seek = null
+      // `the last day of july` is July's end, not a day off its start — a direction on a
+      // bare `day` in front of `of` names one end of the period. Coarser units have no
+      // such reading here, and keep the calendar step below.
+      if (direction !== null && atoms[index] === 'of' && unit === 'days') {
+        const fromEnd = direction === -1
+        ops.push({
+          precision: 'day',
+          apply: (date, scope) => { seekEdgeOfPeriod(date, fromEnd, scope) }
+        })
+        continue
+      }
       // A calendar step, not an offset: `next week` moves one week and says nothing
       // about the time of day, where `in a week` had to be signed to mean anything.
       if (direction !== null && direction !== 0) {
@@ -598,14 +699,12 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
     if (!NOISE.includes(atom)) ignored.push(atom)
   }
 
-  ops.push(...deferred)
-
   // A quantity nobody ever signed says nothing about which three days it means, so it
   // is dropped — and reported, since dropping it silently is how `21h30` used to read
   // as the 30th.
   for (const held of waiting) ignored.push(...held.atoms)
 
-  return { ops, ignored }
+  return { ops, deferred, ignored }
 }
 
 /**
@@ -655,6 +754,13 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
  * January is the end of February, not the 3rd of March. An operator with nothing on its
  * left reaches `onIgnored` instead, which is what `before 2019` does.
  *
+ * **What `of` names is a period, and its left-hand side counts inside it.** A weekday
+ * counts from the period's start, or from its end when asked for the last one, so `the
+ * last friday of july` is the 31st and `the second friday of july` the 10th — where a
+ * plain seek would have walked out of July altogether. A bare `day` names one of the two
+ * ends: `the last day of july`, `the first day of 2019`. Without a period to count in —
+ * `the last friday` on its own — it is an ordinary seek again.
+ *
  * **Reading is lax by construction.** Whitespace and punctuation are separators, a token
  * no table knows is skipped rather than fatal, and nothing is positional: `9pm next
  * thursday` and `next thursday at 9pm` are the same instant. When two tokens name the
@@ -670,15 +776,22 @@ export function inferDate (
   locale = 'en',
   options: InferDateOptions = {}
 ): Date | null {
-  const { ops, ignored } = fold(lex(raw), locale, options.weekStartsOn ?? 1)
+  const { ops, deferred, ignored } = fold(lex(raw), locale, options.weekStartsOn ?? 1)
   if (ignored.length > 0) options.onIgnored?.(ignored)
-  if (ops.length === 0) return null
+  if (ops.length === 0 && deferred.length === 0) return null
   const date = new Date(options.reference ?? new Date())
-  for (const op of ops) op.apply(date)
-  const depth = ops.reduce(
-    (deepest, op) => Math.max(deepest, op.precision === null ? -1 : FIELDS.indexOf(op.precision)),
-    -1
-  )
-  if (depth !== -1) truncate(date, depth)
+  for (const op of ops) op.apply(date, null)
+  // What the right-hand side named is the period the left-hand side counts in, so it is
+  // collapsed first — `of july` means July from its first instant. Truncating again at
+  // the end would undo what the left-hand side then did, so the second pass only reaches
+  // as deep as that side itself named.
+  const scopeDepth = finestOf(ops)
+  const scope = scopeDepth === -1 ? null : FIELDS[scopeDepth] ?? null
+  if (scopeDepth !== -1) truncate(date, scopeDepth)
+  if (deferred.length > 0) {
+    for (const op of deferred) op.apply(date, scope)
+    const deferredDepth = finestOf(deferred)
+    if (deferredDepth !== -1) truncate(date, deferredDepth)
+  }
   return Number.isFinite(date.getTime()) ? date : null
 }
