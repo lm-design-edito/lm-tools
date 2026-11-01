@@ -343,7 +343,8 @@ export function toTrackedBlockDataAttributes (context: TrackedBlockContext): Rec
 /** What the per-frame pass needs to know about one tracked block. */
 export type TrackedBlock = {
   displayZone: number[]
-  onScrolled: (context: TrackedBlockContext) => void
+  /** Absent on a block tracked for its custom properties alone. */
+  onScrolled?: (context: TrackedBlockContext) => void
 }
 
 /**

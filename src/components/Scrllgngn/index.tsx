@@ -75,6 +75,12 @@ import cssModule from './styles.module.css'
  * @property id - Optional stable identifier for the block. Used to consolidate
  * blocks with the same id across multiple pages into a single sticky block
  * displayed across those pages.
+ * @property trackScroll - Asks for this block to be measured, for the custom properties
+ * and `data-` attributes it then carries on its wrapper. Declaring `onScrolled` asks for
+ * the same thing, so a block with a handler needs no flag; this is how a block gets the
+ * measurements **without** one, which is what a scrollytelling driven in CSS alone wants.
+ * Off by default on every block: the pass writes three properties per tracked block per
+ * frame, so it is asked for rather than assumed.
  * @property onScrolled - Called with this block's {@link TrackedBlockContext} on
  * every frame the scroll moved it, while it is displayed. Declaring it is what
  * turns tracking on for the block — nothing is measured for a block without it.
@@ -82,9 +88,7 @@ import cssModule from './styles.module.css'
  */
 export type PropsCommonBlock = PropsWithChildren<{
   id?: string
-  // [WIP] `onScrolled` doubles as the tracking switch, so a block that only wants
-  // the custom properties and `data-` attributes, without a handler, has no way to
-  // ask for them. Reopen a boolean here if that case ever shows up.
+  trackScroll?: boolean
   onScrolled?: (context: TrackedBlockContext) => void
 }>
 
@@ -246,7 +250,8 @@ export type Props = {
  * tracked still gets one, so the DOM keeps the same shape either way.
  *
  * ### Tracked block elements
- * A block declaring {@link PropsCommonBlock.onScrolled} also carries its
+ * A block asking to be tracked — {@link PropsCommonBlock.trackScroll}, or an
+ * `onScrolled` handler, which asks for the same thing — also carries its
  * {@link TrackedBlockContext} on its wrapper, for scrollytelling driven in CSS
  * alone. Written straight to the element on the frames they change, so they never
  * re-render the sequence.
@@ -278,8 +283,8 @@ export type Props = {
  * 100ms, which runs only while the component is on screen and only reaches state
  * when the zone really moved.
  *
- * Tracking costs nothing until a block asks for it: with no `onScrolled` anywhere,
- * the component never joins the shared scroll listener. Once it does, each frame
+ * Tracking costs nothing until a block asks for it: with no `trackScroll` and no
+ * `onScrolled` anywhere, the component never joins the shared scroll listener. Once it does, each frame
  * measures only the pages the displayed tracked blocks span, not the whole sequence.
  */
 export const Scrllgngn: FunctionComponent<Props> = ({
@@ -350,8 +355,13 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   // Tracked blocks, keyed the same way their wrappers are
   const displayZones = blockDisplayZones(pages)
   const trackedBlocks = new Map<string, TrackedBlock>()
+  // A handler asks for tracking as surely as the flag does, so one of the two is enough:
+  // a block written before the flag existed keeps working, and a block that only wants
+  // the custom properties no longer has to hand over a callback it has no use for.
+  const isTracked = (block: PropsBlock): boolean => block.trackScroll === true
+    || block.onScrolled !== undefined
   for (const [blockId, block] of stickyBlocks) {
-    if (block.onScrolled === undefined) continue
+    if (!isTracked(block)) continue
     trackedBlocks.set(stickyKey(blockId), {
       displayZone: block.id === undefined
         ? block.displayOnPages
@@ -361,7 +371,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   }
   pages?.forEach((page, pagePos) => {
     scrollBlocksOf(page).forEach((block, blockPos) => {
-      if (block.onScrolled === undefined) return
+      if (!isTracked(block)) return
       trackedBlocks.set(scrollKey(pagePos, blockPos), {
         displayZone: block.id === undefined
           ? [pagePos]
@@ -431,7 +441,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
           }
         }
       }
-      block.onScrolled(context)
+      block.onScrolled?.(context)
       if (page === currentPage) lastContexts.set(key, context)
       else lastContexts.delete(key)
     }
