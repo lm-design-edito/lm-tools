@@ -4,7 +4,7 @@ import { monthNames, weekdayNames } from '../calendar-names/index.js'
 import type { InferDateOptions } from './types.js'
 
 /** The parts a date is made of, coarsest first — the order is the precision scale. */
-const FIELDS = ['year', 'month', 'day', 'hours', 'minutes', 'seconds'] as const
+const FIELDS = ['year', 'month', 'day', 'hours', 'minutes', 'seconds', 'milliseconds'] as const
 
 type Field = typeof FIELDS[number]
 
@@ -187,7 +187,6 @@ const HOLIDAYS: Record<string, [number, number]> = {
   'all souls': [11, 2],
   armistice: [11, 11],
   remembrance: [11, 11],
-  veterans: [11, 11],
   christmas: [12, 25],
   xmas: [12, 25],
   'boxing day': [12, 26]
@@ -240,22 +239,47 @@ const QUALIFIERS: Record<string, 'time' | 'date'> = { at: 'time', on: 'date' }
 const ARTICLES = ['a', 'an', 'the']
 
 /** What a sentence is held together with, and what is never worth reporting as ignored. */
-const NOISE = [...ARTICLES, 'and', 'oclock']
+const NOISE = [...ARTICLES, 'and', 'oclock', 't']
 
-const CLOCK = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/v
+const CLOCK = /^(\d{1,2}):(\d{2})(?::(\d{2})(?:[.,](\d{1,3}))?)?$/v
 // `9h`, `9h30`, `9h30min`, `9h30min20`, `9h30min20sec` — the form a clock takes when the
 // colon is dropped. A bare `9h` is the only ambiguous one: `in 9h` is nine hours and
 // `at 9h` is nine o'clock, which the fold settles on the sign rather than here.
 const COMPACT_CLOCK = /^(\d{1,2})h(?:(\d{1,2})(?:min(?:(\d{1,2})(?:sec)?)?)?)?$/v
-const NUMERIC_DATE = /^(\d{4})-(\d{1,2})-(\d{1,2})$/v
+// A date in three parts, the same separator twice — `2026-03-14`, `14/03/2026`,
+// `14.03.26`. A four-digit head is a year and the order is the one it opens; anything
+// else is read day first, which is the order most of the world writes and the only one
+// a locale could not settle.
+const NUMERIC_DATE = /^(\d{1,4})([\-\/.])(\d{1,2})\2(\d{1,4})$/v
+const YEAR_MONTH = /^(\d{4})[\-\/.](\d{1,2})$/v
+const MONTH_YEAR = /^(\d{1,2})[\/.](\d{4})$/v
+const DAY_MONTH = /^(\d{1,2})\/(\d{1,2})$/v
 const ORDINAL = /^(\d{1,2})(?:st|nd|rd|th)$/v
 const DIGITS = /^\d+$/v
+const DECIMAL = /^\d+\.\d+$/v
+// An ISO zone offset. `Date` holds no zone of its own, so this is read to be reported
+// rather than honoured — the alternative was `+02:00` landing as two o'clock.
+const ZONE = /^[+\-](?:\d{2}:\d{2}|\d{4})$/v
 const MERIDIEM = /^([ap])m$/v
 
-// Compound shapes first, so a clock, a numeric date and an ordinal survive a split that
-// drops every separator. Everything else is a run of digits, a run of letters or a lone
-// sign, and whatever falls between them — spaces, commas, dashes — is a separator.
-const ATOM = /\d{1,2}:\d{2}(?::\d{2})?|\d{1,2}h(?:\d{1,2}(?:min(?:\d{1,2}(?:sec)?)?)?)?|\d{4}-\d{1,2}-\d{1,2}|\d{1,2}(?:st|nd|rd|th)|\d+|\p{L}+|[+\-]/gv
+// Compound shapes first, so a clock, a numeric date, an ordinal and a decimal survive a
+// split that drops every separator. Everything else is a run of digits, a run of letters
+// or a lone sign, and whatever falls between them — spaces, commas, dashes — is a
+// separator. A trailing `(?!\d)` keeps a shape from biting into the digits behind it.
+const ATOM = new RegExp([
+  /\d{1,2}:\d{2}(?::\d{2}(?:[.,]\d{1,3})?)?/v,
+  /\d{1,2}h(?:\d{1,2}(?:min(?:\d{1,2}(?:sec)?)?)?)?/v,
+  /\d{1,4}[\-\/.]\d{1,2}[\-\/.]\d{1,4}(?!\d)/v,
+  /\d{4}[\-\/.]\d{1,2}(?!\d)/v,
+  /\d{1,2}[\/.]\d{4}(?!\d)/v,
+  /\d{1,2}\/\d{1,2}(?!\d)/v,
+  /[+\-](?:\d{2}:\d{2}|\d{4})(?!\d)/v,
+  /\d{1,2}(?:st|nd|rd|th)/v,
+  /\d+\.\d+/v,
+  /\d+/v,
+  /\p{L}+/v,
+  /[+\-]/v
+].map(shape => shape.source).join('|'), 'gv')
 
 function lex (raw: string): string[] {
   // A lone `s` is the possessive the separators left behind — `new year's eve` is three
@@ -263,6 +287,15 @@ function lex (raw: string): string[] {
   return [...raw.toLowerCase().matchAll(ATOM)]
     .map(match => match[0])
     .filter(atom => atom !== 's')
+}
+
+/**
+ * A year written in two digits, on the `strptime` pivot — 69 through 99 are the last
+ * century, 00 through 68 this one. Three digits or four are taken as written.
+ */
+function fullYear (value: number, digits: number): number {
+  if (digits > 2) return value
+  return value >= 69 ? 1900 + value : 2000 + value
 }
 
 function daysInMonth (year: number, month: number): number {
@@ -473,8 +506,8 @@ function shift (date: Date, amount: number, unit: DurationType): void {
 
 /** Below the finest part named, nothing was named — so nothing is kept. */
 function truncate (date: Date, depth: number): void {
-  if (depth < FIELDS.indexOf('seconds')) date.setSeconds(0, 0)
-  else date.setMilliseconds(0)
+  if (depth < FIELDS.indexOf('milliseconds')) date.setMilliseconds(0)
+  if (depth < FIELDS.indexOf('seconds')) date.setSeconds(0)
   if (depth < FIELDS.indexOf('minutes')) date.setMinutes(0)
   if (depth < FIELDS.indexOf('hours')) date.setHours(0)
   if (depth < FIELDS.indexOf('day')) date.setDate(1)
@@ -506,6 +539,8 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
   let seek: Direction | null = null
   let sign: number | null = null
   let qualifier: 'time' | 'date' | null = null
+  /** The unit the last quantity was counted in, for the `and a half` that follows it. */
+  let lastUnit: DurationType | null = null
   let phraseStart = 0
   /** The day of the month a spelt or suffixed ordinal just asked for, and where it sits. */
   let ordinal: { value: number, at: number } | null = null
@@ -535,9 +570,22 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
   /** An offset when the quantity has a unit — signed now, or parked until a sign comes. */
   function takeQuantity (amount: number, text: string): boolean {
     const ahead = unitAhead(index)
-    if (ahead === null) return false
+    // `an hour and a half`: a fraction with no unit of its own is counted in the one the
+    // quantity before it used. A whole number never is, since `in 2 days 3` is not three
+    // of anything.
+    if (ahead === null) {
+      if (amount >= 1 || lastUnit === null) return false
+      const held = lastUnit
+      if (sign === null) {
+        waiting.push({ amount, unit: held, atoms: [text] })
+        return true
+      }
+      pushShift(amount * sign, held)
+      return true
+    }
     const unitAtom = atoms[ahead.at] ?? ''
     index = ahead.at + 1
+    lastUnit = ahead.unit
     if (sign === null) {
       waiting.push({ amount, unit: ahead.unit, atoms: [text, unitAtom] })
       return true
@@ -574,13 +622,50 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
     ops.push({ precision: 'hours', apply: date => { date.setHours(value) } })
   }
 
-  function takeClock (hours: number, minutes: number | null, seconds: number | null): void {
+  function takeClock (
+    hours: number,
+    minutes: number | null,
+    seconds: number | null,
+    milliseconds: number | null = null
+  ): void {
     if (hours > 23 || (minutes !== null && minutes > 59) || (seconds !== null && seconds > 59)) {
       return
     }
     takeHours(hours)
     if (minutes !== null) ops.push({ precision: 'minutes', apply: date => { date.setMinutes(minutes) } })
     if (seconds !== null) ops.push({ precision: 'seconds', apply: date => { date.setSeconds(seconds) } })
+    if (milliseconds !== null) {
+      ops.push({ precision: 'milliseconds', apply: date => { date.setMilliseconds(milliseconds) } })
+    }
+  }
+
+  /** The year, month and day a three-part numeric date names, in the order it opens. */
+  function takeNumericDate (match: RegExpExecArray): void {
+    const head = match[1] ?? ''
+    const tail = match[4] ?? ''
+    const middle = Number.parseInt(match[3] ?? '', 10)
+    const first = Number.parseInt(head, 10)
+    const last = Number.parseInt(tail, 10)
+    const yearFirst = head.length === 4
+    const year = yearFirst ? first : fullYear(last, tail.length)
+    const day = yearFirst ? last : first
+    if (middle < 1 || middle > 12 || day < 1 || day > 31) {
+      ignored.push(match[0])
+      return
+    }
+    ops.push({ precision: 'year', period: 'year', apply: date => { setYear(date, year) } })
+    ops.push({ precision: 'month', period: 'month', apply: date => { setMonth(date, middle) } })
+    ops.push({ precision: 'day', apply: date => { setDayClamped(date, day) } })
+  }
+
+  /** A month written as a number, with or without a year beside it. */
+  function takeMonthNumber (month: number, year: number | null): boolean {
+    if (month < 1 || month > 12) return false
+    if (year !== null) {
+      ops.push({ precision: 'year', period: 'year', apply: date => { setYear(date, year) } })
+    }
+    ops.push({ precision: 'month', period: 'month', apply: date => { setMonth(date, month) } })
+    return true
   }
 
   /**
@@ -636,12 +721,14 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       const hours = Number.parseInt(clock[1] ?? '', 10)
       const minutes = Number.parseInt(clock[2] ?? '', 10)
       const seconds = clock[3] === undefined ? null : Number.parseInt(clock[3], 10)
+      // `.5` is half a second, not five of them — the digits are padded to the right.
+      const fraction = clock[4] === undefined ? null : Number.parseInt(clock[4].padEnd(3, '0'), 10)
       const meridiem = meridiemAhead()
       const onTheClock = meridiem === null || hours > 12
         ? hours
         : (hours % 12) + (meridiem === 'p' ? 12 : 0)
       const before = ops.length
-      takeClock(onTheClock, minutes, seconds)
+      takeClock(onTheClock, minutes, seconds, fraction)
       if (ops.length === before) ignored.push(atom)
       continue
     }
@@ -669,16 +756,40 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
 
     const numeric = NUMERIC_DATE.exec(atom)
     if (numeric !== null) {
-      const year = Number.parseInt(numeric[1] ?? '', 10)
-      const month = Number.parseInt(numeric[2] ?? '', 10)
-      const day = Number.parseInt(numeric[3] ?? '', 10)
-      if (month < 1 || month > 12 || day < 1 || day > 31) {
-        ignored.push(atom)
+      takeNumericDate(numeric)
+      continue
+    }
+
+    const yearMonth = YEAR_MONTH.exec(atom)
+    if (yearMonth !== null) {
+      const year = Number.parseInt(yearMonth[1] ?? '', 10)
+      const month = Number.parseInt(yearMonth[2] ?? '', 10)
+      if (!takeMonthNumber(month, year)) ignored.push(atom)
+      continue
+    }
+
+    const monthYear = MONTH_YEAR.exec(atom)
+    if (monthYear !== null) {
+      const month = Number.parseInt(monthYear[1] ?? '', 10)
+      const year = Number.parseInt(monthYear[2] ?? '', 10)
+      if (!takeMonthNumber(month, year)) ignored.push(atom)
+      continue
+    }
+
+    const dayMonth = DAY_MONTH.exec(atom)
+    if (dayMonth !== null) {
+      const day = Number.parseInt(dayMonth[1] ?? '', 10)
+      const month = Number.parseInt(dayMonth[2] ?? '', 10)
+      if (takeMonthNumber(month, null) && day >= 1 && day <= 31) {
+        ops.push({ precision: 'day', apply: date => { setDayClamped(date, day) } })
         continue
       }
-      ops.push({ precision: 'year', apply: date => { setYear(date, year) } })
-      ops.push({ precision: 'month', apply: date => { setMonth(date, month) } })
-      ops.push({ precision: 'day', apply: date => { setDayClamped(date, day) } })
+      ignored.push(atom)
+      continue
+    }
+
+    if (ZONE.test(atom)) {
+      ignored.push(atom)
       continue
     }
 
@@ -691,6 +802,11 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       }
       takeDay(value)
       ordinal = { value, at: ops.length - 1 }
+      continue
+    }
+
+    if (DECIMAL.test(atom)) {
+      if (!takeQuantity(Number.parseFloat(atom), atom)) ignored.push(atom)
       continue
     }
 
@@ -749,6 +865,19 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
     const anchor = DAY_ANCHORS[atom]
     if (anchor !== undefined) {
       ops.push({ precision: 'day', apply: date => { date.setDate(date.getDate() + anchor) } })
+      continue
+    }
+
+    // `same time tomorrow`, `this time next week` — the reference's own clock, named so
+    // that it survives the truncation a day on its own would impose.
+    if (atom === 'same' && atoms[index] === 'time') {
+      index += 1
+      ops.push({ precision: 'milliseconds', apply: () => undefined })
+      continue
+    }
+    if (atom === 'time' && seek === 0) {
+      seek = null
+      ops.push({ precision: 'milliseconds', apply: () => undefined })
       continue
     }
 
@@ -982,6 +1111,28 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
  *
  * **A weekend reads as its saturday**, so every weekday rule above holds of `this
  * weekend`, `next weekend` and `the last weekend of july`.
+ *
+ * **A date in digits is read in three parts, with `-`, `/` or `.` between them.** A
+ * four-digit head is a year and the order is the one it opens — `2026-03-14`, `2026/3/4`.
+ * Anything else is read day first — `14/03/2026`, `14.03.26` — which is the order most of
+ * the world writes and the only one a locale tag could not settle, so `03/14/2026` is
+ * impossible as a day-first date and reaches `onIgnored` whole rather than being quietly
+ * re-read in the American order. A year in two digits takes the `strptime` pivot, 69
+ * through 99 being the last century. Two parts read too: `2026-03` and `3/2026` are a
+ * month, `14/03` the 14th of this year's March.
+ *
+ * **A clock reads down to the millisecond** — `09:20`, `09:20:05`, `09:20:05.123` — so a
+ * whole ISO instant goes through, its `T` included. Its zone does not: a `Date` holds no
+ * zone of its own, so `Z` and `+02:00` are recognised in order to be reported rather than
+ * honoured, and the clock is taken as a wall clock.
+ *
+ * **A decimal is a quantity** (`in 1.5 hours`), and a fraction with no unit of its own is
+ * counted in the one before it, which is what `in an hour and a half` means. A whole
+ * number never is, since `in 2 days 3` is not three of anything.
+ *
+ * **`same time` names the reference's own clock**, down to the millisecond, so that it
+ * survives the midnight a named day would otherwise impose: `same time tomorrow`, `this
+ * time next week`.
  *
  * **Reading is lax by construction.** Whitespace and punctuation are separators, a token
  * no table knows is skipped rather than fatal, and nothing is positional: `9pm next
