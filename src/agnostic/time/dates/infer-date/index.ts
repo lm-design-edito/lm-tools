@@ -104,6 +104,35 @@ const UNITS: Record<string, DurationType> = {
   y: 'years'
 }
 
+/**
+ * Spelt-out days of the month. `second` is the collision: it is also a unit of time, and
+ * what tells them apart is a quantity in front of it — `in a second` is consumed as a
+ * quantity before this table is ever reached, where `the second of march` is not.
+ */
+const ORDINAL_WORDS: Record<string, number> = {
+  first: 1,
+  second: 2,
+  third: 3,
+  fourth: 4,
+  fifth: 5,
+  sixth: 6,
+  seventh: 7,
+  eighth: 8,
+  ninth: 9,
+  tenth: 10,
+  eleventh: 11,
+  twelfth: 12,
+  thirteenth: 13,
+  fourteenth: 14,
+  fifteenth: 15,
+  sixteenth: 16,
+  seventeenth: 17,
+  eighteenth: 18,
+  nineteenth: 19,
+  twentieth: 20,
+  thirtieth: 30
+}
+
 const SEEK_WORDS: Record<string, Direction> = {
   next: 1,
   coming: 1,
@@ -116,7 +145,11 @@ const SEEK_WORDS: Record<string, Direction> = {
 // sentence: `in 2 days and 3 hours` is both. A postfix sign reaches the other way, over
 // the quantities read before it — `2 days and 3 hours ago` is also both.
 const PREFIX_SIGNS: Record<string, number> = { in: 1, plus: 1, '+': 1, minus: -1, '-': -1 }
-const POSTFIX_SIGNS: Record<string, number> = { ago: -1, later: 1, from: 1, hence: 1 }
+const POSTFIX_SIGNS: Record<string, number> = { ago: -1, later: 1, hence: 1 }
+
+// `after`, `before` and `from` are read right to left — what follows them places the
+// date, what precedes them is applied to it. `of` does the same with no sign of its own.
+const INFIX_SIGNS: Record<string, number> = { after: 1, from: 1, before: -1 }
 
 const QUALIFIERS: Record<string, 'time' | 'date'> = { at: 'time', on: 'date' }
 
@@ -124,7 +157,7 @@ const QUALIFIERS: Record<string, 'time' | 'date'> = { at: 'time', on: 'date' }
 const ARTICLES = ['a', 'an', 'the']
 
 /** What a sentence is held together with, and what is never worth reporting as ignored. */
-const NOISE = [...ARTICLES, 'and', 'of', 'oclock']
+const NOISE = [...ARTICLES, 'and', 'oclock']
 
 const CLOCK = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/v
 // `9h`, `9h30`, `9h30min`, `9h30min20`, `9h30min20sec` — the form a clock takes when the
@@ -185,6 +218,14 @@ function seekWithinWeek (date: Date, target: number, firstDay: number): void {
   const start = firstDay % 7
   const fromStart = (day: number): number => (day - start + 7) % 7
   date.setDate(date.getDate() + fromStart(target) - fromStart(date.getDay()))
+}
+
+/**
+ * A day the month has not got is the last one it has, rather than a roll into the next
+ * month: `the 31st of next month` asked in January means February's end, not March 3rd.
+ */
+function setDayClamped (date: Date, day: number): void {
+  date.setDate(Math.min(day, daysInMonth(date.getFullYear(), date.getMonth() + 1)))
 }
 
 function seekWeekday (date: Date, target: number, direction: Direction): void {
@@ -259,11 +300,14 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
   const months = nameTable(monthNames(locale, 'long'), monthNames(locale, 'short'))
   const weekdays = nameTable(weekdayNames(locale, 'long'), weekdayNames(locale, 'short'))
   const ops: Op[] = []
+  // What an operator set aside, re-appended once the right-hand side has had its say.
+  const deferred: Op[] = []
   const ignored: string[] = []
   const waiting: Quantity[] = []
   let seek: Direction | null = null
   let sign: number | null = null
   let qualifier: 'time' | 'date' | null = null
+  let phraseStart = 0
   let index = 0
 
   /** The unit a quantity belongs to, past the articles between the two. */
@@ -301,11 +345,25 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
     return true
   }
 
+  /**
+   * Sets aside everything read since the last operator, so that it lands on whatever the
+   * right-hand side resolves to. `false` when there was nothing on the left to set aside,
+   * which is how `before 2019` reports the word it could not use.
+   */
+  function takeInfix (direction: number | null): boolean {
+    if (direction !== null) applySign(direction)
+    const phrase = ops.splice(phraseStart)
+    if (phrase.length === 0) return false
+    deferred.unshift(...phrase)
+    phraseStart = ops.length
+    return true
+  }
+
   function takeDay (value: number): void {
     const direction = seek
     seek = null
     if (direction === null) {
-      ops.push({ precision: 'day', apply: date => { date.setDate(value) } })
+      ops.push({ precision: 'day', apply: date => { setDayClamped(date, value) } })
       return
     }
     ops.push({ precision: 'day', apply: date => { seekDayOfMonth(date, value, direction) } })
@@ -363,8 +421,12 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
         pushShift(hours * sign, 'hours')
         continue
       }
+      const meridiem = meridiemAhead()
+      const onTheClock = meridiem === null || hours > 12
+        ? hours
+        : (hours % 12) + (meridiem === 'p' ? 12 : 0)
       const before = ops.length
-      takeClock(hours, minutes, seconds)
+      takeClock(onTheClock, minutes, seconds)
       if (ops.length === before) ignored.push(atom)
       continue
     }
@@ -380,7 +442,7 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       }
       ops.push({ precision: 'year', apply: date => { setYear(date, year) } })
       ops.push({ precision: 'month', apply: date => { setMonth(date, month) } })
-      ops.push({ precision: 'day', apply: date => { date.setDate(day) } })
+      ops.push({ precision: 'day', apply: date => { setDayClamped(date, day) } })
       continue
     }
 
@@ -421,6 +483,12 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
 
     const quantity = QUANTITY_WORDS[atom]
     if (quantity !== undefined && takeQuantity(quantity, atom)) continue
+
+    const ordinalWord = ORDINAL_WORDS[atom]
+    if (ordinalWord !== undefined) {
+      takeDay(ordinalWord)
+      continue
+    }
 
     const namedTime = NAMED_TIMES[atom]
     if (namedTime !== undefined) {
@@ -479,8 +547,16 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       seek = null
       // A calendar step, not an offset: `next week` moves one week and says nothing
       // about the time of day, where `in a week` had to be signed to mean anything.
-      if (direction !== null && direction !== 0) pushShift(direction, unit)
-      else ignored.push(atom)
+      if (direction !== null && direction !== 0) {
+        pushShift(direction, unit)
+        continue
+      }
+      // `the day after tomorrow`: a bare unit in front of an operator is one of it.
+      if (INFIX_SIGNS[atoms[index] ?? ''] !== undefined || atoms[index] === 'of') {
+        waiting.push({ amount: 1, unit, atoms: [atom] })
+        continue
+      }
+      ignored.push(atom)
       continue
     }
 
@@ -502,6 +578,17 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       continue
     }
 
+    if (atom === 'of') {
+      if (!takeInfix(null)) ignored.push(atom)
+      continue
+    }
+
+    const infix = INFIX_SIGNS[atom]
+    if (infix !== undefined) {
+      if (!takeInfix(infix)) ignored.push(atom)
+      continue
+    }
+
     const asked = QUALIFIERS[atom]
     if (asked !== undefined) {
       qualifier = asked
@@ -510,6 +597,8 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
 
     if (!NOISE.includes(atom)) ignored.push(atom)
   }
+
+  ops.push(...deferred)
 
   // A quantity nobody ever signed says nothing about which three days it means, so it
   // is dropped — and reported, since dropping it silently is how `21h30` used to read
@@ -558,6 +647,13 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
  * before them. So `in 2 days and 3 hours` is both, and so is `2 days and 3 hours ago`. A
  * quantity no sign ever reached is dropped, since `3 days` says nothing about which
  * three days.
+ *
+ * **`after`, `before`, `from` and `of` read right to left.** What follows them places the
+ * date and what precedes them is applied to it, so `2 days after next friday` finds the
+ * Friday first, and `the 1st of next month` moves to the month before writing the day. A
+ * day the month has not got is clamped to its last — `the 31st of next month` asked in
+ * January is the end of February, not the 3rd of March. An operator with nothing on its
+ * left reaches `onIgnored` instead, which is what `before 2019` does.
  *
  * **Reading is lax by construction.** Whitespace and punctuation are separators, a token
  * no table knows is skipped rather than fatal, and nothing is positional: `9pm next

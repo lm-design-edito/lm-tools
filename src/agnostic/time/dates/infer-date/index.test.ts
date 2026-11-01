@@ -277,6 +277,46 @@ describe('inferDate', () => {
     })
   })
 
+  describe('after, before, from and of', () => {
+    it('resolves the right-hand side first, then applies the left', () => {
+      expect(infer('2 days after next friday')).toEqual(new Date(2026, 0, 4))
+      expect(infer('2 days before 2026-03-14')).toEqual(new Date(2026, 2, 12))
+      expect(infer('3 days from monday')).toEqual(new Date(2026, 0, 8))
+    })
+
+    it('reads a bare unit in front of an operator as one of it', () => {
+      expect(infer('the day after tomorrow')).toEqual(new Date(2026, 0, 3))
+    })
+
+    it('places a day of the month inside the period that follows', () => {
+      expect(infer('the 1st of next month')).toEqual(new Date(2026, 1, 1))
+      expect(infer('the 6th of january')).toEqual(new Date(2026, 0, 6))
+    })
+
+    it('reads a day of the month spelt out', () => {
+      expect(infer('the first of next month')).toEqual(new Date(2026, 1, 1))
+      expect(infer('the second of next month')).toEqual(new Date(2026, 1, 2))
+    })
+
+    it('keeps second a unit when a quantity precedes it', () => {
+      expect(infer('in a second')).toEqual(new Date(2026, 0, 1, 15, 5, 10, 42))
+    })
+
+    it('clamps a day the month has not got rather than rolling over', () => {
+      expect(infer('the 31st of next month')).toEqual(new Date(2026, 1, 28))
+    })
+
+    it('reports an operator with nothing on its left', () => {
+      const ignored: string[][] = []
+      const read = inferDate('before 2019', 'en', {
+        reference,
+        onIgnored: atoms => { ignored.push(atoms) }
+      })
+      expect(read).toEqual(new Date(2019, 0, 1))
+      expect(ignored).toEqual([['before']])
+    })
+  })
+
   // One line per string, so that adding a token costs one line to pin and touching the
   // lexer re-checks every form at once. The behaviours above state the rules; this
   // states the coverage.
@@ -339,6 +379,17 @@ describe('inferDate', () => {
       ['TOMORROW AT 9PM', new Date(2026, 0, 2, 21)],
       ['in  3 days — at midnight', new Date(2026, 0, 4)],
       ['january february', new Date(2026, 1, 1)],
+      ['2 days after next friday', new Date(2026, 0, 4)],
+      ['the day after tomorrow', new Date(2026, 0, 3)],
+      ['2 days before 2026-03-14', new Date(2026, 2, 12)],
+      ['3 days from monday', new Date(2026, 0, 8)],
+      ['the 1st of next month', new Date(2026, 1, 1)],
+      ['the first of next month', new Date(2026, 1, 1)],
+      ['the 31st of next month', new Date(2026, 1, 28)],
+      ['the 6th of january', new Date(2026, 0, 6)],
+      ['in a second', new Date(2026, 0, 1, 15, 5, 10, 42)],
+      ['9h20 pm', new Date(2026, 0, 1, 21, 20)],
+      ['a couple of days', null],
       ['on monday', new Date(2026, 0, 5)],
       ['2026-03-14 on monday', new Date(2026, 2, 9)],
       ['2026-03-14 next monday', new Date(2026, 2, 16)],
