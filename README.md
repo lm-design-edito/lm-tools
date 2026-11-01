@@ -42,8 +42,12 @@ là-bas. On y reconstruit **la conscience de la visibilité**, de zéro : le rel
 `components/utils/viewport-behaviours` a conclu que la couche se tenait mal, et le code
 qui la portait est sorti du dépôt plutôt que d'être amendé — voir « La couche de
 visibilité, démontée » plus bas. Viennent ensuite les sujets portés de session en
-session : le motif `when*` pour les trois composants d'un bloc, les types de props vers
-les `types.ts`, et la question `css` / `html`.
+session : le motif `when*` pour les trois composants d'un bloc, et la question `css` /
+`html`. The prop types are settled rather than pending: every `Props` is a flat
+intersection, and it **stays in `index.tsx`** — moving them to `types.ts` was considered
+and dropped, since both files are published entry points and `Scrllgngn/utils.ts` already
+reads `PropsBlock` and `PropsPage` from the index. What that leaves is the type-only cycle
+between those two files, which is erased at compile time and needs its own call.
 
 Passé ce rangement, lm-tools n'est plus le sujet principal : l'attention va à la première
 publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là —
@@ -51,10 +55,14 @@ publication de lm-link, puis à lm-cli. Ce qui arrive ici viendra surtout de là
 gardant que la coquille CLI chez lui. C'est le prochain vrai chantier de ce dépôt,
 et il n'ouvrira qu'une fois lm-link publié.
 
-**`behavioursSuspended` avait été retiré avant la couche entière**, et le principe qu'il
-a laissé vaut toujours : retenir un composant est l'affaire de l'appelant, qui ne lui
-passe pas les props qui déclenchent quelque chose. Côté lm-link, deux
-`Omit<…, 'behavioursSuspended'>` attendent toujours d'être retirés.
+**Withholding a component is the library's business again, and `behavioursSuspended` is
+not how.** That prop left before the layer did, and the principle it left behind — the
+caller withholds by not passing the props that start something — has been reversed:
+`components/utils/disclosure` now carries the notion, every receiver is gated in
+`useCommands`, and the four components with an act of their own hold it themselves. See
+« Disclosure — what a standing disclaimer withholds » below. What waits in lm-link is a
+removal: `contexts/Disclaimer`, the per-passerelle `toUndisclosedProps`, and two
+`Omit<…, 'behavioursSuspended'>` that name a prop nothing declares.
 
 **L'harmonisation du motif `when*` n'est plus un sujet à part** : elle était la question
 posée aux trois composants d'un bloc, et c'est désormais la reconstruction qui y répond.
@@ -590,6 +598,46 @@ The options are flat and prefixed on each component — `visibilityThreshold`,
 and `useVisibilityTriggers` builds `VisibilityOptions` from them, so no component does that
 mapping by hand.
 
+## Disclosure — what a standing disclaimer withholds
+
+`components/utils/disclosure` carries the one thing the command layer needs to know about
+the page: whether the subtree a component sits in has been disclosed to the reader.
+`DisclosureProvider` declares it, `useDisclosure()` reads it, and the default is
+`{ isDisclosed: true }` — content with no disclaimer above it is withheld from nobody, so
+nothing opts in to be reachable. **Nesting only ever withholds more**: a dismissed
+disclaimer inside a standing one stays undisclosed, so an outer decision cannot be undone
+from the inside.
+
+A context, because nothing else reaches. A withheld component sits an unknown number of
+layers under the `Disclaimer` withholding it, with components in between that forward none
+of its props — which is exactly why lm-link had one, and why it belongs here instead.
+`Disclaimer` is the only provider, with `isDisclosed={!isOn}`.
+
+It is read in two places, and that is what keeps it honest:
+
+- **`useCommands`** drops every command while undisclosed, **before** the `force` check.
+  So a receiver is gated the day it is written, and no component can be written without
+  it — the failure mode of the lm-link version was a passerelle forgetting one prop.
+- **`useVisibilityTriggers`** stops sending. `onVisibilityChanged` still fires: it informs
+  a parent, it does not act.
+
+**`:force` does not pass a disclosure, by decision.** The modifier overrides a reader's
+take-over — « they paused it by hand, the article insists » — where a disclaimer is their
+consent. One word for both would let any legitimate `:force` defeat consent silently, in
+an article nobody rereads. If an escape hatch is ever needed, it gets a word of its own.
+
+**Block the act, never the load.** A component with something of its own to hold back
+reads the disclosure and holds that act where the value is forwarded — the same read-side
+arbitration the hybrid props use, so the state stays warm and the reader lands on what the
+article asked for the moment they accept. `Video` does not play, from `autoPlay` no more
+than from a verb or its own button; `Sequencer`'s tempo does not run and its step is kept;
+`Lightbox` does not open, `defaultIsOn` included, since opening writes the store shared
+with every lightbox of the page. Nothing stops loading, though: `Iframe` and `UIModule`
+keep fetching, `Image` keeps loading, `ScrollTracker` keeps tracking. The reason is
+layout — an iframe that never loaded has no height, so a panel laid over it covers a
+collapsed box — and the residue is named rather than argued: an embed that autoplays sound
+behind a disclaimer is the article's business today, not the library's.
+
 ## La couche de visibilité, démontée — et ce qu'il faut en garder
 
 **Il n'y a plus de conscience de la visibilité dans ce dépôt.** Le module
@@ -701,10 +749,10 @@ devinera pas de l'exemple lui-même.
 demande : on appuie sur play sur une citation sonore, puis on continue à lire l'article en
 écoutant. Une pause automatique à la sortie de l'écran serait hostile.
 
-**Et la reddition est le seul frein de cette couche.** Un appelant qui veut retenir un
-composant entier — le disclaimer de lm-link est le cas type — ne passe pas par ici : il ne
-lui passe pas les props qui déclenchent quelque chose. La couche n'a donc aucune notion de
-contenu retenu, et `:force` n'a qu'une chose à contourner.
+**Surrender is no longer this layer's only brake.** A whole subtree can be withheld by a
+disclaimer, which `useCommands` reads before it reads anything else — see « Disclosure »
+below. The two are checked separately on purpose, and `:force` overrides the first and
+never the second: it answers a reader's take-over, not their consent.
 
 **What counts as the reader taking over is the component's decision**, not the generic
 layer's. `Video` counts every control it renders: the play, pause, loud and mute buttons
