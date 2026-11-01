@@ -350,16 +350,57 @@ joined by `of` to a period — the grammar already has `of` —, and `week 32` a
 period that is not a Y/M/D field. Only `end of the month` wants a genuinely new op:
 collapsing to the **end** of the named precision rather than to its start.
 
-**Forms it does not read yet**, raised and left for later: `next friday plus 2 days` only
-wants `plus` / `minus` as prefix signs beside `in` — one row, since a seek followed by an
-offset already composes in the fold —, but `2 days after next friday` is genuinely new,
-because the sign would have to reach forward to a value it has not read yet. `the first of
-next month` wants two things: ordinal words (`first`, `second`, …), where `second` collides
-head-on with the time unit and needs `the` to disambiguate it, and an `of` that stops being
-a filler and becomes an operator, since the right-hand period has to resolve before the
-day-of-period is written — `the 31st of next month` clamps differently depending on the
-order. That is the same mechanism `the last friday of july` wants, so the two arrive
-together.
+**A second pass went in** (commit after `5339b1e`), and it was mostly about silent wrong
+answers rather than missing features. `21h30` used to read as the 30th of the month, because
+the lexer split it into `21`, `h` and `30` and `h` is the hours unit — so the compact clock
+is now a lexer row of its own: `9h`, `9h30`, `9h30min`, `9h30min20sec`. A bare `9h` is the
+only ambiguous one and the fold settles it on the sign in front: `in 9h` is nine hours,
+`at 9h` and `9h` are nine o'clock. `at 9 h` reads as nine o'clock too, since a qualifier
+has already said what the number is and the unit behind it is noise.
+
+**A sign now carries across the string instead of being consumed once.** `in 2 days and
+3 hours` used to read as *in 2 days* with the hours dropped on the floor. A prefix sign
+(`in`, `plus`, `minus`, `+`, `-`) arms everything after it, a postfix one (`ago`, `later`,
+`from`, `hence`) reaches back over every quantity read before it, so `2 days and 3 hours
+ago` is both too. `+` and `-` are atoms the lexer keeps, where all other punctuation is a
+separator.
+
+**A direction now moves the day a time of day belongs to** — `last night` is yesterday at
+20:00 rather than today's, `next morning` is tomorrow's — and `afternoon` joined the named
+times at 14:00, by the same arbitrary convention as the rest.
+
+**`inferDate` never refuses over a token it does not know, and that is decided.** The
+alternative — returning `null` when a digit or a unit was dropped — was weighed and turned
+down: being lax is the point, and the cases that argued for it were coverage gaps, not a
+reason to fail. What it does instead is hand the pieces it could not use to an `onIgnored`
+callback, with the answer unchanged, so a prompt can say « ignored: quarter » in its own
+voice through the `styles` registry. The library prints nothing itself. The shape that still
+needs the warning is `the 3rd quarter`, read as the 3rd: an unknown word changing the meaning
+of a number that *was* read.
+
+**The tests carry a corpus**, one line per string, next to the behaviour-named ones. The
+rules are stated by the latter; coverage is stated by the former, which is what catches a
+`9h30` turning into the 30th when the lexer is touched. 103 tests on the module, and
+`inferDate` weighs 2.9 kB gzipped at 0.006 ms a call.
+
+**Forms it still does not read**, in the order they are worth doing: `2 days after next
+friday` — the inverse of what now works — because the sign has to reach forward to a value
+not yet read. Ordinal words (`the first of next month`), which want two things: a table
+where `second` collides head-on with the time unit and needs `the` to tell them apart, and
+an `of` promoted from filler to operator, since the period has to resolve before the
+day-of-period is written (`the 31st of next month` clamps differently depending on the
+order). That same operator is what `the last friday of july` wants, and the `end of the
+month` / `mid december` family wants one more op on top: collapsing to the end or the middle
+of the named precision rather than to its start — the knob the partial-date consolidation
+raises below. Then `christmas` and `easter`, which are only more `value` tokens, and `week
+32` / `Q3`, which want a period that is not a Y/M/D field.
+
+**Two things are parked on purpose.** The vocabulary is English-only: month and weekday names
+localise through `Intl`, but `tomorrow`, `next`, `at` and `days` do not, so `demain` reads as
+`null` and `dans 3 jours` reads as the 3rd of the month — the role tables were built to
+become per-locale data, and that is the work. And a range — `from monday to friday` — is not
+an evolution of this function but a sibling over the same fold, and it is really the period
+question, so it waits for the partial dates.
 
 ### Partial dates — afterwards, and why in that order
 
