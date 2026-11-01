@@ -3,6 +3,144 @@ import type { DurationType } from '../../duration/index.js'
 import { monthNames, weekdayNames } from '../calendar-names/index.js'
 import type { ReadDateOptions } from './types.js'
 
+/**
+ * Reads a date the way it is spoken — `next thursday at 9:20pm`, `in 3 days, at
+ * midnight`, `yesterday`, `next december`, `21h30` — into a `Date`.
+ *
+ * @param raw - The string to read. Nothing in it has to be a date, and nothing in it
+ * has to be in any particular order.
+ * @param locale - Optional locale code (default: `'en'`), which the month and weekday
+ * names are read in. The rest of the vocabulary is English either way.
+ * @param options - See {@link ReadDateOptions}.
+ * @returns The date, or `null` when no token named one.
+ * @see {@link parseDate} when the string's shape is known in advance — a template is
+ * stricter, and it is what a machine wrote.
+ *
+ * @remarks
+ * **Naming a day gives that day at midnight; offsetting by a duration keeps the time of
+ * day.** So `tomorrow` is tomorrow at 00:00 and `next december` is the 1st at 00:00,
+ * while `in 3 days` is this same hour three days out — which is why `in 3 days, at
+ * midnight` has something to add. More generally, every part finer than the finest one
+ * named falls to its minimum, and every part left unnamed comes from the reference.
+ *
+ * **A weekday reads forward until something else has placed the date.** `monday` and
+ * `on monday` are the Monday ahead, today included, because that is the way the language
+ * leans when nothing says otherwise. But once another token has established a date, the
+ * weekday scopes to that date's week instead of running off into the next one — so
+ * `2026-03-14, on monday` is the Monday of that Saturday's week. An explicit `next` or
+ * `last` always wins over both readings, and where that week opens is
+ * {@link ReadDateOptions.weekStartsOn} — Monday unless the caller says otherwise.
+ *
+ * **A seek never lands back on where it started**: asked on a Thursday, `next thursday`
+ * is seven days out, and in October `last december` is the December before. A bare
+ * `december` sets the month in the reference year, since nothing asked for a seek, but a
+ * bare weekday is always a seek — the coming one, today included — because a weekday is
+ * not a part a date can be told to have.
+ *
+ * **A sign carries across the whole string**, forwards from `in`, `plus`, `minus`, `+`
+ * and `-`, and backwards from `ago`, `later`, `from` and `hence` over everything read
+ * before them. So `in 2 days and 3 hours` is both, and so is `2 days and 3 hours ago`. A
+ * quantity no sign ever reached is dropped, since `3 days` says nothing about which
+ * three days.
+ *
+ * **`after`, `before`, `from` and `of` read right to left.** What follows them places the
+ * date and what precedes them is applied to it, so `2 days after next friday` finds the
+ * Friday first, and `the 1st of next month` moves to the month before writing the day. A
+ * day the month has not got is clamped to its last — `the 31st of next month` asked in
+ * January is the end of February, not the 3rd of March. An operator with nothing on its
+ * left reaches `onIgnored` instead, which is what `before 2019` does.
+ *
+ * **What `of` names is a period, and its left-hand side counts inside it.** A weekday
+ * counts from the period's start, or from its end when asked for the last one, so `the
+ * last friday of july` is the 31st and `the second friday of july` the 10th — where a
+ * plain seek would have walked out of July altogether. A bare `day` names one of the two
+ * ends: `the last day of july`, `the first day of 2019`. Without a period to count in —
+ * `the last friday` on its own — it is an ordinary seek again.
+ *
+ * **`end`, `beginning` and `start` name those ends in a word**: `the end of july` is the
+ * 31st and `the beginning of next month` is its 1st. On the right of an operator a unit
+ * no number reached is the period the cursor already sits in — `the end of the month`,
+ * `the end of this year`. A clock named anywhere in the string survives the move, so
+ * `the end of the month at 6pm` keeps its hour.
+ *
+ * **The named days of the year are read as days**: `christmas`, `new year`, `halloween`,
+ * `all saints`, `all souls`, `valentine's day`, `epiphany`, `april fools`, `may day`,
+ * `bastille day`, `armistice day`, `boxing day`, and `easter` with `palm sunday`, `good
+ * friday`, `easter monday`, `ascension` and `pentecost` moving with it. One of them on
+ * its own is the next occurrence, today included; `this` is the reference year's and
+ * `next` and `last` step a year. They are days like any other, so everything above
+ * composes with them — `the friday before christmas`, `christmas + one week, on monday`,
+ * `2 days after easter`, `the end of easter month`. An `eve` is the evening before, 8pm
+ * on the 24th for `christmas eve` and on the 31st for `new year's eve`.
+ *
+ * **A weekend reads as its saturday**, so every weekday rule above holds of `this
+ * weekend`, `next weekend` and `the last weekend of july`.
+ *
+ * **A date in digits is read in three parts, with `-`, `/` or `.` between them.** A
+ * four-digit head is a year and the order is the one it opens — `2026-03-14`, `2026/3/4`.
+ * Anything else is read day first — `14/03/2026`, `14.03.26` — which is the order most of
+ * the world writes and the only one a locale tag could not settle, so `03/14/2026` is
+ * impossible as a day-first date and reaches `onIgnored` whole rather than being quietly
+ * re-read in the American order. A year in two digits takes the `strptime` pivot, 69
+ * through 99 being the last century. Two parts read too: `2026-03` and `3/2026` are a
+ * month, `14/03` the 14th of this year's March.
+ *
+ * **A clock reads down to the millisecond** — `09:20`, `09:20:05`, `09:20:05.123` — so a
+ * whole ISO instant goes through, its `T` included. Its zone does not: a `Date` holds no
+ * zone of its own, so `Z` and `+02:00` are recognised in order to be reported rather than
+ * honoured, and the clock is taken as a wall clock.
+ *
+ * **A decimal is a quantity** (`in 1.5 hours`), and a fraction with no unit of its own is
+ * counted in the one before it, which is what `in an hour and a half` means. A whole
+ * number never is, since `in 2 days 3` is not three of anything.
+ *
+ * **`same time` names the reference's own clock**, down to the millisecond, so that it
+ * survives the midnight a named day would otherwise impose: `same time tomorrow`, `this
+ * time next week`.
+ *
+ * **Reading is lax by construction.** Whitespace and punctuation are separators, a token
+ * no table knows is skipped rather than fatal, and nothing is positional: `9pm next
+ * thursday` and `next thursday at 9pm` are the same instant. When two tokens name the
+ * same part, the later one wins. Nothing here ever throws, and what the read could not
+ * use reaches `onIgnored` rather than changing the answer.
+ *
+ * @example
+ * readDate('next thursday at 9:20pm')
+ * // => the coming Thursday, 21:20:00.000
+ */
+export function readDate (
+  raw: string,
+  locale = 'en',
+  options: ReadDateOptions = {}
+): Date | null {
+  const { ops, deferred, ignored } = fold(lex(raw), locale, options.weekStartsOn ?? 1)
+  if (ignored.length > 0) options.onIgnored?.(ignored)
+  if (ops.length === 0 && deferred.length === 0) return null
+  const date = new Date(options.reference ?? new Date())
+  for (const op of ops) op.apply(date, null)
+  // What the right-hand side named is the period the left-hand side counts in, so it is
+  // collapsed first — `of july` means July from its first instant. Truncating again at
+  // the end would undo what the left-hand side then did, so the second pass only reaches
+  // as deep as that side itself named.
+  const scopeDepth = finestOf(ops)
+  // A period named outright wins over the one a precision implies: `of next month` is a
+  // month even though a calendar step collapses nothing, and `of july at 6pm` is July.
+  const scope = finestPeriodOf(ops) ?? (scopeDepth === -1 ? null : FIELDS[scopeDepth] ?? null)
+  if (scopeDepth !== -1) truncate(date, scopeDepth)
+  if (deferred.length > 0) {
+    for (const op of deferred) op.apply(date, scope)
+    // Truncating to the whole string's depth would undo what the deferred side did on a
+    // coarser field — `2 days after july` is not July 1st again. A clock the other side
+    // named still has to survive, and collapsing below an hour never moves a day.
+    const depth = Math.max(finestOf(deferred), finestTimeOf(ops))
+    if (depth !== -1) truncate(date, depth)
+  }
+  return Number.isFinite(date.getTime()) ? date : null
+}
+
+// Everything below is internal. The functions are hoisted and the tables are only ever
+// read from inside a call, so the entry point reads first and the machinery after it.
+
 /** The parts a date is made of, coarsest first — the order is the precision scale. */
 const FIELDS = ['year', 'month', 'day', 'hours', 'minutes', 'seconds', 'milliseconds'] as const
 
@@ -1037,139 +1175,4 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
   for (const held of waiting) ignored.push(...held.atoms)
 
   return { ops, deferred, ignored }
-}
-
-/**
- * Reads a date the way it is spoken — `next thursday at 9:20pm`, `in 3 days, at
- * midnight`, `yesterday`, `next december`, `21h30` — into a `Date`.
- *
- * @param raw - The string to read. Nothing in it has to be a date, and nothing in it
- * has to be in any particular order.
- * @param locale - Optional locale code (default: `'en'`), which the month and weekday
- * names are read in. The rest of the vocabulary is English either way.
- * @param options - See {@link ReadDateOptions}.
- * @returns The date, or `null` when no token named one.
- * @see {@link parseDate} when the string's shape is known in advance — a template is
- * stricter, and it is what a machine wrote.
- *
- * @remarks
- * **Naming a day gives that day at midnight; offsetting by a duration keeps the time of
- * day.** So `tomorrow` is tomorrow at 00:00 and `next december` is the 1st at 00:00,
- * while `in 3 days` is this same hour three days out — which is why `in 3 days, at
- * midnight` has something to add. More generally, every part finer than the finest one
- * named falls to its minimum, and every part left unnamed comes from the reference.
- *
- * **A weekday reads forward until something else has placed the date.** `monday` and
- * `on monday` are the Monday ahead, today included, because that is the way the language
- * leans when nothing says otherwise. But once another token has established a date, the
- * weekday scopes to that date's week instead of running off into the next one — so
- * `2026-03-14, on monday` is the Monday of that Saturday's week. An explicit `next` or
- * `last` always wins over both readings, and where that week opens is
- * {@link ReadDateOptions.weekStartsOn} — Monday unless the caller says otherwise.
- *
- * **A seek never lands back on where it started**: asked on a Thursday, `next thursday`
- * is seven days out, and in October `last december` is the December before. A bare
- * `december` sets the month in the reference year, since nothing asked for a seek, but a
- * bare weekday is always a seek — the coming one, today included — because a weekday is
- * not a part a date can be told to have.
- *
- * **A sign carries across the whole string**, forwards from `in`, `plus`, `minus`, `+`
- * and `-`, and backwards from `ago`, `later`, `from` and `hence` over everything read
- * before them. So `in 2 days and 3 hours` is both, and so is `2 days and 3 hours ago`. A
- * quantity no sign ever reached is dropped, since `3 days` says nothing about which
- * three days.
- *
- * **`after`, `before`, `from` and `of` read right to left.** What follows them places the
- * date and what precedes them is applied to it, so `2 days after next friday` finds the
- * Friday first, and `the 1st of next month` moves to the month before writing the day. A
- * day the month has not got is clamped to its last — `the 31st of next month` asked in
- * January is the end of February, not the 3rd of March. An operator with nothing on its
- * left reaches `onIgnored` instead, which is what `before 2019` does.
- *
- * **What `of` names is a period, and its left-hand side counts inside it.** A weekday
- * counts from the period's start, or from its end when asked for the last one, so `the
- * last friday of july` is the 31st and `the second friday of july` the 10th — where a
- * plain seek would have walked out of July altogether. A bare `day` names one of the two
- * ends: `the last day of july`, `the first day of 2019`. Without a period to count in —
- * `the last friday` on its own — it is an ordinary seek again.
- *
- * **`end`, `beginning` and `start` name those ends in a word**: `the end of july` is the
- * 31st and `the beginning of next month` is its 1st. On the right of an operator a unit
- * no number reached is the period the cursor already sits in — `the end of the month`,
- * `the end of this year`. A clock named anywhere in the string survives the move, so
- * `the end of the month at 6pm` keeps its hour.
- *
- * **The named days of the year are read as days**: `christmas`, `new year`, `halloween`,
- * `all saints`, `all souls`, `valentine's day`, `epiphany`, `april fools`, `may day`,
- * `bastille day`, `armistice day`, `boxing day`, and `easter` with `palm sunday`, `good
- * friday`, `easter monday`, `ascension` and `pentecost` moving with it. One of them on
- * its own is the next occurrence, today included; `this` is the reference year's and
- * `next` and `last` step a year. They are days like any other, so everything above
- * composes with them — `the friday before christmas`, `christmas + one week, on monday`,
- * `2 days after easter`, `the end of easter month`. An `eve` is the evening before, 8pm
- * on the 24th for `christmas eve` and on the 31st for `new year's eve`.
- *
- * **A weekend reads as its saturday**, so every weekday rule above holds of `this
- * weekend`, `next weekend` and `the last weekend of july`.
- *
- * **A date in digits is read in three parts, with `-`, `/` or `.` between them.** A
- * four-digit head is a year and the order is the one it opens — `2026-03-14`, `2026/3/4`.
- * Anything else is read day first — `14/03/2026`, `14.03.26` — which is the order most of
- * the world writes and the only one a locale tag could not settle, so `03/14/2026` is
- * impossible as a day-first date and reaches `onIgnored` whole rather than being quietly
- * re-read in the American order. A year in two digits takes the `strptime` pivot, 69
- * through 99 being the last century. Two parts read too: `2026-03` and `3/2026` are a
- * month, `14/03` the 14th of this year's March.
- *
- * **A clock reads down to the millisecond** — `09:20`, `09:20:05`, `09:20:05.123` — so a
- * whole ISO instant goes through, its `T` included. Its zone does not: a `Date` holds no
- * zone of its own, so `Z` and `+02:00` are recognised in order to be reported rather than
- * honoured, and the clock is taken as a wall clock.
- *
- * **A decimal is a quantity** (`in 1.5 hours`), and a fraction with no unit of its own is
- * counted in the one before it, which is what `in an hour and a half` means. A whole
- * number never is, since `in 2 days 3` is not three of anything.
- *
- * **`same time` names the reference's own clock**, down to the millisecond, so that it
- * survives the midnight a named day would otherwise impose: `same time tomorrow`, `this
- * time next week`.
- *
- * **Reading is lax by construction.** Whitespace and punctuation are separators, a token
- * no table knows is skipped rather than fatal, and nothing is positional: `9pm next
- * thursday` and `next thursday at 9pm` are the same instant. When two tokens name the
- * same part, the later one wins. Nothing here ever throws, and what the read could not
- * use reaches `onIgnored` rather than changing the answer.
- *
- * @example
- * readDate('next thursday at 9:20pm')
- * // => the coming Thursday, 21:20:00.000
- */
-export function readDate (
-  raw: string,
-  locale = 'en',
-  options: ReadDateOptions = {}
-): Date | null {
-  const { ops, deferred, ignored } = fold(lex(raw), locale, options.weekStartsOn ?? 1)
-  if (ignored.length > 0) options.onIgnored?.(ignored)
-  if (ops.length === 0 && deferred.length === 0) return null
-  const date = new Date(options.reference ?? new Date())
-  for (const op of ops) op.apply(date, null)
-  // What the right-hand side named is the period the left-hand side counts in, so it is
-  // collapsed first — `of july` means July from its first instant. Truncating again at
-  // the end would undo what the left-hand side then did, so the second pass only reaches
-  // as deep as that side itself named.
-  const scopeDepth = finestOf(ops)
-  // A period named outright wins over the one a precision implies: `of next month` is a
-  // month even though a calendar step collapses nothing, and `of july at 6pm` is July.
-  const scope = finestPeriodOf(ops) ?? (scopeDepth === -1 ? null : FIELDS[scopeDepth] ?? null)
-  if (scopeDepth !== -1) truncate(date, scopeDepth)
-  if (deferred.length > 0) {
-    for (const op of deferred) op.apply(date, scope)
-    // Truncating to the whole string's depth would undo what the deferred side did on a
-    // coarser field — `2 days after july` is not July 1st again. A clock the other side
-    // named still has to survive, and collapsing below an hour never moves a day.
-    const depth = Math.max(finestOf(deferred), finestTimeOf(ops))
-    if (depth !== -1) truncate(date, depth)
-  }
-  return Number.isFinite(date.getTime()) ? date : null
 }
