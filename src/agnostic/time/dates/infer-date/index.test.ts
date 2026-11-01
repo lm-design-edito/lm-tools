@@ -337,6 +337,12 @@ describe('inferDate', () => {
       expect(infer('the last day of 2019')).toEqual(new Date(2019, 11, 31))
     })
 
+    it('reads a weekday the way the operator after it points', () => {
+      // The 20th of January 2026 is a Tuesday.
+      expect(infer('the friday before the 20th')).toEqual(new Date(2026, 0, 16))
+      expect(infer('the friday after the 20th')).toEqual(new Date(2026, 0, 23))
+    })
+
     it('falls back to an ordinary seek with no period to count in', () => {
       expect(infer('the last friday')).toEqual(new Date(2025, 11, 26))
     })
@@ -411,6 +417,7 @@ describe('inferDate', () => {
       ['in  3 days — at midnight', new Date(2026, 0, 4)],
       ['january february', new Date(2026, 1, 1)],
       ['the last friday of july', new Date(2026, 6, 31)],
+      ['the friday before the 20th', new Date(2026, 0, 16)],
       ['the first friday of july', new Date(2026, 6, 3)],
       ['the second friday of july', new Date(2026, 6, 10)],
       ['the last day of july', new Date(2026, 6, 31)],

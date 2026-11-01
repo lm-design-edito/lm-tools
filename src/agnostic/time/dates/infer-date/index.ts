@@ -606,6 +606,14 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       // both mean the Monday ahead. Once another token has established a date, the
       // cursor is somewhere we travelled to rather than now, and the weekday scopes to
       // that week: `the 6th, on monday` is the Monday of the 6th's week.
+      // `the friday before the 20th` looks back from the 20th, so an operator about to
+      // set the anchor also says which way its weekday reads.
+      const toward = INFIX_SIGNS[atoms[index] ?? '']
+      if (direction === null && toward !== undefined) {
+        const strict = toward < 0 ? -1 : 1
+        ops.push({ precision: 'day', apply: date => { seekWeekday(date, weekday, strict) } })
+        continue
+      }
       // `the last friday of july` counts inside July, so a weekday standing in front of
       // `of` is resolved within the period that follows rather than from the cursor —
       // and an ordinal just before it says which occurrence, instead of a day number.
