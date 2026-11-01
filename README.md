@@ -247,7 +247,7 @@ span qui contient son propre séparateur, et non une suite plate de jetons et de
 ponctuations. À noter aussi : les horloges se re-rendent à chaque `timeupdate`, donc ce
 composant multiplie par six ce qui est diffé à chaque tick.
 
-## Reading a time — `parseDate` and `inferDate` are both in
+## Reading a time — `parseDate` and `readDate` are both in
 
 **`parseDate` is written**: `agnostic/time/dates/parse-date`, the exact mirror of
 `formatDate` — the same token grammar, read backwards. `parseDate(raw, format,
@@ -256,7 +256,7 @@ locale = 'en', { reference })` gives a `Date` or `null`. The token table is a
 keys, so a token added to `format-date` stops compiling here until it is read too. Commits
 `fc79ef0` and `edb400c`.
 
-Three decisions are settled there, and they hold for `inferDate` as well:
+Three decisions are settled there, and they hold for `readDate` as well:
 
 - **What the template does not name comes from the reference date**, except the parts finer
   than the finest one it does name, which take their minimum (0, or 1 for month and day). A
@@ -272,14 +272,21 @@ Three decisions are settled there, and they hold for `inferDate` as well:
 `monthNames` and `weekdayNames` were private to `format-date/parts.ts` and both modules want
 them, so they moved to `dates/calendar-names`.
 
-### `inferDate` — what is decided, and what is left to do
+### `readDate` — what is decided, and what is left to do
 
 The need comes from dlbbm's post-creation script, which asks for a publication date in
 `YYYY-MM-DD HH:MM`: one wants to write `next thursday at 9:20pm`, `in 3 days, at midnight`,
-`yesterday`. It would go in `agnostic/time/dates/infer-date`, as `inferDate(raw,
+`yesterday`. It would go in `agnostic/time/dates/read-date`, as `readDate(raw,
 locale = 'en', { reference })` → `Date | null` — the same shape as `parseDate`, minus the
 template. **It is written**, commit `5339b1e`, in three stages: a lexer down to atoms, a
 fold into ops, and one application onto a cursor started from the reference.
+
+It was `inferDate`, in `agnostic/time/dates/infer-date`, for as long as it was being
+written — the commits up to `45e4ed2` carry that name, which is where to look for the
+history. It was renamed the day before it first shipped, nothing having been published
+under the old one: `read` is the verb this section and the JSDoc had been using all along,
+where `infer` named the one thing the function shares with `parseDate` — filling in the
+parts the string never mentions — rather than the thing that tells them apart.
 
 **One rule was settled while writing it, and it is the one to remember: naming a day gives
 that day at midnight, offsetting by a duration keeps the time of day.** So `tomorrow` is
@@ -341,7 +348,7 @@ land on the same instant; when two ops set the same field, **the later one wins*
 must survive the split — `9:20pm`, `21:20`, `6th` — are recognised before it, not after.
 
 Two reuses fall out on their own: the month and weekday tokens come from `calendar-names`,
-so `inferDate('en décembre', 'fr')` works without a second table, and the unit tokens come
+so `readDate('en décembre', 'fr')` works without a second table, and the unit tokens come
 from `Duration`'s own suffixes, so `in 3 d` and `in 3 days` are one row each.
 
 The out-of-v1 rows are reachable from this shape, which is the real argument for it:
@@ -369,7 +376,7 @@ separator.
 20:00 rather than today's, `next morning` is tomorrow's — and `afternoon` joined the named
 times at 14:00, by the same arbitrary convention as the rest.
 
-**`inferDate` never refuses over a token it does not know, and that is decided.** The
+**`readDate` never refuses over a token it does not know, and that is decided.** The
 alternative — returning `null` when a digit or a unit was dropped — was weighed and turned
 down: being lax is the point, and the cases that argued for it were coverage gaps, not a
 reason to fail. What it does instead is hand the pieces it could not use to an `onIgnored`
@@ -494,12 +501,12 @@ question, so it waits for the partial dates.
 dlbbm carries a `PartialDate` of three nullable fields (`shared/types`), with no precision,
 no time of day, and holes allowed anywhere (`{ year: null, month: 1 }` = *January of an
 unknown year*). Too light to be generalised as it stands, and the question is not urgent:
-neither `parseDate` nor `inferDate` needs it, both consolidate against a reference and give
+neither `parseDate` nor `readDate` needs it, both consolidate against a reference and give
 a `Date`.
 
 **The order is deliberate.** The concept's real questions — holes or no holes, a precision
 field, intervals, how comparison works — are answered by what consumes it, and there is one
-and a half consumer today. `inferDate` will be the second, and it will say whether `next
+and a half consumer today. `readDate` will be the second, and it will say whether `next
 december` has to stay month-precise or may land on the 1st. Designing the concept first is
 guessing; designing it second is two working consumers dictating the shape. The parts record
 inside `parse-date` is already a partial date under another name: with two producers instead

@@ -7,7 +7,7 @@ function resolveLocale (locale: string): string {
 }
 
 // What a locale calls its months does not change, and building the formatter is the
-// expensive part — a formatter and a dozen `format` calls, which `inferDate` and
+// expensive part — a formatter and a dozen `format` calls, which `readDate` and
 // `parseDate` would otherwise pay on every string they read.
 const tables = new Map<string, string[]>()
 

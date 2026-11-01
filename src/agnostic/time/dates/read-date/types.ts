@@ -1,5 +1,5 @@
-/** Options for {@link inferDate}. */
-export type InferDateOptions = {
+/** Options for {@link readDate}. */
+export type ReadDateOptions = {
   /**
    * The moment everything is read against — `in 3 days` counts from it, `next
    * thursday` looks forward from it, and it fills whatever the string does not name.

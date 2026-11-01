@@ -1,7 +1,7 @@
 import { Duration } from '../../duration/index.js'
 import type { DurationType } from '../../duration/index.js'
 import { monthNames, weekdayNames } from '../calendar-names/index.js'
-import type { InferDateOptions } from './types.js'
+import type { ReadDateOptions } from './types.js'
 
 /** The parts a date is made of, coarsest first — the order is the precision scale. */
 const FIELDS = ['year', 'month', 'day', 'hours', 'minutes', 'seconds', 'milliseconds'] as const
@@ -1047,7 +1047,7 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
  * has to be in any particular order.
  * @param locale - Optional locale code (default: `'en'`), which the month and weekday
  * names are read in. The rest of the vocabulary is English either way.
- * @param options - See {@link InferDateOptions}.
+ * @param options - See {@link ReadDateOptions}.
  * @returns The date, or `null` when no token named one.
  * @see {@link parseDate} when the string's shape is known in advance — a template is
  * stricter, and it is what a machine wrote.
@@ -1065,7 +1065,7 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
  * weekday scopes to that date's week instead of running off into the next one — so
  * `2026-03-14, on monday` is the Monday of that Saturday's week. An explicit `next` or
  * `last` always wins over both readings, and where that week opens is
- * {@link InferDateOptions.weekStartsOn} — Monday unless the caller says otherwise.
+ * {@link ReadDateOptions.weekStartsOn} — Monday unless the caller says otherwise.
  *
  * **A seek never lands back on where it started**: asked on a Thursday, `next thursday`
  * is seven days out, and in October `last december` is the December before. A bare
@@ -1141,13 +1141,13 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
  * use reaches `onIgnored` rather than changing the answer.
  *
  * @example
- * inferDate('next thursday at 9:20pm')
+ * readDate('next thursday at 9:20pm')
  * // => the coming Thursday, 21:20:00.000
  */
-export function inferDate (
+export function readDate (
   raw: string,
   locale = 'en',
-  options: InferDateOptions = {}
+  options: ReadDateOptions = {}
 ): Date | null {
   const { ops, deferred, ignored } = fold(lex(raw), locale, options.weekStartsOn ?? 1)
   if (ignored.length > 0) options.onIgnored?.(ignored)
