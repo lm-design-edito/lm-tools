@@ -1032,6 +1032,39 @@ Pas encore remonté par décision : on écrit d'abord chez l'appelant, on récol
 deuxième appelant existe. Voir « Le déploiement » dans le README de lm-link pour la liste
 complète des candidats.
 
+## Les commentaires des composants — ce que l'audit a trouvé
+
+Relevé fait, passe remise à après la publication de lm-link. L'inventaire : 50 fichiers
+portant des commentaires, 2 380 lignes, dont 1 938 de JSDoc — la surface publique, hors
+sujet ici — et 442 en ligne, réparties en 226 blocs. 167 de ces blocs tiennent en une ou
+deux lignes, donc la règle tient ; le travail porte sur les 27 blocs de quatre lignes ou
+plus, et sur quatre passages encore en français.
+
+What the pass has to do, in order of how clear-cut it is:
+
+- **Translate four French passages**, all four worth keeping: `Drawer:246` (one bar
+  written once serves both states), `Drawer:253` (how `-btn` resolves),
+  `Video/index.controlled:268` (why subtitles default to on), `:465` (why neither modifier
+  appears when no subtitles are given). The two in `Drawer` go from four or five lines to
+  two.
+- **Delete commented-out code** in `global.d.ts:2`: four `declare module` lines and a
+  `'*.gif'` block, dead. The live `*.module.css` declaration stays.
+- **Separate two comments glued into one run** at `Video/index.tsx:223`, and **put a
+  section comment back above its subject** at `:235` — « the table is written here rather
+  than in a module of its own » sits above `jumpTo` while `useCommands` is further down.
+- **Cut rationale that duplicates the written rules**: that same table-in-`index.tsx`
+  justification is a `CLAUDE.md` convention, and the « failure modes are not symmetrical »
+  paragraph at `Video/index.tsx:223` is in this README's `:force` section at length.
+- **Leave what earns its length**: `Video/index.controlled:394` (the click surface, no
+  `role`, no `tabIndex`), `Drawer:90` (`useToggleMarking` and its `[WIP]`), `Lightbox:428`
+  (nothing here is conditional), `Overlayer:142` (written out in full). Same for the four
+  `Fx. dep.` headers that only reach four lines by listing dependencies.
+
+**One decision to take with the pass**, not before: the bare section markers — `// Commands`,
+`// Render`, `// State & refs`, `// Class names`, `// User action handlers`. They name what
+the next line says, which the rules call noise, but they are consistent across every
+component and are what makes a 600-line `Video` scannable. One ruling for the set.
+
 ## En sommeil
 
 Aucun des trois n'a d'importance à court terme. Ils sont ici pour ne pas être
