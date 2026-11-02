@@ -22,6 +22,7 @@ export const LIB_PKG_JSON = path.join(LIB, 'package.json')
 export const COMPONENTS = path.join(SRC, 'components')
 export const AGNOSTIC = path.join(SRC, 'agnostic')
 export const NODE = path.join(SRC, 'node')
+export const STYLES = path.join(SRC, 'styles')
 
 // Deps
 export const externalDeps: string[] = Object.keys(JSON.parse(

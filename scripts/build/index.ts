@@ -2,7 +2,8 @@ import { spawn, spawnSync } from 'node:child_process'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { camelCase } from 'change-case'
-import { SRC, COMPONENTS, AGNOSTIC, NODE, LIB } from '../_config/index.js'
+import * as sass from 'sass'
+import { SRC, COMPONENTS, AGNOSTIC, NODE, LIB, STYLES } from '../_config/index.js'
 import * as Subpaths from '../../src/node/files/subpaths/index.js'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -34,6 +35,10 @@ const toDeleteInLib = await Subpaths.list(LIB, {
 
 await Promise.all(toDeleteInLib.map(async f => fs.unlink(path.join(LIB, f))))
 
+const LIB_STYLES = path.join(LIB, path.relative(SRC, STYLES))
+const isInStyles = (dirpath: string): boolean => dirpath === LIB_STYLES
+  || dirpath.startsWith(`${LIB_STYLES}${path.sep}`)
+
 for (const dir of [AGNOSTIC, NODE, COMPONENTS]) {
   const p = spawn('tsc', ['-p', path.join(dir, 'tsconfig.json')], { stdio: 'pipe' })
   p.stdout?.on('data', data => console.log(data.toString().trim()))
@@ -44,9 +49,28 @@ for (const dir of [AGNOSTIC, NODE, COMPONENTS]) {
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
+ * Compile the stylesheets
+ * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+// The .scss ships as the source a consumer extends from; the .css beside it is for
+// whoever would rather not run sass.
+for await (const file of fs.glob('**/index.scss', { cwd: LIB_STYLES })) {
+  const scssPath = path.join(LIB_STYLES, file)
+  const cssPath = scssPath.replace(/\.scss$/, '.css')
+  const { css } = sass.compile(scssPath, { style: 'compressed', charset: false })
+  await fs.writeFile(cssPath, `${css}\n`, { encoding: 'utf-8' })
+  console.log(`Compiled ${path.relative(LIB, cssPath)}`)
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
  * Generate re-export files
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+// styles/ holds no module, so it gets no generated index.js — and must not be
+// re-exported from lib/index.js either, since there would be nothing to import.
 
 const everyDirBuilt = [LIB, ...await Subpaths.list(LIB, {
   directories: true,
@@ -57,7 +81,7 @@ const everyDirBuilt = [LIB, ...await Subpaths.list(LIB, {
   dedupeSimlinksContents: true,
   maxDepth: 100,
   returnRelative: false
-})]
+})].filter(dirpath => !isInStyles(dirpath))
 
 await Promise.all(everyDirBuilt.reverse().map(async dirpath => {
   const childrenFiles = await Subpaths.list(dirpath, {
@@ -70,7 +94,7 @@ await Promise.all(everyDirBuilt.reverse().map(async dirpath => {
     maxDepth: 0,
     returnRelative: false
   })
-  const childrenDirs = await Subpaths.list(dirpath, {
+  const childrenDirs = (await Subpaths.list(dirpath, {
     directories: true,
     files: false,
     symlinks: false,
@@ -79,7 +103,7 @@ await Promise.all(everyDirBuilt.reverse().map(async dirpath => {
     dedupeSimlinksContents: true,
     maxDepth: 0,
     returnRelative: false
-  })
+  })).filter(chiDir => !isInStyles(chiDir))
   const hasIndexJs = childrenFiles.some(file => file.endsWith('/index.js'))
   if (hasIndexJs) return true
   let reExportJsFileContents = ''
