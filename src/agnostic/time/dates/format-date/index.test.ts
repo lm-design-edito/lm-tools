@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { toPartialDate } from '../partial-date/index.js'
 import { formatDate } from './index.js'
 import { getDateParts } from './parts.js'
 
@@ -113,6 +114,57 @@ describe('formatDate', () => {
     it('marks only the 1st in French', () => {
       expect(formatDate(new Date(2026, 0, 1), '{{D}}{{th}}', 'fr')).toBe('1er')
       expect(formatDate(new Date(2026, 0, 2), '{{D}}{{th}}', 'fr')).toBe('2')
+    })
+  })
+
+  describe('a partial date', () => {
+    const template = '[[{{DD}} ]][[{{MMMM}} ]]{{YYYY}}'
+
+    it('renders the parts it knows, and drops the groups it cannot fill', () => {
+      expect(formatDate({ year: 2026, month: 3, day: 14 }, template)).toBe('14 March 2026')
+      expect(formatDate({ year: 2026, month: 3 }, template)).toBe('March 2026')
+      expect(formatDate({ year: 2026 }, template)).toBe('2026')
+    })
+
+    it('takes absent, null and undefined as the same unknown', () => {
+      expect(formatDate({ year: 2026, month: null, day: 14 }, template)).toBe('14 2026')
+      expect(formatDate({ year: 2026, month: undefined, day: 14 }, template)).toBe('14 2026')
+    })
+
+    it('drops a group over a token that needs a part the date has not got', () => {
+      expect(formatDate({ year: 2026, day: 14 }, '[[{{dddd}} ]]{{YYYY}}')).toBe('2026')
+      expect(formatDate({ year: 2026, month: 3, day: 14 }, '[[{{dddd}} ]]{{YYYY}}'))
+        .toBe('Saturday 2026')
+    })
+
+    it('reads a meridiem off the hours, and an ordinal suffix off the day', () => {
+      expect(formatDate({ hours: 21 }, '[[{{h}}{{a}}]]')).toBe('9pm')
+      expect(formatDate({ day: 1 }, '[[{{D}}{{th}}]]')).toBe('1st')
+      expect(formatDate({ minutes: 30 }, '[[{{h}}{{a}}]]')).toBe('')
+    })
+
+    it('renders an ungrouped token with nothing behind it as nothing', () => {
+      expect(formatDate({ year: 2026 }, '{{DD}}/{{MM}}/{{YYYY}}')).toBe('//2026')
+    })
+
+    it('keeps a bracket that opens no group', () => {
+      expect(formatDate({ year: 2026 }, '[[ {{YYYY}}')).toBe('[[ 2026')
+      expect(formatDate({ year: 2026 }, '[{{YYYY}}]')).toBe('[2026]')
+    })
+
+    it('clamps a day its month has not got, as the rest of the family does', () => {
+      expect(formatDate({ year: 2026, month: 2, day: 30 }, '{{DD}}/{{MM}}')).toBe('28/02')
+    })
+
+    it('reads a year under 100 as written', () => {
+      expect(formatDate({ year: 26 }, '{{YYYY}}')).toBe('26')
+    })
+
+    it('renders a Date exactly as it did before', () => {
+      const asDate = formatDate(thursdayAfternoon, '{{YYYY}}-{{MM}}-{{DD}} {{HH}}:{{mm}}')
+      expect(asDate).toBe('2026-01-01 15:05')
+      expect(formatDate(toPartialDate(thursdayAfternoon), '{{YYYY}}-{{MM}}-{{DD}} {{HH}}:{{mm}}'))
+        .toBe(asDate)
     })
   })
 })
