@@ -550,39 +550,75 @@ become per-locale data, and that is the work. And a range — `from monday to fr
 an evolution of this function but a sibling over the same fold, and it is really the period
 question, so it waits for the partial dates.
 
-### Partial dates — afterwards, and why in that order
+### Partial dates — the type is in, and the formatter is its consumer
 
-dlbbm carries a `PartialDate` of three nullable fields (`shared/types`), with no precision,
-no time of day, and holes allowed anywhere (`{ year: null, month: 1 }` = *January of an
-unknown year*). Too light to be generalised as it stands, and the question is not urgent:
-neither `parseDate` nor `readDate` needs it, both consolidate against a reference and give
-a `Date`.
+**`agnostic/time/dates/partial-date` holds the concept** (`569848d`): a `PartialDate` of
+seven optional fields, year down to milliseconds, where **a part is unknown when it is
+absent, `null` or `undefined`** — all three the same thing, so a record out of JSON reads
+like one written by hand. Holes are allowed **anywhere**: `{ year: 2026, day: 14 }` is the
+14th of a month nobody wrote down, which is the case that makes this something other than a
+truncation. Precision is therefore **derived and never stored** — `partialDatePrecision` is
+the finest known field, and `isContiguousPartialDate` is the question to ask before treating
+a partial date as a stretch of time. Nothing validates the parts against each other: a 30th
+of February can be written, and `formatDate` clamps it as the rest of the family does.
 
-**The order is deliberate.** The concept's real questions — holes or no holes, a precision
-field, intervals, how comparison works — are answered by what consumes it, and there is one
-and a half consumer today. `readDate` will be the second, and it will say whether `next
-december` has to stay month-precise or may land on the 1st. Designing the concept first is
-guessing; designing it second is two working consumers dictating the shape. The parts record
-inside `parse-date` is already a partial date under another name: with two producers instead
-of one, that is what it gets extracted from.
+**The consumer that dictated the shape is a formatter, not a resolver.** dlbbm saves a post
+holding a live with whatever is known of its date, and what it needs next is a readable
+string. So `formatDate` now takes a `Date | PartialDate` and the template grammar gained one
+construct, the **optional group** `[[…]]`, dropped whole when a token inside it has nothing
+to render (`bcfc5c6`):
 
-What is already known about consolidation, and it is half the answer: the fields **below**
-the known precision are not missing, they are the extent of an interval — `2019` is the
-whole year, and consolidating means **picking a point in it** (start, end, middle; `before
-2019` in a filter wants the end). The fields **above** it are unknown and have to be
-**anchored from outside**, and the reference is the only anchor available: zeroing
-everything would mean year 0, or `strptime`'s arbitrary 1900, which turns `09:20` into
-1900-01-01T09:20. So one rule, two mechanisms — anchor above, collapse below — and the
-honest primitive is `toInterval(partial) → { start, end }`, with `resolve()` as sugar over
-it. The one arbitrary part left is a hole *in the middle* (year and day, no month), which
-only exists if the type allows holes at all.
+```ts
+const template = '[[{{DD}} ]][[{{MMMM}} ]]{{YYYY}}'
+formatDate({ year: 2026, month: 3, day: 14 }, template)  // => '14 March 2026'
+formatDate({ year: 2026, month: 3 }, template)           // => 'March 2026'
+formatDate({ year: 2026 }, template)                     // => '2026'
+```
+
+**The group is what carries the separator**, which is the whole reason it exists: dropping
+`{{DD}}` has to take its trailing space with it, and a flat list of tokens and literals
+cannot say which space belongs to which token. The same insight the clock mask had.
+
+**A group drops on the parts a token reads, not on the field it is named after.** That is
+the one table the feature rests on: `{{dddd}}` wants year, month and day together, `{{A}}`
+reads the hours, `{{th}}` only the day. A row per token, next to the renderers, and the
+engine does not move when one is added. Groups do not nest and there is no escape for a
+literal `[[`, which is left as written when it closes nowhere — a date template has no use
+for the sequence, and an escape would cost the grammar more than it buys.
+
+Two decisions were taken and are worth re-reading before they are relied on. A token **not**
+in a group whose parts are missing renders as **nothing** rather than throwing or failing the
+whole format, on the grounds that the template author asked for it by leaving it ungrouped:
+`'{{DD}}/{{MM}}/{{YYYY}}'` on a bare year gives `//2026`. And the parts are read off a
+stand-in `Date` carrying an arbitrary filler wherever a part is unknown, which is safe only
+because the dependency table stops every token that would read a filler from rendering at
+all — the alternative was threading `Partial<DateParts>` through twenty-four renderers that
+would each have needed a non-null assertion.
+
+**`parseDate` is untouched, deliberately.** Giving it a partial mode would turn its return
+into `PartialDate | Date`, and a union coming *back* forces a narrowing at every call site
+where a widened *input* costs the caller nothing. If reading a partial is ever wanted, it is
+a `parsePartialDate` of its own that `parseDate` then consolidates over — the parts record
+inside `parse-date` is already that type under another name. The rule the two sides of this
+follow: **widen the input, never the output.**
+
+**The notion of period is not coupled to this, and that is a decision.** A contiguous
+partial date is an interval and a holey one is a set of candidates, so a `toInterval` could
+only return a convex hull — right for sorting, wrong for « is this in March ». Nothing sorts
+or filters these yet, so nothing is built; if a period concept ever lands it will say how it
+meets this type, rather than the other way round. `describePartial`, a table of human
+phrasings per locale (« courant 2026 », « en mars 2026 »), was weighed and dropped in the
+same breath: it is a translation surface, and a template with optional groups lets the
+consumer own the wording.
 
 Confronted with the registry: schema.org has nothing (`Date`, `DateTime`), but **EDTF /
 ISO 8601-2** is exactly this concept, and it separates the two cases dlbbm conflates —
 truncation (`1968`, `1968-01`, which is also the W3C-DTF dlbbm already writes) and
 unspecified digits (`XXXX-01`, `196X`). Truncation is an interval, the second is a set of
-intervals, and `toInterval`, `compare` and `resolve` are only definable on the first — an
-argument for making the truncated form the main type and the hole-y one a separate matter.
+intervals, and `toInterval`, `compare` and `resolve` are only definable on the first. The
+type here takes the holey form as the main one and leaves the interval questions unanswered,
+which is the opposite trade — defensible only as long as nothing needs to compare two of
+them.
 
 ## `compId` — chaque composant a une identité
 
