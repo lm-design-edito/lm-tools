@@ -1200,15 +1200,15 @@
 
   --shadow-color: rgb(0, 0, 0, .1);
 
-  --shadow-xxs: box-shadow: var(--shadow-x-xxs) var(--shadow-y-xxs) var(--shadow-blur-xxs) var(--shadow-spread-xxs) var(--shadow-color);
-  --shadow-xs: box-shadow: var(--shadow-x-xs) var(--shadow-y-xs) var(--shadow-blur-xs) var(--shadow-spread-xs) var(--shadow-color);
-  --shadow-s: box-shadow: var(--shadow-x-s) var(--shadow-y-s) var(--shadow-blur-s) var(--shadow-spread-s) var(--shadow-color);
-  --shadow-m: box-shadow: var(--shadow-x-m) var(--shadow-y-m) var(--shadow-blur-m) var(--shadow-spread-m) var(--shadow-color);
-  --shadow-l: box-shadow: var(--shadow-x-l) var(--shadow-y-l) var(--shadow-blur-l) var(--shadow-spread-l) var(--shadow-color);
-  --shadow-xl: box-shadow: var(--shadow-x-xl) var(--shadow-y-xl) var(--shadow-blur-xl) var(--shadow-spread-xl) var(--shadow-color);
-  --shadow-xxl: box-shadow: var(--shadow-x-xxl) var(--shadow-y-xxl) var(--shadow-blur-xxl) var(--shadow-spread-xxl) var(--shadow-color);
+  --shadow-xxs: var(--shadow-x-xxs) var(--shadow-y-xxs) var(--shadow-blur-xxs) var(--shadow-spread-xxs) var(--shadow-color);
+  --shadow-xs: var(--shadow-x-xs) var(--shadow-y-xs) var(--shadow-blur-xs) var(--shadow-spread-xs) var(--shadow-color);
+  --shadow-s: var(--shadow-x-s) var(--shadow-y-s) var(--shadow-blur-s) var(--shadow-spread-s) var(--shadow-color);
+  --shadow-m: var(--shadow-x-m) var(--shadow-y-m) var(--shadow-blur-m) var(--shadow-spread-m) var(--shadow-color);
+  --shadow-l: var(--shadow-x-l) var(--shadow-y-l) var(--shadow-blur-l) var(--shadow-spread-l) var(--shadow-color);
+  --shadow-xl: var(--shadow-x-xl) var(--shadow-y-xl) var(--shadow-blur-xl) var(--shadow-spread-xl) var(--shadow-color);
+  --shadow-xxl: var(--shadow-x-xxl) var(--shadow-y-xxl) var(--shadow-blur-xxl) var(--shadow-spread-xxl) var(--shadow-color);
 
-  --shadow: box-shadow: var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-spread) var(--shadow-color);
+  --shadow: var(--shadow-x) var(--shadow-y) var(--shadow-blur) var(--shadow-spread) var(--shadow-color);
 }
 
 .bg { background-color: var(--bg-color); }
