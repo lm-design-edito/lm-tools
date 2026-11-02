@@ -103,8 +103,11 @@ else {
 
 const indexJsFiles = fs.glob('**/index.js', { cwd: LIB })
 const exports: Record<string, {
-  import: string
+  import?: string
   types?: string
+  sass?: string
+  style?: string
+  default?: string
 }> = {}
 for await (const file of indexJsFiles) {
   const importPath = file.replace(/\/?index.js$/, '')
@@ -147,6 +150,21 @@ for await (const file of typesJsFiles) {
     }
   }
 }
+// A stylesheet is the one asset a consumer imports by path rather than by module, so
+// its entries are written here: the .scss for whoever compiles sass, the .css beside
+// it for whoever does not. Scoped to src/styles, so a component's styles.module.css
+// stays private.
+const styleFiles = fs.glob('**/index.scss', { cwd: LIB })
+for await (const file of styleFiles) {
+  if (!file.startsWith(`styles${path.sep}`) && file !== `styles${path.sep}index.scss`) continue
+  const dirPath = file.replace(/[\\/]?index\.scss$/, '')
+  const scssPath = `./${file}`
+  const cssPath = `./${file.replace(/\.scss$/, '.css')}`
+  exports[`./${dirPath}`] = { sass: scssPath, style: cssPath, default: cssPath }
+  exports[`./${dirPath}/index.scss`] = { default: scssPath }
+  exports[`./${dirPath}/index.css`] = { default: cssPath }
+}
+
 const exportsSorted = Object.entries(exports).sort((a, b) => {
   const aKey = a[0]
   const bKey = b[0]
