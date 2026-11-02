@@ -107,6 +107,14 @@ grammaire ne peut pas l'y suivre. À faire plus tard, mais c'est de là que le c
 tests de composants doit partir : `commands`, `comp-id`, `visibility`, qui sont des
 fonctions pures et des hooks avant d'être des composants.
 
+**An audit is owed on the reading order inside a module.**
+A folder named `some-util` exports `someUtil`, and that symbol belongs at the **top** of its
+`index.ts`, above the internal helpers it leans on: whoever opens the file meets the subject
+before the machinery. `read-date` was put in that order (`142109a`), `parse-date` is not, and
+nothing else has been looked at. The pass is to walk `agnostic/` and `node/` module by module
+and move the exported symbol up — a reordering and nothing else, no renaming and no splitting,
+so it reviews as a diff of moved blocks.
+
 **And on the same shelf, in no hurry at all: what belongs in `agnostic/css` and what
 belongs in `agnostic/html`.** `mergeClassNames` moved to `css/merge-class-names`, next
 to `clss`, `bem` and `is-valid-css-class-name` — but a class name is an HTML attribute
