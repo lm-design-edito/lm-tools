@@ -168,21 +168,44 @@ describe('readDate', () => {
       expect(read('14.03.2026')).toEqual(new Date(2026, 2, 14))
     })
 
-    it('takes the order from the head, and reads day first otherwise', () => {
+    it('reads the year first when both ends could carry it', () => {
       expect(read('2026/03/14')).toEqual(new Date(2026, 2, 14))
-      expect(read('2026.3.4')).toEqual(new Date(2026, 2, 4))
-      expect(read('14/3/26')).toEqual(new Date(2026, 2, 14))
+      expect(read('04-03-26')).toEqual(new Date(2004, 2, 26))
+      expect(read('14/03/26')).toEqual(new Date(2014, 2, 26))
     })
 
-    it('pivots a year written in two digits', () => {
-      expect(read('14/03/26')).toEqual(new Date(2026, 2, 14))
+    it('rules out a year of one digit, which nobody writes', () => {
+      expect(read('26-3-4')).toEqual(new Date(2026, 2, 4))
+      expect(read('4-3-26')).toEqual(new Date(2026, 2, 4))
+      expect(read('2026.3.4')).toEqual(new Date(2026, 2, 4))
+    })
+
+    it('falls back to the other order when the year cannot open', () => {
+      expect(read('14-03-2026')).toEqual(new Date(2026, 2, 14))
       expect(read('14/03/69')).toEqual(new Date(1969, 2, 14))
       expect(read('14/03/68')).toEqual(new Date(2068, 2, 14))
     })
 
-    it('reports a date that is impossible read day first', () => {
+    it('reports a date no order makes possible', () => {
       expect(read('03/14/2026')).toBeNull()
       expect(ignoredBy('03/14/2026')).toEqual(['03/14/2026'])
+    })
+
+    it('reads a date with no separator at all', () => {
+      expect(read('20260314')).toEqual(new Date(2026, 2, 14))
+      expect(read('14032026')).toEqual(new Date(2026, 2, 14))
+      expect(read('260314')).toEqual(new Date(2026, 2, 14))
+      expect(read('140326')).toEqual(new Date(2014, 2, 26))
+    })
+
+    it('leaves a run of digits to the unit behind it', () => {
+      expect(read('in 260314 days')).toEqual(readFrom(reference, 'in 260314 d'))
+      expect(ignoredBy('in 260314 days')).toEqual([])
+    })
+
+    it('reports a run of digits that is no date either way', () => {
+      expect(read('99999999')).toBeNull()
+      expect(ignoredBy('99999999')).toEqual(['99999999'])
     })
 
     it('reads two parts as a month, or as a day of this year', () => {
@@ -681,7 +704,10 @@ describe('readDate', () => {
       ['2026-03-14 21:30', new Date(2026, 2, 14, 21, 30)],
       ['14/03/2026', new Date(2026, 2, 14)],
       ['14.03.2026', new Date(2026, 2, 14)],
-      ['14/03/26', new Date(2026, 2, 14)],
+      ['14/03/26', new Date(2014, 2, 26)],
+      ['20260314', new Date(2026, 2, 14)],
+      ['14032026', new Date(2026, 2, 14)],
+      ['260314', new Date(2026, 2, 14)],
       ['2026-03', new Date(2026, 2, 1)],
       ['14/03', new Date(2026, 2, 14)],
       ['03/14/2026', null],

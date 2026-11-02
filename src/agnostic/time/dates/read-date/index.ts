@@ -76,14 +76,18 @@ import type { ReadDateOptions } from './types.js'
  * **A weekend reads as its saturday**, so every weekday rule above holds of `this
  * weekend`, `next weekend` and `the last weekend of july`.
  *
- * **A date in digits is read in three parts, with `-`, `/` or `.` between them.** A
- * four-digit head is a year and the order is the one it opens — `2026-03-14`, `2026/3/4`.
- * Anything else is read day first — `14/03/2026`, `14.03.26` — which is the order most of
- * the world writes and the only one a locale tag could not settle, so `03/14/2026` is
- * impossible as a day-first date and reaches `onIgnored` whole rather than being quietly
- * re-read in the American order. A year in two digits takes the `strptime` pivot, 69
- * through 99 being the last century. Two parts read too: `2026-03` and `3/2026` are a
- * month, `14/03` the 14th of this year's March.
+ * **A date in digits is read in three parts**, with `-`, `/` or `.` between them or with
+ * nothing at all — `2026-03-14`, `14/03/2026`, `20260314`, `14032026`, `260314`. **The year
+ * comes first**, and the width of a part is the only thing that can say otherwise: four
+ * digits is a year wherever it sits, one digit never is, and two digits at both ends leaves
+ * the year leading. So `26-3-4` and `4-3-26` are both the 4th of March 2026, read from
+ * opposite ends, where `14/03/26` is the 26th of March 2014. A reading that is not a date
+ * gives way to the other order, which is what tells `14032026` from `20260314`; the
+ * American order is never read, `03/14/2026` naming a month of 14 either way and reaching
+ * `onIgnored` whole rather than being quietly re-read. A year in two digits takes the
+ * `strptime` pivot, 69 through 99 being the last century. Two parts read too, and keep the
+ * day-or-month reading the year-first rule would have cost them: `2026-03` and `3/2026` are
+ * a month, `14/03` the 14th of this year's March.
  *
  * **A clock reads down to the millisecond** — `09:20`, `09:20:05`, `09:20:05.123` — so a
  * whole ISO instant goes through, its `T` included. Its zone does not: a `Date` holds no
@@ -389,6 +393,8 @@ const COMPACT_CLOCK = /^(\d{1,2})h(?:(\d{1,2})(?:min(?:(\d{1,2})(?:sec)?)?)?)?$/
 // else is read day first, which is the order most of the world writes and the only one
 // a locale could not settle.
 const NUMERIC_DATE = /^(\d{1,4})([\-\/.])(\d{1,2})\2(\d{1,4})$/v
+// The same date with nothing between its parts, as a machine or a form field writes it.
+const COMPACT_DATE = /^(?:\d{6}|\d{8})$/v
 const YEAR_MONTH = /^(\d{4})[\-\/.](\d{1,2})$/v
 const MONTH_YEAR = /^(\d{1,2})[\/.](\d{4})$/v
 const DAY_MONTH = /^(\d{1,2})\/(\d{1,2})$/v
@@ -414,6 +420,8 @@ const ATOM = new RegExp([
   /[+\-](?:\d{2}:\d{2}|\d{4})(?!\d)/v,
   /\d{1,2}(?:st|nd|rd|th)/v,
   /\d+\.\d+/v,
+  /\d{8}(?!\d)/v,
+  /\d{6}(?!\d)/v,
   /\d+/v,
   /\p{L}+/v,
   /[+\-]/v
@@ -434,6 +442,43 @@ function lex (raw: string): string[] {
 function fullYear (value: number, digits: number): number {
   if (digits > 2) return value
   return value >= 69 ? 1900 + value : 2000 + value
+}
+
+/**
+ * The year, month and day a three-part numeric date names, or `null` when no reading of
+ * it is a date. Width is evidence before order is: four digits is a year, and one digit
+ * never is, since a year is written `04` and not `4`. Two digits at both ends is the only
+ * genuinely ambiguous case, and the year comes first there — `04-03-26` is 2004. A reading
+ * that is not a date gives way to the other order, which is what tells `14032026` from
+ * `20260314` and leaves `03/14/2026` unread.
+ */
+function resolveNumericDate (splits: Array<[string, string, string]>): [number, number, number] | null {
+  for (const [head, middle, tail] of splits) {
+    const month = Number.parseInt(middle, 10)
+    const first = Number.parseInt(head, 10)
+    const last = Number.parseInt(tail, 10)
+    const readings: Array<[number, number, number]> = []
+    if (head.length >= 2) readings.push([fullYear(first, head.length), month, last])
+    if (tail.length >= 2) readings.push([fullYear(last, tail.length), month, first])
+    for (const reading of readings) {
+      const [, readMonth, day] = reading
+      if (readMonth >= 1 && readMonth <= 12 && day >= 1 && day <= 31) return reading
+    }
+  }
+  return null
+}
+
+/**
+ * A date with no separator has to be cut before it can be read, and eight digits cut two
+ * ways — `20260314` opens on its year where `14032026` closes on it. Six digits are two
+ * each way, so one cut covers them.
+ */
+function compactSplits (atom: string): Array<[string, string, string]> {
+  if (atom.length === 6) return [[atom.slice(0, 2), atom.slice(2, 4), atom.slice(4)]]
+  return [
+    [atom.slice(0, 4), atom.slice(4, 6), atom.slice(6)],
+    [atom.slice(0, 2), atom.slice(2, 4), atom.slice(4)]
+  ]
 }
 
 function daysInMonth (year: number, month: number): number {
@@ -777,22 +822,16 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
     }
   }
 
-  /** The year, month and day a three-part numeric date names, in the order it opens. */
-  function takeNumericDate (match: RegExpExecArray): void {
-    const head = match[1] ?? ''
-    const tail = match[4] ?? ''
-    const middle = Number.parseInt(match[3] ?? '', 10)
-    const first = Number.parseInt(head, 10)
-    const last = Number.parseInt(tail, 10)
-    const yearFirst = head.length === 4
-    const year = yearFirst ? first : fullYear(last, tail.length)
-    const day = yearFirst ? last : first
-    if (middle < 1 || middle > 12 || day < 1 || day > 31) {
-      ignored.push(match[0])
+  /** The date a run of digits names, whatever the cuts it can be read with. */
+  function takeNumericDate (atom: string, splits: Array<[string, string, string]>): void {
+    const resolved = resolveNumericDate(splits)
+    if (resolved === null) {
+      ignored.push(atom)
       return
     }
+    const [year, month, day] = resolved
     ops.push({ precision: 'year', period: 'year', apply: date => { setYear(date, year) } })
-    ops.push({ precision: 'month', period: 'month', apply: date => { setMonth(date, middle) } })
+    ops.push({ precision: 'month', period: 'month', apply: date => { setMonth(date, month) } })
     ops.push({ precision: 'day', apply: date => { setDayClamped(date, day) } })
   }
 
@@ -894,7 +933,15 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
 
     const numeric = NUMERIC_DATE.exec(atom)
     if (numeric !== null) {
-      takeNumericDate(numeric)
+      takeNumericDate(atom, [[numeric[1] ?? '', numeric[3] ?? '', numeric[4] ?? '']])
+      continue
+    }
+
+    if (COMPACT_DATE.test(atom)) {
+      // A unit behind it still wins, as it does for any other run of digits: `in 260314
+      // days` is an offset, not the 14th of March 2026.
+      if (takeQuantity(Number.parseInt(atom, 10), atom)) continue
+      takeNumericDate(atom, compactSplits(atom))
       continue
     }
 
