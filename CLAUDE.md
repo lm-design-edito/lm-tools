@@ -251,6 +251,21 @@ controlling prop would contradict the parent. The guard belongs there and nowher
   le montage pour un simple réglage ; corriger sans rien dire déguise un bug de
   l'appelant en problème d'affichage, qu'on ira chercher ailleurs.
 
+### SVG
+
+`_WIP_Icon` and anything else that ships a drawing follows one shape, so a consumer
+learns it once:
+
+- The SVG is **rendered inline**, as elements the page owns. An `<img>` or a
+  `background-image` puts it out of CSS's reach, and an icon that cannot be repainted is
+  an icon that cannot be themed.
+- Its shapes carry **`.fill-1`, `.fill-2`, `.fill-3`**, numbered by visual weight, over a
+  **`.bg`** rectangle covering the whole `viewBox` and transparent by default.
+- **No color in the file** — no `fill`, no `fill-opacity`, no `style` attribute. The
+  consumer's stylesheet paints those four classes and nothing else needs to exist.
+- **A drawing that wants a fifth class is a component**, with props of its own. The
+  vocabulary stays at four so that reading one icon is reading all of them.
+
 ## Tests
 
 Vitest. A single module with `npx vitest run <path>`, everything with
