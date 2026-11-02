@@ -304,7 +304,7 @@ them, so they moved to `dates/calendar-names`.
 
 ### `readDate` — what is decided, and what is left to do
 
-The need comes from dlbbm's post-creation script, which asks for a publication date in
+The need is a publication date typed by hand into a field that wants
 `YYYY-MM-DD HH:MM`: one wants to write `next thursday at 9:20pm`, `in 3 days, at midnight`,
 `yesterday`. It would go in `agnostic/time/dates/read-date`, as `readDate(raw,
 locale = 'en', { reference })` → `Date | null` — the same shape as `parseDate`, minus the
@@ -562,11 +562,11 @@ the finest known field, and `isContiguousPartialDate` is the question to ask bef
 a partial date as a stretch of time. Nothing validates the parts against each other: a 30th
 of February can be written, and `formatDate` clamps it as the rest of the family does.
 
-**The consumer that dictated the shape is a formatter, not a resolver.** dlbbm saves a post
-holding a live with whatever is known of its date, and what it needs next is a readable
-string. So `formatDate` now takes a `Date | PartialDate` and the template grammar gained one
-construct, the **optional group** `[[…]]`, dropped whole when a token inside it has nothing
-to render (`bcfc5c6`):
+**What the type answers to is a formatter, not a resolver.** A record saved with whatever
+is known of its date has to come back out as a readable string, and that is the need that
+arrived first — reading one and resolving one came later or not at all. So `formatDate` now
+takes a `Date | PartialDate` and the template grammar gained one construct, the **optional
+group** `[[…]]`, dropped whole when a token inside it has nothing to render (`bcfc5c6`):
 
 ```ts
 const template = '[[{{DD}} ]][[{{MMMM}} ]]{{YYYY}}'
@@ -612,9 +612,9 @@ same breath: it is a translation surface, and a template with optional groups le
 consumer own the wording.
 
 Confronted with the registry: schema.org has nothing (`Date`, `DateTime`), but **EDTF /
-ISO 8601-2** is exactly this concept, and it separates the two cases dlbbm conflates —
-truncation (`1968`, `1968-01`, which is also the W3C-DTF dlbbm already writes) and
-unspecified digits (`XXXX-01`, `196X`). Truncation is an interval, the second is a set of
+ISO 8601-2** is exactly this concept, and it separates two cases that are easily
+conflated — truncation (`1968`, `1968-01`, which is also W3C-DTF) and unspecified digits
+(`XXXX-01`, `196X`). Truncation is an interval, the second is a set of
 intervals, and `toInterval`, `compare` and `resolve` are only definable on the first. The
 type here takes the holey form as the main one and leaves the interval questions unanswered,
 which is the opposite trade — defensible only as long as nothing needs to compare two of
