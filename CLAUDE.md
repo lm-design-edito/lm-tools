@@ -43,6 +43,13 @@ it.
   modifier set. A `as const` array rather than a bare union whenever something outside
   will need the values at runtime, since a type has nothing to hand a validator.
 
+**The exported symbol comes first in the file.** A folder named `some-util` exports
+`someUtil`, and that declaration sits at the **top** of `index.ts`, above the internal
+helpers it leans on — whoever opens the file meets the subject before the machinery. A
+helper written later goes to the bottom, never in front of the export. `read-date` is in
+that order, `parse-date` is not, and an audit of the rest is owed: see the roadmap in
+[`README.md`](./README.md).
+
 **A command table is written in `index.tsx`, never in a `commands.ts`.** Every verb
 writes the component's own state, so a sibling module could only be handed each setter
 back — plumbing that costs a type, an argument bag and a jump between files, and reads
