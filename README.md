@@ -7,6 +7,7 @@ utilities, Node-only helpers, and a React/Preact component library.
 src/agnostic/    pure logic — runs anywhere (time, colors, css, html, random, …)
 src/node/        Node-only — files, images, cloud storage, sftp/ftps, encryption
 src/components/  React/Preact components, consumed almost exclusively under Preact
+src/styles/      the token layer — a stylesheet, published as source and compiled
 demo/            a demo app per component (npm run demo:preact | demo:react)
 ```
 
@@ -21,6 +22,27 @@ demo/            a demo app per component (npm run demo:preact | demo:react)
 
 Coding conventions live in [CLAUDE.md](./CLAUDE.md) and in the root
 [`../CLAUDE.md`](../CLAUDE.md).
+
+## `src/styles/` — the token layer
+
+A stylesheet rather than a module. `src/styles/index.scss` holds the vocabulary a page
+is built from: a type scale with the line heights made to match it, a spacing scale,
+column widths, display and positioning utilities, four colour roles — `--bg-color`,
+`--text-color`, `--accent-color`, `--border-color` — with the classes that read them,
+and a set of animations. No component and no brand in it: not one font family, and no
+literal colour beyond the neutral defaults those four roles start from. Any project
+wanting one consistent set of sizes and spacings can take it as it stands.
+
+It ships twice. `@design-edito/tools/styles/index.scss` is the source, which is the
+only form that lets a consumer `@extend` one of the utility classes from a sheet of its
+own. `@design-edito/tools/styles/index.css` is the compiled result, for a consumer who
+would rather not run sass. `@design-edito/tools/styles` resolves to whichever fits —
+the `sass` condition picks the source, anything else the compiled file.
+
+The build compiles the `.css` from the `.scss` so the two cannot drift. This is the one
+place where a `.scss` is public API: a component's `styles.module.css` is not, since the
+`exports` map only ever names `index.js`, `types.js` and what this folder holds. It
+carries no `index.ts` either, and is kept out of the re-export generator on purpose.
 
 ---
 
