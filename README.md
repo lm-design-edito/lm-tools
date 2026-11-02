@@ -459,9 +459,10 @@ not been said. And `weekend` reads as its Saturday, which makes every weekday ru
 `this weekend`, `next weekend` and `the last weekend of july` without a line of its own.
 
 **A fifth pass read the forms a machine or a form field writes** (`efb75d9`). A date in
-digits is now taken in three parts with `-`, `/` or `.` between them: a four-digit head is
-a year and the order is the one it opens (`2026-03-14`, `2026/3/4`), anything else is read
-day first (`14/03/2026`, `14.03.26`), and a two-digit year takes the `strptime` pivot.
+digits is now taken in three parts with `-`, `/` or `.` between them: a four-digit head was
+a year and the order the one it opened, anything else read day first, and a two-digit year
+takes the `strptime` pivot. That order rule has since been replaced — see the sixth pass
+below.
 **The American month-first order is deliberately not read**: the same string means two
 different days, and the locale could not settle it either — the module reads a locale for
 names, not for digit order, so inferring the order from a tag nobody set deliberately
@@ -481,6 +482,29 @@ the reference's own clock so that it survives the midnight a named day imposes �
 tomorrow`, `this time next week`. `veterans day` came out of the table in the same pass:
 Armistice Day and Remembrance Day already name the 11th of November, and a holiday of one
 country alone does not belong in a table that reads as international.
+
+**A sixth pass made the year lead, and took in the forms with no separator at all**
+(`7dfa6f9`). `20260314`, `14032026` and `260314` are read now, and the order of a
+three-part date answers to one rule whatever its shape: **the year comes first, and the
+width of a part is the only thing that can say otherwise.** Four digits is a year wherever
+it sits, one digit never is — a year is written `04`, not `4` —, and two digits at both
+ends leaves the year leading. `26-3-4` and `4-3-26` are therefore the same day, the 4th of
+March 2026, read from opposite ends. A reading that is not a date gives way to the other
+order, which is what tells `14032026` from `20260314` and keeps the American order
+unreadable: `03/14/2026` names a month of 14 either way and is reported whole.
+
+**One form changed meaning: `14/03/26` is now the 26th of March 2014**, where it used to
+be the 14th of March 2026. That is the cost of a rule that holds without consulting a
+locale — two digits at both ends is a coin flip, and a rule that answers it has to answer
+it the same way everywhere. By the same arithmetic `140326` is 2014-03-26, so `DDMMYY` is
+not a shape the module knows: eight digits cut two ways and six only one. A unit behind a
+run of digits still wins before any of this, `in 260314 days` being an offset.
+
+**The two-part shapes keep the reading they had**, and are the one place the year does not
+lead: `2026-03` and `3/2026` are a month, `14/03` the 14th of this year's March. Applied
+there, the rule would have made `14/03` March 2014 and left no two-part form naming a day
+at all — a worse trade than the inconsistency, which is small and goes in the direction of
+what a human types.
 
 **Where the weight sits.** 14.4 kB minified, 4.9 kB gzipped, of which the token tables are
 1.5 kB / 0.65 kB and `Duration` 1.8 kB / 0.48 kB. A call is 7.5 to 11 µs depending on the
