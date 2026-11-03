@@ -502,6 +502,18 @@ describe('readDate', () => {
       expect(read('the 6th on monday')).toEqual(new Date(2026, 0, 5))
     })
 
+    it('scopes to the week a step named, whichever order the two came in', () => {
+      // Thursday the 8th, a week out, whose own week opens on Monday the 5th.
+      expect(read('next week on monday')).toEqual(new Date(2026, 0, 5))
+      expect(read('monday next week')).toEqual(new Date(2026, 0, 5))
+      expect(readFrom(summer, 'last week on friday')).toEqual(new Date(2026, 6, 10))
+    })
+
+    it('reads forward after a step that named no week', () => {
+      // February 1st is a Sunday, so the Monday ahead of it is the 2nd.
+      expect(read('next month on monday')).toEqual(new Date(2026, 1, 2))
+    })
+
     it('does not count a time of day as a date', () => {
       expect(read('9pm on monday')).toEqual(new Date(2026, 0, 5, 21))
     })

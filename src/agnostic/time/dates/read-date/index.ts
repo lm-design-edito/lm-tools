@@ -27,9 +27,12 @@ import type { ReadDateOptions } from './types.js'
  * `on monday` are the Monday ahead, today included, because that is the way the language
  * leans when nothing says otherwise. But once another token has established a date, the
  * weekday scopes to that date's week instead of running off into the next one — so
- * `2026-03-14, on monday` is the Monday of that Saturday's week. An explicit `next` or
- * `last` always wins over both readings, and where that week opens is
- * {@link ReadDateOptions.weekStartsOn} — Monday unless the caller says otherwise.
+ * `2026-03-14, on monday` is the Monday of that Saturday's week. A week step names a
+ * week the way a date does, and in either order — `next week, on monday` and `monday
+ * next week` are both the Monday of next week — where a coarser step names no week at
+ * all, `next month, on monday` keeping the forward reading. An explicit `next` or
+ * `last` on the weekday itself always wins over both readings, and where that week opens
+ * is {@link ReadDateOptions.weekStartsOn} — Monday unless the caller says otherwise.
  *
  * **A seek never lands back on where it started**: asked on a Thursday, `next thursday`
  * is seven days out, and in October `last december` is the December before. A bare
@@ -722,6 +725,13 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
   let seek: Direction | null = null
   let sign: number | null = null
   let qualifier: 'time' | 'date' | null = null
+  /**
+   * Whether a week step was read anywhere in the string. `next week` names a week the
+   * way a date does, so a bare weekday scopes to it — and a weekday op reads this when
+   * it runs rather than when it is folded, so that the two may come in either order. It
+   * is a record because a closure made in the loop below cannot read a changing `let`.
+   */
+  const weekStep = { read: false }
   /** The unit the last quantity was counted in, for the `and a half` that follows it. */
   let lastUnit: DurationType | null = null
   let phraseStart = 0
@@ -1122,11 +1132,18 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
         })
         continue
       }
-      if (direction === null && ops.some(placesDate)) {
-        ops.push({ precision: 'day', apply: date => { seekWithinWeek(date, weekday, firstDay) } })
+      if (direction === null) {
+        const placed = ops.some(placesDate)
+        ops.push({
+          precision: 'day',
+          apply: date => {
+            if (placed || weekStep.read) seekWithinWeek(date, weekday, firstDay)
+            else seekWeekday(date, weekday, 0)
+          }
+        })
         continue
       }
-      ops.push({ precision: 'day', apply: date => { seekWeekday(date, weekday, direction ?? 0) } })
+      ops.push({ precision: 'day', apply: date => { seekWeekday(date, weekday, direction) } })
       continue
     }
 
@@ -1149,6 +1166,7 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       // A calendar step, not an offset: `next week` moves one week and says nothing
       // about the time of day, where `in a week` had to be signed to mean anything.
       if (direction !== null && direction !== 0) {
+        if (unit === 'weeks') weekStep.read = true
         ops.push({ precision: null, period, apply: date => { shift(date, direction, unit) } })
         continue
       }
