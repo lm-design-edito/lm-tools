@@ -509,9 +509,18 @@ describe('readDate', () => {
       expect(readFrom(summer, 'last week on friday')).toEqual(new Date(2026, 6, 10))
     })
 
-    it('reads forward after a step that named no week', () => {
+    it('scopes to the week an offset in weeks reached', () => {
+      // Thursday the 15th, two weeks out, whose week opens on Monday the 12th.
+      expect(read('in two weeks on monday')).toEqual(new Date(2026, 0, 12))
+      expect(read('monday in two weeks')).toEqual(new Date(2026, 0, 12))
+      expect(read('2 weeks ago on monday')).toEqual(new Date(2025, 11, 15))
+    })
+
+    it('reads forward after a step or an offset that named no week', () => {
       // February 1st is a Sunday, so the Monday ahead of it is the 2nd.
       expect(read('next month on monday')).toEqual(new Date(2026, 1, 2))
+      // Three days out is Sunday the 4th, and the Monday ahead of it is the 5th.
+      expect(read('in 3 days on monday')).toEqual(new Date(2026, 0, 5))
     })
 
     it('does not count a time of day as a date', () => {

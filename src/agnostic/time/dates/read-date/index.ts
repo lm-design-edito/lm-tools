@@ -27,12 +27,13 @@ import type { ReadDateOptions } from './types.js'
  * `on monday` are the Monday ahead, today included, because that is the way the language
  * leans when nothing says otherwise. But once another token has established a date, the
  * weekday scopes to that date's week instead of running off into the next one — so
- * `2026-03-14, on monday` is the Monday of that Saturday's week. A week step names a
- * week the way a date does, and in either order — `next week, on monday` and `monday
- * next week` are both the Monday of next week — where a coarser step names no week at
- * all, `next month, on monday` keeping the forward reading. An explicit `next` or
- * `last` on the weekday itself always wins over both readings, and where that week opens
- * is {@link ReadDateOptions.weekStartsOn} — Monday unless the caller says otherwise.
+ * `2026-03-14, on monday` is the Monday of that Saturday's week. Anything counted in
+ * weeks names a week the way a date does, and in either order — `next week, on monday`,
+ * `monday next week` and `in two weeks, on monday` all land on the Monday of the week
+ * they reached — where another unit names no week at all, `next month, on monday` and
+ * `in 3 days, on monday` keeping the forward reading. An explicit `next` or `last` on
+ * the weekday itself always wins over both readings, and where that week opens is
+ * {@link ReadDateOptions.weekStartsOn} — Monday unless the caller says otherwise.
  *
  * **A seek never lands back on where it started**: asked on a Thursday, `next thursday`
  * is seven days out, and in October `last december` is the December before. A bare
@@ -726,8 +727,8 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
   let sign: number | null = null
   let qualifier: 'time' | 'date' | null = null
   /**
-   * Whether a week step was read anywhere in the string. `next week` names a week the
-   * way a date does, so a bare weekday scopes to it — and a weekday op reads this when
+   * Whether anything counted in weeks was read anywhere in the string. `next week` and
+   * `in two weeks` name a week the way a date does, so a bare weekday scopes to it — and a weekday op reads this when
    * it runs rather than when it is folded, so that the two may come in either order. It
    * is a record because a closure made in the loop below cannot read a changing `let`.
    */
@@ -750,6 +751,7 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
   }
 
   function pushShift (amount: number, unit: DurationType): void {
+    if (unit === 'weeks') weekStep.read = true
     ops.push({ precision: null, apply: date => { shift(date, amount, unit) } })
   }
 
@@ -797,6 +799,10 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
     const phrase = ops.splice(phraseStart)
     if (phrase.length === 0) return false
     deferred.unshift(...phrase)
+    // What the operator set aside is counted from whatever its right-hand side places,
+    // so a week named on the left scopes nothing: `2 weeks from monday` is two weeks off
+    // the Monday ahead, not off the Monday of this week.
+    weekStep.read = false
     phraseStart = ops.length
     return true
   }
