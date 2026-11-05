@@ -5,7 +5,7 @@ import { isRecord } from '../../objects/is-record/index.js'
 /** Options for `deepSelect`. */
 type Options = {
   /** Root node to start traversal from. Defaults to `document`. */
-  fromElement?: Element
+  fromElement?: Element | Document | ShadowRoot
   /** Number of element nodes to visit before yielding to the main thread. Defaults to `500`. */
   chunkSize?: number
 }
@@ -21,18 +21,21 @@ const yieldToMain = async (windowLike: unknown): Promise<void> => {
 /**
  * Queries the DOM for all elements matching a CSS selector, including inside open shadow roots.
  *
- * Walks the tree with `document.createTreeWalker` instead of `querySelectorAll`, so traversal can
- * descend into `element.shadowRoot` trees that standard selectors do not pierce. The traversal
- * root (`fromElement` or `document`) is never included in the results, even if it matches.
+ * Runs `querySelectorAll` once per tree, then descends into every `element.shadowRoot` it finds,
+ * which standard selectors do not pierce. The traversal root (`fromElement` or `document`) is
+ * never included in the results, even if it matches. Closed shadow roots are unreachable.
  *
- * Yields to the main thread every `chunkSize` visited nodes, using `scheduler.yield()` when
- * available or `setTimeout(0)` as a fallback. Requires a browser environment with `document`.
+ * Yields to the main thread every `chunkSize` visited elements, using `scheduler.yield()` when
+ * available or `setTimeout(0)` as a fallback. A yield costs far more than the walk itself, so a
+ * caller that repeats the query wants a `chunkSize` large enough never to be reached. Requires a
+ * browser environment with `document`.
  *
- * @param selector - CSS selector tested with `Element.prototype.matches`.
+ * @param selector - CSS selector passed to `querySelectorAll`.
  * @param [options] - Optional configuration:
- *   - `fromElement`: Element (or `document`) to start the walk from.
- *   - `chunkSize`: How many element nodes to process between yields.
- * @returns All matching elements in tree-walker order (depth-first).
+ *   - `fromElement`: Element, document or shadow root to start the walk from.
+ *   - `chunkSize`: How many elements to visit between yields.
+ * @returns All matching elements, each tree in document order, a shadow root's matches following
+ * those of the tree that hosts it.
  *
  * @example
  * const items = await deepSelect('[data-item]', { fromElement: app })
@@ -51,14 +54,16 @@ export const deepSelect = async (
   const chunkSize = options?.chunkSize ?? 500
   let nodeCount = 0
   const traverse = async (root: Element | Document | ShadowRoot): Promise<void> => {
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT)
-    let node: Node | null = walker.currentNode
-    while (node !== null) {
-      if (node !== root && node instanceof Element && node.matches(selector)) results.push(node)
-      if (node instanceof Element && node.shadowRoot !== null) await traverse(node.shadowRoot)
-      nodeCount = nodeCount + 1
-      if (nodeCount % chunkSize === 0) await yieldToMain(window)
-      node = walker.nextNode()
+    // Spreading into push would blow the call stack on a large tree.
+    root.querySelectorAll(selector).forEach(elt => { results.push(elt) })
+    const all = root.querySelectorAll('*')
+    nodeCount = nodeCount + all.length
+    if (nodeCount >= chunkSize) {
+      nodeCount = 0
+      await yieldToMain(window)
+    }
+    for (const elt of all) {
+      if (elt.shadowRoot !== null) await traverse(elt.shadowRoot)
     }
   }
   await traverse(from)

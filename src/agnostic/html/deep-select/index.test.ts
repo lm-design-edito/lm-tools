@@ -80,14 +80,23 @@ describe('deepSelect', () => {
   })
 
   describe('traversal order', () => {
-    it('places shadow content at its host, ahead of the host own light children', async () => {
+    it('returns a tree own matches in document order, before any shadow content', async () => {
       makeElement('div', { class: 'needle', id: 'before' }, document.body)
       const { host, shadow } = makeHost(document.body)
       makeElement('span', { class: 'needle', id: 'in-shadow' }, shadow)
       makeElement('span', { class: 'needle', id: 'host-child' }, host)
       makeElement('div', { class: 'needle', id: 'after' }, document.body)
       const found = await deepSelect('.needle')
-      expect(found.map(elt => elt.id)).toEqual(['before', 'in-shadow', 'host-child', 'after'])
+      expect(found.map(elt => elt.id)).toEqual(['before', 'host-child', 'after', 'in-shadow'])
+    })
+
+    it('returns shadow roots in host order', async () => {
+      const { shadow: first } = makeHost(document.body)
+      const { shadow: second } = makeHost(document.body)
+      makeElement('span', { class: 'needle', id: 'second-host' }, second)
+      makeElement('span', { class: 'needle', id: 'first-host' }, first)
+      const found = await deepSelect('.needle')
+      expect(found.map(elt => elt.id)).toEqual(['first-host', 'second-host'])
     })
   })
 
