@@ -75,6 +75,26 @@ describe('watchSelection', () => {
     })
   })
 
+  describe('a scoped root', () => {
+    it('watches only what matches inside the given root', async () => {
+      const kept = makeElement('div', { id: 'kept' }, document.body)
+      makeElement('span', { class: 'needle', id: 'inside' }, kept)
+      makeElement('span', { class: 'needle', id: 'outside' }, document.body)
+      const seen = makeLedger()
+      await watchTracked('.needle', { watch: seen.watch, unwatch: seen.unwatch, root: kept })
+      expect(seen.watchedIds()).toEqual(['inside'])
+    })
+
+    it('never sees an element added outside its root', async () => {
+      const kept = makeElement('div', { id: 'kept' }, document.body)
+      const seen = makeLedger()
+      await watchTracked('.needle', { watch: seen.watch, unwatch: seen.unwatch, root: kept, selectIntervalMs: 5 })
+      makeElement('span', { class: 'needle', id: 'outside' }, document.body)
+      await wait(80)
+      expect(seen.watchedIds()).toEqual([])
+    })
+  })
+
   describe('elements that stay', () => {
     it('watches an element once, however many polls go by', async () => {
       makeElement('div', { class: 'needle', id: 'staying' }, document.body)
