@@ -58,15 +58,21 @@ d'alignement, la reprise de `Subtitles`, celle de `Video`, le chantier `Scrllgng
 la mise en conformité d'`UIModule` sont faits ; les états internes remontent tous en
 modifieurs de classe racine.
 
-**Le chantier du moment est une passe de rangement**, et c'est elle qui passe devant la
-route vers la publication de lm-link : on finit ici ce qui est en cours avant de reprendre
-là-bas. On y reconstruit **la conscience de la visibilité**, de zéro : le relevé de
-`components/utils/viewport-behaviours` a conclu que la couche se tenait mal, et le code
-qui la portait est sorti du dépôt plutôt que d'être amendé — voir « La couche de
-visibilité, démontée » plus bas. Viennent ensuite les sujets portés de session en
-session : le motif `when*` pour les trois composants d'un bloc, et la question `css` /
-`html`. The prop types are settled rather than pending: every `Props` is a flat
-intersection, and it **stays in `index.tsx`** — moving them to `types.ts` was considered
+**The visibility layer is rebuilt, and the tidying pass with it.**
+`components/utils/viewport-behaviours` left the repo rather than being amended, and the
+concept came back as three modules — `utils/intersection`, `utils/visibility` and
+`utils/disclosure` — all of them shipped: see « Les commandes », « Les déclencheurs » and
+« Disclosure » below. The `when*` pattern was the question put to the three components of
+a block, and that rebuild answered it; what the name still covers is a trigger other than
+viewport visibility, which is a subject of its own and has never been tried.
+
+**What is left here before lm-link's publication is a release.** `0.5.42` is the published
+version, and `deepSelect` and `watchSelection` were rewritten after it, so nothing
+consumes either. The `css` / `html` question stays parked, and so does the reading-order
+audit.
+
+The prop types are settled rather than pending: every `Props` is a flat intersection, and
+it **stays in `index.tsx`** — moving them to `types.ts` was considered
 and dropped, since both files are published entry points and `Scrllgngn/utils.ts` already
 reads `PropsBlock` and `PropsPage` from the index. What that leaves is the type-only cycle
 between those two files, which is erased at compile time and needs its own call.
@@ -778,9 +784,10 @@ parsed and transported for all along; it finally has a ledger to override. **The
 belongs to the commands layer, not to the component**: a module map keyed by `compId`,
 written by `surrenderCommands` and read in the dispatch, emptied when the component
 unsubscribes. So a component reports a gesture and holds nothing, a surrender triggers no
-render, and a command sent in the same tick as the click is already refused. It also
-settles the survey's last charge the other way round: nothing surfaces in the DOM, since
-what a component does not hold is not a state it owes a modifier. Under-
+render, and a command sent in the same tick as the click is already refused. It also answers the
+one charge the first layer never could — that its ledgers were observable from nowhere —
+the other way round: nothing surfaces in the DOM, since what a component does not hold is
+not a state it owes a modifier. Under-
 surrendering is accepted: someone who pressed pause still gets `jump-start` on the way
 out, since `force` can repair an over-eager yield but no modifier can repair a partition
 that is too coarse.
@@ -863,198 +870,37 @@ layout — an iframe that never loaded has no height, so a panel laid over it co
 collapsed box — and the residue is named rather than argued: an embed that autoplays sound
 behind a disclaimer is the article's business today, not the library's.
 
-## La couche de visibilité, démontée — et ce qu'il faut en garder
+## Ce que la conversion a laissé aux composants
 
-**Il n'y a plus de conscience de la visibilité dans ce dépôt.** Le module
-`components/utils/viewport-behaviours` et tout ce qui le consommait — les props
-`whenVisible` / `whenHidden` / `visibility…` de `Video`, `Sequencer` et `ScrollTracker`,
-leurs vocabulaires de verbes, leurs tables d'actions — ont été retirés pour que le concept
-soit reconstruit depuis zéro, et non amendé en place. Ce qui a été retiré n'est pas perdu :
-le tag **`viewport-behaviours/v1`** marque le dernier commit où tout cela existe, et
-`git show viewport-behaviours/v1:<chemin>` rend n'importe lequel de ces fichiers.
+`components/utils/viewport-behaviours` was the first version of this layer, and it is gone:
+the module and everything that consumed it left the repo so the concept could be rebuilt
+rather than amended — the tag **`viewport-behaviours/v1`** marks the last commit where all
+of it exists, and `git show viewport-behaviours/v1:<path>` renders any of those files. What
+replaced it is « Les commandes » and « Les déclencheurs » above. Three decisions survived
+the rebuild and are nowhere visible in the code that carries them:
 
-Ce qui suit est donc **l'entrée de la reconstruction, pas un contrat** : l'histoire qui a
-mené là, le contrat tel qu'il était écrit, et le relevé qui a conclu qu'il fallait
-recommencer. À lire avant de reposer la moindre ligne, et à remplacer par le nouveau
-contrat quand il sera écrit.
+- **The trigger is a state, not a crossing.** Visibility is held as state and the commands
+  fire on its transitions. That is what makes the two delays possible, and what lets a
+  caller recombine visibility with whatever else they follow: an observer event is read
+  once, a state is readable at any time.
+- **The two delays debounce the state, not the action.** `visibilityOnAfterMs` reads as
+  « must stay visible that long to count as visible », so a video crossed while scrolling
+  fast never counts as seen and spends no send limit. A delay on the action would have had
+  to be cancellable.
+- **The options are flat under a common prefix** rather than grouped in a record. A record
+  reads well in a type and badly at the call site, where it costs a pair of braces to set
+  one value; the prefix groups just as well, and in the autocomplete list too.
 
-### L'histoire — d'où venait la grammaire
+**And one on why a command yields to the reader by default.** The counter-argument is
+serious — `whenVisible='play'` does not say it may not fire, and an invisible mechanism is
+one you suffer rather than debug — but the asymmetry of the failures settles it: not
+restarting by itself is a disappointment, restarting against a reader who has just pressed
+pause is a hostility, and they meet it every time they scroll past. A default that would
+have to be written on nearly every command is not one. The price is paid by the
+documentation rather than by the syntax: a component's fiche has to say that its commands
+yield, since an article copying an example will not guess it.
 
-`Video` portait **huit props** — `autoPlay`, `autoPause`, `autoMute`, `autoLoud`, chacune
-en `…WhenVisible` et `…OnceVisible` —, et la démo de lm-link avait dû les présenter comme
-une grammaire (`auto` + verbe + quand) pour ne pas les décrire huit fois. Qu'une fiche ait
-eu besoin d'inventer une grammaire pour rendre une API lisible était le signe que l'API
-pouvait la porter elle-même : c'est ce qui a été fait.
-
-La couche générique vivait dans `components/utils/viewport-behaviours/`, et `Video`,
-`Sequencer` et `ScrollTracker` la consommaient. La conversion avait abouti : trois
-grammaires pour la même idée au départ, il n'en restait qu'une — et c'est cette couche-là
-qui est démontée aujourd'hui.
-
-### Ce qui est décidé
-
-**Deux props, pas huit** — `whenVisible` et `whenHidden` —, chacune prenant une
-instruction ou une liste d'instructions. Le composant publie un **vocabulaire de verbes**
-qui lui est propre ; la couche générique ne connaît que des chaînes. Et ce sont des
-chaînes pour ce qu'elles rendent possible : déclarer un déclenchement conditionnel sans
-écrire de callback, et le déclarer là où une fonction ne passe pas — un attribut, un
-champ de formulaire, une structure sérialisée.
-
-```ts
-export type Modifier = 'once' | 'force'
-export type Instruction<A extends string> = A | `${A}:${Modifier}` | `${A}:${Modifier}:${Modifier}`
-
-export type ViewportBehaviours<Action extends string> = VisibilityOptions & {
-  whenVisible?: Instruction<Action> | Array<Instruction<Action>>
-  whenHidden?: Instruction<Action> | Array<Instruction<Action>>
-  onVisibilityChanged?: (isVisible: boolean) => void
-}
-```
-
-Les réglages du *quand* sont à part, dans `VisibilityOptions`, et **à plat sous un préfixe
-commun** plutôt que groupés dans un record : `visibilityThreshold`, `visibilityRoot`,
-`visibilityRootMargin`, `visibilityOnAfterMs`, `visibilityOffAfterMs`. Un record se lit
-bien dans un type et mal à l'appel, où il coûte une paire d'accolades pour poser une
-valeur ; le préfixe groupe aussi bien, et dans la liste d'autocomplétion en plus.
-
-**Le déclencheur est un état, pas un franchissement.** La visibilité est tenue en état
-et les instructions tirent sur sa transition. C'est ce qui rend les deux délais possibles,
-et ce qui laisse un appelant recombiner la visibilité avec ce qu'il suit par ailleurs : un
-événement d'observateur se lit une fois, un état se lit à tout moment.
-
-**Les deux délais sont un debounce sur l'état**, pas un report de l'action.
-`visibilityOnAfterMs` veut dire « doit rester visible ce temps-là pour compter comme
-visible » :
-une vidéo croisée en scrollant vite ne compte jamais comme vue, donc rien ne tire et aucun
-crédit `once` n'est dépensé. Un délai posé sur l'action aurait demandé de l'annuler.
-
-**Chaque composant publie une table**, dont le `domain` répond à la question restée
-ouverte ci-dessous : la main du lecteur — toucher lecture/pause éteint le domaine
-`playback` et laisse `sound` intact.
-
-```ts
-const videoActions: ActionTable<VideoAction> = {
-  play: { domain: 'playback', run: () => setPlay(true) },
-  mute: { domain: 'sound', run: () => setMute(true) }
-}
-```
-
-Quatre règles à ne pas réinventer : le crédit `once` est **par couple (action,
-déclencheur)** et vit le temps du montage ; dans une même liste, **la forme nue l'emporte
-sur la forme suffixée** — c'est la règle « déclarer les deux revient à ne déclarer que
-`When…` », devenue une déduplication ; et **l'ordre de la liste est l'ordre d'exécution**.
-
-### La main du lecteur, et le `:force` qui passe outre
-
-**Par défaut, une instruction cède au lecteur.** Dès qu'il touche un contrôle, les
-instructions du **domaine** correspondant cessent de tirer, pour la durée du montage.
-Mettre en pause à la main n'empêche pas la coupure du son à la sortie de l'écran : c'est
-tout l'objet du champ `domain` de la table, et c'est une erreur déjà commise et corrigée
-une fois — un drapeau unique confondait quatre questions.
-
-Ce défaut a été discuté dans les deux sens, et voici pourquoi il tombe de ce côté-là. Le
-contre-argument est sérieux : `whenVisible={['play']}` ne dit pas qu'il peut ne pas tirer,
-et une mécanique invisible est une mécanique qu'on subit au lieu de la déboguer. Mais
-**l'asymétrie des échecs tranche.** Ne pas redémarrer tout seul est une déception ;
-redémarrer contre un lecteur qui vient de mettre en pause est une hostilité, et il la
-subira à chaque passage devant le composant. Et un défaut qu'il faudrait écrire sur
-presque chaque instruction n'en est pas un.
-
-**Le prix est donc payé par la documentation, pas par la syntaxe.** La fiche d'un
-composant doit dire que ses instructions cèdent — l'article qui copie un exemple ne le
-devinera pas de l'exemple lui-même.
-
-**`:force` passe outre**, et c'est l'unique échappatoire :
-
-```tsx
-<Video whenVisible={['play:force']} whenHidden={['pause']} />
-```
-
-**La reddition éteint le domaine entier**, et c'est un cas d'usage concret qui le
-demande : on appuie sur play sur une citation sonore, puis on continue à lire l'article en
-écoutant. Une pause automatique à la sortie de l'écran serait hostile.
-
-**Surrender is no longer this layer's only brake.** A whole subtree can be withheld by a
-disclaimer, which `useCommands` reads before it reads anything else — see « Disclosure »
-below. The two are checked separately on purpose, and `:force` overrides the first and
-never the second: it answers a reader's take-over, not their consent.
-
-**What counts as the reader taking over is the component's decision**, not the generic
-layer's. `Video` counts every control it renders: the play, pause, loud and mute buttons
-and a click on the picture surrender `playback`, the volume slider and the two sound
-buttons `sound`, the rate slider `rate`, the timeline `position`, and the last two buttons
-`fullscreen` and `subtitles`. An earlier reading left the timeline, the rate and
-fullscreen out — scrubbing is not deciding on playback — but the domains are narrow enough
-that counting them costs nothing elsewhere, and a reader who scrubs has taken the position
-in hand. The component calls `surrender(domain)` from the handlers concerned, and the list
-is documented there.
-
-**Les modifieurs forment un ensemble, pas une séquence.** `'play:once:force'` et
-`'play:force:once'` sont la même instruction. L'analyse en découle : on retire les segments
-de fin tant que ce sont des modifieurs connus, et tout ce qui reste est le verbe — quelle
-que soit sa forme interne, argument compris.
-
-### Les verbes à arguments, et le deux-points
-
-Le deux-points porte les deux : l'argument d'un verbe et les modifieurs. **`jump-to:542`**
-porte la vidéo à 542 ms. Une valeur négative compte
-**depuis la fin** — `jump-to:-1` est le dernier timecode possible, et c'est `-1` et non
-`-0` parce que `-0 === 0` en JavaScript et collisionnerait avec le début. `jump-start` et
-`jump-end` en sont les raccourcis, pour `jump-to:0` et `jump-to:-1`.
-
-**L'argument appartient au verbe, et `once` est un suffixe uniforme par-dessus.** C'est ce
-qui fait tenir les deux ensemble sans grammaire à deux étages : le vocabulaire d'un
-composant porte ses propres formes, et la couche générique n'ajoute qu'un segment final.
-
-> **Tranché autrement depuis.** Les modifieurs passent **devant** l'action et non après —
-> voir « La grammaire » plus haut —, et `once` n'est plus un suffixe que le receveur lit :
-> c'est un compteur tenu par l'émetteur. L'argument appartient toujours au verbe.
-
-```ts
-export const VIDEO_VERBS = ['play', 'pause', 'loud', 'mute', 'jump-to', 'jump-start', 'jump-end'] as const
-export type VideoVerb = typeof VIDEO_VERBS[number]
-
-export type VideoAction =
-  | Exclude<VideoVerb, 'jump-to'>
-  | `jump-to:${number}`
-
-// Instruction<VideoAction> contient donc « jump-to:500:once » sans rien de plus à écrire.
-```
-
-**Le vocabulaire est un tableau `as const`, pas une union nue**, et c'est ce qui a coûté le
-plus à trouver : lm-link valide à l'exécution ce qu'un article a écrit, et un type n'a rien
-à donner à un validateur. `VIDEO_VERBS` et `VIDEO_VERB_ARGUMENTS` sont donc des **valeurs**
-exportées, et les types s'en déduisent — jamais l'inverse.
-
-Une seule règle d'analyse en découle : **on retire les segments de fin tant que ce sont des
-modifieurs connus, et tout ce qui reste est le verbe**, quelle que soit sa forme interne. Le verbe est toujours le
-premier segment, ce qui rend les listes lisibles et triables — `['play', 'play:once']` se
-groupe à l'œil là où un préfixe les aurait séparés. C'est aussi la convention des
-modifieurs d'événement de Vue (`@click.once`) et de Svelte (`on:click|once`), qui est
-exactement le même objet.
-
-**Le prix à payer : un verbe ne peut pas prendre `once` comme valeur littérale
-d'argument.** Le segment final est toujours lu comme le modifieur. La règle est gratuite
-tant que les arguments sont des nombres ; le jour où un verbe prend du texte libre, la
-sortie est de séparer les deux ponctuations — `:` pour l'argument, `.` pour les modifieurs,
-soit `jump-to:500.once` —, ce qui lèverait l'ambiguïté et composerait si un second
-modifieur apparaissait.
-
-**Ce qui reste perdu, c'est l'énumérabilité.** Le deux-points avait été choisi parce qu'il
-gardait l'ensemble fini : TypeScript autocomplète, lm-link valide par un `those_(...)`, et
-la fiche rend un multi-select qui énumère. Un argument libre casse les trois — TypeScript
-ne fait plus que valider une forme, la validation demande un petit parseur, et le champ de
-la fiche devient mixte : choisir un verbe, puis taper sa valeur. C'est du travail à compter
-dans le chantier, pas un obstacle.
-
-Les quatre questions que cette section portait ouvertes sont tranchées, et chacune l'est
-dans le code : le déclencheur est **un état** et non un franchissement, ce qui ferme le bug
-de la porte qui s'ouvre sur une vidéo déjà visible ; il reste **deux props** et non huit ;
-la logique **n'appartient pas à `Video`** mais à `viewport-behaviours/`, qui ne connaît que
-des chaînes ; et **la direction compte**, portée par le `kind` de la table plutôt que laissée à
-l'appelant.
-
-Both points below are in the code now.
+What the conversion settled in each component:
 
 - **`Sequencer` is wired**, with six verbs in `Video`'s family word for word: `play`,
   `pause`, `jump-to:<n>`, `jump-start`, `jump-end`, `jump-by:<n>`. A jump names a
@@ -1122,36 +968,6 @@ Both points below are in the code now.
   measured with `trackScroll`, where only `onScrolled`'s presence could say it. The flag
   and the handler each ask for the same thing, and tracking stays off until one of them
   does.
-
-### The survey — why it is being rebuilt rather than amended
-
-This is the reading that ended the layer. One fact first, because everything below rests
-on it: the `verb:arg:modifier` grammar has **exactly
-one trigger**, viewport visibility, and three consumers — `Video`, `Sequencer` and
-`ScrollTracker`. Nothing else in `src/` so much as splits a string on `:`. So this is a
-general mechanism that has never been tried against a second signal, and the parts that
-look general may only be general in intention.
-
-Four weak points, in the order they matter:
-
-1. **The grammar is general, the trigger is welded on.** Verbs, arguments, modifiers and
-   both ledgers are indifferent to where the signal comes from, but only visibility can
-   fire them, and the module's name, props and types all say so. « Do X when the sequence
-   reaches step 3 » has no way in.
-2. **`domain` and `surrender` are inert for two consumers out of three.** `Sequencer` and
-   `ScrollTracker` each declare a single domain and each document that nothing ever
-   surrenders — which also makes `':force'` a no-op there.
-3. **A vocabulary is declared four to five times per component** — verbs array, verb type,
-   argument validators, action type, action table — and `Video` and `Sequencer` duplicate
-   each other's verbs wholesale, which `Sequencer`'s own doc admits in writing.
-4. **None of it is observable.** The ledgers are refs, so neither a root-class modifier nor
-   a callback can say that a domain was surrendered or that an instruction ran — against
-   this repo's own rule that every state a component holds surfaces as a modifier.
-
-Two smaller questions raised and not answered. **`dedupe` keys on verb *and* argument**, so
-`['jump-to:100', 'jump-to:200']` both run, in order — intended, or an accident of the key?
-And **the `once` ledger includes the trigger**, so `play:once` holds one credit for visible
-and another for hidden, which is probably right and is written nowhere.
 
 ## `Video` — les bornes de lecture, à instruire
 
