@@ -870,6 +870,39 @@ layout — an iframe that never loaded has no height, so a panel laid over it co
 collapsed box — and the residue is named rather than argued: an embed that autoplays sound
 behind a disclaimer is the article's business today, not the library's.
 
+## A lightbox group is shared state, and both of its gates are per component
+
+Which member of a group is open lives in `Lightbox/store.ts`, not in any component. Every
+gate is keyed by `compId`. Two holes come out of that gap, and one change closes both.
+
+**A surrender does not cover the group.** A reader who opens one lightbox by hand
+surrenders its `opening` domain, so `@that-one:close` is refused — but `@a-sibling:open`
+names a component that surrendered nothing, and opening a sibling closes the one the reader
+opened. The gate asks who a command is addressed to, where the question is whose state it
+changes. **Decided:** one surrender covers the whole group, which means the store carrying
+each member's `compId`.
+
+**A standing disclaimer does not survive group navigation.** Walking from the open member
+to one still withheld opens it: `requestGroupNavigation` checks the *caller*'s `isOn`,
+`navigateOpenGroupBy` writes `openLightboxId`, and the target resolves
+`isOn = isOnProp ?? (storeState.openLightboxId === id)` on the read side with no disclosure
+read at all. The two gates that do exist — `requestOpen` and the `defaultIsOn` effect — are
+about a component's own act, and navigation is a sibling's write that happens to name it.
+Since a lightbox is an overlay, the withheld content is lifted out of whatever the
+disclaimer panel was covering in flow. The reachable paths are the rendered prev / next
+buttons and `navOnArrowKeys`; not a command, `LIGHTBOX_ACTION_VERBS` being `open` and
+`close` only, and `@withheld-one:open` is properly refused twice over.
+
+**Decided: a withheld lightbox is not part of its group's display rotation.**
+`getGroupLightboxes` filters it out, so navigation skips it and `openGroupSize` counts only
+what a reader can reach — which also hides the arrows when fewer than two remain. The store
+therefore learns of disclosure, `registerLightbox` carrying it and re-registering on change,
+which is the same shape the surrender fix needs. One pass, not two.
+
+Two calls left, one per hole: whether a member mounting *after* a surrender is covered by
+it, and whether accepting a disclaimer while the group is open puts that member back in the
+rotation — it would, by re-registration, which is to confirm rather than to assume.
+
 ## Ce que la conversion a laissé aux composants
 
 `components/utils/viewport-behaviours` was the first version of this layer, and it is gone:
