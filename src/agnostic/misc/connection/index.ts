@@ -53,7 +53,7 @@ function isConnection (unk: unknown): unk is MinimalConnection {
  */
 export function getConnection (): MinimalConnection | undefined {
   const window = Window.get()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-type-assertion -- MinimalWindow deliberately doesn't declare `navigator`; this is browser-only feature detection, guarded by the typeof/null check below
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-type-assertion -- MinimalNavigator holds identity fields only, not the vendor-prefixed network ones read below; guarded by the typeof/null check
   const navigator = (window as any).navigator
   if (typeof navigator !== 'object' || navigator === null) return undefined
   const connection = navigator.connection
