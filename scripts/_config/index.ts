@@ -11,12 +11,16 @@ export const ROOT = path.join(TEMP, '..')
 
 // ROOT
 export const PKG_JSON = path.join(ROOT, 'package.json')
+export const README = path.join(ROOT, 'README.md')
+export const CHANGELOG = path.join(ROOT, 'CHANGELOG.md')
 export const LIB = path.join(ROOT, 'lib')
 export const SRC = path.join(ROOT, 'src')
 
 // Lib
 export const LIB_INDEX = path.join(LIB, 'index.js')
 export const LIB_PKG_JSON = path.join(LIB, 'package.json')
+export const LIB_README = path.join(LIB, 'README.md')
+export const LIB_CHANGELOG = path.join(LIB, 'CHANGELOG.md')
 
 // Src
 export const COMPONENTS = path.join(SRC, 'components')

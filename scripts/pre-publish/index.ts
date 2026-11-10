@@ -5,7 +5,16 @@ import { exec, execSync } from 'node:child_process'
 import prompts from 'prompts'
 import semver from 'semver'
 import Git from 'simple-git'
-import { PKG_JSON, LIB_PKG_JSON, LIB } from '../_config/index.js'
+import {
+  CHANGELOG,
+  LIB,
+  LIB_CHANGELOG,
+  LIB_PKG_JSON,
+  LIB_README,
+  PKG_JSON,
+  README
+} from '../_config/index.js'
+import { styles } from '../../src/agnostic/misc/logs/styles/index.js'
 import { spawner } from '../../src/node/process/spawner/index.js'
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -221,6 +230,26 @@ try {
 } catch (err) {
   console.error(`Something went wrong while parsing lib/package.json`)
   process.exit(1)
+}
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Copy the docs npm displays
+ * 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+// Only what lib/ holds reaches the tarball, so the package page has no README
+// and no changelog unless they are copied in here.
+const docsToPublish: Array<[string, string]> = [
+  [README, LIB_README],
+  [CHANGELOG, LIB_CHANGELOG]
+]
+for (const [source, destination] of docsToPublish) {
+  try {
+    await fs.cp(source, destination)
+  } catch (err) {
+    console.log(styles.warning(`Could not copy ${path.basename(source)} into lib, publishing without it.`))
+  }
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
