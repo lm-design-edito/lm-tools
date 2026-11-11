@@ -47,6 +47,24 @@ for (const dir of [AGNOSTIC, NODE, COMPONENTS]) {
   await new Promise(res => p.on('close', res))
 }
 
+// The tsconfigs include the test files so `npm run check` typechecks them, which means
+// tsc also emits them here — and lib is the tree that gets published.
+const builtTestsInLib = await Subpaths.list(LIB, {
+  files: true,
+  symlinks: false,
+  hidden: false,
+  followSimlinks: false,
+  dedupeSimlinksContents: false,
+  maxDepth: 100,
+  returnRelative: true,
+  filter: async file => {
+    const basename = path.basename(file)
+    return basename.endsWith('.test.js') || basename.endsWith('.test.d.ts')
+  }
+})
+
+await Promise.all(builtTestsInLib.map(async f => fs.unlink(path.join(LIB, f))))
+
 /* * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * Compile the stylesheets
