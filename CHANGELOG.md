@@ -4,6 +4,10 @@ Notable changes to `@design-edito/tools`, newest first. Paths are the ones a con
 imports; what never reaches the published package is left out. Sections before
 `0.5.44` were reconstructed from the commits between two version bumps.
 
+## [latest]
+
+- fixed - **package** - the built `*.test.js` and `*.test.d.ts` files no longer ship in the tarball. They were never in the `exports` map, so nothing could import them — only weight.
+
 ## [0.5.44] — 2026-11-11
 
 - added - **agnostic/errors/try-catch** - `tryCatch(run)` newly exported. Runs `run` and turns a throw into a value: `Outcome.Either`, carrying the returned value on success and the thrown one on failure. Synchronous only, so an async function's rejection is not caught.
