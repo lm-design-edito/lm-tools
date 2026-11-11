@@ -1,3 +1,6 @@
+import { tryCatch } from '../../../errors/try-catch/index.js'
+import { isRecord } from '../../../objects/is-record/index.js'
+import { getPayload } from '../../outcome/index.js'
 import type { MinimalNavigator } from '../types.js'
 import * as Window from '../window/index.js'
 import {
@@ -230,20 +233,8 @@ function readUserAgentData (navigator: MinimalNavigator | null): Record<string, 
 
 function readEngineProbes (): EngineProbes {
   return {
-    mozAppearance: probe(() => typeof CSS !== 'undefined' && CSS.supports('-moz-appearance', 'none')),
-    gestureEvent: probe(() => typeof GestureEvent !== 'undefined'),
-    chromeNamespace: probe(() => typeof chrome !== 'undefined')
+    mozAppearance: getPayload(tryCatch(() => typeof CSS !== 'undefined' && CSS.supports('-moz-appearance', 'none')), null),
+    gestureEvent: getPayload(tryCatch(() => typeof GestureEvent !== 'undefined'), null),
+    chromeNamespace: getPayload(tryCatch(() => typeof chrome !== 'undefined'), null)
   }
-}
-
-function probe (run: () => boolean): boolean | null {
-  try {
-    return run()
-  } catch {
-    return null
-  }
-}
-
-function isRecord (value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
 }
