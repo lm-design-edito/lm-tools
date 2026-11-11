@@ -69,3 +69,37 @@ export function make<Payload, Error> (
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- guaranteed by the overload signatures above; the implementation signature can't express that link
     : makeFailure(payloadOrError as Error)
 }
+
+/**
+ * Reads the payload of an outcome, falling back to a given value on a failure.
+ *
+ * @template Payload - The type of the success payload.
+ * @template Fallback - The type of the value returned on a failure.
+ * @param outcome - The outcome to read.
+ * @param fallback - What to return when the outcome is a failure. Required, so
+ * that a caller wanting the absent case says `undefined` at the call site.
+ * @returns The payload on a success, `fallback` on a failure.
+ */
+export function getPayload<Payload, Fallback> (
+  outcome: Either<Payload, unknown>,
+  fallback: Fallback
+): Payload | Fallback {
+  return outcome.success ? outcome.payload : fallback
+}
+
+/**
+ * Reads the error of an outcome, falling back to a given value on a success.
+ *
+ * @template Error - The type of the error.
+ * @template Fallback - The type of the value returned on a success.
+ * @param outcome - The outcome to read.
+ * @param fallback - What to return when the outcome is a success, where there is
+ * no error at all. Required, like `getPayload`'s.
+ * @returns The error on a failure, `fallback` on a success.
+ */
+export function getError<Error, Fallback> (
+  outcome: Either<unknown, Error>,
+  fallback: Fallback
+): Error | Fallback {
+  return outcome.success ? fallback : outcome.error
+}

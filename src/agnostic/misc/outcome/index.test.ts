@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { makeSuccess, makeFailure, make } from './index.js'
+import { makeSuccess, makeFailure, make, getPayload, getError } from './index.js'
 
 describe('makeSuccess', () => {
   it('creates success outcome with payload', () => {
@@ -42,5 +42,34 @@ describe('make', () => {
     const result = make(false, 'error')
     expect(result.success).toBe(false)
     expect(result.error).toBe('error')
+  })
+})
+
+describe('getPayload', () => {
+  it('returns the payload of a success', () => {
+    expect(getPayload(makeSuccess('payload'), null)).toBe('payload')
+  })
+
+  it('returns the fallback on a failure', () => {
+    expect(getPayload(makeFailure(new Error('nope')), null)).toBe(null)
+  })
+
+  it('returns a payload that is itself undefined rather than the fallback', () => {
+    expect(getPayload(makeSuccess(undefined), 'fallback')).toBe(undefined)
+  })
+})
+
+describe('getError', () => {
+  it('returns the error of a failure', () => {
+    const error = new Error('nope')
+    expect(getError(makeFailure(error), null)).toBe(error)
+  })
+
+  it('returns the fallback on a success', () => {
+    expect(getError(makeSuccess('payload'), null)).toBe(null)
+  })
+
+  it('returns an error that is itself undefined rather than the fallback', () => {
+    expect(getError(makeFailure(undefined), 'fallback')).toBe(undefined)
   })
 })
