@@ -25,29 +25,13 @@ declare const Deno: unknown
 export function detectRuntime (): RuntimeName | null {
   const hasProcess = typeof process !== 'undefined'
   const hasNavigator = typeof navigator !== 'undefined'
-
-  /* Electron — a renderer process also carries window.document */
   if (hasProcess && process.versions?.electron !== undefined) return RuntimeName.ELECTRON
-
-  /* AWS Lambda — a Node process carrying the function's name */
   if (hasProcess && process.env?.AWS_LAMBDA_FUNCTION_NAME !== undefined) return RuntimeName.AWS_LAMBDA
-
-  /* Deno — ships a process shim, so it is tested before Node */
   if (typeof Deno !== 'undefined') return RuntimeName.DENO
-
-  /* React Native */
   if (hasNavigator && isReactNativeNavigator(navigator)) return RuntimeName.REACT_NATIVE
-
-  /* Cloudflare Workers — this exact user agent is the documented marker */
   if (hasNavigator && navigator.userAgent === 'Cloudflare-Workers') return RuntimeName.CLOUDFLARE
-
-  /* Node — a browser bundle may shim `process` without a version string */
   if (hasProcess && typeof process.versions?.node === 'string') return RuntimeName.NODE
-
-  /* Browser */
   if (typeof window !== 'undefined' && window.document !== undefined) return RuntimeName.BROWSER
-
-  /* Other */
   return null
 }
 
