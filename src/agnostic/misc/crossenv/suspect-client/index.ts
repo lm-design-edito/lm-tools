@@ -90,6 +90,7 @@ const browserEngineUserAgentTokens: Array<[RegExp, BrowserEngineName]> = [
 const greaseBrandPattern = /not[^a-z0-9]*a[^a-z0-9]*brand/iv
 
 const browserBrandDataNames = new Map<string, BrowserBrandName>([
+  ['android webview', BrowserBrandName.ANDROID_WEBVIEW],
   ['google chrome', BrowserBrandName.CHROME],
   ['microsoft edge', BrowserBrandName.EDGE],
   ['opera', BrowserBrandName.OPERA],
@@ -98,9 +99,10 @@ const browserBrandDataNames = new Map<string, BrowserBrandName>([
 ])
 
 // Every brand impersonates the ones before it, so the order is most specific
-// first. Safari closes the list and demands its `Version/` pair: an in-app
-// webview has neither token, and must stay unknown rather than read as Safari.
+// first: `wv` leads because an Android webview also carries a `Chrome/` token, and
+// Safari closes the list demanding its `Version/` pair, which an iOS webview lacks.
 const browserBrandUserAgentTokens: Array<[RegExp, BrowserBrandName]> = [
+  [/;\s*wv\)/v, BrowserBrandName.ANDROID_WEBVIEW],
   [/Edg(?:iOS|A)?\//v, BrowserBrandName.EDGE],
   [/OPR\/|OPiOS\//v, BrowserBrandName.OPERA],
   [/SamsungBrowser\//v, BrowserBrandName.SAMSUNG_INTERNET],

@@ -28,8 +28,12 @@ export enum BrowserEngineName {
  *
  * `Chromium` is not one of them: every Blink browser lists it, so an unrecognised
  * Blink browser is reported as unknown rather than as Chrome.
+ *
+ * `Android WebView` is the component an Android app embeds, not the Chrome app,
+ * though its user agent carries a `Chrome/` token for compatibility.
  */
 export enum BrowserBrandName {
+  ANDROID_WEBVIEW = 'Android WebView',
   CHROME = 'Chrome',
   SAFARI = 'Safari',
   FIREFOX = 'Firefox',

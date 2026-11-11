@@ -15,6 +15,7 @@ const chromeOsChrome = 'Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537
 const windowsFirefox = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0'
 const windowsEdge = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0'
 const androidSamsung = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/23.0 Chrome/115.0.0.0 Mobile Safari/537.36'
+const androidWebview = 'Mozilla/5.0 (Linux; Android 16; SM-A166B Build/BP4A.251205.006; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/156.0.8078.47 Mobile Safari/537.36'
 
 describe('suspectClient', () => {
   describe('operating system', () => {
@@ -139,6 +140,17 @@ describe('suspectClient', () => {
 
     it('parses Chrome when no more specific brand claims the user agent', () => {
       expect(suspectClient({ userAgent: androidChrome }).browserBrand?.value).toBe(BrowserBrandName.CHROME)
+    })
+
+    it('parses the wv token as Android WebView, before the Chrome token beside it', () => {
+      expect(suspectClient({ userAgent: androidWebview }).browserBrand).toMatchObject({
+        value: BrowserBrandName.ANDROID_WEBVIEW,
+        certainty: Certainty.PARSED
+      })
+    })
+
+    it('still names the operating system of an Android webview', () => {
+      expect(suspectClient({ userAgent: androidWebview }).operatingSystem?.value).toBe(OperatingSystemName.ANDROID)
     })
 
     it('takes a declared brand, skipping the GREASE decoy and Chromium', () => {
