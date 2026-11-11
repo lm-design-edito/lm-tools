@@ -129,9 +129,11 @@ thing is deliberately not for: that is the JSDoc's job, and the README's. A rati
 sentence here is the drift to watch for. Versions `0.5.0` to `0.5.44` set the density —
 read a neighbouring entry rather than guessing.
 
-**The top section is `[next]`**, without a number or a date. It is filled at every
+**The top section is `[latest]`**, without a number or a date. It is filled at every
 session close, reviewed just before a publish, and stamped with its version only once
 the publish has happened. Nobody writes a version number the user has not chosen.
+`[latest]` names the version about to go out, not the one on npm — the slight abuse
+is deliberate.
 
 ## Components
 
