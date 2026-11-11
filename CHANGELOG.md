@@ -6,6 +6,8 @@ imports; what never reaches the published package is left out. Sections before
 
 ## [latest]
 
+- changed - **agnostic/misc/crossenv/suspect-client** - `BrowserBrandName.ANDROID_WEBVIEW` added, and the `wv` token is read before the `Chrome/` one beside it. **An Android webview now reports `Android WebView` where it reported `Chrome`.** Confirmed against the real user agent of the Le Monde app.
+
 - fixed - **package** - the built `*.test.js` and `*.test.d.ts` files no longer ship in the tarball. They were never in the `exports` map, so nothing could import them — only weight.
 
 ## [0.5.44] — 2026-11-11
