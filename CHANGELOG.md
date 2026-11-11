@@ -4,7 +4,7 @@ Notable changes to `@design-edito/tools`, newest first. Paths are the ones a con
 imports; what never reaches the published package is left out. Sections before
 `0.5.44` were reconstructed from the commits between two version bumps.
 
-## [0.5.44] — unreleased
+## [next]
 
 - added - **agnostic/misc/crossenv/suspect-client** - `suspectClient()` newly exported. Suspects client's OS, rendering engine & browser brand. Returned `Suspicion` carries a `Certainty` level and the evidence behind it. Relies on user agent and vendor specific feature detection. Returns `null` if nothing conclusive found.
 - added - **agnostic/misc/crossenv/types** - `MinimalNavigator` (`userAgent`, `vendor`, `maxTouchPoints`). `navigator` added to `MinimalWindow`, optional.

@@ -109,6 +109,30 @@ reader. Everything that is **not** JSDoc follows « Comments » in the root
    */
   ```
 
+## Changelog
+
+`CHANGELOG.md` is a record of what moved, not documentation. One flat line per change,
+no `### Added` headings:
+
+```
+- added - **path/to/module** - `symbol` very short description of what matters
+```
+
+Kind first — `added`, `changed`, `removed`, `fixed` —, then the module by the path a
+consumer imports, in bold, then what changed. Within a version, bullets group added,
+changed, removed, then fixed. A change that never reaches the published package — the
+demo, this file, repo tooling — gets no entry.
+
+**Say what it is, not why it is that way.** The symbol, what it does in a clause or
+two, the shape of what it returns. The governing principle, the edge cases, what the
+thing is deliberately not for: that is the JSDoc's job, and the README's. A rationale
+sentence here is the drift to watch for. Versions `0.5.0` to `0.5.44` set the density —
+read a neighbouring entry rather than guessing.
+
+**The top section is `[next]`**, without a number or a date. It is filled at every
+session close, reviewed just before a publish, and stamped with its version only once
+the publish has happened. Nobody writes a version number the user has not chosen.
+
 ## Components
 
 Consumed almost exclusively **under Preact**, though they typecheck against React
