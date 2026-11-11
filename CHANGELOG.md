@@ -6,6 +6,9 @@ imports; what never reaches the published package is left out. Sections before
 
 ## [latest]
 
+- added - **agnostic/errors/try-catch** - `tryCatch(run)` newly exported. Runs `run` and turns a throw into a value: `Outcome.Either`, carrying the returned value on success and the thrown one on failure. Synchronous only, so an async function's rejection is not caught.
+- added - **agnostic/misc/outcome** - `getPayload(outcome, fallback)` and `getError(outcome, fallback)` newly exported. The fallback is required, so a caller wanting the absent case writes `undefined`.
+- changed - **agnostic/misc/crossenv/suspect-client** - the engine probes read through `tryCatch`, and the record guard is the shared `agnostic/objects/is-record`. No change to what the module exports.
 - added - **agnostic/misc/crossenv/suspect-client** - `suspectClient()` newly exported. Suspects client's OS, rendering engine & browser brand. Returned `Suspicion` carries a `Certainty` level and the evidence behind it. Relies on user agent and vendor specific feature detection. Returns `null` if nothing conclusive found.
 - added - **agnostic/misc/crossenv/types** - `MinimalNavigator` (`userAgent`, `vendor`, `maxTouchPoints`). `navigator` added to `MinimalWindow`, optional.
 - added - **package** - `README.md` and `CHANGELOG.md` now reach the tarball.
