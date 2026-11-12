@@ -141,7 +141,7 @@ export const Overlayer: FunctionComponent<Props> = ({
       else { computedTranslateX = '-50%' }
       // Written out in full, one literal per line: they are this component's public API,
       // a consumer greps for the exact string, and it has to exist in the source they
-      // read. Public and not `--PRIVATE-`, because they are a conversion of props an
+      // read. Public and not `--PRV-`, because they are a conversion of props an
       // article wrote — three numbers given back as percentages — and not a mechanism
       // this component keeps to itself.
       const overlayCustomProps: Record<string, string> = {

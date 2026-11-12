@@ -5,10 +5,10 @@
   The visible zone's height, derived from the offsets rather than measured: CSS
   already knows them, and reading them back from JS would only add a frame of lag.
   */
-  --PRIVATE-viewport-height: calc(
+  --PRV-viewport-height: calc(
     100vh
-    - var(--PRIVATE-viewport-offset-top)
-    - var(--PRIVATE-viewport-offset-bottom)
+    - var(--PRV-viewport-offset-top)
+    - var(--PRV-viewport-offset-bottom)
   );
 }
 
@@ -18,10 +18,10 @@ length written by the consumer — a var, a clamp, a breakpoint — reaches Java
 */
 .viewport-probe {
   position: fixed;
-  top: var(--PRIVATE-viewport-offset-top);
-  right: var(--PRIVATE-viewport-offset-right);
-  bottom: var(--PRIVATE-viewport-offset-bottom);
-  left: var(--PRIVATE-viewport-offset-left);
+  top: var(--PRV-viewport-offset-top);
+  right: var(--PRV-viewport-offset-right);
+  bottom: var(--PRV-viewport-offset-bottom);
+  left: var(--PRV-viewport-offset-left);
   visibility: hidden;
   pointer-events: none;
   z-index: -1;
@@ -55,7 +55,7 @@ length written by the consumer — a var, a clamp, a breakpoint — reaches Java
   top: 0;
   left: 0;
   right: 0;
-  height: var(--PRIVATE-viewport-height);
+  height: var(--PRV-viewport-height);
 }
 
 /*
@@ -76,20 +76,20 @@ Force stick blocks option
 .root.root--bottom-visible.root--content-visible.root--force-stick-blocks-both .back-blocks,
 .root.root--bottom-visible.root--content-visible.root--force-stick-blocks-both .front-blocks {
   position: fixed;
-  top: var(--PRIVATE-viewport-offset-top);
-  left: var(--PRIVATE-left);
-  width: var(--PRIVATE-width);
-  height: var(--PRIVATE-viewport-height);
+  top: var(--PRV-viewport-offset-top);
+  left: var(--PRV-left);
+  width: var(--PRV-width);
+  height: var(--PRV-viewport-height);
 }
 
 /* Scrllgngn leaving the viewport, blocks not fixed but have offset */
 .root.root--bottom-visible.root--content-visible .back-blocks,
 .root.root--bottom-visible.root--content-visible .front-blocks {
   position: absolute;
-  top: calc(var(--PRIVATE-height) - var(--PRIVATE-viewport-height));
+  top: calc(var(--PRV-height) - var(--PRV-viewport-height));
   left: 0;
   right: 0;
-  height: var(--PRIVATE-viewport-height);
+  height: var(--PRV-viewport-height);
 }
 
 /* INDIVIDUAL FIXED BLOCKS */

@@ -224,7 +224,7 @@ export type Props = {
  * - `--lm-scrllgngn-screen-width` / `--lm-scrllgngn-screen-width-raw` — total width.
  * - `--lm-scrllgngn-screen-height` / `--lm-scrllgngn-screen-height-raw` — total height.
  *
- * The same four measurements are also exposed as `--PRIVATE-left`, `-right`,
+ * The same four measurements are also exposed as `--PRV-left`, `-right`,
  * `-width` and `-height` for the component's own stylesheet. They are internal:
  * do not read or override them.
  *

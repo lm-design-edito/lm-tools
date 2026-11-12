@@ -101,7 +101,7 @@ export function lazyLoadedBlocks (
  * Builds the CSS custom properties exposed on a {@link Scrllgngn} root.
  *
  * The public `screen-*` set follows the usual convention and stays absent until
- * the first measurement lands. The `--PRIVATE-*` set is what the component's own
+ * the first measurement lands. The `--PRV-*` set is what the component's own
  * stylesheet positions its fixed layers with, and it is emitted from the very
  * first render — as `initial`, the guaranteed-invalid value — so those layers can
  * never inherit the same names from an ancestor component. `initial` leaves them
@@ -132,10 +132,10 @@ export function toScreenCssProps (rect?: ScreenRect, zone?: VisibleZoneRect): Re
   const inZone = toZoneClampedRect(rect, zone)
   return {
     ...publicProps,
-    '--PRIVATE-left': toPrivateLength(inZone?.left),
-    '--PRIVATE-right': toPrivateLength(inZone?.right),
-    '--PRIVATE-width': toPrivateLength(inZone?.width),
-    '--PRIVATE-height': toPrivateLength(rect?.height)
+    '--PRV-left': toPrivateLength(inZone?.left),
+    '--PRV-right': toPrivateLength(inZone?.right),
+    '--PRV-width': toPrivateLength(inZone?.width),
+    '--PRV-height': toPrivateLength(rect?.height)
   }
 }
 
@@ -431,10 +431,10 @@ export function toViewportOffsetCssProps (offsets: ViewportOffsets): Record<stri
     '--lm-scrllgngn-viewport-offset-right': right,
     '--lm-scrllgngn-viewport-offset-bottom': bottom,
     '--lm-scrllgngn-viewport-offset-left': left,
-    '--PRIVATE-viewport-offset-top': top,
-    '--PRIVATE-viewport-offset-right': right,
-    '--PRIVATE-viewport-offset-bottom': bottom,
-    '--PRIVATE-viewport-offset-left': left
+    '--PRV-viewport-offset-top': top,
+    '--PRV-viewport-offset-right': right,
+    '--PRV-viewport-offset-bottom': bottom,
+    '--PRV-viewport-offset-left': left
   }
 }
 

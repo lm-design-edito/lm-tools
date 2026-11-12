@@ -261,7 +261,7 @@ controlling prop would contradict the parent. The guard belongs there and nowher
   annotation — `style` rejects a literal that shares no property with `CSSProperties`.
 - When every value comes from the same measurement, guard once on that measurement
   rather than per value.
-- `--PRIVATE-<name>` is what the component's own stylesheet reads — unprefixed,
+- `--PRV-<name>` is what the component's own stylesheet reads — unprefixed,
   outside the API. Safe only because the component sets it itself, so **emit it
   unconditionally**: a gap lets an ancestor's value inherit through.
   - **A conversion of public props is not private.** `Overlayer` turns `xPercent` and
@@ -271,7 +271,7 @@ controlling prop would contradict the parent. The guard belongs there and nowher
     consumer — a component that measures nothing has nothing to put in its own
     stylesheet. `Scrllgngn` is the other side of the line: its viewport geometry is
     measured per frame and means nothing outside its own mechanism, so it stays
-    `--PRIVATE-`.
+    `--PRV-`.
 - Point de vigilance, pas règle stricte : devant une **prop hors bornes**, préférer
   corriger la valeur *et* avertir, plutôt que jeter ou corriger en silence. Jeter tue
   le montage pour un simple réglage ; corriger sans rien dire déguise un bug de

@@ -6,6 +6,7 @@ imports; what never reaches the published package is left out. Sections before
 
 ## [latest]
 
+- changed - **components/Scrllgngn** - the measurements the component writes for its own stylesheet are spelled `--PRV-*` where they were `--PRIVATE-*`. Internal to the component, never part of its API.
 - changed - **agnostic/misc/crossenv/suspect-client** - `BrowserBrandName.ANDROID_WEBVIEW` added, and the `wv` token is read before the `Chrome/` one beside it. **An Android webview now reports `Android WebView` where it reported `Chrome`.** Confirmed against the real user agent of the Le Monde app.
 - fixed - **package** - the built `*.test.js` and `*.test.d.ts` files no longer ship in the tarball. They were never in the `exports` map, so nothing could import them — only weight.
 - fixed - **components/Gallery** - the slots no longer shrink to fit the scroller, so the strip overflows and scrolls as it was measured to.
