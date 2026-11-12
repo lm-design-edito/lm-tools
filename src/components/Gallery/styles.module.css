@@ -29,5 +29,6 @@
 }
 
 .slot {
+  flex-shrink: 0;
   scroll-snap-align: center;
 }
