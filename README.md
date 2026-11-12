@@ -1236,4 +1236,7 @@ export async function generateDiffDescription (
 - [ ] Repenser agnostic/optim/throttle-debounce ?
 - [ ] Repenser agnostic/strings/normalize-indent ?
 - [ ] Get rid of namespaces in hyper-json ?
+- [ ] `components/Paginator/styles.module.css` holds a single `.threshold` rule, for an
+      element the component no longer renders — there is no `c('threshold')` left in
+      `index.tsx`. Found by lm-link's sheet audit, 2026-11-12.
 - [ ] agnostic/misc/logs/styles, se repencher dessus, viser à substituer totalement chalk (styles génériques, bold, red, bgBlue, etc...) + continuer à exporter des "styles nommés" comme actuellement
