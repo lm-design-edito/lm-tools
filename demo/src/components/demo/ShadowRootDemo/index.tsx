@@ -41,7 +41,8 @@ export type Props = PropsWithChildren<WithClassName<{
 }>>`
 
 const demoProps: SRCompProps = {
-  injectedStyles: `div {
+  children: <>
+    <style>{`div {
   border-radius: 40px;
   border: 2px solid white;
   display: flex;
@@ -49,8 +50,9 @@ const demoProps: SRCompProps = {
   justify-content: center;
   color: white;
   font-size: 1.5em;
-}`,
-  children: <div style={{ width: 200, height: 200, backgroundColor: 'black' }}>In the shadow</div>
+}`}</style>
+    <div style={{ width: 200, height: 200, backgroundColor: 'black' }}>In the shadow</div>
+  </>
 }
 
 export const ShadowRootDemo: FunctionComponent = () => {
