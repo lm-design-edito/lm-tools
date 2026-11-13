@@ -176,19 +176,26 @@ drapeau pour les distinguer.
 **En hyper-json, `update` ne sera jamais appelé**, les props d'un article étant statiques.
 Il a été réparé pour un consommateur React ; ce qui paie pour lm-link, c'est `postInit`.
 
-**What it did not settle: the module's CSS is scoped to the host.** The sheet a module
-ships is injected as `.lm-ui-module#<id> { <moduleCss> }`, so its selectors become
-descendant rules — right, and what an author expects — but a top-level `&` rule resolves
-like `:scope` and lands on the host `<div>` itself, at (1,1,0). A module can therefore set
-the geometry of the box the article placed, and the article cannot take it back. Found
-during lm-link's passerelle audit of 2026-11-13.
+**The module's CSS no longer reaches the host.** It used to be injected as
+`.lm-ui-module#<id> { <moduleCss> }`, so a top-level `&` rule resolved like `:scope` and
+landed on the host `<div>` at (1,1,0) — a module could set the geometry of the box the
+article had placed, and the article could not take it back. Found during lm-link's
+passerelle audit of 2026-11-13 and fixed the same day: the element `init` returns is
+marked `lm-ui-module__module` on append, and the injection is scoped to it.
 
-**The fix is structural, not a filter.** Parsing someone else's CSS to decide which
-declarations are legitimate is a policy the component should not hold. Scoping the
-injection to the module's own root instead — the element already appended into the host —
-puts a selectorless or `&` rule where its author meant it and leaves the host to the
-article. It wants a class on that root, so it is a published change, and lm-link is pinned
-to `0.5.44`: after the deployment unless it rides along with the next publish.
+**Structural rather than a filter, and deliberately.** The other route was to parse the
+incoming sheet, drop its selectorless declarations — invalid at the top level of a
+standalone sheet, so the parser discards them for free — and strip top-level `&` rules.
+It closes the same hole, but it turns a pass-through into a filter: anything the running
+engine cannot parse disappears from the output, so a rule guarding a feature that browser
+lacks is dropped instead of sitting inert, and the result differs between readers.
+Scoping keeps the CSS verbatim.
+
+**What it costs.** A module that styled its own root through a descendant selector —
+`.title { … }` for a root carrying `title` — stops matching it; `&.title` is the idiom
+now. Nothing has shipped against the old shape, lm-link never having been deployed, so
+the break is theoretical, but it is a behaviour change for module authors and the next
+version number should say so.
 
 ## Les payloads de handlers — ce qui reste ouvert
 
