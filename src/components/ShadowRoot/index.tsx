@@ -34,8 +34,6 @@ import cssModule from './styles.module.css'
  * `"manual"` requires manual slot assignment via `HTMLSlotElement.assign()`.
  * @property adoptedStyleSheets - Array of constructable `CSSStyleSheet` instances
  * assigned to `shadowRoot.adoptedStyleSheets` (if supported by the browser).
- * @property injectedStyles - Raw CSS string injected into the Shadow Root inside a `<style>` element.
- * Useful as a fallback when constructable stylesheets are not used.
  * @property children - React children rendered inside the Shadow Root via a React portal.
  *
  * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
@@ -46,7 +44,6 @@ export type Props = {
   delegatesFocus?: boolean
   slotAssignment?: 'named' | 'manual'
   adoptedStyleSheets?: CSSStyleSheet[]
-  injectedStyles?: string
 }
   & ChildrenProps
   & ClassNameProps
@@ -81,7 +78,6 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
   delegatesFocus,
   slotAssignment,
   adoptedStyleSheets,
-  injectedStyles,
   className,
   children
 }) => {
@@ -100,7 +96,6 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
     visibilityOffAfterMs
   })
   const [shadowRoot, setShadowRoot] = useState<ShadowRoot | null>(null)
-  const [styles, setStyles] = useState<string | undefined>(injectedStyles)
   useEffect(() => {
     if (hostRef.current === null || shadowRoot !== null) return
     const root = hostRef.current.attachShadow({ mode, delegatesFocus, slotAssignment })
@@ -108,14 +103,12 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
       && 'adoptedStyleSheets' in root) {
       root.adoptedStyleSheets = adoptedStyleSheets
     }
-    if (injectedStyles !== undefined) setStyles(injectedStyles)
     setShadowRoot(root)
   }, [
     mode,
     delegatesFocus,
     slotAssignment,
-    adoptedStyleSheets,
-    injectedStyles
+    adoptedStyleSheets
   ])
 
   // Rendering
@@ -129,9 +122,6 @@ export const ShadowRootComponent: FunctionComponent<Props> = ({
     ref={hostRef}
     className={rootClss}>
 
-    {shadowRoot !== null && createPortal(<>
-      {styles !== undefined && <style>{styles}</style>}
-      {children}
-    </>, shadowRoot)}
+    {shadowRoot !== null && createPortal(children, shadowRoot)}
   </div>
 }
