@@ -176,6 +176,20 @@ drapeau pour les distinguer.
 **En hyper-json, `update` ne sera jamais appelé**, les props d'un article étant statiques.
 Il a été réparé pour un consommateur React ; ce qui paie pour lm-link, c'est `postInit`.
 
+**What it did not settle: the module's CSS is scoped to the host.** The sheet a module
+ships is injected as `.lm-ui-module#<id> { <moduleCss> }`, so its selectors become
+descendant rules — right, and what an author expects — but a top-level `&` rule resolves
+like `:scope` and lands on the host `<div>` itself, at (1,1,0). A module can therefore set
+the geometry of the box the article placed, and the article cannot take it back. Found
+during lm-link's passerelle audit of 2026-11-13.
+
+**The fix is structural, not a filter.** Parsing someone else's CSS to decide which
+declarations are legitimate is a policy the component should not hold. Scoping the
+injection to the module's own root instead — the element already appended into the host —
+puts a selectorless or `&` rule where its author meant it and leaves the host to the
+article. It wants a class on that root, so it is a published change, and lm-link is pinned
+to `0.5.44`: after the deployment unless it rides along with the next publish.
+
 ## Les payloads de handlers — ce qui reste ouvert
 
 **La règle est tenue : les 79 handlers prennent exactement un argument**, nommé dès
