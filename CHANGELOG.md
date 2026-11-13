@@ -6,6 +6,7 @@ imports; what never reaches the published package is left out. Sections before
 
 ## [latest]
 
+- removed - **components/ShadowRoot** - `injectedStyles`. A `<style>` element in `children` lands in the same tree one node later, so the prop was a second way to do one thing — and lm-html passes a `<style>` through, so hyper-json had no need of a string-shaped entry point either.
 - changed - **components/UIModule** - the `Element` returned by `init` is marked `lm-ui-module__module` on append, and a module's `css` is now wrapped in `.lm-ui-module#<id> > .lm-ui-module__module { … }` instead of the host's selector. **A rule that named the module's own root as a descendant no longer reaches it** — `&` does — and a bare declaration lands on that root rather than on the host the consumer sizes.
 - changed - **components/Scrllgngn** - the measurements the component writes for its own stylesheet are spelled `--PRV-*` where they were `--PRIVATE-*`. Internal to the component, never part of its API.
 - changed - **agnostic/misc/crossenv/suspect-client** - `BrowserBrandName.ANDROID_WEBVIEW` added, and the `wv` token is read before the `Chrome/` one beside it. **An Android webview now reports `Android WebView` where it reported `Chrome`.** Confirmed against the real user agent of the Le Monde app.
