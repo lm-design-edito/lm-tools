@@ -43,10 +43,11 @@ import cssModule from './styles.module.css'
  * Receives the `Element` previously returned by `init`. Use it to tear down event
  * listeners, timers, or third-party instances.
  * @property css - Optional stylesheet, injected in a `<style>` and wrapped in
- * `.<publicClassName>#<id> { … }` so it reaches this instance and nothing else.
- * **Write rules, not bare declarations**: a declaration would land on the host, which
- * the module does not own — the consumer styles it, and the two would fight. Rules are
- * resolved by CSS nesting, so they need only name what `init` built.
+ * `.<publicClassName>#<id> > .<publicClassName>__module { … }`, so it reaches the
+ * element `init` built on this instance and nothing else. Rules are resolved by CSS
+ * nesting, so they need only name what is inside that element; a bare declaration, or
+ * an `&` rule, lands on the element itself. The host `<div>` is out of reach on
+ * purpose — the consumer places and sizes it.
  */
 type ModuleData = {
   init: (props: Record<string, unknown>) => Element
@@ -124,6 +125,11 @@ export type Props = {
  * - `visible` — the component has settled into view. Absent until something asks
  *   about visibility, since nothing is observed before that.
  *
+ * ### CSS elements
+ * - `__module` — the `Element` returned by `init`, marked on append. It is what the
+ * module's own `css` is scoped to, and the handle a consumer styles the module through
+ * without reaching into what it built.
+ *
  * ### Root element attributes
  * - `id` — a stable generated id, assigned once on mount and used to scope the
  * module's `css` to this specific instance.
@@ -176,6 +182,7 @@ export const UIModule: FunctionComponent<Props> = ({
   // The load effect depends on `src` alone, so the props it closes over are those of
   // the render it ran on. This is what `init` and `postInit` read instead.
   const propsRef = useRef(props)
+  const c = clss(publicClassName, { cssModule })
 
   // State dispatch
   useStateChangeDispatch(isLoading, onIsLoadingChanged)
@@ -246,6 +253,7 @@ export const UIModule: FunctionComponent<Props> = ({
     if (moduleTarget === null) return
     if (rootRef.current === null) return
     rootRef.current.appendChild(moduleTarget)
+    moduleTarget.classList.add(...c('module').split(' '))
     const liveInstance = liveInstanceRef.current
     if (liveInstance === null) return
     const cleanup = liveInstance.module.postInit?.(moduleTarget, propsRef.current ?? {})
@@ -262,7 +270,6 @@ export const UIModule: FunctionComponent<Props> = ({
   }, [props])
 
   // Rendering
-  const c = clss(publicClassName, { cssModule })
   const hasErrored = loadedModule instanceof Error
   const rootClss = mergeClassNames(
     c(null, {
@@ -282,7 +289,7 @@ export const UIModule: FunctionComponent<Props> = ({
     ref={rootRef}
     id={id}>
     {moduleCss !== undefined && <style>
-      {`.${publicClassName}#${id} { ${moduleCss} }`}
+      {`.${publicClassName}#${id} > .${publicClassName}__module { ${moduleCss} }`}
     </style>}
   </div>
 }
