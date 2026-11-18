@@ -4,6 +4,10 @@ Notable changes to `@design-edito/tools`, newest first. Paths are the ones a con
 imports; what never reaches the published package is left out. Sections before
 `0.5.44` were reconstructed from the commits between two version bumps.
 
+## [latest]
+
+- changed - **styles** - `--border-color` defaults to `rgba(0, 0, 0, .1)` where it was `grey`. Every `.border-*` utility and the `--border-xxs` … `--border-xxl` shorthands take the new value.
+
 ## [0.6.0] — 2026-11-13
 
 - changed - **components/UIModule** - the `Element` returned by `init` is marked `lm-ui-module__module` on append, and a module's `css` is now wrapped in `.lm-ui-module#<id> > .lm-ui-module__module { … }` instead of the host's selector. **A rule that named the module's own root as a descendant no longer reaches it** — `&` does — and a bare declaration lands on that root rather than on the host the consumer sizes.
