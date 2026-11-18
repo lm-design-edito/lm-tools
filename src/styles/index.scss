@@ -1129,7 +1129,7 @@
 :root, :host {
   --bg-color: white;
   --text-color: black;
-  --accent-color: coral;
+  --accent-color: red;
 
   --underline-line: underline;
   --underline-thickness: .1em;
@@ -1145,7 +1145,7 @@
   --border-width-xl: 16px;
   --border-width-xxl: 32px;
   
-  --border-color: rgba(0, 0, 0, .1);
+  --border-color: rgb(0, 0, 0, .1);
   --border-style: solid;
   --border-width: var(--border-width-m);
 
