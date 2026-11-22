@@ -64,7 +64,7 @@ export async function readWrite (
   editor: EditorFunc | Replacements,
   opts: Options = {}
 ): Promise<WriteFileData> {
-  const readData = await fs.readFile(path, opts.readOptions)
+  const readData = await fs.readFile(path, opts.readOptions ?? null)
   const edited = typeof editor === 'function'
     ? editor(readData)
     : Object.entries(editor).reduce(
