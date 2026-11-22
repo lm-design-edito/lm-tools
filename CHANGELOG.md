@@ -4,6 +4,10 @@ Notable changes to `@design-edito/tools`, newest first. Paths are the ones a con
 imports; what never reaches the published package is left out. Sections before
 `0.5.44` were reconstructed from the commits between two version bumps.
 
+## [latest]
+
+- changed - **package.json** - dependencies bumped to latest where possible, `@google-cloud/storage` to `^9.0.0`; TypeScript still held at 5.x, the ecosystem isn't ready for 7.x.
+
 ## [0.7.0] — 2026-11-23
 
 - changed - **styles** - `--accent-color` defaults to `red` where it was `coral`. `.accent` and anything reading the accent role take the new value.
