@@ -301,9 +301,8 @@ export namespace Utils {
       const allChildren: ChildData[] = []
       clones.forEach(node => {
         const actionAttribute = node.getAttribute(TreeNamespace.Tree.actionAttribute)?.trim().toLowerCase()
-        const actionAttrIsValid = isInEnum(Types.Tree.Merge.Action, actionAttribute ?? '')
-        const nodeAction = actionAttrIsValid
-          ? actionAttribute as Types.Tree.Merge.Action
+        const nodeAction = actionAttribute !== undefined && isInEnum(Types.Tree.Merge.Action, actionAttribute)
+          ? actionAttribute
           : Types.Tree.Merge.Action.APPEND
         const children: typeof allChildren = Array
           .from(node.childNodes)

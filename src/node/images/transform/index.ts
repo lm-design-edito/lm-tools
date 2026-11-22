@@ -55,7 +55,7 @@ const validators = {
 export function isOperationDescriptor (obj: unknown): Outcome.Either<OperationDescriptor, string> {
   if (!isNonNullObject(obj)) return Outcome.makeFailure('Invalid operation descriptor')
   if (!('name' in obj) || typeof obj.name !== 'string') return Outcome.makeFailure('Field named \'name\' in operation descriptor is required and must be a string')
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- not yet proven; verified below via Set.has(...)/object-key lookup, which are safe regardless of this type
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, @typescript-eslint/no-unsafe-enum-assignment -- not yet proven; verified below via Set.has(...)/object-key lookup, which are safe regardless of this type
   const name = obj.name as OpName
   const validateOperation = (validatorFn: typeof validators[keyof typeof validators]): Outcome.Either<OperationDescriptor, string> => {
     const result = validatorFn(obj)
