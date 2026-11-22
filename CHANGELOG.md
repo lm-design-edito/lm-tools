@@ -4,7 +4,7 @@ Notable changes to `@design-edito/tools`, newest first. Paths are the ones a con
 imports; what never reaches the published package is left out. Sections before
 `0.5.44` were reconstructed from the commits between two version bumps.
 
-## [0.7.0] — 2026-11-22
+## [0.7.0] — 2026-11-23
 
 - changed - **styles** - `--accent-color` defaults to `red` where it was `coral`. `.accent` and anything reading the accent role take the new value.
 - changed - **styles** - `--border-color` defaults to `rgb(0, 0, 0, .1)` where it was `grey`. Every `.border-*` utility and the `--border-xxs` … `--border-xxl` shorthands take the new value.
