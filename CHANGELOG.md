@@ -6,6 +6,7 @@ imports; what never reaches the published package is left out. Sections before
 
 ## [latest]
 
+- added - **styles/visibility-triggers** - `activateVisibilityTriggers()` and `deactivateVisibilityTriggers()` newly exported. Watches the document for elements carrying `data-add|remove|toggle-when|once-visible|hidden` and applies those class lists as the element enters or leaves the viewport; `data-animate-on-visibility[-once]` is the shorthand for the `do-*` effect classes, adding `do--play` when visible and `do--init` when hidden.
 - added - **agnostic/optim/throttle** - `throttle(fn, delayMs, options?)` newly exported. Wraps `fn` so it runs at most once every `delayMs`; `leading`/`trailing` options (both default `true`) decide whether a burst's first call runs immediately and whether one more call runs at the end with the latest arguments. Carries `cancel()`, `flush()` and `setDelay(delayMs)`.
 - added - **agnostic/optim/debounce** - `debounce(fn, delayMs, options?)` newly exported. Wraps `fn` so it only runs once activity has stopped for `delayMs`; `leading` (default `false`) also runs the first call of a burst immediately, without double-running for a lone call. Carries `cancel()`, `flush()` and `setDelay(delayMs)`.
 - changed - **package.json** - dependencies bumped to latest where possible, `@google-cloud/storage` to `^9.0.0`; TypeScript still held at 5.x, the ecosystem isn't ready for 7.x.

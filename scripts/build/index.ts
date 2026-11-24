@@ -39,7 +39,7 @@ const LIB_STYLES = path.join(LIB, path.relative(SRC, STYLES))
 const isInStyles = (dirpath: string): boolean => dirpath === LIB_STYLES
   || dirpath.startsWith(`${LIB_STYLES}${path.sep}`)
 
-for (const dir of [AGNOSTIC, NODE, COMPONENTS]) {
+for (const dir of [AGNOSTIC, NODE, COMPONENTS, STYLES]) {
   const p = spawn('tsc', ['-p', path.join(dir, 'tsconfig.json')], { stdio: 'pipe' })
   p.stdout?.on('data', data => console.log(data.toString().trim()))
   p.stderr?.on('data', data => console.log(data.toString().trim()))
@@ -87,8 +87,8 @@ for await (const file of fs.glob('**/index.scss', { cwd: LIB_STYLES })) {
  * 
  * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-// styles/ holds no module, so it gets no generated index.js — and must not be
-// re-exported from lib/index.js either, since there would be nothing to import.
+// styles/ gets no generated index.js and is not re-exported from lib/index.js: ./styles
+// is the stylesheet's exports entry. Modules under it carry their own index.ts.
 
 const everyDirBuilt = [LIB, ...await Subpaths.list(LIB, {
   directories: true,

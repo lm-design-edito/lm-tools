@@ -1384,6 +1384,9 @@
   --ease-in-out-back: cubic-bezier(0.68, -0.6, 0.32, 1.6);
 }
 
+/* [WIP] Root effects a keyframes pair of their own would open: blur, filter, a color
+   crossfade, and height — plus fade + transform together, which one --PRV-do-play cannot carry. */
+
 /* Fade in */
 
 @keyframes do-fade { to { opacity: var(--PRV-do-to); } }
