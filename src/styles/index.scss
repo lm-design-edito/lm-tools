@@ -1391,8 +1391,8 @@
 
 @keyframes do-fade { to { opacity: var(--PRV-do-to); } }
 @keyframes undo-fade { to { opacity: var(--PRV-do-from); } }
-.do-fade {
-  // [WIP] Defaults here or on :root, :host ?
+
+:root, :host {
   --do-fade-from: 0;
   --do-fade-to: 1;
   --do-fade-duration: 1s;
@@ -1400,7 +1400,9 @@
   --do-fade-ease: var(--ease-out-circ, ease-in-out);
   --do-fade-count: 1;
   --do-fade-direction: normal;
+}
 
+.do-fade {
   --PRV-do-from: var(--do-fade-from);
   --PRV-do-to: var(--do-fade-to);
   --PRV-do-duration: var(--do-fade-duration);
@@ -1423,15 +1425,25 @@
 
 /* Pulse */
 
+:root, :host {
+  --do-pulse-from: 0;
+  --do-pulse-to: 1;
+  --do-pulse-duration: 1s;
+  --do-pulse-delay: 200ms;
+  --do-pulse-ease: linear;
+  --do-pulse-count: infinite;
+  --do-pulse-direction: alternate;
+}
+
 .do-pulse {
   @extend .do-fade;
-  --do-fade-from: var(--do-pulse-from, 0);
-  --do-fade-to: var(--do-pulse-to, 1);
-  --do-fade-duration: var(--do-pulse-duration, 1s);
-  --do-fade-delay: var(--do-pulse-delay, 200ms);
-  --do-fade-ease: var(--do-pulse-ease, linear);
-  --do-fade-count: var(--do-pulse-count, infinite);
-  --do-fade-direction: var(--do-pulse-direction, alternate);
+  --PRV-do-from: var(--do-pulse-from);
+  --PRV-do-to: var(--do-pulse-to);
+  --PRV-do-duration: var(--do-pulse-duration);
+  --PRV-do-delay: var(--do-pulse-delay);
+  --PRV-do-ease: var(--do-pulse-ease);
+  --PRV-do-count: var(--do-pulse-count);
+  --PRV-do-direction: var(--do-pulse-direction);
 }
 .do-pulse.do--init {
   animation: none;
@@ -1445,7 +1457,8 @@
 
 @keyframes do-transform { to { transform: var(--PRV-do-to); } }
 @keyframes undo-transform { to { transform: var(--PRV-do-from); } }
-.do-transform {
+
+:root, :host {
   --do-transform-from: translateY(100px);
   --do-transform-to: none;
   --do-transform-duration: 1s;
@@ -1453,7 +1466,9 @@
   --do-transform-ease: var(--ease-out-circ, ease-in-out);
   --do-transform-count: 1;
   --do-transform-direction: normal;
+}
 
+.do-transform {
   --PRV-do-from: var(--do-transform-from);
   --PRV-do-to: var(--do-transform-to);
   --PRV-do-duration: var(--do-transform-duration);
@@ -1476,15 +1491,25 @@
 
 /* Slide up */
 
+:root, :host {
+  --do-slide-up-from: translateY(100px);
+  --do-slide-up-to: none;
+  --do-slide-up-duration: 1s;
+  --do-slide-up-delay: 200ms;
+  --do-slide-up-ease: var(--ease-out-circ, ease-in-out);
+  --do-slide-up-count: 1;
+  --do-slide-up-direction: normal;
+}
+
 .do-slide-up {
   @extend .do-transform;
-  --do-transform-from: var(--do-slide-up-from, translateY(100px));
-  --do-transform-to: var(--do-slide-up-to, none);
-  --do-transform-duration: var(--do-slide-up-duration, 1s);
-  --do-transform-delay: var(--do-slide-up-delay, 200ms);
-  --do-transform-ease: var(--do-slide-up-ease, var(--ease-out-circ, ease-in-out));
-  --do-transform-count: var(--do-slide-up-count, 1);
-  --do-transform-direction: var(--do-slide-up-direction, normal);
+  --PRV-do-from: var(--do-slide-up-from);
+  --PRV-do-to: var(--do-slide-up-to);
+  --PRV-do-duration: var(--do-slide-up-duration);
+  --PRV-do-delay: var(--do-slide-up-delay);
+  --PRV-do-ease: var(--do-slide-up-ease);
+  --PRV-do-count: var(--do-slide-up-count);
+  --PRV-do-direction: var(--do-slide-up-direction);
 }
 .do-slide-up.do--init {
   animation: none;
@@ -1496,15 +1521,25 @@
 
 /* Slide down */
 
+:root, :host {
+  --do-slide-down-from: translateY(-100px);
+  --do-slide-down-to: none;
+  --do-slide-down-duration: 1s;
+  --do-slide-down-delay: 200ms;
+  --do-slide-down-ease: var(--ease-out-circ, ease-in-out);
+  --do-slide-down-count: 1;
+  --do-slide-down-direction: normal;
+}
+
 .do-slide-down {
   @extend .do-transform;
-  --do-transform-from: var(--do-slide-down-from, translateY(-100px));
-  --do-transform-to: var(--do-slide-down-to, none);
-  --do-transform-duration: var(--do-slide-down-duration, 1s);
-  --do-transform-delay: var(--do-slide-down-delay, 200ms);
-  --do-transform-ease: var(--do-slide-down-ease, var(--ease-out-circ, ease-in-out));
-  --do-transform-count: var(--do-slide-down-count, 1);
-  --do-transform-direction: var(--do-slide-down-direction, normal);
+  --PRV-do-from: var(--do-slide-down-from);
+  --PRV-do-to: var(--do-slide-down-to);
+  --PRV-do-duration: var(--do-slide-down-duration);
+  --PRV-do-delay: var(--do-slide-down-delay);
+  --PRV-do-ease: var(--do-slide-down-ease);
+  --PRV-do-count: var(--do-slide-down-count);
+  --PRV-do-direction: var(--do-slide-down-direction);
 }
 .do-slide-down.do--init {
   animation: none;
@@ -1516,15 +1551,25 @@
 
 /* Slide left */
 
+:root, :host {
+  --do-slide-left-from: translateX(100px);
+  --do-slide-left-to: none;
+  --do-slide-left-duration: 1s;
+  --do-slide-left-delay: 200ms;
+  --do-slide-left-ease: var(--ease-out-circ, ease-in-out);
+  --do-slide-left-count: 1;
+  --do-slide-left-direction: normal;
+}
+
 .do-slide-left {
   @extend .do-transform;
-  --do-transform-from: var(--do-slide-left-from, translateX(100px));
-  --do-transform-to: var(--do-slide-left-to, none);
-  --do-transform-duration: var(--do-slide-left-duration, 1s);
-  --do-transform-delay: var(--do-slide-left-delay, 200ms);
-  --do-transform-ease: var(--do-slide-left-ease, var(--ease-out-circ, ease-in-out));
-  --do-transform-count: var(--do-slide-left-count, 1);
-  --do-transform-direction: var(--do-slide-left-direction, normal);
+  --PRV-do-from: var(--do-slide-left-from);
+  --PRV-do-to: var(--do-slide-left-to);
+  --PRV-do-duration: var(--do-slide-left-duration);
+  --PRV-do-delay: var(--do-slide-left-delay);
+  --PRV-do-ease: var(--do-slide-left-ease);
+  --PRV-do-count: var(--do-slide-left-count);
+  --PRV-do-direction: var(--do-slide-left-direction);
 }
 .do-slide-left.do--init {
   animation: none;
@@ -1536,15 +1581,25 @@
 
 /* Slide right */
 
+:root, :host {
+  --do-slide-right-from: translateX(-100px);
+  --do-slide-right-to: none;
+  --do-slide-right-duration: 1s;
+  --do-slide-right-delay: 200ms;
+  --do-slide-right-ease: var(--ease-out-circ, ease-in-out);
+  --do-slide-right-count: 1;
+  --do-slide-right-direction: normal;
+}
+
 .do-slide-right {
   @extend .do-transform;
-  --do-transform-from: var(--do-slide-right-from, translateX(-100px));
-  --do-transform-to: var(--do-slide-right-to, none);
-  --do-transform-duration: var(--do-slide-right-duration, 1s);
-  --do-transform-delay: var(--do-slide-right-delay, 200ms);
-  --do-transform-ease: var(--do-slide-right-ease, var(--ease-out-circ, ease-in-out));
-  --do-transform-count: var(--do-slide-right-count, 1);
-  --do-transform-direction: var(--do-slide-right-direction, normal);
+  --PRV-do-from: var(--do-slide-right-from);
+  --PRV-do-to: var(--do-slide-right-to);
+  --PRV-do-duration: var(--do-slide-right-duration);
+  --PRV-do-delay: var(--do-slide-right-delay);
+  --PRV-do-ease: var(--do-slide-right-ease);
+  --PRV-do-count: var(--do-slide-right-count);
+  --PRV-do-direction: var(--do-slide-right-direction);
 }
 .do-slide-right.do--init {
   animation: none;
@@ -1556,15 +1611,25 @@
 
 /* Scale up */
 
+:root, :host {
+  --do-scale-up-from: scale(0);
+  --do-scale-up-to: none;
+  --do-scale-up-duration: 1s;
+  --do-scale-up-delay: 200ms;
+  --do-scale-up-ease: var(--ease-out-circ, ease-in-out);
+  --do-scale-up-count: 1;
+  --do-scale-up-direction: normal;
+}
+
 .do-scale-up {
   @extend .do-transform;
-  --do-transform-from: var(--do-scale-up-from, scale(0));
-  --do-transform-to: var(--do-scale-up-to, none);
-  --do-transform-duration: var(--do-scale-up-duration, 1s);
-  --do-transform-delay: var(--do-scale-up-delay, 200ms);
-  --do-transform-ease: var(--do-scale-up-ease, var(--ease-out-circ, ease-in-out));
-  --do-transform-count: var(--do-scale-up-count, 1);
-  --do-transform-direction: var(--do-scale-up-direction, normal);
+  --PRV-do-from: var(--do-scale-up-from);
+  --PRV-do-to: var(--do-scale-up-to);
+  --PRV-do-duration: var(--do-scale-up-duration);
+  --PRV-do-delay: var(--do-scale-up-delay);
+  --PRV-do-ease: var(--do-scale-up-ease);
+  --PRV-do-count: var(--do-scale-up-count);
+  --PRV-do-direction: var(--do-scale-up-direction);
 }
 .do-scale-up.do--init {
   animation: none;
@@ -1576,15 +1641,25 @@
 
 /* Scale down */
 
+:root, :host {
+  --do-scale-down-from: scale(3);
+  --do-scale-down-to: none;
+  --do-scale-down-duration: 1s;
+  --do-scale-down-delay: 200ms;
+  --do-scale-down-ease: var(--ease-out-circ, ease-in-out);
+  --do-scale-down-count: 1;
+  --do-scale-down-direction: normal;
+}
+
 .do-scale-down {
   @extend .do-transform;
-  --do-transform-from: var(--do-scale-down-from, scale(3));
-  --do-transform-to: var(--do-scale-down-to, none);
-  --do-transform-duration: var(--do-scale-down-duration, 1s);
-  --do-transform-delay: var(--do-scale-down-delay, 200ms);
-  --do-transform-ease: var(--do-scale-down-ease, var(--ease-out-circ, ease-in-out));
-  --do-transform-count: var(--do-scale-down-count, 1);
-  --do-transform-direction: var(--do-scale-down-direction, normal);
+  --PRV-do-from: var(--do-scale-down-from);
+  --PRV-do-to: var(--do-scale-down-to);
+  --PRV-do-duration: var(--do-scale-down-duration);
+  --PRV-do-delay: var(--do-scale-down-delay);
+  --PRV-do-ease: var(--do-scale-down-ease);
+  --PRV-do-count: var(--do-scale-down-count);
+  --PRV-do-direction: var(--do-scale-down-direction);
 }
 .do-scale-down.do--init {
   animation: none;
@@ -1596,15 +1671,25 @@
 
 /* Rotate */
 
+:root, :host {
+  --do-rotate-from: rotate(-90deg);
+  --do-rotate-to: none;
+  --do-rotate-duration: 1s;
+  --do-rotate-delay: 200ms;
+  --do-rotate-ease: var(--ease-out-circ, ease-in-out);
+  --do-rotate-count: 1;
+  --do-rotate-direction: normal;
+}
+
 .do-rotate {
   @extend .do-transform;
-  --do-transform-from: var(--do-rotate-from, rotate(-90deg));
-  --do-transform-to: var(--do-rotate-to, none);
-  --do-transform-duration: var(--do-rotate-duration, 1s);
-  --do-transform-delay: var(--do-rotate-delay, 200ms);
-  --do-transform-ease: var(--do-rotate-ease, var(--ease-out-circ, ease-in-out));
-  --do-transform-count: var(--do-rotate-count, 1);
-  --do-transform-direction: var(--do-rotate-direction, normal);
+  --PRV-do-from: var(--do-rotate-from);
+  --PRV-do-to: var(--do-rotate-to);
+  --PRV-do-duration: var(--do-rotate-duration);
+  --PRV-do-delay: var(--do-rotate-delay);
+  --PRV-do-ease: var(--do-rotate-ease);
+  --PRV-do-count: var(--do-rotate-count);
+  --PRV-do-direction: var(--do-rotate-direction);
 }
 .do-rotate.do--init {
   animation: none;
@@ -1616,15 +1701,25 @@
 
 /* Spin */
 
+:root, :host {
+  --do-spin-from: rotate(-360deg);
+  --do-spin-to: none;
+  --do-spin-duration: 1s;
+  --do-spin-delay: 200ms;
+  --do-spin-ease: linear;
+  --do-spin-count: infinite;
+  --do-spin-direction: normal;
+}
+
 .do-spin {
   @extend .do-transform;
-  --do-transform-from: var(--do-spin-from, rotate(-360deg));
-  --do-transform-to: var(--do-spin-to, none);
-  --do-transform-duration: var(--do-spin-duration, 1s);
-  --do-transform-delay: var(--do-spin-delay, 200ms);
-  --do-transform-ease: var(--do-spin-ease, linear);
-  --do-transform-count: var(--do-spin-count, infinite);
-  --do-transform-direction: var(--do-spin-direction, normal);
+  --PRV-do-from: var(--do-spin-from);
+  --PRV-do-to: var(--do-spin-to);
+  --PRV-do-duration: var(--do-spin-duration);
+  --PRV-do-delay: var(--do-spin-delay);
+  --PRV-do-ease: var(--do-spin-ease);
+  --PRV-do-count: var(--do-spin-count);
+  --PRV-do-direction: var(--do-spin-direction);
 }
 .do-spin.do--init {
   animation: none;
