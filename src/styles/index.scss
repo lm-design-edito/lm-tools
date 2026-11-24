@@ -662,16 +662,84 @@
   }
 }
 
+:root, :host {
+  --column-xxs-asides-width: 200px;
+  --column-xxs-asides-overflow: calc(var(--column-xxs-asides-width) - 80px);
+  --column-xs-asides-width: 200px;
+  --column-xs-asides-overflow: calc(var(--column-xs-asides-width) - 80px);
+  --column-s-asides-width: 220px;
+  --column-s-asides-overflow: calc(var(--column-s-asides-width) + calc(var(--lh-current-px) / 2));
+  --column-m-asides-width: 240px;
+  --column-m-asides-overflow: calc(var(--column-m-asides-width) + calc(var(--lh-current-px) / 2));
+  --column-l-asides-width: 280px;
+  --column-l-asides-overflow: calc(var(--column-l-asides-width) + calc(var(--lh-current-px) / 2));
+  --column-xl-asides-width: 320px;
+  --column-xl-asides-overflow: calc(var(--column-xl-asides-width) - 160px);
+  --column-xxl-asides-width: 360px;
+  --column-xxl-asides-overflow: 0px;
+}
+
+@media (max-width: 1619px) {
+  :root, :host {
+    --column-l-asides-overflow: calc(var(--column-l-asides-width) - 120px);
+    --column-xl-asides-overflow: 0px;
+  }
+}
+
+@media (max-width: 1279px) {
+  :root, :host {
+    --column-s-asides-overflow: calc(var(--column-s-asides-width) - 120px);
+    --column-m-asides-overflow: calc(var(--column-m-asides-width) - 120px);
+    --column-l-asides-overflow: calc(var(--column-l-asides-width) - 180px);
+  }
+}
+
+@media (max-width: 1119px) {
+  :root, :host {
+    --column-l-asides-overflow: 0px;
+  }
+}
+
+@media (max-width: 1023px) {
+  :root, :host {
+    --column-m-asides-overflow: 0px;
+  }
+}
+
+@media (max-width: 879px) {
+  :root, :host {
+    --column-s-asides-overflow: 0px;
+  }
+}
+
+@media (max-width: 679px) {
+  :root, :host {
+    --column-xxs-asides-width: 100%;
+    --column-xxs-asides-overflow: 0px;
+    --column-xs-asides-width: 100%;
+    --column-xs-asides-overflow: 0px;
+  }
+}
+
+@media (max-width: 419px) {
+  :root, :host {
+    --column-xxs-asides-width: 100%;
+    --column-xs-asides-width: 100%;
+    --column-s-asides-width: 100%;
+    --column-m-asides-width: 100%;
+    --column-l-asides-width: 100%;
+    --column-xl-asides-width: 100%;
+    --column-xxl-asides-width: 100%;
+  }
+}
+
 .column-xxs {
   width: min(100%, var(--column-xxs));
 }
 
 .column-xxs:has(.aside, .aside-left, .aside-right) {
-  --PRV-column-asides-width: var(--column-asides-width, 200px);
-  --PRV-column-asides-overflow: var(
-    --column-asides-overflow,
-    calc(var(--PRV-column-asides-width) - 80px)
-  );
+  --PRV-column-asides-width: var(--column-xxs-asides-width);
+  --PRV-column-asides-overflow: var(--column-xxs-asides-overflow);
 }
 
 .column-xs {
@@ -679,20 +747,8 @@
 }
 
 .column-xs:has(.aside, .aside-left, .aside-right) {
-  --PRV-column-asides-width: var(--column-asides-width, 200px);
-  --PRV-column-asides-overflow: var(
-    --column-asides-overflow,
-    calc(var(--PRV-column-asides-width) - 80px)
-  );
-}
-
-@media (max-width: 679px) {
-  .column-xxs:has(.aside, .aside-left, .aside-right),
-  .column-xs:has(.aside, .aside-left, .aside-right) {
-    --PRV-column-asides-width: var(--column-asides-width, 100%);
-    --PRV-column-asides-overflow: var(--column-asides-overflow, 0px);
-    --aside-width: var(--PRV-column-asides-width);
-  }
+  --PRV-column-asides-width: var(--column-xs-asides-width);
+  --PRV-column-asides-overflow: var(--column-xs-asides-overflow);
 }
 
 .column-s {
@@ -700,29 +756,8 @@
 }
 
 .column-s:has(.aside, .aside-left, .aside-right) {
-  --PRV-column-asides-width: var(--column-asides-width, 220px);
-  --PRV-column-asides-overflow: var(
-    --column-asides-overflow,
-    calc(
-      var(--PRV-column-asides-width)
-      + calc(var(--lh-current-px) / 2)
-    )
-  );
-}
-
-@media (max-width: 1279px) {
-  .column-s:has(.aside, .aside-left, .aside-right) {
-    --PRV-column-asides-overflow: var(
-      --column-asides-overflow,
-      calc(var(--PRV-column-asides-width) - 120px)
-    );
-  }
-}
-
-@media (max-width: 879px) {
-  .column-s:has(.aside, .aside-left, .aside-right) {
-    --PRV-column-asides-overflow: var(--column-asides-overflow, 0px);
-  }
+  --PRV-column-asides-width: var(--column-s-asides-width);
+  --PRV-column-asides-overflow: var(--column-s-asides-overflow);
 }
 
 .column-m {
@@ -730,29 +765,8 @@
 }
 
 .column-m:has(.aside, .aside-left, .aside-right) {
-  --PRV-column-asides-width: var(--column-asides-width, 240px);
-  --PRV-column-asides-overflow: var(
-    --column-asides-overflow,
-    calc(
-      var(--PRV-column-asides-width)
-      + calc(var(--lh-current-px) / 2)
-    )
-  );
-}
-
-@media (max-width: 1279px) {
-  .column-m:has(.aside, .aside-left, .aside-right) {
-    --PRV-column-asides-overflow: var(
-      --column-asides-overflow,
-      calc(var(--PRV-column-asides-width) - 120px)
-    );
-  }
-}
-
-@media (max-width: 1023px) {
-  .column-m:has(.aside, .aside-left, .aside-right) {
-    --PRV-column-asides-overflow: var(--column-asides-overflow, 0px);
-  }
+  --PRV-column-asides-width: var(--column-m-asides-width);
+  --PRV-column-asides-overflow: var(--column-m-asides-overflow);
 }
 
 .column-l {
@@ -760,35 +774,8 @@
 }
 
 .column-l:has(.aside, .aside-left, .aside-right) {
-  --PRV-column-asides-width: var(--column-asides-width, 280px);
-  --PRV-column-asides-overflow: var(
-    --column-asides-overflow,
-    calc(var(--PRV-column-asides-width) + calc(var(--lh-current-px) / 2))
-  );
-}
-
-@media (max-width: 1619px) {
-  .column-l:has(.aside, .aside-left, .aside-right) {
-    --PRV-column-asides-overflow: var(
-      --column-asides-overflow,
-      calc(var(--PRV-column-asides-width) - 120px)
-    );
-  }
-}
-
-@media (max-width: 1279px) {
-  .column-l:has(.aside, .aside-left, .aside-right) {
-    --PRV-column-asides-overflow: var(
-      --column-asides-overflow,
-      calc(var(--PRV-column-asides-width) - 180px)
-    );
-  }
-}
-
-@media (max-width: 1119px) {
-  .column-l:has(.aside, .aside-left, .aside-right) {
-    --PRV-column-asides-overflow: var(--column-asides-overflow, 0px);
-  }
+  --PRV-column-asides-width: var(--column-l-asides-width);
+  --PRV-column-asides-overflow: var(--column-l-asides-overflow);
 }
 
 .column-xl {
@@ -796,17 +783,8 @@
 }
 
 .column-xl:has(.aside, .aside-left, .aside-right) {
-  --PRV-column-asides-width: var(--column-asides-width, 320px);
-  --PRV-column-asides-overflow: var(
-    --column-asides-overflow,
-    calc(var(--PRV-column-asides-width) - 160px)
-  );
-}
-
-@media (max-width: 1619px) {
-  .column-xl:has(.aside, .aside-left, .aside-right) {
-    --PRV-column-asides-overflow: var(--column-asides-overflow, 0px);
-  }
+  --PRV-column-asides-width: var(--column-xl-asides-width);
+  --PRV-column-asides-overflow: var(--column-xl-asides-overflow);
 }
 
 .column-xxl {
@@ -814,21 +792,10 @@
 }
 
 .column-xxl:has(.aside, .aside-left, .aside-right) {
-  --PRV-column-asides-width: var(--column-asides-width, 360px);
-  --PRV-column-asides-overflow: var(--column-asides-overflow, 0px);
+  --PRV-column-asides-width: var(--column-xxl-asides-width);
+  --PRV-column-asides-overflow: var(--column-xxl-asides-overflow);
 }
 
-@media (max-width: 419px) {
-  .column-xxs:has(.aside, .aside-left, .aside-right),
-  .column-xs:has(.aside, .aside-left, .aside-right),
-  .column-s:has(.aside, .aside-left, .aside-right),
-  .column-m:has(.aside, .aside-left, .aside-right),
-  .column-l:has(.aside, .aside-left, .aside-right),
-  .column-xl:has(.aside, .aside-left, .aside-right),
-  .column-xxl:has(.aside, .aside-left, .aside-right) {
-    --PRV-column-asides-width: var(--column-asides-width, 100%);
-  }
-}
 
 /* Aside */
 
@@ -1098,10 +1065,15 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /* Drop cap */
+
+:root, :host {
+  --drop-cap-lines: 3;
+}
+
 .drop-cap {
   @extend .fw-700;
   @extend .float-left;
-  --PRV-lines: calc(var(--drop-cap-lines, 3) - .01);
+  --PRV-lines: calc(var(--drop-cap-lines) - .01);
   --PRV-fs: calc(
     var(--lh-current-px, 1.33em)
     * var(--PRV-lines)
