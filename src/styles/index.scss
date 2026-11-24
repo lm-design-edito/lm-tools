@@ -1071,15 +1071,15 @@
 .drop-cap {
   @extend .fw-700;
   @extend .float-left;
-  --PRV-lines: calc(var(--drop-cap-lines) - .01);
-  --PRV-fs: calc(
-    var(--lh-current-px, 1.33em)
-    * var(--PRV-lines)
+  --PRV-drop-cap-lines: calc(var(--drop-cap-lines) - .01);
+  --PRV-drop-cap-font-size: calc(
+    var(--lh-current-px)
+    * var(--PRV-drop-cap-lines)
   );
-  --PRV-margin: calc(.25em / var(--PRV-lines));
-  font-size: var(--PRV-fs);
+  --PRV-drop-cap-margin: calc(.25em / var(--PRV-drop-cap-lines));
+  font-size: var(--PRV-drop-cap-font-size);
   line-height: 1;
-  margin-right: var(--PRV-margin);
+  margin-right: var(--PRV-drop-cap-margin);
 }
 
 .drop-cap-xxs { @extend .drop-cap; --drop-cap-lines: 0.99; }
