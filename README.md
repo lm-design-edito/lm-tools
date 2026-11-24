@@ -41,8 +41,46 @@ the `sass` condition picks the source, anything else the compiled file.
 
 The build compiles the `.css` from the `.scss` so the two cannot drift. This is the one
 place where a `.scss` is public API: a component's `styles.module.css` is not, since the
-`exports` map only ever names `index.js`, `types.js` and what this folder holds. It
-carries no `index.ts` either, and is kept out of the re-export generator on purpose.
+`exports` map only ever names `index.js`, `types.js` and what this folder holds. The
+folder itself carries no `index.ts` — `./styles` is the stylesheet, and the re-export
+generator leaves the whole directory alone — but a module **under** it is published like
+any other, which is how `styles/visibility-triggers` below is reached.
+
+**Every value a consumer may set is declared on `:root, :host`, and read with no
+fallback.** The declaration is the documentation: a name declared nowhere is not API. A
+default that varies with the viewport is redeclared on `:root, :host` inside a media
+query — the seven `--column-<size>-asides-width` / `--column-<size>-asides-overflow`
+pairs are the longest ladder of that kind. A `var()` fallback is left only for a name
+belonging to a layer that may not be loaded. What the sheet resolves for itself is
+`--PRV-*`, declared on the element that reads it and never part of the API.
+
+**The sheet takes four global `@keyframes` names** — `do-fade`, `undo-fade`,
+`do-transform`, `undo-transform`. Keyframes live in one flat table per document with no
+per-element arbitration, so a consumer defining one of those four replaces ours
+everywhere it is used, including inside our own components — where a same-named *class*
+would merely have competed, rule by rule. Nothing outside the sheet writes these names,
+which makes the collision unlikely rather than impossible.
+
+### `styles/visibility-triggers`
+
+`activateVisibilityTriggers()` watches the document for elements carrying a class list
+keyed on their own visibility and applies it as they enter or leave the viewport;
+`deactivateVisibilityTriggers()` ends the watch. Elements are found by polling, so one
+appended later needs no registration, and a page calls the pair once — lm-link does it
+from its own `load()`.
+
+Each attribute takes a comma-separated class list. `when-*` applies on every crossing,
+`once-*` on the first one only:
+
+| | entering the viewport | leaving it |
+| --- | --- | --- |
+| every crossing | `data-add-when-visible`, `data-remove-when-visible`, `data-toggle-when-visible` | `data-add-when-hidden`, `data-remove-when-hidden`, `data-toggle-when-hidden` |
+| first crossing | `data-add-once-visible`, `data-remove-once-visible`, `data-toggle-once-visible` | `data-add-once-hidden`, `data-remove-once-hidden`, `data-toggle-once-hidden` |
+
+`data-animate-on-visibility` and `data-animate-on-visibility-once` are the shorthand for
+the `do-*` effects: the effect class is added with `do--play` when the element is visible
+and with `do--init` when it is hidden, which is what replays an animation that a bare
+`do-*` class plays once and never again.
 
 ---
 
