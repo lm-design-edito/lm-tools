@@ -16,7 +16,7 @@
 :root, :host {
   --fs-current: var(--fs-6);
   --lh-current: var(--lh-6);
-  --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-0));
+  --lh-current-px: calc(var(--fs-current) * var(--lh-0));
 }
 
 .fs-0 { --fs-current: var(--fs-0); font-size: var(--fs-0); }
@@ -62,39 +62,39 @@
 @media (min-width: 1280px) { :root, :host { --lh-0: 1.5; --lh-1: 1.49; --lh-2: 1.47; --lh-3: 1.46; --lh-4: 1.45; --lh-5: 1.43; --lh-6: 1.42; --lh-7: 1.41; --lh-8: 1.39; --lh-9: 1.38; --lh-10: 1.37; --lh-11: 1.36; --lh-12: 1.34; --lh-13: 1.33; --lh-14: 1.32; --lh-15: 1.31; --lh-16: 1.3; --lh-17: 1.28; --lh-18: 1.27; --lh-19: 1.26; --lh-20: 1.25; --lh-21: 1.24; --lh-22: 1.23; --lh-23: 1.21; --lh-24: 1.2; --lh-25: 1.19; --lh-26: 1.18; --lh-27: 1.17; --lh-28: 1.16; --lh-29: 1.15; --lh-30: 1.14; --lh-31: 1.13; --lh-32: 1.12; } }
 @media (min-width: 1440px) { :root, :host { --lh-0: 1.5; --lh-1: 1.49; --lh-2: 1.47; --lh-3: 1.46; --lh-4: 1.44; --lh-5: 1.43; --lh-6: 1.42; --lh-7: 1.4; --lh-8: 1.39; --lh-9: 1.38; --lh-10: 1.37; --lh-11: 1.35; --lh-12: 1.34; --lh-13: 1.33; --lh-14: 1.31; --lh-15: 1.3; --lh-16: 1.29; --lh-17: 1.28; --lh-18: 1.27; --lh-19: 1.25; --lh-20: 1.24; --lh-21: 1.23; --lh-22: 1.22; --lh-23: 1.21; --lh-24: 1.2; --lh-25: 1.19; --lh-26: 1.17; --lh-27: 1.16; --lh-28: 1.15; --lh-29: 1.14; --lh-30: 1.13; --lh-31: 1.12; --lh-32: 1.11; } }
 
-.lh-0 { --lh-current: var(--lh-0); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-0)); line-height: var(--lh-0); }
-.lh-1 { --lh-current: var(--lh-1); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-1)); line-height: var(--lh-1); }
-.lh-2 { --lh-current: var(--lh-2); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-2)); line-height: var(--lh-2); }
-.lh-3 { --lh-current: var(--lh-3); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-3)); line-height: var(--lh-3); }
-.lh-4 { --lh-current: var(--lh-4); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-4)); line-height: var(--lh-4); }
-.lh-5 { --lh-current: var(--lh-5); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-5)); line-height: var(--lh-5); }
-.lh-6 { --lh-current: var(--lh-6); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-6)); line-height: var(--lh-6); }
-.lh-7 { --lh-current: var(--lh-7); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-7)); line-height: var(--lh-7); }
-.lh-8 { --lh-current: var(--lh-8); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-8)); line-height: var(--lh-8); }
-.lh-9 { --lh-current: var(--lh-9); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-9)); line-height: var(--lh-9); }
-.lh-10 { --lh-current: var(--lh-10); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-10)); line-height: var(--lh-10); }
-.lh-11 { --lh-current: var(--lh-11); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-11)); line-height: var(--lh-11); }
-.lh-12 { --lh-current: var(--lh-12); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-12)); line-height: var(--lh-12); }
-.lh-13 { --lh-current: var(--lh-13); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-13)); line-height: var(--lh-13); }
-.lh-14 { --lh-current: var(--lh-14); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-14)); line-height: var(--lh-14); }
-.lh-15 { --lh-current: var(--lh-15); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-15)); line-height: var(--lh-15); }
-.lh-16 { --lh-current: var(--lh-16); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-16)); line-height: var(--lh-16); }
-.lh-17 { --lh-current: var(--lh-17); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-17)); line-height: var(--lh-17); }
-.lh-18 { --lh-current: var(--lh-18); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-18)); line-height: var(--lh-18); }
-.lh-19 { --lh-current: var(--lh-19); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-19)); line-height: var(--lh-19); }
-.lh-20 { --lh-current: var(--lh-20); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-20)); line-height: var(--lh-20); }
-.lh-21 { --lh-current: var(--lh-21); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-21)); line-height: var(--lh-21); }
-.lh-22 { --lh-current: var(--lh-22); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-22)); line-height: var(--lh-22); }
-.lh-23 { --lh-current: var(--lh-23); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-23)); line-height: var(--lh-23); }
-.lh-24 { --lh-current: var(--lh-24); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-24)); line-height: var(--lh-24); }
-.lh-25 { --lh-current: var(--lh-25); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-25)); line-height: var(--lh-25); }
-.lh-26 { --lh-current: var(--lh-26); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-26)); line-height: var(--lh-26); }
-.lh-27 { --lh-current: var(--lh-27); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-27)); line-height: var(--lh-27); }
-.lh-28 { --lh-current: var(--lh-28); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-28)); line-height: var(--lh-28); }
-.lh-29 { --lh-current: var(--lh-29); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-29)); line-height: var(--lh-29); }
-.lh-30 { --lh-current: var(--lh-30); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-30)); line-height: var(--lh-30); }
-.lh-31 { --lh-current: var(--lh-31); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-31)); line-height: var(--lh-31); }
-.lh-32 { --lh-current: var(--lh-32); --lh-current-px: calc(var(--fs-current, 1em) * var(--lh-32)); line-height: var(--lh-32); }
+.lh-0 { --lh-current: var(--lh-0); --lh-current-px: calc(var(--fs-current) * var(--lh-0)); line-height: var(--lh-0); }
+.lh-1 { --lh-current: var(--lh-1); --lh-current-px: calc(var(--fs-current) * var(--lh-1)); line-height: var(--lh-1); }
+.lh-2 { --lh-current: var(--lh-2); --lh-current-px: calc(var(--fs-current) * var(--lh-2)); line-height: var(--lh-2); }
+.lh-3 { --lh-current: var(--lh-3); --lh-current-px: calc(var(--fs-current) * var(--lh-3)); line-height: var(--lh-3); }
+.lh-4 { --lh-current: var(--lh-4); --lh-current-px: calc(var(--fs-current) * var(--lh-4)); line-height: var(--lh-4); }
+.lh-5 { --lh-current: var(--lh-5); --lh-current-px: calc(var(--fs-current) * var(--lh-5)); line-height: var(--lh-5); }
+.lh-6 { --lh-current: var(--lh-6); --lh-current-px: calc(var(--fs-current) * var(--lh-6)); line-height: var(--lh-6); }
+.lh-7 { --lh-current: var(--lh-7); --lh-current-px: calc(var(--fs-current) * var(--lh-7)); line-height: var(--lh-7); }
+.lh-8 { --lh-current: var(--lh-8); --lh-current-px: calc(var(--fs-current) * var(--lh-8)); line-height: var(--lh-8); }
+.lh-9 { --lh-current: var(--lh-9); --lh-current-px: calc(var(--fs-current) * var(--lh-9)); line-height: var(--lh-9); }
+.lh-10 { --lh-current: var(--lh-10); --lh-current-px: calc(var(--fs-current) * var(--lh-10)); line-height: var(--lh-10); }
+.lh-11 { --lh-current: var(--lh-11); --lh-current-px: calc(var(--fs-current) * var(--lh-11)); line-height: var(--lh-11); }
+.lh-12 { --lh-current: var(--lh-12); --lh-current-px: calc(var(--fs-current) * var(--lh-12)); line-height: var(--lh-12); }
+.lh-13 { --lh-current: var(--lh-13); --lh-current-px: calc(var(--fs-current) * var(--lh-13)); line-height: var(--lh-13); }
+.lh-14 { --lh-current: var(--lh-14); --lh-current-px: calc(var(--fs-current) * var(--lh-14)); line-height: var(--lh-14); }
+.lh-15 { --lh-current: var(--lh-15); --lh-current-px: calc(var(--fs-current) * var(--lh-15)); line-height: var(--lh-15); }
+.lh-16 { --lh-current: var(--lh-16); --lh-current-px: calc(var(--fs-current) * var(--lh-16)); line-height: var(--lh-16); }
+.lh-17 { --lh-current: var(--lh-17); --lh-current-px: calc(var(--fs-current) * var(--lh-17)); line-height: var(--lh-17); }
+.lh-18 { --lh-current: var(--lh-18); --lh-current-px: calc(var(--fs-current) * var(--lh-18)); line-height: var(--lh-18); }
+.lh-19 { --lh-current: var(--lh-19); --lh-current-px: calc(var(--fs-current) * var(--lh-19)); line-height: var(--lh-19); }
+.lh-20 { --lh-current: var(--lh-20); --lh-current-px: calc(var(--fs-current) * var(--lh-20)); line-height: var(--lh-20); }
+.lh-21 { --lh-current: var(--lh-21); --lh-current-px: calc(var(--fs-current) * var(--lh-21)); line-height: var(--lh-21); }
+.lh-22 { --lh-current: var(--lh-22); --lh-current-px: calc(var(--fs-current) * var(--lh-22)); line-height: var(--lh-22); }
+.lh-23 { --lh-current: var(--lh-23); --lh-current-px: calc(var(--fs-current) * var(--lh-23)); line-height: var(--lh-23); }
+.lh-24 { --lh-current: var(--lh-24); --lh-current-px: calc(var(--fs-current) * var(--lh-24)); line-height: var(--lh-24); }
+.lh-25 { --lh-current: var(--lh-25); --lh-current-px: calc(var(--fs-current) * var(--lh-25)); line-height: var(--lh-25); }
+.lh-26 { --lh-current: var(--lh-26); --lh-current-px: calc(var(--fs-current) * var(--lh-26)); line-height: var(--lh-26); }
+.lh-27 { --lh-current: var(--lh-27); --lh-current-px: calc(var(--fs-current) * var(--lh-27)); line-height: var(--lh-27); }
+.lh-28 { --lh-current: var(--lh-28); --lh-current-px: calc(var(--fs-current) * var(--lh-28)); line-height: var(--lh-28); }
+.lh-29 { --lh-current: var(--lh-29); --lh-current-px: calc(var(--fs-current) * var(--lh-29)); line-height: var(--lh-29); }
+.lh-30 { --lh-current: var(--lh-30); --lh-current-px: calc(var(--fs-current) * var(--lh-30)); line-height: var(--lh-30); }
+.lh-31 { --lh-current: var(--lh-31); --lh-current-px: calc(var(--fs-current) * var(--lh-31)); line-height: var(--lh-31); }
+.lh-32 { --lh-current: var(--lh-32); --lh-current-px: calc(var(--fs-current) * var(--lh-32)); line-height: var(--lh-32); }
 
 /* Size (font-size + line-height) */
 
@@ -799,11 +799,16 @@
 
 /* Aside */
 
+:root, :host {
+  --aside-width: 100%;
+  --aside-overflow: 0px;
+}
+
 .aside {
   @extend .float-left;
   @extend .disp-block;
-  width: var(--aside-width, 100%);
-  margin-left: calc(-1 * var(--aside-overflow, 0px));
+  width: var(--aside-width);
+  margin-left: calc(-1 * var(--aside-overflow));
 }
 
 .aside-left {
@@ -814,7 +819,7 @@
   @extend .aside;
   @extend .float-right;
   margin-left: unset;
-  margin-right: calc(-1 * var(--aside-overflow, 0px));
+  margin-right: calc(-1 * var(--aside-overflow));
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -1185,12 +1190,20 @@
 .text { color: var(--text-color); }
 .accent { color: var(--accent-color); }
 
+:root, :host {
+  --underline-line: underline;
+  --underline-thickness: 1px;
+  --underline-style: solid;
+  --underline-color: var(--text-color);
+  --underline-offset: .2em;
+}
+
 .underline {
-  text-decoration: var(--underline-line, underline)
-    var(--underline-thickness, 1px)
-    var(--underline-style, solid)
-    var(--underline-color, black);
-  text-underline-offset: var(--underline-offset, .2em);
+  text-decoration: var(--underline-line)
+    var(--underline-thickness)
+    var(--underline-style)
+    var(--underline-color);
+  text-underline-offset: var(--underline-offset);
 }
 
 .border-bottom-xxs,
@@ -1367,7 +1380,7 @@
   --do-fade-to: 1;
   --do-fade-duration: 1s;
   --do-fade-delay: 200ms;
-  --do-fade-ease: var(--ease-out-circ, ease-in-out);
+  --do-fade-ease: var(--ease-out-circ);
   --do-fade-count: 1;
   --do-fade-direction: normal;
 }
@@ -1433,7 +1446,7 @@
   --do-transform-to: none;
   --do-transform-duration: 1s;
   --do-transform-delay: 200ms;
-  --do-transform-ease: var(--ease-out-circ, ease-in-out);
+  --do-transform-ease: var(--ease-out-circ);
   --do-transform-count: 1;
   --do-transform-direction: normal;
 }
@@ -1466,7 +1479,7 @@
   --do-slide-up-to: none;
   --do-slide-up-duration: 1s;
   --do-slide-up-delay: 200ms;
-  --do-slide-up-ease: var(--ease-out-circ, ease-in-out);
+  --do-slide-up-ease: var(--ease-out-circ);
   --do-slide-up-count: 1;
   --do-slide-up-direction: normal;
 }
@@ -1496,7 +1509,7 @@
   --do-slide-down-to: none;
   --do-slide-down-duration: 1s;
   --do-slide-down-delay: 200ms;
-  --do-slide-down-ease: var(--ease-out-circ, ease-in-out);
+  --do-slide-down-ease: var(--ease-out-circ);
   --do-slide-down-count: 1;
   --do-slide-down-direction: normal;
 }
@@ -1526,7 +1539,7 @@
   --do-slide-left-to: none;
   --do-slide-left-duration: 1s;
   --do-slide-left-delay: 200ms;
-  --do-slide-left-ease: var(--ease-out-circ, ease-in-out);
+  --do-slide-left-ease: var(--ease-out-circ);
   --do-slide-left-count: 1;
   --do-slide-left-direction: normal;
 }
@@ -1556,7 +1569,7 @@
   --do-slide-right-to: none;
   --do-slide-right-duration: 1s;
   --do-slide-right-delay: 200ms;
-  --do-slide-right-ease: var(--ease-out-circ, ease-in-out);
+  --do-slide-right-ease: var(--ease-out-circ);
   --do-slide-right-count: 1;
   --do-slide-right-direction: normal;
 }
@@ -1586,7 +1599,7 @@
   --do-scale-up-to: none;
   --do-scale-up-duration: 1s;
   --do-scale-up-delay: 200ms;
-  --do-scale-up-ease: var(--ease-out-circ, ease-in-out);
+  --do-scale-up-ease: var(--ease-out-circ);
   --do-scale-up-count: 1;
   --do-scale-up-direction: normal;
 }
@@ -1616,7 +1629,7 @@
   --do-scale-down-to: none;
   --do-scale-down-duration: 1s;
   --do-scale-down-delay: 200ms;
-  --do-scale-down-ease: var(--ease-out-circ, ease-in-out);
+  --do-scale-down-ease: var(--ease-out-circ);
   --do-scale-down-count: 1;
   --do-scale-down-direction: normal;
 }
@@ -1646,7 +1659,7 @@
   --do-rotate-to: none;
   --do-rotate-duration: 1s;
   --do-rotate-delay: 200ms;
-  --do-rotate-ease: var(--ease-out-circ, ease-in-out);
+  --do-rotate-ease: var(--ease-out-circ);
   --do-rotate-count: 1;
   --do-rotate-direction: normal;
 }
