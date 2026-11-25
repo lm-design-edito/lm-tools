@@ -26,22 +26,52 @@ export const STEPS_ATTRIBUTE = 'data-steps'
  * the child. A child after the mark that names no step therefore never lights up, which
  * is the honest reading of « it is not part of the sequence ».
  *
+ * **`last` here is the index and not the reading sense**: the mark is the highest step
+ * the sequence counts, which under `reverse` is where it starts rather than where it
+ * ends.
+ *
  * Valueless, as an HTML boolean attribute: what matters is that it is there.
  */
 export const LAST_STEP_ATTRIBUTE = 'data-last-step'
 
 /**
+ * The two directions a sequence runs in, named on the index and nothing else.
+ *
+ * `forward` is the index ascending and `backward` the index descending, **whichever way
+ * the sequence happens to be playing** — which is what makes them the invariable half of
+ * this component's vocabulary, and `reverse` the prop that switches between them.
+ */
+export const SEQUENCER_DIRECTIONS = [
+  'forward',
+  'backward'
+] as const
+
+/** One of {@link SEQUENCER_DIRECTIONS}. */
+export type SequencerDirection = typeof SEQUENCER_DIRECTIONS[number]
+
+/**
  * Everything a command can ask of a sequence, in the family `Video` already uses.
  *
+ * **Two axes, and every verb belongs to one of them.** The index — `first`, `last`,
+ * `forward`, `backward` — never moves: `jump-last` is the highest step whatever the
+ * sequence is doing. The reading sense — `start`, `end`, and the sign of `jump-by` —
+ * follows `reverse`: `jump-start` is the step playback begins on, which is the last index
+ * when the sequence runs backward.
+ *
  * **A jump names a position, never an active step**: `stepMap` is read after the jump,
- * not before, so `jump-to:1` is the second beat whatever step it resolves to. No `reset`
+ * not before, so `jump-to:1` is the second step whatever step it resolves to. No `reset`
  * — the old `resetOnVisible` **is** `jump-start` — and no `stop`, since
  * `['pause', 'jump-start']` composes and a list runs in order.
  */
 export const SEQUENCER_ACTION_VERBS = [
   'play',
   'pause',
+  'direction',
   'jump-to',
+  'jump-first',
+  'jump-last',
+  'jump-forward-by',
+  'jump-backward-by',
   'jump-start',
   'jump-end',
   'jump-by'
@@ -51,27 +81,42 @@ export const SEQUENCER_ACTION_VERBS = [
 export type SequencerActionVerb = typeof SEQUENCER_ACTION_VERBS[number]
 
 /**
- * What a caller writes: a verb, and its argument after a colon for the two that take one.
+ * What a caller writes: a verb, and its argument after a colon for the four that take
+ * one.
  *
  * A step is a whole number, and **a negative one counts back from the end**: `jump-to:-1`
  * is the last step, `-1` rather than `-0` because `-0 === 0` would collide with the
- * start. `jump-by` reads the same sign as a direction instead — `jump-by:-1` steps back
- * one — which is the price of one `jump-*` family rather than a `next` / `prev` pair
- * beside it.
+ * first. The two `jump-*-by` carry a direction in the verb and take a plain count, so
+ * only `jump-by` reads a sign — as a direction along the reading sense, `jump-by:-1`
+ * stepping back one towards the start of playback.
  */
 export type SequencerAction =
-  | Exclude<SequencerActionVerb, 'jump-to' | 'jump-by'>
+  | Exclude<
+    SequencerActionVerb,
+    'direction' | 'jump-to' | 'jump-forward-by' | 'jump-backward-by' | 'jump-by'
+  >
+  | `direction:${SequencerDirection}`
   | `jump-to:${number}`
+  | `jump-forward-by:${number}`
+  | `jump-backward-by:${number}`
   | `jump-by:${number}`
 
 const isStep = (arg: string): boolean => /^-?\d+$/v.test(arg)
+
+const isStepCount = (arg: string): boolean => /^\d+$/v.test(arg)
+
+const isDirection = (arg: string): boolean => SEQUENCER_DIRECTIONS
+  .some(direction => direction === arg)
 
 /**
  * How to read the argument of each verb that takes one. The others take none, and a verb
  * absent from here is handed its argument list unread.
  */
 export const SEQUENCER_ACTION_VERB_ARGUMENTS = {
+  direction: isDirection,
   'jump-to': isStep,
+  'jump-forward-by': isStepCount,
+  'jump-backward-by': isStepCount,
   'jump-by': isStep
 } as const satisfies Partial<Record<SequencerActionVerb, (arg: string) => boolean>>
 
@@ -91,11 +136,19 @@ export const SEQUENCER_ACTION_DOMAINS = [
 /** One of {@link SEQUENCER_ACTION_DOMAINS}. */
 export type SequencerActionDomain = typeof SEQUENCER_ACTION_DOMAINS[number]
 
-/** The domain of each verb — see {@link SEQUENCER_ACTION_DOMAINS}. */
+/**
+ * The domain of each verb — see {@link SEQUENCER_ACTION_DOMAINS}. `direction` is playback
+ * and not position: it says which way the sequence runs, not where it is.
+ */
 export const SEQUENCER_ACTION_VERB_DOMAINS = {
   play: 'playback',
   pause: 'playback',
+  direction: 'playback',
   'jump-to': 'position',
+  'jump-first': 'position',
+  'jump-last': 'position',
+  'jump-forward-by': 'position',
+  'jump-backward-by': 'position',
   'jump-start': 'position',
   'jump-end': 'position',
   'jump-by': 'position'
