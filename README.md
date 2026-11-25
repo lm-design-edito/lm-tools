@@ -889,6 +889,32 @@ The options are flat and prefixed on each component — `visibilityThreshold`,
 and `useVisibilityTriggers` builds `VisibilityOptions` from them, so no component does that
 mapping by hand.
 
+## Les déclencheurs — the `when*` family every state owes
+
+Visibility has `whenVisible` / `whenHidden`; **nothing else does**. Every other state a
+component publishes is reachable only through its `on*` handler, so answering a component's
+own states means writing JavaScript, where answering its visibility is a prop.
+
+The missing layer is one `when*` per state a component already emits, sending commands the
+way the visibility triggers do: `whenAtFirst`, `whenAtLast`, `whenStarted`, `whenEnded`,
+`whenLooped` on `Sequencer`, and whatever the equivalent list is on `Video`, `Gallery` and
+`Paginator`. It came up on the sequencer's round trip, where `whenEnded: 'jump-by:1'` is
+how one would skip a beat that is not wanted — and the only way to do that today is an
+`on*` handler calling `sendCommands` by hand.
+
+What has to be settled before anything is written:
+
+- **Which states earn a trigger.** One per `on*` handler is the easy answer and probably
+  the wrong one: a trigger on every item change is a command sent on every beat.
+- **Where the mapping lives.** `useVisibilityTriggers` is visibility's own; a general
+  `useStateTriggers(compId, { whenX: state })` would serve every component, and it is the
+  same shape — a settled state turned into commands.
+- **What it costs in props.** `Sequencer` already takes some thirty, and a `when*` per
+  state is a second name for each of them.
+- **Whether a trigger fires on mount**, as the first settled visibility state does.
+
+Opened 2026-11-25, and it does not block lm-link's publication either way.
+
 ## Disclosure — what a standing disclaimer withholds
 
 `components/utils/disclosure` carries the one thing the command layer needs to know about
