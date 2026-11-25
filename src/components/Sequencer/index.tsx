@@ -28,14 +28,24 @@ import { useVisibilityTriggers } from '../utils/visibility/index.js'
 import type { VisibilityProps } from '../utils/visibility/types.js'
 import { sequencer as publicClassName } from '../public-classnames.js'
 import cssModule from './styles.module.css'
-import { SEQUENCER_ACTION_VERB_ARGUMENTS } from './types.js'
+import {
+  SEQUENCER_ACTION_VERB_ARGUMENTS,
+  type SequencerEasing
+} from './types.js'
 import {
   getChildActiveItems,
-  hasDataLastItemAttribute
+  hasDataLastItemAttribute,
+  resolveEasing
 } from './utils.js'
 
 // A step is time and an item is place: `reverse` makes the two run opposite ways, and
 // `itemMap` turns the item into the active item children are matched on.
+
+// The two cannot be written together: a union rather than a runtime check alone, so the
+// mistake is caught where it is made.
+type DirectionProps =
+  | { reverse?: boolean, alternate?: undefined }
+  | { reverse?: undefined, alternate?: boolean }
 
 /**
  * @property totalItems - How many items the sequence has. Falls back to the first child
@@ -57,8 +67,8 @@ import {
  * the count over from the tempo.
  * @property defaultPlay - Whether it starts advancing. `false` by default, and the
  * starting point a `'play'` instruction moves from — not a setting, hence `default…`.
- * @property tempo - Speed in steps per minute: one step every `60000 / tempo` ms, so `60`
- * is a step per second. Clamped to a minimum of `1`.
+ * @property tempo - Speed in counter ticks per minute, so `60` is a tick per second. A
+ * lap lasts `totalItems` ticks whatever the easing does inside it.
  * @property loop - Whether the sequence wraps round. **`false` by default**, so a
  * sequence ends the way a video does rather than running forever.
  * @property reverse - Whether the sequence runs backward — down the items instead of up
@@ -68,16 +78,29 @@ import {
  * wins and the conflict is logged.
  * @property alternate - Whether the sequence turns round at each end instead of starting
  * over. **It composes with `loop`**: alone it is one round trip and then the end, with
- * `loop` the round trips follow one another. The item it turns on plays once — `5, 6, 5`
- * and not `5, 6, 6, 5` — so a round trip over seven items is two laps of six steps, the
- * first starting forward on item `0` and the second backward on item `6`, plus the step
- * that brings it home. Ignored on a sequence of one item, which has nothing to alternate.
+ * `loop` the round trips follow one another. **Each end takes two steps**, one for the
+ * pass arriving on it and one for the pass leaving it — the item does not change on that
+ * beat, it holds for both — so a lap stays `totalItems` steps and a round trip is two
+ * laps exactly. Ignored on a sequence of one item, which has nothing to alternate.
  * @property defaultReverse - Which way it starts running. `false` by default, which is
  * `forward`, and the direction a `direction` instruction moves from — not a setting,
  * hence `default…`. **It is also where an alternating sequence starts**, `reverse` being
  * closed to it.
+ * @property easing - How a lap's time is spread over its items. An item's dwell is its
+ * slice of the curve — `easing((i + 1) / totalItems) - easing(i / totalItems)` of the
+ * lap's duration — so a curve redistributes a lap's time without changing it, and the
+ * default, `linear`, gives every item one tick.
+ * @property reverseEasing - The curve a backward pass uses, read from where that pass
+ * starts. **Absent, the backward pass replays the forward dwells in reverse order**, so
+ * an item keeps the time `easing` gave it whichever way the sequence is running.
  * @property onItemChanged - Called when the item changes, with `item` and the
  * `activeItem` it resolves to. Never on mount.
+ * @property onStarted - Called when the count arrives on a lap's first step. Never on
+ * mount, like every handler here, so a sequence that neither loops nor alternates — whose
+ * first step is its only start — never emits.
+ * @property onEnded - Called when a lap's last step runs out of time: at each lap
+ * boundary while the sequence runs on, and once at the end when it stops there. This is
+ * the instant, where `onIsEndedChanged` is the state.
  * @property onIsPlayingChanged - Called once the effective play state changed — which
  * includes it dropping to `false` on its own at the end.
  * @property onIsReversedChanged - Called once the effective direction changed.
@@ -98,12 +121,6 @@ import {
  * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
  * `onVisibilityChanged` and the five `visibility*` settings.
  */
-// The two cannot be written together: a union rather than a runtime check alone, so the
-// mistake is caught where it is made.
-type DirectionProps =
-  | { reverse?: boolean, alternate?: undefined }
-  | { reverse?: undefined, alternate?: boolean }
-
 export type Props = {
   totalItems?: number
   itemMap?: number[]
@@ -114,7 +131,11 @@ export type Props = {
   tempo?: number
   loop?: boolean
   defaultReverse?: boolean
+  easing?: SequencerEasing
+  reverseEasing?: SequencerEasing
   onItemChanged?: (payload: { item: number, activeItem: number }) => void
+  onStarted?: () => void
+  onEnded?: () => void
   onIsPlayingChanged?: (isPlaying: boolean) => void
   onIsReversedChanged?: (isReversed: boolean) => void
   onIsEndedChanged?: (isEnded: boolean) => void
@@ -152,7 +173,7 @@ export type Props = {
  * belongs to the items; everything named `start`, `end`, `earlier` or `later` belongs to
  * the steps, and follows the direction.
  *
- * **A lap is one pass over the items**, which is also the unit `alternate` is built on: a
+ * **A lap is `totalItems` steps**, which is also the unit `alternate` is built on: a
  * round trip is two laps, the second one running the items back down, and the direction
  * is the parity of the lap rather than a state of its own.
  *
@@ -184,9 +205,9 @@ export type Props = {
  *   `jump-to` counts back from the end, so `jump-to:-1` is the last item; the two
  *   `jump-*-by` carry their direction in the verb and take a plain count.
  * - `jump-start`, `jump-end`, `jump-by:<n>` — steps, which it does move. `jump-start` is
- *   where playback begins, the last item under `reverse`, and `jump-by:1` the next item
- *   played whichever way the sequence runs. On an alternating sequence the three read the
- *   cycle, so `jump-end` is the far turn and `jump-start` home.
+ *   where playback begins and `jump-end` where it stops, which on an alternating sequence
+ *   is the step that brings it home rather than the far turn. `jump-by:1` is the next item
+ *   played whichever way the sequence runs.
  *
  * **A verb never contradicts a prop**: `play` and `pause` are inert while `play` arrived
  * as one, `direction` while `reverse` did, every `jump-*` while `step` did. **A command
@@ -202,26 +223,27 @@ export type Props = {
  *
  * `play` on a sequence that has ended does nothing, since ending is what stops it:
  * `['jump-start', 'play']` is how it starts again, and a `loop` sequence never ends so
- * never meets the case. An absolute jump stays in the lap it was made from, so it is not
+ * never meets the case. An absolute jump stays in the cycle it was made from, so it is not
  * a wrap and `onLooped` does not fire.
  *
  * @remarks
  * ### On the root
- * `--playing`, `--at-start`, `--at-end`, `--reverse`, `--ended`, `--visible`, plus
+ * `--playing`, `--at-first`, `--at-last`, `--reverse`, `--ended`, `--visible`, plus
  * `data-item`, `data-active-item`, `data-total-items`, `data-tempo`, `data-lap` and
- * `data-step`. `--at-start` and `--at-end` are steps, so `reverse` swaps which end of the
- * items they land on, and on an alternating sequence they are the two turns of the cycle.
- * `--reverse` is the direction being run and not the prop, so it comes and goes lap by
- * lap while `alternate` is on.
+ * `data-step`.
+ *
+ * **`--at-first` and `--at-last` are items**, so they stay where they are whatever the
+ * direction, and the ends of a pass are `.--at-first:not(.--reverse)` and
+ * `.--at-last.--reverse`. `--reverse` is the direction being run and not the prop, so it
+ * comes and goes lap by lap while `alternate` is on.
  *
  * The same six numbers are also published as custom properties —
  * `--lm-sequencer-item`, `--lm-sequencer-active-item`, `--lm-sequencer-total-items`,
  * `--lm-sequencer-tempo`, `--lm-sequencer-lap` and `--lm-sequencer-step`, the count that
- * keeps growing across laps (`lap × total` plus the step reached in it). **A data
- * attribute selects, a custom property computes**: `attr()` cannot feed a `calc()`, so a
- * rule that wants to turn something by a degree per step needs the property, and gets it
- * on every descendant since custom properties inherit —
- * `transform: rotate(calc(var(--lm-sequencer-step) * 5deg))`.
+ * keeps growing across laps. **A data attribute selects, a custom property computes**:
+ * `attr()` cannot feed a `calc()`, so a rule that wants to turn something by a degree per
+ * step needs the property, and gets it on every descendant since custom properties
+ * inherit — `transform: rotate(calc(var(--lm-sequencer-step) * 5deg))`.
  *
  * No `-raw` twin as `ResizeObserver` has: every one of these is a bare number, and none
  * of them would mean anything with a unit attached.
@@ -229,7 +251,7 @@ export type Props = {
  * ### On each element child
  * The `__child` element class, then three pairs, one of each always present:
  * - `--on` / `--off` — whether it belongs to the active item.
- * - `--has-earlier-turn` / `--no-earlier-turn` — whether a turn of its own came earlier
+ * - `--had-earlier-turn` / `--no-earlier-turn` — whether a turn of its own came earlier
  *   in this lap's playback.
  * - `--has-later-turn` / `--no-later-turn` — whether it has another one left in this lap.
  *
@@ -261,7 +283,11 @@ export const Sequencer: FunctionComponent<Props> = ({
   reverse,
   alternate,
   defaultReverse,
+  easing,
+  reverseEasing,
   onItemChanged,
+  onStarted,
+  onEnded,
   onIsPlayingChanged,
   onIsReversedChanged,
   onIsEndedChanged,
@@ -301,21 +327,19 @@ export const Sequencer: FunctionComponent<Props> = ({
   // One item has nothing to alternate, and neither has a sequence whose direction the
   // consumer holds — the conflict is said below rather than thrown.
   const isAlternating = reverse === undefined && alternate === true && itemsCount > 1
-  const lapLength = isAlternating ? itemsCount - 1 : itemsCount
-  const cycleLength = isAlternating ? 2 * lapLength : lapLength
-  // A round trip comes home, so its last step is the one after its two laps rather than
-  // the last of them.
-  const lastStep = isAlternating ? cycleLength : itemsCount - 1
-  // The count runs one past the end so the last item played gets a step of its own; what
-  // is read from here on is this one, which stops there.
+  const cycleLength = isAlternating ? 2 * itemsCount : itemsCount
+  const lastStep = cycleLength - 1
+  // The count runs past the end so the last item played gets its own step; what is read
+  // from here on is this one, which stops there.
   const publishedStep = loop === true
     ? rawStep
     : clamp(rawStep, 0, Math.max(lastStep, 0))
   const stepInCycle = cycleLength > 0 ? absoluteModulo(publishedStep, cycleLength) : 0
+  const stepInLap = itemsCount > 0 ? absoluteModulo(publishedStep, itemsCount) : 0
   // Past the far end an alternating cycle walks the items back down, which is the whole
   // of the alternation.
   const forwardItem = isAlternating && stepInCycle >= itemsCount
-    ? cycleLength - stepInCycle
+    ? cycleLength - 1 - stepInCycle
     : stepInCycle
   const isBaseReversed = reverse ?? internalReverse
   // Its own inverse, so it also reads an item back as the forward item that plays it.
@@ -335,16 +359,31 @@ export const Sequencer: FunctionComponent<Props> = ({
 
   // A lap counter rather than a comparison of items: `onLooped` has to fire on the wrap
   // itself, and the item on either side of it says nothing about having crossed.
-  const lapCount = lapLength > 0 ? Math.floor(publishedStep / lapLength) : 0
-  // A one-shot round trip comes home on the first step of a third lap — the lap it ends
-  // on rather than one it runs, so the count keeps that step and the lap does not.
-  const lap = loop !== true && isAlternating ? Math.min(lapCount, 1) : lapCount
+  const lap = itemsCount > 0 ? Math.floor(publishedStep / itemsCount) : 0
   const isReversed = isAlternating
     ? isBaseReversed !== (absoluteModulo(lap, 2) === 1)
     : isBaseReversed
   // A lap is a wrap or a turn, so there is none without `loop` or `alternate` — where the
   // internal count would report `1` past the end.
   const publishedLap = loop === true || isAlternating ? lap : 0
+
+  // The dwell is the item's slice of the lap, so an easing redistributes a lap's time
+  // without changing it. A curve that overshoots can ask for a negative slice.
+  const lapDurationMs = itemsCount * (60000 / Math.max(tempo, 1))
+  const passEasing = resolveEasing(isReversed ? reverseEasing ?? easing : easing)
+  // Without a `reverseEasing` a backward pass owes each item the time the forward one
+  // gave it, which is the same curve read from the other end.
+  const easedStep = isReversed && reverseEasing === undefined
+    ? Math.max(itemsCount - 1 - stepInLap, 0)
+    : stepInLap
+  const dwellMs = itemsCount > 0
+    ? Math.max(
+      lapDurationMs * (
+        passEasing((easedStep + 1) / itemsCount) - passEasing(easedStep / itemsCount)
+      ),
+      0
+    )
+    : 0
 
   // Commands
   //
@@ -361,6 +400,9 @@ export const Sequencer: FunctionComponent<Props> = ({
     return null
   }
 
+  // A jump restarts the step it lands on, whatever time the one it left had used.
+  const stepStartedAtRef = useRef<number | null>(null)
+
   // An absolute jump writes a step in the cycle it was made from, so it never reads as a
   // wrap.
   const cycleStart = loop === true && cycleLength > 0
@@ -368,11 +410,12 @@ export const Sequencer: FunctionComponent<Props> = ({
     : 0
   const jumpToStepInCycle = (targetStepInCycle: number): void => {
     if (step !== undefined) return
+    stepStartedAtRef.current = null
     setInternalStep(cycleStart + targetStepInCycle)
   }
 
   // A negative item counts back from the end, `-1` being the last one. An alternating
-  // cycle plays most items twice, and the jump lands on the first of the two.
+  // cycle plays each item twice, and the jump lands on the first of the two.
   const jumpToItem = (targetItem: number): void => {
     const resolvedItem = targetItem < 0 ? itemsCount + targetItem : targetItem
     jumpToStepInCycle(oppositeItemWhenBaseReversed(resolvedItem))
@@ -382,6 +425,7 @@ export const Sequencer: FunctionComponent<Props> = ({
   // back from an ended sequence lands on the last item rather than nowhere.
   const jumpBySteps = (stepDelta: number): void => {
     if (step !== undefined) return
+    stepStartedAtRef.current = null
     setInternalStep(current => current + stepDelta)
   }
 
@@ -411,7 +455,7 @@ export const Sequencer: FunctionComponent<Props> = ({
       jumpBySteps(isReversed ? Number(arg) : -Number(arg))
     },
     'jump-start': () => { jumpToStepInCycle(0) },
-    'jump-end': () => { jumpToStepInCycle(Math.max(itemsCount - 1, 0)) },
+    'jump-end': () => { jumpToStepInCycle(Math.max(lastStep, 0)) },
     'jump-by': ({ args }) => {
       const arg = readArgument('jump-by', args)
       if (arg === null) return
@@ -431,27 +475,47 @@ export const Sequencer: FunctionComponent<Props> = ({
     console.warn('`reverse` and `alternate` cannot both be set on a sequencer: `alternate` is ignored while `reverse` is.')
   }, [givenReverse, givenAlternate])
 
+  // One timeout per step rather than an interval, since an easing gives each step its own
+  // length. It is scheduled from when the step became due, so lateness does not add up.
   useEffect(() => {
     if (!isPlaying || step !== undefined || itemsCount <= 0) return
-    const interval = window.setInterval(
-      () => setInternalStep(current => current + 1),
-      60000 / Math.max(tempo, 1)
+    const now = Date.now()
+    const startedAt = stepStartedAtRef.current
+    const dueAt = startedAt !== null && startedAt + dwellMs > now
+      ? startedAt + dwellMs
+      : now + dwellMs
+    const timeout = window.setTimeout(
+      () => {
+        stepStartedAtRef.current = dueAt
+        setInternalStep(current => current + 1)
+      },
+      Math.max(dueAt - now, 0)
     )
-    return () => window.clearInterval(interval)
-  }, [isPlaying, step, itemsCount, tempo])
+    return () => { window.clearTimeout(timeout) }
+  }, [isPlaying, step, itemsCount, dwellMs, publishedStep])
 
   useEffect(() => {
     if (loop !== true && !isAlternating) return
     if (lap === hasLapped) return
     setHasLapped(lap)
     onLooped?.()
-  }, [lap, loop])
+  }, [lap, loop, isAlternating])
 
   // State dispatch
   useStateChangeDispatch(item, () => onItemChanged?.({ item, activeItem }))
   useStateChangeDispatch(isPlaying, onIsPlayingChanged)
   useStateChangeDispatch(isReversed, onIsReversedChanged)
-  useStateChangeDispatch(isEnded, onIsEndedChanged)
+  useStateChangeDispatch(isEnded, ended => {
+    onIsEndedChanged?.(ended)
+    // The count can only leave the last step of the last lap by ending, so this is where
+    // that lap runs out of time.
+    if (ended) onEnded?.()
+  })
+  useStateChangeDispatch(stepInLap === 0, atLapStart => { if (atLapStart) onStarted?.() })
+  useStateChangeDispatch(
+    itemsCount > 0 && stepInLap === itemsCount - 1,
+    atLapEnd => { if (!atLapEnd) onEnded?.() }
+  )
   useStateChangeDispatch(item === 0, atFirst => { if (atFirst) onReachedFirstItem?.() })
   useStateChangeDispatch(
     itemsCount > 0 && item === itemsCount - 1,
@@ -462,8 +526,8 @@ export const Sequencer: FunctionComponent<Props> = ({
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null, {
     playing: isPlaying,
-    'at-start': stepInCycle === 0,
-    'at-end': itemsCount > 0 && stepInCycle === itemsCount - 1,
+    'at-first': item === 0,
+    'at-last': itemsCount > 0 && item === itemsCount - 1,
     reverse: isReversed,
     ended: isEnded,
     visible: isVisible === true
@@ -506,13 +570,13 @@ export const Sequencer: FunctionComponent<Props> = ({
       const isOn = declaredItems.includes(activeItem)
       const hasBefore = turnItems.some(turnItem => turnItem < item)
       const hasAfter = turnItems.some(turnItem => turnItem > item)
-      const hasEarlierTurn = isReversed ? hasAfter : hasBefore
+      const hadEarlierTurn = isReversed ? hasAfter : hasBefore
       const hasLaterTurn = isReversed ? hasBefore : hasAfter
       const childClss = c('child', {
         on: isOn,
         off: !isOn,
-        'has-earlier-turn': hasEarlierTurn,
-        'no-earlier-turn': !hasEarlierTurn,
+        'had-earlier-turn': hadEarlierTurn,
+        'no-earlier-turn': !hadEarlierTurn,
         'has-later-turn': hasLaterTurn,
         'no-later-turn': !hasLaterTurn
       })

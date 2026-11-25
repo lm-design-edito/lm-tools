@@ -1,8 +1,21 @@
 import type { ReactElement } from 'react'
 import {
+  easings,
+  type EasingFunction
+} from '../../agnostic/time/transitions/index.js'
+import {
   ITEMS_ATTRIBUTE,
-  LAST_ITEM_ATTRIBUTE
+  LAST_ITEM_ATTRIBUTE,
+  type SequencerEasing
 } from './types.js'
+
+export function resolveEasing (easing: SequencerEasing | undefined): EasingFunction {
+  if (easing === undefined) return LINEAR
+  if (typeof easing === 'function') return easing
+  return easings[easing] ?? LINEAR
+}
+
+const LINEAR: EasingFunction = ratio => ratio
 
 export function parseDataItemsAttribute (raw: unknown): number[] | null {
   if (typeof raw !== 'string') return null

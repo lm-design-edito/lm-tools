@@ -1,3 +1,8 @@
+import type {
+  Ease,
+  EasingFunction
+} from '../../agnostic/time/transitions/index.js'
+
 /**
  * The attribute a child uses to say which items it belongs to.
  *
@@ -33,6 +38,17 @@ export const ITEMS_ATTRIBUTE = 'data-items'
  * Valueless, as an HTML boolean attribute: what matters is that it is there.
  */
 export const LAST_ITEM_ATTRIBUTE = 'data-last-item'
+
+/**
+ * How a lap's time is spread over its items: an {@link Ease} name, or a curve of one's
+ * own.
+ *
+ * Either way it is read as cumulative progress, the way CSS reads an easing, so an item's
+ * share is the slice between two of its values. **A curve that overshoots** — the `back`,
+ * `elastic` and `bounce` families leave the `0`–`1` range — can hand back a negative
+ * slice, which is read as no time at all.
+ */
+export type SequencerEasing = Ease | EasingFunction
 
 /**
  * The two directions a sequence runs in, named on the items and nothing else.
