@@ -63,9 +63,19 @@ import {
  * sequence ends the way a video does rather than running forever.
  * @property reverse - Whether the sequence runs backward — down the items instead of up
  * them — taken over by the consumer. Provided, the `direction` verb no longer reaches it.
+ * **`reverse` and `alternate` are mutually exclusive**, in the types and at runtime: a
+ * sequence whose direction is the consumer's has nothing left to alternate, so `reverse`
+ * wins and the conflict is logged.
+ * @property alternate - Whether the sequence turns round at each end instead of starting
+ * over. **It composes with `loop`**: alone it is one round trip and then the end, with
+ * `loop` the round trips follow one another. The item it turns on plays once — `5, 6, 5`
+ * and not `5, 6, 6, 5` — so a round trip over seven items is two laps of six steps, the
+ * first starting forward on item `0` and the second backward on item `6`, plus the step
+ * that brings it home. Ignored on a sequence of one item, which has nothing to alternate.
  * @property defaultReverse - Which way it starts running. `false` by default, which is
  * `forward`, and the direction a `direction` instruction moves from — not a setting,
- * hence `default…`.
+ * hence `default…`. **It is also where an alternating sequence starts**, `reverse` being
+ * closed to it.
  * @property onItemChanged - Called when the item changes, with `item` and the
  * `activeItem` it resolves to. Never on mount.
  * @property onIsPlayingChanged - Called once the effective play state changed — which
@@ -73,9 +83,12 @@ import {
  * @property onIsReversedChanged - Called once the effective direction changed.
  * @property onIsEndedChanged - Called when the sequence ends, or leaves that state.
  * **The end is the count leaving the last item played, not arriving on it** — that item
- * is owed its step like every other one, and a sequence paused on it has not ended. A
- * looping sequence never ends, so never emits.
- * @property onLooped - Called on each wrap, only while `loop` is `true`.
+ * is owed its step like every other one, and a sequence paused on it has not ended. An
+ * alternating sequence ends once it is home again; a looping one never ends, so never
+ * emits.
+ * @property onLooped - Called on each wrap, and on each turn of an alternating sequence,
+ * both being a lap boundary. Only while the sequence can lap, so a one-shot `alternate`
+ * emits once, at its turn, and a sequence that neither loops nor alternates never does.
  * @property onReachedFirstItem - Called when the item becomes `0`. Named on the items, so
  * under `reverse` it fires where the sequence ends.
  * @property onReachedLastItem - Called when the item becomes the last one. This is the
@@ -85,6 +98,12 @@ import {
  * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
  * `onVisibilityChanged` and the five `visibility*` settings.
  */
+// The two cannot be written together: a union rather than a runtime check alone, so the
+// mistake is caught where it is made.
+type DirectionProps =
+  | { reverse?: boolean, alternate?: undefined }
+  | { reverse?: undefined, alternate?: boolean }
+
 export type Props = {
   totalItems?: number
   itemMap?: number[]
@@ -94,7 +113,6 @@ export type Props = {
   defaultPlay?: boolean
   tempo?: number
   loop?: boolean
-  reverse?: boolean
   defaultReverse?: boolean
   onItemChanged?: (payload: { item: number, activeItem: number }) => void
   onIsPlayingChanged?: (isPlaying: boolean) => void
@@ -104,6 +122,7 @@ export type Props = {
   onReachedFirstItem?: () => void
   onReachedLastItem?: () => void
 }
+  & DirectionProps
   & ChildrenProps
   & ClassNameProps
   & CompIdProps
@@ -132,6 +151,10 @@ export type Props = {
  * them run opposite ways. Everything named `first`, `last`, `forward` or `backward`
  * belongs to the items; everything named `start`, `end`, `earlier` or `later` belongs to
  * the steps, and follows the direction.
+ *
+ * **A lap is one pass over the items**, which is also the unit `alternate` is built on: a
+ * round trip is two laps, the second one running the items back down, and the direction
+ * is the parity of the lap rather than a state of its own.
  *
  * ### Where the sequence ends
  * A child marked `data-last-item` ends it, and what follows still takes part — through
@@ -162,12 +185,16 @@ export type Props = {
  *   `jump-*-by` carry their direction in the verb and take a plain count.
  * - `jump-start`, `jump-end`, `jump-by:<n>` — steps, which it does move. `jump-start` is
  *   where playback begins, the last item under `reverse`, and `jump-by:1` the next item
- *   played whichever way the sequence runs.
+ *   played whichever way the sequence runs. On an alternating sequence the three read the
+ *   cycle, so `jump-end` is the far turn and `jump-start` home.
  *
  * **A verb never contradicts a prop**: `play` and `pause` are inert while `play` arrived
  * as one, `direction` while `reverse` did, every `jump-*` while `step` did. **A command
  * never surrenders either** — there is no control to touch here, so `:force` has nothing
  * to override.
+ *
+ * **`direction` sets the direction a sequence starts from**, which `alternate` then flips
+ * lap by lap: it mirrors the whole pattern rather than freezing it on one side.
  *
  * **Nothing is clamped here, and that is the exception in the library**: elsewhere a
  * position outside the component lands on the nearest end, but a step past the last item
@@ -183,7 +210,9 @@ export type Props = {
  * `--playing`, `--at-start`, `--at-end`, `--reverse`, `--ended`, `--visible`, plus
  * `data-item`, `data-active-item`, `data-total-items`, `data-tempo`, `data-lap` and
  * `data-step`. `--at-start` and `--at-end` are steps, so `reverse` swaps which end of the
- * items they land on.
+ * items they land on, and on an alternating sequence they are the two turns of the cycle.
+ * `--reverse` is the direction being run and not the prop, so it comes and goes lap by
+ * lap while `alternate` is on.
  *
  * The same six numbers are also published as custom properties —
  * `--lm-sequencer-item`, `--lm-sequencer-active-item`, `--lm-sequencer-total-items`,
@@ -230,6 +259,7 @@ export const Sequencer: FunctionComponent<Props> = ({
   tempo = 60,
   loop,
   reverse,
+  alternate,
   defaultReverse,
   onItemChanged,
   onIsPlayingChanged,
@@ -266,36 +296,55 @@ export const Sequencer: FunctionComponent<Props> = ({
   const impliedItems = markedLast === -1 ? elements.length : markedLast + 1
   const itemsCount = Math.max(totalItems ?? impliedItems, 0)
 
-  // The three numbers
+  // The numbers
   const rawStep = step ?? internalStep
-  const isReversed = reverse ?? internalReverse
-  const stepInLap = itemsCount > 0
-    ? (loop === true
-        ? absoluteModulo(rawStep, itemsCount)
-        : clamp(rawStep, 0, itemsCount - 1))
-    : 0
-  // Its own inverse, so it also reads an item back as the step that plays it.
-  const itemOfStep = (sourceStep: number): number => isReversed
-    ? Math.max(itemsCount - 1, 0) - sourceStep
-    : sourceStep
-  const item = itemOfStep(stepInLap)
+  // One item has nothing to alternate, and neither has a sequence whose direction the
+  // consumer holds — the conflict is said below rather than thrown.
+  const isAlternating = reverse === undefined && alternate === true && itemsCount > 1
+  const lapLength = isAlternating ? itemsCount - 1 : itemsCount
+  const cycleLength = isAlternating ? 2 * lapLength : lapLength
+  // A round trip comes home, so its last step is the one after its two laps rather than
+  // the last of them.
+  const lastStep = isAlternating ? cycleLength : itemsCount - 1
+  // The count runs one past the end so the last item played gets a step of its own; what
+  // is read from here on is this one, which stops there.
+  const publishedStep = loop === true
+    ? rawStep
+    : clamp(rawStep, 0, Math.max(lastStep, 0))
+  const stepInCycle = cycleLength > 0 ? absoluteModulo(publishedStep, cycleLength) : 0
+  // Past the far end an alternating cycle walks the items back down, which is the whole
+  // of the alternation.
+  const forwardItem = isAlternating && stepInCycle >= itemsCount
+    ? cycleLength - stepInCycle
+    : stepInCycle
+  const isBaseReversed = reverse ?? internalReverse
+  // Its own inverse, so it also reads an item back as the forward item that plays it.
+  const oppositeItemWhenBaseReversed = (sourceItem: number): number => isBaseReversed
+    ? Math.max(itemsCount - 1, 0) - sourceItem
+    : sourceItem
+  const item = oppositeItemWhenBaseReversed(forwardItem)
   const activeItem = itemMap?.[item] ?? item
 
-  // The count runs one past the end so the last item played gets a step of its own, and
-  // the step clamps to it. Ended is therefore leaving that item, not arriving on it.
-  const isEnded = loop !== true && itemsCount > 0 && rawStep >= itemsCount
+  // Ended is leaving the last item played, not arriving on it.
+  const isEnded = loop !== true && itemsCount > 0 && rawStep > lastStep
   // A sequence withheld by a disclaimer does not advance. Read here rather than in the
   // clock, so the `playing` modifier and `onIsPlayingChanged` say the same thing the
   // tempo does — and so the step is kept, the reader landing where the article left it.
   const { isDisclosed } = useDisclosure()
   const isPlaying = (play ?? internalPlay) && !isEnded && isDisclosed
 
-  // A lap counter rather than a comparison of steps: `onLooped` has to fire on the wrap
-  // itself, and the step on either side of it says nothing about having crossed.
-  const lap = itemsCount > 0 ? Math.floor(rawStep / itemsCount) : 0
-  // A lap is a wrap, so there is none without `loop` — where the internal count would
-  // report `1` past the end.
-  const publishedLap = loop === true ? lap : 0
+  // A lap counter rather than a comparison of items: `onLooped` has to fire on the wrap
+  // itself, and the item on either side of it says nothing about having crossed.
+  const lapCount = lapLength > 0 ? Math.floor(publishedStep / lapLength) : 0
+  // A one-shot round trip comes home on the first step of a third lap — the lap it ends
+  // on rather than one it runs, so the count keeps that step and the lap does not.
+  const lap = loop !== true && isAlternating ? Math.min(lapCount, 1) : lapCount
+  const isReversed = isAlternating
+    ? isBaseReversed !== (absoluteModulo(lap, 2) === 1)
+    : isBaseReversed
+  // A lap is a wrap or a turn, so there is none without `loop` or `alternate` — where the
+  // internal count would report `1` past the end.
+  const publishedLap = loop === true || isAlternating ? lap : 0
 
   // Commands
   //
@@ -312,16 +361,21 @@ export const Sequencer: FunctionComponent<Props> = ({
     return null
   }
 
-  // An absolute jump writes a step in the lap it was made from, so it never reads as a
+  // An absolute jump writes a step in the cycle it was made from, so it never reads as a
   // wrap.
-  const jumpToStepInLap = (targetStepInLap: number): void => {
+  const cycleStart = loop === true && cycleLength > 0
+    ? Math.floor(publishedStep / cycleLength) * cycleLength
+    : 0
+  const jumpToStepInCycle = (targetStepInCycle: number): void => {
     if (step !== undefined) return
-    setInternalStep(publishedLap * itemsCount + targetStepInLap)
+    setInternalStep(cycleStart + targetStepInCycle)
   }
 
-  // A negative item counts back from the end, `-1` being the last one.
+  // A negative item counts back from the end, `-1` being the last one. An alternating
+  // cycle plays most items twice, and the jump lands on the first of the two.
   const jumpToItem = (targetItem: number): void => {
-    jumpToStepInLap(itemOfStep(targetItem < 0 ? itemsCount + targetItem : targetItem))
+    const resolvedItem = targetItem < 0 ? itemsCount + targetItem : targetItem
+    jumpToStepInCycle(oppositeItemWhenBaseReversed(resolvedItem))
   }
 
   // Relative to the count and not to the item, so it keeps the lap it is in and a step
@@ -356,14 +410,26 @@ export const Sequencer: FunctionComponent<Props> = ({
       if (arg === null) return
       jumpBySteps(isReversed ? Number(arg) : -Number(arg))
     },
-    'jump-start': () => { jumpToStepInLap(0) },
-    'jump-end': () => { jumpToStepInLap(Math.max(itemsCount - 1, 0)) },
+    'jump-start': () => { jumpToStepInCycle(0) },
+    'jump-end': () => { jumpToStepInCycle(Math.max(itemsCount - 1, 0)) },
     'jump-by': ({ args }) => {
       const arg = readArgument('jump-by', args)
       if (arg === null) return
       jumpBySteps(Number(arg))
     }
   })
+
+  // Read wide on purpose: the types rule the pair out, so narrowing holds the two apart
+  // — but an untyped caller can write both all the same.
+  const givenReverse: boolean | undefined = reverse
+  const givenAlternate: boolean | undefined = alternate
+  // Said rather than thrown: a conflict is a written mistake, and the component keeps
+  // running on `reverse`.
+  useEffect(() => {
+    if (givenReverse === undefined || givenAlternate !== true) return
+    // eslint-disable-next-line no-console
+    console.warn('`reverse` and `alternate` cannot both be set on a sequencer: `alternate` is ignored while `reverse` is.')
+  }, [givenReverse, givenAlternate])
 
   useEffect(() => {
     if (!isPlaying || step !== undefined || itemsCount <= 0) return
@@ -375,7 +441,7 @@ export const Sequencer: FunctionComponent<Props> = ({
   }, [isPlaying, step, itemsCount, tempo])
 
   useEffect(() => {
-    if (loop !== true) return
+    if (loop !== true && !isAlternating) return
     if (lap === hasLapped) return
     setHasLapped(lap)
     onLooped?.()
@@ -396,8 +462,8 @@ export const Sequencer: FunctionComponent<Props> = ({
   const c = clss(publicClassName, { cssModule })
   const rootClss = mergeClassNames(c(null, {
     playing: isPlaying,
-    'at-start': stepInLap === 0,
-    'at-end': itemsCount > 0 && stepInLap === itemsCount - 1,
+    'at-start': stepInCycle === 0,
+    'at-end': itemsCount > 0 && stepInCycle === itemsCount - 1,
     reverse: isReversed,
     ended: isEnded,
     visible: isVisible === true
@@ -411,9 +477,6 @@ export const Sequencer: FunctionComponent<Props> = ({
     return items
   }
 
-  // Rebuilt from the published lap rather than from `rawStep`, which runs one past the
-  // end on a sequence that does not loop.
-  const publishedStep = publishedLap * itemsCount + stepInLap
   const cssCustomProps: Record<string, string> = {
     '--lm-sequencer-item': `${item}`,
     '--lm-sequencer-active-item': `${activeItem}`,
