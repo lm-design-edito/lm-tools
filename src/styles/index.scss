@@ -848,14 +848,14 @@
 
 /* Display */
 
-.none, .disp-none { display: none; }
-.block, .disp-block { display: block; }
-.flex, .disp-flex { display: flex; }
-.grid, .disp-grid { display: grid; }
-.inline, .disp-inline { display: inline; }
-.inline-block, .disp-inline-block { display: inline-block; }
-.inline-flex, .disp-inline-flex { display: inline-flex; }
-.inline-grid, .disp-inline-grid { display: inline-grid; }
+.none { display: none; }
+.block { display: block; }
+.flex { display: flex; }
+.grid { display: grid; }
+.inline { display: inline; }
+.inline-block { display: inline-block; }
+.inline-flex { display: inline-flex; }
+.inline-grid { display: inline-grid; }
 
 /* Flex */
 
