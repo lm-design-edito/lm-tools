@@ -4,7 +4,7 @@ Notable changes to `@design-edito/tools`, newest first. Paths are the ones a con
 imports; what never reaches the published package is left out. Sections before
 `0.5.44` were reconstructed from the commits between two version bumps.
 
-## [latest]
+## [0.9.0] — 2026-11-26
 
 - changed - **styles** - `.hidden` adds `visibility: hidden` to the `opacity: 0` and the `pointer-events` / `user-select` it already carried. The element keeps its box and its place in the flow, as before, but now also leaves the tab order and the accessibility tree — a transparent link was still focusable and still announced. The one thing it costs is a fade on `.hidden` alone, `visibility` not being an animatable property; a fade belongs to the `do-fade` family.
 
