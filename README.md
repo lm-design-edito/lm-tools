@@ -1228,7 +1228,7 @@ redécouverts par surprise, pas pour être traités.
   out of step with the components it was meant to show: `BeforeAfterDemo` still read
   `--{prefix}-ratio-percent` in six places, a property dropped because a ratio has no
   twin, and `SequencerDemo` printed child modifiers that no longer existed. Reviving it
-  means `git checkout <the deletion commit>^ -- demo`, and then that drift to pay off.
+  means `git checkout 10d22be^ -- demo`, and then that drift to pay off.
 
 
 ## Coverage roadmap
