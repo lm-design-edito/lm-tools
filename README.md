@@ -931,8 +931,8 @@ of them have none.
   part of the same call, and `whenVisible` / `whenHidden` either fold into it or have to be
   explained beside it.
 
-Opened 2026-11-25, widened 2026-11-26, and it does not block lm-link's publication either
-way.
+Opened 2026-11-25, widened 2026-11-26, and placed **before** lm-link's publication the
+same day: the shape is cheaper to fix now than to change once articles read it.
 
 ## Disclosure — what a standing disclaimer withholds
 
