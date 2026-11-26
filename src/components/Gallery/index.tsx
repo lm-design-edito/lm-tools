@@ -67,7 +67,9 @@ function resolveOffset (
  * renders empty and a stylesheet fills it.
  * @property nextButtonContent - Content of the "next" control, same.
  * @property paginationContent - Content of each pagination item: a node used for all of
- * them, a function of the page index, or undefined to show the index.
+ * them, or a function of the page index. Left out, the button renders empty and a
+ * stylesheet fills it — the index is on the element as `data-page`, so `content:
+ * attr(data-page)` reaches it without the component writing anything.
  * @property defaultActive - Slot to scroll to at mount, in uncontrolled mode.
  * @property active - Controlled index. When set, the active slot is this one and hand
  * scrolling is disabled.
@@ -476,7 +478,7 @@ export const Gallery: FunctionComponent<Props> = ({
           onClick={() => handlePaginationClick(pos)}>
           {typeof paginationContent === 'function'
             ? paginationContent(pos)
-            : paginationContent ?? pos}
+            : paginationContent}
         </button>
       })}
     </div>
