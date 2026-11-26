@@ -170,8 +170,9 @@ export type Props = {
  * carry the whole vocabulary: an item is an index among the children and never moves, a
  * step is a count that keeps growing as the sequence plays, and `reverse` is what makes
  * them run opposite ways. Everything named `first`, `last`, `forward` or `backward`
- * belongs to the items; everything named `start`, `end`, `earlier` or `later` belongs to
- * the steps, and follows the direction.
+ * belongs to the items; everything named `start` or `end`, the sign of `jump-by` and the
+ * child flags `--did-activate` / `--will-activate` belong to the steps, and follow the
+ * direction.
  *
  * **A lap is `totalItems` steps**, which is also the unit `alternate` is built on: a
  * round trip is two laps, the second one running the items back down, and the direction
@@ -249,18 +250,20 @@ export type Props = {
  * of them would mean anything with a unit attached.
  *
  * ### On each element child
- * The `__child` element class, then three pairs, one of each always present:
+ * The `__child` element class, then the `--on` / `--off` pair, one side of it always
+ * present, and two flags that stand alone:
  * - `--on` / `--off` — whether it belongs to the active item.
- * - `--had-earlier-turn` / `--no-earlier-turn` — whether a turn of its own came earlier
- *   in this lap's playback.
- * - `--has-later-turn` / `--no-later-turn` — whether it has another one left in this lap.
+ * - `--did-activate` — it has a turn of its own at a step this lap has already played.
+ * - `--will-activate` — it has one at a step still to come in this lap.
  *
- * **The three pairs are derived, not remembered.** The order of the whole lap is known
- * from `itemMap` and the direction alone, so « has it been shown yet » is a question
- * about the items playback has already passed, not about what happened since mount. A
- * child active at items 1 and 6 therefore has no earlier turn at 1 and one at 6 — the
- * other way round under `reverse` — and the answer is the same on every lap without
- * anything being reset.
+ * **Neither flag has a negation, on purpose**: a child with a single turn carries at most
+ * one of them, and one active at items 1 and 6 sitting on 3 carries both. What a rule
+ * wants from a missing negation it gets from `:not(.--did-activate)`.
+ *
+ * **They are derived, not remembered.** The order of the whole lap is known from
+ * `itemMap` and the direction alone, so « has it been shown yet » is a question about the
+ * steps playback has passed, not about what happened since mount: the answer is the same
+ * on every lap without anything being reset, and `reverse` swaps the two.
  */
 export const Sequencer: FunctionComponent<Props> = ({
   compId: givenCompId,
@@ -570,15 +573,13 @@ export const Sequencer: FunctionComponent<Props> = ({
       const isOn = declaredItems.includes(activeItem)
       const hasBefore = turnItems.some(turnItem => turnItem < item)
       const hasAfter = turnItems.some(turnItem => turnItem > item)
-      const hadEarlierTurn = isReversed ? hasAfter : hasBefore
-      const hasLaterTurn = isReversed ? hasBefore : hasAfter
+      const didActivate = isReversed ? hasAfter : hasBefore
+      const willActivate = isReversed ? hasBefore : hasAfter
       const childClss = c('child', {
         on: isOn,
         off: !isOn,
-        'had-earlier-turn': hadEarlierTurn,
-        'no-earlier-turn': !hadEarlierTurn,
-        'has-later-turn': hasLaterTurn,
-        'no-later-turn': !hasLaterTurn
+        'did-activate': didActivate,
+        'will-activate': willActivate
       })
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- a React element's props are a record, whatever else they are
       const ownClassName = (child.props as Record<string, unknown>).className
