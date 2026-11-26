@@ -48,78 +48,43 @@ type DirectionProps =
   | { reverse?: undefined, alternate?: boolean }
 
 /**
- * @property totalItems - How many items the sequence has. Falls back to the first child
- * marked `data-last-item`, which sets the count to its own position plus one, and then
- * to the number of **element** children: text and whitespace never count, which matters
- * more than it looks — an article writes its children across several lines, and a text
- * node counting as an item would put every index out by one.
- * @property itemMap - Rewrites what an item means, **by item and nothing else**: at item
- * `i` the active item is `itemMap[i]` when there is one, and `i` otherwise. `[2, 6, 7]`
- * over seven items plays `2, 6, 7, 3, 4, 5, 6` — an item may be skipped, may come back,
- * and may not correspond to any child at all, in which case nothing lights up and that
- * is a legal thing to write.
- * @property step - The step, taken over by the consumer: the count the tempo advances,
- * laps included, and what the item is read from. Provided, the tempo stops advancing
- * anything: the count is theirs.
+ * @property totalItems - How many items. Falls back to the child marked
+ * `data-last-item`, then to the number of **element** children.
+ * @property itemMap - What an item means, by item: at `i` the active item is
+ * `itemMap[i]`. One may be skipped, repeated, or match no child at all.
+ * @property step - The count, taken over by the consumer. The tempo then advances
+ * nothing.
  * @property defaultStep - The step to start from. Ignored when `step` is provided.
- * @property play - Whether the sequence advances, taken over by the consumer. Provided,
- * it is the whole answer and the instructions no longer reach it, the way `step` takes
- * the count over from the tempo.
- * @property defaultPlay - Whether it starts advancing. `false` by default, and the
- * starting point a `'play'` instruction moves from — not a setting, hence `default…`.
- * @property tempo - Speed in counter ticks per minute, so `60` is a tick per second. A
- * lap lasts `totalItems` ticks whatever the easing does inside it.
- * @property loop - Whether the sequence wraps round. **`false` by default**, so a
- * sequence ends the way a video does rather than running forever.
- * @property reverse - Whether the sequence runs backward — down the items instead of up
- * them — taken over by the consumer. Provided, the `direction` verb no longer reaches it.
- * **`reverse` and `alternate` are mutually exclusive**, in the types and at runtime: a
- * sequence whose direction is the consumer's has nothing left to alternate, so `reverse`
- * wins and the conflict is logged.
- * @property alternate - Whether the sequence turns round at each end instead of starting
- * over. **It composes with `loop`**: alone it is one round trip and then the end, with
- * `loop` the round trips follow one another. **Each end takes two steps**, one for the
- * pass arriving on it and one for the pass leaving it — the item does not change on that
- * beat, it holds for both — so a lap stays `totalItems` steps and a round trip is two
- * laps exactly. Ignored on a sequence of one item, which has nothing to alternate.
- * @property defaultReverse - Which way it starts running. `false` by default, which is
- * `forward`, and the direction a `direction` instruction moves from — not a setting,
- * hence `default…`. **It is also where an alternating sequence starts**, `reverse` being
- * closed to it.
- * @property easing - How a lap's time is spread over its items. An item's dwell is its
- * slice of the curve — `easing((i + 1) / totalItems) - easing(i / totalItems)` of the
- * lap's duration — so a curve redistributes a lap's time without changing it, and the
- * default, `linear`, gives every item one tick.
- * @property reverseEasing - The curve a backward pass uses, read from where that pass
- * starts. **Absent, the backward pass replays the forward dwells in reverse order**, so
- * an item keeps the time `easing` gave it whichever way the sequence is running.
- * @property onItemChanged - Called when the item changes, with `item` and the
- * `activeItem` it resolves to. Never on mount.
- * @property onStarted - Called when the count arrives on a lap's first step. Never on
- * mount, like every handler here, so a sequence that neither loops nor alternates — whose
- * first step is its only start — never emits.
- * @property onEnded - Called when a lap's last step runs out of time: at each lap
- * boundary while the sequence runs on, and once at the end when it stops there. This is
- * the instant, where `onIsEndedChanged` is the state.
- * @property onIsPlayingChanged - Called once the effective play state changed — which
- * includes it dropping to `false` on its own at the end.
- * @property onIsReversedChanged - Called once the effective direction changed.
- * @property onIsEndedChanged - Called when the sequence ends, or leaves that state.
- * **The end is the count leaving the last item played, not arriving on it** — that item
- * is owed its step like every other one, and a sequence paused on it has not ended. An
- * alternating sequence ends once it is home again; a looping one never ends, so never
- * emits.
- * @property onLooped - Called on each wrap, and on each turn of an alternating sequence,
- * both being a lap boundary. Only while the sequence can lap, so a one-shot `alternate`
- * emits once, at its turn, and a sequence that neither loops nor alternates never does.
- * @property onReachedFirstItem - Called when the item becomes `0`. Named on the items, so
- * under `reverse` it fires where the sequence ends.
- * @property onReachedLastItem - Called when the item becomes the last one. This is the
- * arrival, where `onIsEndedChanged` is the departure: on a sequence playing forward they
- * are one step apart.
+ * @property play - Whether it advances, taken over. The verbs then no longer reach it.
+ * @property defaultPlay - Whether it starts advancing, `false` by default.
+ * @property tempo - Counter ticks per minute. A lap lasts `totalItems` ticks whatever
+ * an easing does inside it.
+ * @property loop - Whether it wraps round. `false` by default, so it ends.
+ * @property reverse - Whether it runs down the items, taken over. **Exclusive with
+ * `alternate`**, in the types and at runtime.
+ * @property alternate - Whether it turns round at each end. Composes with `loop`, holds
+ * each end for two steps, so a round trip is two laps exactly.
+ * @property defaultReverse - Which way it starts, alternating included. `false` is
+ * `forward`.
+ * @property easing - How a lap's time spreads over its items: a dwell is a slice of the
+ * curve, so a curve redistributes the lap without lengthening it.
+ * @property reverseEasing - The curve of a backward pass, read from where it starts.
+ * Absent, that pass replays the forward dwells in reverse order.
+ * @property onItemChanged - The item changed, with `item` and its `activeItem`.
+ * @property onStarted - The count arrived on a lap's first step.
+ * @property onEnded - A lap's last step ran out of time. The instant, where
+ * `onIsEndedChanged` is the state.
+ * @property onIsPlayingChanged - The effective play state changed, its drop at the end
+ * included.
+ * @property onIsReversedChanged - The effective direction changed.
+ * @property onIsEndedChanged - It ended, or left that state. **The end is the count
+ * leaving the last item played, not arriving on it.**
+ * @property onLooped - A wrap, or an alternating turn — both lap boundaries.
+ * @property onReachedFirstItem - The item became `0`, so under `reverse` it fires where
+ * the sequence ends.
+ * @property onReachedLastItem - The item became the last one.
  *
- * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`,
- * `onVisibilityChanged` and the five `visibility*` settings.
+ * No handler fires on mount. Plus the triggers of {@link VisibilityProps}.
  */
 export type Props = {
   totalItems?: number
@@ -152,118 +117,42 @@ export type Props = {
 /**
  * A sequencer over its children, which it classifies and never moves.
  *
- * It renders no box of its own around anything: **the modifiers go straight onto the
- * children**, by `cloneElement`. A wrapper would take the place a consumer lays out —
- * it would be the grid or flex item, leaving the element they actually wrote one level
- * down — and a sequencer exists precisely so that a stylesheet can animate that element.
- * The cost is the contract: **a child has to honour `className`**, which every DOM
- * element does, and every component here does by convention. One that ignores it gets no
- * modifiers, silently.
+ * It renders no box of its own: the modifiers go onto the children themselves, by
+ * `cloneElement`, so **a child has to honour `className`** or it silently gets none.
+ * Non-element children take no part, and a fragment is opened rather than counted.
  *
- * Children that are not elements — text, whitespace — are rendered untouched and take no
- * part: they carry no class, so they simply stay visible throughout. **A fragment is
- * opened rather than counted**: it groups without rendering an element of its own, so
- * there would be nothing to class and nothing to show for the item it would consume.
+ * **An item is a place in the sequence, a step is one beat of the tempo**, and `reverse`
+ * makes the two run opposite ways: `first`, `last`, `forward` and `backward` name items
+ * and never move, where `start`, `end`, the sign of `jump-by` and the child activation
+ * flags name steps and follow the direction. A lap is `totalItems` steps.
  *
- * ### Items and steps
- * **An item is a place in the sequence and a step is one beat of the tempo.** The two
- * carry the whole vocabulary: an item is an index among the children and never moves, a
- * step is a count that keeps growing as the sequence plays, and `reverse` is what makes
- * them run opposite ways. Everything named `first`, `last`, `forward` or `backward`
- * belongs to the items; everything named `start` or `end`, the sign of `jump-by` and the
- * child flags `--did-activate` / `--will-activate` belong to the steps, and follow the
- * direction.
- *
- * **A lap is `totalItems` steps**, which is also the unit `alternate` is built on: a
- * round trip is two laps, the second one running the items back down, and the direction
- * is the parity of the lap rather than a state of its own.
- *
- * ### Where the sequence ends
- * A child marked `data-last-item` ends it, and what follows still takes part — through
- * `data-items` alone. That is what lets an article write the items in reading order and
- * put the children belonging to several of them at once **after**, where they read as
- * what they are, rather than having their position counted as an item of its own:
- *
- * ```html
- * <div>1</div><div>2</div><div data-last-item>3</div>
- * <div data-items="0, 1">both of the first two</div>
- * ```
- *
- * Three items, four children. A trailing child that names no item never lights up, which
- * is the honest reading of « it is not part of the sequence ».
- *
- * ### Disclosure
- * Under a standing `Disclaimer` the tempo does not run, from `defaultPlay` no more than
- * from a verb, and the component sends nothing. The step is kept, so dismissing the panel
- * resumes where the article left it instead of restarting.
+ * A child marked `data-last-item` ends the sequence, and children after it still take
+ * part through `data-items`. The README holds the reasoning behind all of this.
  *
  * ### Commands
- * - `play` / `pause` — the tempo runs or stops.
- * - `direction:forward` / `direction:backward` — which way it runs, up the items or down
- *   them.
+ * Inert while the prop each would contradict is provided, and nothing is clamped here:
+ * a step past the last item is a real step in the next lap.
+ * - `play` / `pause`.
+ * - `direction:forward` / `direction:backward` — which way it runs.
  * - `jump-to:<n>`, `jump-first`, `jump-last`, `jump-forward-by:<n>`,
  *   `jump-backward-by:<n>` — items, which `reverse` never moves. A negative `n` on
- *   `jump-to` counts back from the end, so `jump-to:-1` is the last item; the two
- *   `jump-*-by` carry their direction in the verb and take a plain count.
- * - `jump-start`, `jump-end`, `jump-by:<n>` — steps, which it does move. `jump-start` is
- *   where playback begins and `jump-end` where it stops, which on an alternating sequence
- *   is the step that brings it home rather than the far turn. `jump-by:1` is the next item
- *   played whichever way the sequence runs.
- *
- * **A verb never contradicts a prop**: `play` and `pause` are inert while `play` arrived
- * as one, `direction` while `reverse` did, every `jump-*` while `step` did. **A command
- * never surrenders either** — there is no control to touch here, so `:force` has nothing
- * to override.
- *
- * **`direction` sets the direction a sequence starts from**, which `alternate` then flips
- * lap by lap: it mirrors the whole pattern rather than freezing it on one side.
- *
- * **Nothing is clamped here, and that is the exception in the library**: elsewhere a
- * position outside the component lands on the nearest end, but a step past the last item
- * is a real step in the next lap, so there is no outside to be brought back from.
- *
- * `play` on a sequence that has ended does nothing, since ending is what stops it:
- * `['jump-start', 'play']` is how it starts again, and a `loop` sequence never ends so
- * never meets the case. An absolute jump stays in the cycle it was made from, so it is not
- * a wrap and `onLooped` does not fire.
+ *   `jump-to` counts back from the end.
+ * - `jump-start`, `jump-end`, `jump-by:<n>` — steps, which it does move. `jump-by:1` is
+ *   the next item played whichever way the sequence runs.
  *
  * @remarks
- * ### On the root
- * `--playing`, `--at-first`, `--at-last`, `--reverse`, `--ended`, `--visible`, plus
- * `data-item`, `data-active-item`, `data-total-items`, `data-tempo`, `data-lap` and
- * `data-step`.
+ * ### CSS elements
+ * On the root: `--playing`, `--at-first`, `--at-last`, `--reverse`, `--ended` and
+ * `--visible`, with `data-item`, `data-active-item`, `data-total-items`, `data-tempo`,
+ * `data-lap`, `data-step`, and the same six numbers as `--lm-sequencer-*` custom
+ * properties. `--at-first` / `--at-last` name items, so a pass's own ends are
+ * `.--at-first:not(.--reverse)` and `.--at-last.--reverse`.
  *
- * **`--at-first` and `--at-last` are items**, so they stay where they are whatever the
- * direction, and the ends of a pass are `.--at-first:not(.--reverse)` and
- * `.--at-last.--reverse`. `--reverse` is the direction being run and not the prop, so it
- * comes and goes lap by lap while `alternate` is on.
+ * On each element child: `__child`, then `--on` / `--off` for the active item,
+ * `--did-activate` when it has a turn at a step this lap has played, and
+ * `--will-activate` when it has one still to come.
  *
- * The same six numbers are also published as custom properties —
- * `--lm-sequencer-item`, `--lm-sequencer-active-item`, `--lm-sequencer-total-items`,
- * `--lm-sequencer-tempo`, `--lm-sequencer-lap` and `--lm-sequencer-step`, the count that
- * keeps growing across laps. **A data attribute selects, a custom property computes**:
- * `attr()` cannot feed a `calc()`, so a rule that wants to turn something by a degree per
- * step needs the property, and gets it on every descendant since custom properties
- * inherit — `transform: rotate(calc(var(--lm-sequencer-step) * 5deg))`.
- *
- * No `-raw` twin as `ResizeObserver` has: every one of these is a bare number, and none
- * of them would mean anything with a unit attached.
- *
- * ### On each element child
- * The `__child` element class, then the `--on` / `--off` pair, one side of it always
- * present, and two flags that stand alone:
- * - `--on` / `--off` — whether it belongs to the active item.
- * - `--did-activate` — it has a turn of its own at a step this lap has already played.
- * - `--will-activate` — it has one at a step still to come in this lap.
- *
- * **Neither flag has a negation, on purpose**: a child with a single turn carries at most
- * one of them, and one active at items 1 and 6 sitting on 3 carries both. What a rule
- * wants from a missing negation it gets from `:not(.--did-activate)`.
- *
- * **They are derived, not remembered.** The order of the whole lap is known from
- * `itemMap` and the direction alone, so « has it been shown yet » is a question about the
- * steps playback has passed, not about what happened since mount: the answer is the same
- * on every lap without anything being reset, and `reverse` swaps the two.
+ * @see {@link Props}
  */
 export const Sequencer: FunctionComponent<Props> = ({
   compId: givenCompId,
