@@ -4,7 +4,7 @@ Notable changes to `@design-edito/tools`, newest first. Paths are the ones a con
 imports; what never reaches the published package is left out. Sections before
 `0.5.44` were reconstructed from the commits between two version bumps.
 
-## [latest]
+## [0.8.0] — 2026-11-26
 
 - added - **agnostic/strings/join-path** - `joinPath(...segments)` newly exported. Joins path segments with a single `/`, resolving `.` and `..` on the way and collapsing empty segments and repeated slashes. It works on strings alone, with no filesystem knowledge, so it runs in a browser where Node's `path.join` cannot. The result is absolute when the first segment starts with `/`, and a `..` that would climb above an absolute root is ignored rather than escaping it.
 - added - **agnostic/strings/looks-like-email** - `looksLikeEmail(candidate)` and the `laxEmailPattern` it reads newly exported. Whether a string has the shape of an address — one `@`, no whitespace, a dot in the domain — and deliberately nothing more: it is there to tell a reader they mistyped, never to decide that an address is valid.
