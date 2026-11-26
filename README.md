@@ -8,7 +8,6 @@ src/agnostic/    pure logic — runs anywhere (time, colors, css, html, random, 
 src/node/        Node-only — files, images, cloud storage, sftp/ftps, encryption
 src/components/  React/Preact components, consumed almost exclusively under Preact
 src/styles/      the token layer — a stylesheet, published as source and compiled
-demo/            a demo app per component (npm run demo:preact | demo:react)
 ```
 
 ## Scripts
@@ -18,7 +17,6 @@ demo/            a demo app per component (npm run demo:preact | demo:react)
 | `npm run check` | typecheck everything under `src` |
 | `npm run tests` | vitest over `agnostic` and `node` (component tests are disabled) |
 | `npm run build` | build the publishable package |
-| `npm run demo` | run the demo app |
 
 Coding conventions live in [CLAUDE.md](./CLAUDE.md) and in the root
 [`../CLAUDE.md`](../CLAUDE.md).
@@ -1225,12 +1223,12 @@ redécouverts par surprise, pas pour être traités.
   donc toujours, le clic remonte au gestionnaire de lm-tools, et `Entrée` l'atteint. Le
   jour où on revient ici, aligner sur `Lightbox` rendrait ce contournement inutile.
 
-- **La démo est en pause, et le reste.** Ne pas y passer de temps ; n'y toucher que
-  si un changement l'empêche de compiler. Une chose à savoir le jour où elle
-  reprendra : `BeforeAfterDemo` lit `--{prefix}-ratio-percent` en six endroits, une
-  propriété supprimée parce qu'un ratio n'a pas de jumeau — remplacer par
-  `calc(var(--lm-before-after-ratio) * 100%)`. Elle compile, elle s'affiche de
-  travers.
+- **The demo app is gone**, deleted on 2026-11-26 after a year on pause — 46 files under
+  `demo/`, its six `package.json` scripts and its eslint exclusion with it. It had drifted
+  out of step with the components it was meant to show: `BeforeAfterDemo` still read
+  `--{prefix}-ratio-percent` in six places, a property dropped because a ratio has no
+  twin, and `SequencerDemo` printed child modifiers that no longer existed. Reviving it
+  means `git checkout <the deletion commit>^ -- demo`, and then that drift to pay off.
 
 
 ## Coverage roadmap

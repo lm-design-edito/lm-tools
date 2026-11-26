@@ -6,8 +6,7 @@ export default [
     ignores: [
       'lib/**',
       '.temp/**',
-      'dist/**',
-      'demo/**'
+      'dist/**'
     ]
   },
   {
