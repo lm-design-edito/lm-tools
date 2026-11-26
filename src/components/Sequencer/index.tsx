@@ -38,11 +38,6 @@ import {
   resolveEasing
 } from './utils.js'
 
-// A step is time and an item is place: `reverse` makes the two run opposite ways, and
-// `itemMap` turns the item into the active item children are matched on.
-
-// The two cannot be written together: a union rather than a runtime check alone, so the
-// mistake is caught where it is made.
 type DirectionProps =
   | { reverse?: boolean, alternate?: undefined }
   | { reverse?: undefined, alternate?: boolean }
@@ -216,36 +211,27 @@ export const Sequencer: FunctionComponent<Props> = ({
 
   // The numbers
   const rawStep = step ?? internalStep
-  // One item has nothing to alternate, and neither has a sequence whose direction the
-  // consumer holds — the conflict is said below rather than thrown.
   const isAlternating = reverse === undefined && alternate === true && itemsCount > 1
   const cycleLength = isAlternating ? 2 * itemsCount : itemsCount
   const lastStep = cycleLength - 1
-  // The count runs past the end so the last item played gets its own step; what is read
-  // from here on is this one, which stops there.
   const publishedStep = loop === true
     ? rawStep
     : clamp(rawStep, 0, Math.max(lastStep, 0))
   const stepInCycle = cycleLength > 0 ? absoluteModulo(publishedStep, cycleLength) : 0
   const stepInLap = itemsCount > 0 ? absoluteModulo(publishedStep, itemsCount) : 0
-  // Past the far end an alternating cycle walks the items back down, which is the whole
-  // of the alternation.
   const forwardItem = isAlternating && stepInCycle >= itemsCount
     ? cycleLength - 1 - stepInCycle
     : stepInCycle
   const isBaseReversed = reverse ?? internalReverse
-  // Its own inverse, so it also reads an item back as the forward item that plays it.
   const oppositeItemWhenBaseReversed = (sourceItem: number): number => isBaseReversed
     ? Math.max(itemsCount - 1, 0) - sourceItem
     : sourceItem
   const item = oppositeItemWhenBaseReversed(forwardItem)
   const activeItem = itemMap?.[item] ?? item
 
-  // Ended is leaving the last item played, not arriving on it.
   const isEnded = loop !== true && itemsCount > 0 && rawStep > lastStep
-  // A sequence withheld by a disclaimer does not advance. Read here rather than in the
-  // clock, so the `playing` modifier and `onIsPlayingChanged` say the same thing the
-  // tempo does — and so the step is kept, the reader landing where the article left it.
+  // Read here rather than in the clock, so the modifier, the handler and the tempo all
+  // say the same thing — and the step survives being withheld.
   const { isDisclosed } = useDisclosure()
   const isPlaying = (play ?? internalPlay) && !isEnded && isDisclosed
 
@@ -255,16 +241,10 @@ export const Sequencer: FunctionComponent<Props> = ({
   const isReversed = isAlternating
     ? isBaseReversed !== (absoluteModulo(lap, 2) === 1)
     : isBaseReversed
-  // A lap is a wrap or a turn, so there is none without `loop` or `alternate` — where the
-  // internal count would report `1` past the end.
   const publishedLap = loop === true || isAlternating ? lap : 0
 
-  // The dwell is the item's slice of the lap, so an easing redistributes a lap's time
-  // without changing it. A curve that overshoots can ask for a negative slice.
   const lapDurationMs = itemsCount * (60000 / Math.max(tempo, 1))
   const passEasing = resolveEasing(isReversed ? reverseEasing ?? easing : easing)
-  // Without a `reverseEasing` a backward pass owes each item the time the forward one
-  // gave it, which is the same curve read from the other end.
   const easedStep = isReversed && reverseEasing === undefined
     ? Math.max(itemsCount - 1 - stepInLap, 0)
     : stepInLap
@@ -278,9 +258,6 @@ export const Sequencer: FunctionComponent<Props> = ({
     : 0
 
   // Commands
-  //
-  // Written here rather than in a module of its own: every verb writes this component's
-  // state, so a sibling file could only be handed each setter back.
   const readArgument = (
     verb: keyof typeof SEQUENCER_ACTION_VERB_ARGUMENTS,
     args: string[]
@@ -292,11 +269,8 @@ export const Sequencer: FunctionComponent<Props> = ({
     return null
   }
 
-  // A jump restarts the step it lands on, whatever time the one it left had used.
   const stepStartedAtRef = useRef<number | null>(null)
 
-  // An absolute jump writes a step in the cycle it was made from, so it never reads as a
-  // wrap.
   const cycleStart = loop === true && cycleLength > 0
     ? Math.floor(publishedStep / cycleLength) * cycleLength
     : 0
@@ -306,15 +280,11 @@ export const Sequencer: FunctionComponent<Props> = ({
     setInternalStep(cycleStart + targetStepInCycle)
   }
 
-  // A negative item counts back from the end, `-1` being the last one. An alternating
-  // cycle plays each item twice, and the jump lands on the first of the two.
   const jumpToItem = (targetItem: number): void => {
     const resolvedItem = targetItem < 0 ? itemsCount + targetItem : targetItem
     jumpToStepInCycle(oppositeItemWhenBaseReversed(resolvedItem))
   }
 
-  // Relative to the count and not to the item, so it keeps the lap it is in and a step
-  // back from an ended sequence lands on the last item rather than nowhere.
   const jumpBySteps = (stepDelta: number): void => {
     if (step !== undefined) return
     stepStartedAtRef.current = null
@@ -359,8 +329,6 @@ export const Sequencer: FunctionComponent<Props> = ({
   // — but an untyped caller can write both all the same.
   const givenReverse: boolean | undefined = reverse
   const givenAlternate: boolean | undefined = alternate
-  // Said rather than thrown: a conflict is a written mistake, and the component keeps
-  // running on `reverse`.
   useEffect(() => {
     if (givenReverse === undefined || givenAlternate !== true) return
     // eslint-disable-next-line no-console
@@ -399,8 +367,6 @@ export const Sequencer: FunctionComponent<Props> = ({
   useStateChangeDispatch(isReversed, onIsReversedChanged)
   useStateChangeDispatch(isEnded, ended => {
     onIsEndedChanged?.(ended)
-    // The count can only leave the last step of the last lap by ending, so this is where
-    // that lap runs out of time.
     if (ended) onEnded?.()
   })
   useStateChangeDispatch(stepInLap === 0, atLapStart => { if (atLapStart) onStarted?.() })

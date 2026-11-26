@@ -1150,6 +1150,12 @@ surrenders here — the component renders no control, so `:force` has nothing to
 from a verb, and the component sends nothing. The step is kept, so dismissing the panel
 resumes where the article left it rather than restarting.
 
+**The count runs past the end.** The last item played is owed its own step, so an ending
+sequence stops at `cycleLength - 1` rather than before it, and a relative jump moves the
+count and not the item — it keeps the lap it is in, and a step back from an ended sequence
+lands on the last item rather than nowhere. An easing can ask for a negative slice when
+the curve overshoots, which is read as no time at all.
+
 **A data attribute selects, a custom property computes.** The same six numbers are
 published both ways on purpose: `attr()` cannot feed a `calc()`, so a rule turning
 something by a degree per step needs the property, and gets it on every descendant since
