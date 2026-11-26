@@ -36,7 +36,8 @@ import {
  * @property children - The content the disclaimer withholds, rendered below the panel.
  * @property undisclosedContent - Content displayed inside the disclaimer panel,
  * until it is dismissed.
- * @property togglerContent - Content rendered inside the dismiss toggler.
+ * @property togglerContent - Content rendered inside the dismiss toggler. Left out, the
+ * button renders empty and a stylesheet fills it.
  * When omitted, the toggler is not rendered.
  * @property isOn - Controlled visibility state. When defined, the component
  * behaves as a controlled component and internal state is never updated.
@@ -190,11 +191,12 @@ export const Disclaimer: FunctionComponent<Props> = ({
       {undisclosedContent !== undefined && <div className={contentClss}>
         {undisclosedContent}
       </div>}
-      {togglerContent !== undefined && <div
+      <button
+        type='button'
         className={togglerClss}
         onClick={handleDismissClick}>
         {togglerContent}
-      </div>}
+      </button>
     </div>
     <div className={sensitiveClss}>
       <DisclosureProvider isDisclosed={!isOn}>

@@ -4,6 +4,13 @@ Notable changes to `@design-edito/tools`, newest first. Paths are the ones a con
 imports; what never reaches the published package is left out. Sections before
 `0.5.44` were reconstructed from the commits between two version bumps.
 
+## [latest]
+
+- changed - **components/Disclaimer** - the dismiss toggler is a `<button type='button'>` and is **always rendered**, where it was a `<div>` carrying an `onClick` and only existed when `togglerContent` was given. A disclaimer with no toggler content was undismissable by keyboard and had no element to style; it now has an empty button a stylesheet fills. A consumer passing a `<button>` of its own as `togglerContent` must stop — that would now nest one button inside another.
+- changed - **components/Gallery** - the previous, next and pagination controls are `<button type='button'>` where they were `<div>`s carrying an `onClick`, so they are focusable and announced as controls.
+- changed - **components/Gallery** - `prevButtonContent` and `nextButtonContent` no longer default to the words `prev` and `next`. Left out, the button renders empty and a stylesheet fills it, as everywhere else in the library — the component no longer chooses a word or a language on the consumer's behalf.
+- changed - **components/Lightbox** - the control element classes drop their `-btn` suffix: `open`, `close`, `prev` and `next`, where they were `open-btn`, `close-btn`, `prev-btn` and `next-btn`. **The old class names no longer exist.**
+
 ## [0.9.0] — 2026-11-26
 
 - changed - **styles** - the display classes lose their prefix: `.none`, `.block`, `.flex`, `.grid`, `.inline`, `.inline-block`, `.inline-flex` and `.inline-grid`, which is the shape position already had with `.absolute`, `.relative`, `.fixed` and `.sticky`. **The `disp-*` names are gone**, with no alias: a consumer writing `disp-flex` now gets no rule at all.

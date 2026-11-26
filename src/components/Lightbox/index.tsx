@@ -144,7 +144,7 @@ export type Props = {
  * - `backdrop` - the box the content always lives in; a stylesheet takes it out of
  *   flow and over the page while the root carries `--on`.
  * - `content` - wraps the content inside the backdrop.
- * - `open-btn`, `close-btn`, `prev-btn`, `next-btn`
+ * - `open`, `close`, `prev`, `next`
  *
  * ### Disclosure
  * Under a standing `Disclaimer` it does not open — not from `defaultIsOn`, not from a
@@ -449,26 +449,26 @@ export const Lightbox: FunctionComponent<Props> = ({
       </div>
       <button
         type='button'
-        className={c('close-btn')}
+        className={c('close')}
         onClick={handleCloseButtonClick}>
         {closeBtnContent}
       </button>
       <button
         type='button'
-        className={c('prev-btn')}
+        className={c('prev')}
         onClick={handlePrevButtonClick}>
         {prevBtnContent}
       </button>
       <button
         type='button'
-        className={c('next-btn')}
+        className={c('next')}
         onClick={handleNextButtonClick}>
         {nextBtnContent}
       </button>
     </div>
     <button
       type='button'
-      className={c('open-btn')}
+      className={c('open')}
       onClick={handleOpenButtonClick}>
       {openBtnContent}
     </button>

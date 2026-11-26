@@ -1278,23 +1278,15 @@ component and are what makes a 600-line `Video` scannable. One ruling for the se
 Aucun des trois n'a d'importance à court terme. Ils sont ici pour ne pas être
 redécouverts par surprise, pas pour être traités.
 
-- **`Disclaimer` n'a pas reçu la passe d'alignement**, sur deux points, et lm-link
-  contourne les deux aujourd'hui.
+- **`Disclaimer`'s alignment pass is half done.** The toggler was the sharp half and it
+  landed on 2026-11-26: it is a real `<button type='button'>` rendered unconditionally,
+  so a disclaimer with no `togglerContent` is still dismissable by keyboard, where before
+  the element did not exist at all and the one that did was a `div` with an `onClick`.
 
-  D'abord il **rend ses éléments sous condition** : `__toggler` n'existe que si
-  `togglerContent` est fourni, `__content` que si `undisclosedContent` l'est. `Lightbox`
-  fait l'inverse — ses quatre contrôles sont rendus en permanence, et c'est la feuille
-  qui décide lequel est atteignable, `:empty` distinguant le vide du rempli. La
-  conséquence est sévère : un disclaimer sans `togglerContent` est **indismissable**,
-  aucun élément n'existant à habiller.
-
-  Ensuite le toggler est une **`div` portant un `onClick`**, là où `Lightbox` rend de
-  vrais `<button type='button'>`. Sans `tabIndex`, sans rôle, sans gestion clavier :
-  l'avertissement ne se lève donc qu'à la souris ou au doigt.
-
-  lm-link s'en sort en glissant un `<button>` dans `togglerContent` — l'élément existe
-  donc toujours, le clic remonte au gestionnaire de lm-tools, et `Entrée` l'atteint. Le
-  jour où on revient ici, aligner sur `Lightbox` rendrait ce contournement inutile.
+  What is left is the other element: `__content` is still rendered only when
+  `undisclosedContent` is given. Same question, lower stakes — a panel with no text is
+  not an accessibility hole, only an inconsistency with how every other control in the
+  library now behaves.
 
 - **The demo app is gone**, deleted on 2026-11-26 after a year on pause — 46 files under
   `demo/`, its six `package.json` scripts and its eslint exclusion with it. It had drifted

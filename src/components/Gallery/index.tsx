@@ -63,8 +63,9 @@ function resolveOffset (
  * like any other. A number is pixels. Falls back to `offset`, then `0px`.
  * @property offsetRight - Room kept after the last slot. Same rules.
  * @property offset - Shorthand for both ends, used when a side is not set.
- * @property prevButtonContent - Content of the "previous" control. Defaults to `"prev"`.
- * @property nextButtonContent - Content of the "next" control. Defaults to `"next"`.
+ * @property prevButtonContent - Content of the "previous" control. Left out, the button
+ * renders empty and a stylesheet fills it.
+ * @property nextButtonContent - Content of the "next" control, same.
  * @property paginationContent - Content of each pagination item: a node used for all of
  * them, a function of the page index, or undefined to show the index.
  * @property defaultActive - Slot to scroll to at mount, in uncontrolled mode.
@@ -450,30 +451,33 @@ export const Gallery: FunctionComponent<Props> = ({
 
     {/* Actions */}
     <div className={actionsClss}>
-      <div
+      <button
+        type='button'
         className={prevBtnClss}
         onClick={handlePrevClick}>
-        {prevButtonContent ?? 'prev'}
-      </div>
-      <div
+        {prevButtonContent}
+      </button>
+      <button
+        type='button'
         className={nextBtnClss}
         onClick={handleNextClick}>
-        {nextButtonContent ?? 'next'}
-      </div>
+        {nextButtonContent}
+      </button>
     </div>
 
     {/* Pagination */}
     <div className={paginationClss}>
       {Children.map(children, (_, pos) => {
         const pageClss = c('page', { active: pos === activeIndex })
-        return <div
+        return <button
+          type='button'
           className={pageClss}
           data-page={pos}
           onClick={() => handlePaginationClick(pos)}>
           {typeof paginationContent === 'function'
             ? paginationContent(pos)
             : paginationContent ?? pos}
-        </div>
+        </button>
       })}
     </div>
   </div>
