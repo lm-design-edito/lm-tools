@@ -1104,6 +1104,73 @@ What the conversion settled in each component:
   and the handler each ask for the same thing, and tracking stays off until one of them
   does.
 
+## `Sequencer` — the reasoning the JSDoc does not carry
+
+The component's JSDoc holds its contract: the props, the verbs, the class names and the
+attributes a consumer reads. Everything below is why it is shaped that way, moved here on
+2026-11-26 when the two blocks had grown to 190 lines between them.
+
+**It renders no box of its own.** The modifiers go straight onto the children, by
+`cloneElement`. A wrapper would take the place the consumer lays out — it would be the
+grid or flex item, leaving the element they actually wrote one level down — and a
+sequencer exists precisely so a stylesheet can animate that element. The cost is a
+contract: a child has to honour `className`, which every DOM element does and every
+component here does by convention. One that ignores it gets no modifiers, silently.
+
+**Children that are not elements take no part.** Text and whitespace are rendered
+untouched, carry no class and stay visible throughout. A fragment is opened rather than
+counted: it groups without rendering an element of its own, so there would be nothing to
+class and nothing to show for the item it would consume.
+
+**`data-last-item` ends the sequence, and what follows still takes part** — through
+`data-items` alone. That is what lets an article write the items in reading order and put
+the children belonging to several of them at once *after*, where they read as what they
+are, instead of having their position counted as an item:
+
+```html
+<div>1</div><div>2</div><div data-last-item>3</div>
+<div data-items="0, 1">both of the first two</div>
+```
+
+Three items, four children. A trailing child that names no item never lights up, which is
+the honest reading of « it is not part of the sequence ».
+
+**Nothing is clamped, and that is the exception in the library.** Elsewhere a position
+outside the component lands on the nearest end; here a step past the last item is a real
+step in the next lap, so there is no outside to come back from. `play` on a sequence that
+has ended does nothing, ending being what stopped it — `['jump-start', 'play']` is how it
+starts again, and a `loop` sequence never meets the case. An absolute jump stays in the
+cycle it was made from, so it is not a wrap and `onLooped` does not fire.
+
+**A verb never contradicts a prop**: `play` and `pause` are inert while `play` arrived as
+one, `direction` while `reverse` did, every `jump-*` while `step` did. And nothing ever
+surrenders here — the component renders no control, so `:force` has nothing to override.
+
+**Under a standing `Disclaimer` the tempo does not run**, from `defaultPlay` no more than
+from a verb, and the component sends nothing. The step is kept, so dismissing the panel
+resumes where the article left it rather than restarting.
+
+**A data attribute selects, a custom property computes.** The same six numbers are
+published both ways on purpose: `attr()` cannot feed a `calc()`, so a rule turning
+something by a degree per step needs the property, and gets it on every descendant since
+custom properties inherit — `transform: rotate(calc(var(--lm-sequencer-step) * 5deg))`.
+No `-raw` twin as `ResizeObserver` has: every one of them is a bare number, and none would
+mean anything with a unit attached.
+
+**The child flags are derived, not remembered.** The order of a whole lap is known from
+`itemMap` and the direction alone, so « has it been shown yet » is a question about the
+steps playback has passed, not about what happened since mount: the answer is the same on
+every lap with nothing reset, and `reverse` swaps the two. Neither carries a negation —
+a child with a single turn carries at most one of them, one active at items 1 and 6
+sitting on 3 carries both, and `:not(.--did-activate)` says what the missing negative
+would have.
+
+**An alternating sequence holds each end for two steps**, one for the pass arriving and
+one for the pass leaving. Playing the turn item once cost a lap of `totalItems - 1`, a
+one-step shift between the lap and the direction flip, and a rule about which curve owns a
+turn item; holding it buys all three back, at the price of a double dwell on the extremes
+under a linear easing.
+
 ## `Video` — les bornes de lecture, à instruire
 
 Notée telle quelle, à reprendre en discussion : elle n'est pas conçue.
