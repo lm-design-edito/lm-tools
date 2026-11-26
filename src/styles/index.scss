@@ -1015,6 +1015,7 @@
 .hidden {
   @extend .not-interactive;
   opacity: 0;
+  visibility: hidden;
 }
 
 .pointer { cursor: pointer; }

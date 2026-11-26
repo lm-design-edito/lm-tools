@@ -4,6 +4,10 @@ Notable changes to `@design-edito/tools`, newest first. Paths are the ones a con
 imports; what never reaches the published package is left out. Sections before
 `0.5.44` were reconstructed from the commits between two version bumps.
 
+## [latest]
+
+- changed - **styles** - `.hidden` adds `visibility: hidden` to the `opacity: 0` and the `pointer-events` / `user-select` it already carried. The element keeps its box and its place in the flow, as before, but now also leaves the tab order and the accessibility tree — a transparent link was still focusable and still announced. The one thing it costs is a fade on `.hidden` alone, `visibility` not being an animatable property; a fade belongs to the `do-fade` family.
+
 ## [0.8.0] — 2026-11-26
 
 - added - **agnostic/strings/join-path** - `joinPath(...segments)` newly exported. Joins path segments with a single `/`, resolving `.` and `..` on the way and collapsing empty segments and repeated slashes. It works on strings alone, with no filesystem knowledge, so it runs in a browser where Node's `path.join` cannot. The result is absolute when the first segment starts with `/`, and a `..` that would climb above an absolute root is ignored rather than escaping it.
