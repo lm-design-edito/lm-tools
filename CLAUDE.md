@@ -80,6 +80,11 @@ reader. Everything that is **not** JSDoc follows « Comments » in the root
 [`../CLAUDE.md`](../CLAUDE.md): one or two lines, and rarely.
 
 - Document exported symbols. Internal helpers don't need it.
+- **Forty lines is a hard ceiling for one block**, and only a genuinely complex component
+  may approach it; most symbols are done in three. A block that outgrows it is not dense
+  documentation, it is a README section written in the wrong file — move the rationale out
+  and leave the contract: what a caller passes, what comes back, the class names they can
+  target. The test is whether a reader at the call site needs the sentence *there*.
 - One precise sentence beats an exhaustive paragraph. Say *why* and *when*, never
   restate what the types already say, and never repeat a type inside a tag
   (`@param {string} name`).
