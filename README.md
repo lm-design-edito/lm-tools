@@ -913,7 +913,26 @@ What has to be settled before anything is written:
   state is a second name for each of them.
 - **Whether a trigger fires on mount**, as the first settled visibility state does.
 
-Opened 2026-11-25, and it does not block lm-link's publication either way.
+**It is a project over the whole library, not a `Sequencer` detail** — 2026-11-26. Every
+component gets its own pass: which of its states are worth answering with a command, read
+one component at a time rather than deduced from a rule. `Video`, `Gallery`, `Paginator`,
+`Scrllgngn`, `Drawer`, `Lightbox` and the rest each have an answer of their own, and some
+of them have none.
+
+**Two shapes are on the table, and that choice comes before the per-component pass:**
+
+- **One `when*` per `on*`**, a strict mirror of the handler list. Legible and greppable at
+  the call site, and it doubles a prop list already thirty long on `Sequencer`.
+- **A single `when` prop** taking `<trigger>:<action>:<...args>` — one name per component
+  whatever its state count, at the price of a grammar. The command layer already reads
+  `verb:arg` (`jump-by:1`, `direction:forward`), so the first segment alone would be the
+  trigger and everything after it the command, which is parseable but no longer greppable
+  per state. Whether it takes one string, a list of them or a record keyed by trigger is
+  part of the same call, and `whenVisible` / `whenHidden` either fold into it or have to be
+  explained beside it.
+
+Opened 2026-11-25, widened 2026-11-26, and it does not block lm-link's publication either
+way.
 
 ## Disclosure — what a standing disclaimer withholds
 
