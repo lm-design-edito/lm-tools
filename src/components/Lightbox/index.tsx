@@ -174,32 +174,16 @@ export type Props = {
  * and the controls.
  *
  * @remarks
- * - **The content never moves.** It stays in the same box, at the same place in the
- *   React tree, open or closed; only the box's positioning changes, and that is a
- *   stylesheet's business. Nothing is unmounted, so a playing video keeps playing at
- *   its timecode. Rendering `children` in two branches - one in place, one on a stage
- *   - would mount a fresh instance on every flip, React reconciling by position.
- * - **Nothing leaves the component's own subtree.** No portal, no `document.body`: a
- *   component has no business writing outside the scope it was handed.
- * - **A placeholder keeps the layout still.** Its size is the content's last measured
- *   one, read while closed; without it the article would collapse around the hole left
- *   once the backdrop goes out of flow.
+ * - **The content never moves**, and nothing is unmounted: it stays in the same box
+ *   open or closed, so a playing video keeps playing at its timecode.
+ * - **A placeholder keeps the layout still**, sized from the content's last measurement
+ *   while closed, so the article does not collapse once the backdrop leaves the flow.
  * - **A `position: fixed` backdrop is contained by the first ancestor carrying a
- *   `transform`, a `filter` or a `contain`**, which becomes its containing block. That
- *   is wanted, not suffered: where several articles are preloaded side by side and
- *   slid through by a transformed container, containment is what keeps an offscreen
- *   article's lightbox offscreen. The top layer - `<dialog>` with `showModal()`, or
- *   the popover API - would do the opposite, being document-wide and above
- *   everything, and paint over whichever article is being read.
- * - **Groups are held outside React**, in `./store.ts`: a consumer may render each
- *   component in a root of its own, in which case the lightboxes of a group share no
- *   tree and a context could not reach from one to the other.
- * - Every lightbox holds its own backdrop; only the open one is lifted over the page.
- *   Navigating a group therefore lowers one and lifts another, and neither one's
- *   content is touched.
- * - This component ships **no appearance**: covering the page, the backdrop and the
- *   buttons are the consumer stylesheet's business. Without one, the content is moved
- *   to the end of the document and nothing looks like a lightbox.
+ *   `transform`, a `filter` or a `contain`**, which becomes its containing block.
+ * - Every lightbox holds its own backdrop and only the open one is lifted, so walking a
+ *   group lowers one and lifts another without touching either content.
+ * - This component ships **no appearance**: the backdrop and the buttons are the
+ *   consumer stylesheet's business, and without one nothing looks like a lightbox.
  */
 export const Lightbox: FunctionComponent<Props> = ({
   compId: givenCompId,

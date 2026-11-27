@@ -108,16 +108,13 @@ export type Props = {
  * `<audio>` tag can't be autoplayed: the muted-autoplay exemption browsers grant is
  * for video, so an `<audio>` waits for a user gesture whatever its muted state.
  * Autoplaying an audio file therefore needs `muted` and `playsInline` on a `<video>`,
- * which is what this is. The one thing lost is the assistive-tech
- * label: a screen reader announces a video player. Worth a `tag` prop the day that
- * matters more than autoplay — not before.
+ * which is what this is. The one thing lost is the assistive-tech label: a screen
+ * reader announces a video player.
  *
  * **`loop` reaches the element untouched**, like every other native media attribute
- * this component does not drive itself. It was once destructured out of the props and
- * never forwarded, which silently dropped it — so if a native attribute ever stops
- * arriving, look at the destructuring here before looking at the caller. One
- * consequence worth knowing: a looping element never fires `ended`, so the `--ended`
- * modifier and the `isEnded` it feeds to `Subtitles` simply never come.
+ * this component does not drive itself. One consequence worth knowing: a looping
+ * element never fires `ended`, so the `--ended` modifier and the `isEnded` it feeds to
+ * `Subtitles` never come.
  *
  * ### Disclosure
  * Under a standing `Disclaimer`, the element does not play — not from `autoPlay`, not
