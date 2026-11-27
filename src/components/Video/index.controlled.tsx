@@ -150,17 +150,14 @@ export type VideoActionPayload<E, T> = {
 } & T
 
 export type Props = {
-  // The `<figure>` handed back to whoever renders this component. It exists for the
-  // hybrid `Video` above it, which observes that element rather than wrapping it in a
-  // box of its own — hence a readable ref and not a callback one.
+  // The `<figure>` handed back to whoever renders this. The hybrid above observes that
+  // element rather than wrapping it, hence a readable ref and not a callback one.
   rootRef?: RefObject<HTMLElement | null>
-  // Whether the component has settled into view, as the layer above measures it. Only
-  // the `--visible` modifier and its attribute come of it here; `undefined` while
-  // nothing asks about visibility, which is why neither ever appears unasked.
+  // Whether the component has settled into view, as the layer above measures it.
+  // `undefined` while nothing asks, which is why the modifier never appears unasked.
   isVisible?: boolean
-  // The `<video>` itself, for a caller that has to reach it outside of a handler —
-  // seeking on a viewport instruction, typically, which happens at no one's click. Given
-  // one, this component uses it instead of its own rather than merging the two.
+  // The `<video>` itself, for a caller reaching it outside a handler — a seek on a
+  // viewport instruction. Given one, this component uses it instead of its own.
   videoRef?: RefObject<HTMLVideoElement | null>
   togglePlayOnClick?: boolean
   sources?: string | string[] | SourceData[]
@@ -274,9 +271,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   playbackRate = 1,
   currentTimeMs: givenCurrentTimeMs,
   defaultCurrentTimeMs,
-  // Milliseconds by default, which is what this component has always rendered — a
-  // default that changes under a consumer is a change nobody asked for. An article
-  // usually wants `'{{mm}}:{{ss}}'` and says so.
+  // Milliseconds by default, which is what this component has always rendered: a
+  // default that changes under a consumer is a change nobody asked for.
   timeFormat = '{{mm}}:{{ss}}:{{ms}}',
   onPlayButtonClicked,
   onPauseButtonClicked,
@@ -319,15 +315,12 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   // the metadata event, and seeking there a second time would send a playing media back.
   const hasSeededDefaultTimeRef = useRef(false)
 
-  // Unlike play, mute and fullscreen, this one isn't a prop: nothing can *set* a
-  // media to ended, it is something the element reports. So it is read from the
-  // element, and the two events that turn it on and off are joined by a sync on
-  // every time update, which covers a seek away from the end.
+  // Nothing can *set* a media to ended, so it is read from the element — its two events
+  // plus a sync on every time update, which covers a seek away from the end.
   const [isEnded, setIsEnded] = useState(false)
 
-  // What the element is actually doing, as opposed to what `play` asked for. The
-  // two part ways whenever a browser refuses a play, which it does without firing
-  // anything — see `forcePlay`.
+  // What the element is actually doing, as opposed to what `play` asked for: the two
+  // part ways when a browser refuses a play, which it does silently — see `forcePlay`.
   const [isElementPlaying, setIsElementPlaying] = useState(false)
 
   const isTimeControlled = givenCurrentTimeMs !== undefined
@@ -391,14 +384,12 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     onPlayButtonClicked?.({ event: e, isPlaying: wasPlaying, videoElement: videoRef.current })
   }, [onPlayButtonClicked])
 
-  // The picture as a play/pause surface. It reports and nothing more, like every other
-  // control here: the uncontrolled layer above owns the play state.
-  //
-  // The listener sits on the element and not on the `<figure>`, so the controls painted
-  // over it are not part of the surface — a click on pause would otherwise toggle twice
-  // and cancel itself. No `role` and no `tabIndex` either: this is a **second** way to
-  // do what the play button already does, and giving it a focus stop would put the same
-  // action twice in the tab order.
+  // The picture as a play/pause surface, reporting only: the layer above owns the state.
+  // The listener sits on the element, not the `<figure>`, or a click on pause would
+  // toggle twice.
+
+  // No `role` and no `tabIndex`: this is a second way to do what the play button does,
+  // and a focus stop would put the same action twice in the tab order.
   const handleVideoClick = useCallback((e: React.MouseEvent<HTMLVideoElement>) => {
     if (togglePlayOnClick !== true) return
     const wasPlaying = videoRef.current?.paused === false
@@ -466,9 +457,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     // the absence of one, and a stylesheet recognises the case by neither being there.
     'subtitles-on': subtitles !== undefined && subtitlesOn,
     'subtitles-off': subtitles !== undefined && !subtitlesOn,
-    // A capability rather than a state, and it is here for the same reason the lightbox
-    // carries `--open-on-click`: a surface that answers a click has to be able to say so
-    // with a cursor.
+    // A capability rather than a state, as the lightbox's `--open-on-click` is: a surface
+    // that answers a click has to be able to say so with a cursor.
     'toggle-play-on-click': togglePlayOnClick === true,
     visible: isVisible === true
   }), className)
@@ -540,9 +530,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   }, [fullscreen])
 
   useEffect(() => {
-    // A controlled time belongs to the parent, and a playing element advances
-    // the time on its own — so the two cannot coexist. Applied once, on entering
-    // the mode, rather than fought on every tick.
+    // A controlled time belongs to the parent and a playing element advances it, so the
+    // two cannot coexist. Applied on entering the mode rather than fought on every tick.
     if (isTimeControlled) {
       void forcePause(videoRef.current)
       return
@@ -577,9 +566,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     }
   }, [mute])
 
-  // The browser can leave fullscreen without going through our button — Escape,
-  // or the platform's own exit gesture. Nothing in React reports it, so the real
-  // event is the only way for a parent to keep its `fullscreen` prop truthful.
+  // The browser can leave fullscreen without our button — Escape, the platform's own
+  // gesture — and React reports none of it, so the real event is the only truth.
   useEffect(() => {
     if (onFullscreenChange === undefined) return
     const handleDocumentFullscreenChange = (): void => {

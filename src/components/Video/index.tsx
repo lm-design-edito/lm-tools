@@ -77,10 +77,8 @@ import {
  * @property children - React children rendered inside the `<video>` element itself
  * (e.g. fallback content).
  */
-// What this layer owns rather than forwards. `isVisible` is measured here, and the two
-// refs are how it reaches elements it does not render itself — plumbing between the two
-// files, never a way in: a caller holding the `<video>` would act behind the command
-// layer's back.
+// What this layer owns rather than forwards. The two refs reach elements it does not
+// render: plumbing between the files, never a way past the command layer.
 export type Props = {
   defaultSubtitlesOn?: boolean
   defaultVolume?: number
@@ -191,18 +189,16 @@ export const Video: FunctionComponent<Props> = ({
   onSubtitlesButtonClicked,
   ...controlledProps
 }) => {
-  // The id is resolved here and handed down, so the two layers share one rather than
-  // minting one each. The refs go the same way: this layer observes the root and seeks
-  // on the element, both rendered below, so it mints the boxes and hands them down.
+  // The id is resolved here and handed down, so the two layers share one. The refs go
+  // the same way: this layer observes and seeks on elements rendered below.
   const compId = useCompId(givenCompId)
   const rootRef = useRef<HTMLElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  // State & refs
-  //
-  // Each of these six can also arrive as a prop, which wins where they are forwarded
-  // below; the state is written either way, so a caller that stops driving one lands on
-  // what the reader last did rather than on a mount-time value.
+  // State
+
+  // Each of these six can also arrive as a prop, which wins where they are forwarded;
+  // the state is written either way, so a caller that stops driving one lands on it.
   const [internalPlay, setInternalPlay] = useState(false)
   const [internalVolume, setInternalVolume] = useState(defaultVolume)
   const [internalMute, setInternalMute] = useState(defaultMute)
@@ -210,21 +206,17 @@ export const Video: FunctionComponent<Props> = ({
   const [internalFullscreen, setInternalFullscreen] = useState(false)
   const [internalSubtitlesOn, setInternalSubtitlesOn] = useState(defaultSubtitlesOn)
 
-  // Several paths below ask for playback — the play button, `autoPlay` itself. None of
-  // them may win over a parent-owned time, so the invariant is applied where the state
-  // is forwarded rather than guarded at each call site.
+  // Several paths below ask for playback, and none may win over a parent-owned time —
+  // hence the invariant where the state is forwarded rather than at each call site.
   const isTimeControlled = controlledProps.currentTimeMs !== undefined
 
   // A video withheld by a disclaimer does not play, whoever asked. Read where the state
-  // is forwarded rather than written, as the controlling props are, so the reader lands
-  // on what they had once they accept instead of on a mount-time value.
+  // is forwarded, so the reader lands on what they had rather than on a mount value.
   const { isDisclosed } = useDisclosure()
 
-  // The reader's hand. Touching a control hands its domain over for the rest of the
-  // mount, because the failure modes are not symmetrical: not restarting on its own is
-  // a disappointment, restarting against someone who just pressed pause is a hostility
-  // they would meet at every pass. `force` is the written form for the same reason —
-  // yielding is the silent one.
+  // The reader's hand: touching a control hands its domain over for the mount, because
+  // restarting against someone who just pressed pause is a hostility, not a surprise.
+
   // Annotated with this component's vocabulary: the layer takes any name, so the
   // annotation is what keeps a misspelled domain from compiling.
   const surrender: (domain: VideoActionDomain) => void = useCommandSurrender(
@@ -233,12 +225,12 @@ export const Video: FunctionComponent<Props> = ({
   )
 
   // Commands
-  //
-  // The table is written here rather than in a module of its own: every verb writes
-  // this component's state, so a sibling file could only be handed each setter back.
-  // A time outside the video lands on the nearest end and says so: `jump-to:90min` on a
-  // two-minute clip is a written mistake, and a silent seek to the end reads as if it
-  // had worked.
+
+  // Written here rather than in a module of its own: every verb writes this component's
+  // state, so a sibling file could only be handed each setter back.
+
+  // A time outside the video lands on the nearest end and says so — a silent seek to
+  // the end would read as if `jump-to:90min` on a two-minute clip had worked.
   const jumpTo = (targetMs: number): void => {
     if (isTimeControlled) return
     const wasClamped = forceJumpTo(videoRef.current, targetMs)
@@ -309,10 +301,8 @@ export const Video: FunctionComponent<Props> = ({
     controlledProps.onPause?.(e)
   }, [controlledProps.onPause])
 
-  // The element's own account of whether it is playing. It covers what the `play`
-  // and `pause` events do, plus the one case they can't: a play the browser refused,
-  // which fires nothing at all. Without it the controls would stay on `--play-on`
-  // over a media that never started.
+  // The element's own account of whether it is playing, which covers the case the
+  // `play` and `pause` events cannot: a play the browser refused, firing nothing.
   const handleIsPlayingChanged = useCallback((isPlaying: boolean) => {
     setInternalPlay(isPlaying)
     controlledProps.onIsPlayingChanged?.(isPlaying)
@@ -390,9 +380,8 @@ export const Video: FunctionComponent<Props> = ({
     setInternalFullscreen(!payload.isFullscreen)
   }, [onFullscreenButtonClicked, surrender])
 
-  // One button for both directions, where play/pause and loud/mute get one each: those
-  // carry two opposed glyphs, so both are rendered and the stylesheet shows one. The
-  // subtitles button carries a single glyph whose styling alone changes.
+  // One button for both directions where play/pause and loud/mute get one each: those
+  // carry two opposed glyphs, this one a single glyph whose styling alone changes.
   const handleSubtitlesButtonClick = useCallback<NonNullable<Props['onSubtitlesButtonClicked']>>(payload => {
     onSubtitlesButtonClicked?.(payload)
     surrender('subtitles')
@@ -406,22 +395,20 @@ export const Video: FunctionComponent<Props> = ({
     surrender('position')
   }, [onTimelineClicked, surrender])
 
-  // `autoPlay` is forwarded to the element, but the play state is owned here, so
-  // it has to be seeded once on mount for the controls to agree with the element.
-  //
-  // Fx. dep. isDisclosed - and seeded again when a disclaimer is dismissed: the autoplay
-  // was the article's instruction, consent was the only thing in its way.
+  // `autoPlay` is forwarded to the element but the play state is owned here, so it is
+  // seeded on mount.
+
+  // Fx. dep. isDisclosed - and seeded again on dismissal: the autoplay was the
+  // article's instruction, consent was the only thing in its way.
   useEffect(() => {
     if (!isDisclosed) return
     if (controlledProps.autoPlay === true) setInternalPlay(true)
   }, [isDisclosed])
 
   // Rendering
-  //
+
   // **The `<figure>` is the root, and there is nothing above it.** A wrapper would take
-  // the outer position — the one a consumer lays out — and leave `className` naming an
-  // inner element, which is the wrong way round. So no wrapper, and no second class-name
-  // prop to reach past it.
+  // the outer position and leave `className` naming an inner element.
   return <ControlledVideo
     {...controlledProps}
     compId={compId}
