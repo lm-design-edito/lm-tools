@@ -273,9 +273,8 @@ export const Gallery: FunctionComponent<Props> = ({
     return null
   }
 
-  // A position outside the strip lands on the nearest slot. An absolute verb says so —
-  // `jump-to:7` on three slots is a written mistake — where `jump-by` stays quiet, a
-  // next at the last slot being an ordinary end and not a typo.
+  // A position outside the strip lands on the nearest slot. An absolute verb says so,
+  // where `jump-by` stays quiet: a next at the last slot is an end, not a typo.
   const jumpToSlot = (targetSlot: number, verb: GalleryActionVerb): void => {
     if (isControlled) return
     const resolved = targetSlot < 0 ? childrenCount + targetSlot : targetSlot
@@ -320,9 +319,8 @@ export const Gallery: FunctionComponent<Props> = ({
     scrollToSlot(pos)
   }
 
-  // A horizontal intent, and not a scroll: a programmatic scroll fires the same events
-  // the reader does. Dominance is what tells a swipe along the strip from the jitter of
-  // one down the article.
+  // A horizontal intent, not a scroll: a programmatic scroll fires the reader's events
+  // too, and dominance is what tells a swipe along the strip from jitter down the page.
   const takeOverPosition = (): void => {
     pendingTargetRef.current = null
     surrender('position')
@@ -348,9 +346,8 @@ export const Gallery: FunctionComponent<Props> = ({
   }
   const handleScrollerPointerUp = (): void => { dragOriginRef.current = null }
 
-  // Fx. dep. childrenCount - Measure, and measure again whenever a box changes size.
-  // Watching the slots and not only the scroller is what makes a late image or font
-  // land correctly, where a delay after mount could only guess.
+  // Fx. dep. childrenCount - Measure again whenever a box changes size. Watching the
+  // slots and not only the scroller is what makes a late image or font land right.
   useEffect(() => {
     const scrollerElt = scrollerRef.current
     if (scrollerElt === null) return

@@ -73,9 +73,8 @@ const readers = {
   'YY': {
     pattern: () => '\\d{2}',
     field: 'YYYY',
-    // The pivot `strptime` uses, and the one every other reader of two-digit years
-    // settled on: a date file written in 1998 means 1998, a form filled today means
-    // this century.
+    // The pivot `strptime` uses, and every other reader of two-digit years: a file written
+    // in 1998 means 1998, a form filled today means this century.
     read: captured => {
       const value = Number.parseInt(captured, 10)
       return value > 68 ? 1900 + value : 2000 + value
@@ -100,9 +99,8 @@ const readers = {
   'th': { pattern: () => '(?:st|nd|rd|th|er)?', field: null }
 } satisfies Record<DateToken, TokenReader>
 
-// Alternation is ordered and the first branch that fits wins, so the longest tokens
-// come first — the same reason `formatDate` spells its own alternation that way, built
-// off the table above rather than written out a second time.
+// Alternation is ordered and the first fit wins, so the longest tokens come first —
+// built off the table above rather than spelled out a second time.
 const tokenPattern = Object.keys(readers)
   .sort((one, other) => other.length - one.length)
   .join('|')
@@ -206,9 +204,8 @@ export function parseDate (
     hours = asHours24
   }
 
-  // The parts, finest first, so that the index of the first one named says where the
-  // template stops: anything finer than that is a minimum, anything coarser is the
-  // reference's.
+  // The parts, finest first, so the index of the first one named says where the template
+  // stops: finer than that is a minimum, coarser is the reference's.
   const reference = options.reference ?? new Date()
   const finest = [parts.ms, parts.s, parts.m, hours, parts.D, parts.M, parts.YYYY]
     .findIndex(part => part !== undefined)
@@ -221,9 +218,8 @@ export function parseDate (
   const month = parts.M ?? (finest < 5 ? reference.getMonth() + 1 : 1)
   const year = parts.YYYY ?? reference.getFullYear()
 
-  // A year under 100 would land in the 1900s through the constructor, so it is set
-  // afterwards. Everything else is built in one go on purpose: an hour daylight saving
-  // skips has to be weighed in the year actually asked for, not in a stand-in one.
+  // A year under 100 would land in the 1900s through the constructor, so it is set after.
+  // The rest is built in one go: DST has to be weighed in the year actually asked for.
   const date = new Date(year, month - 1, day, hoursOfDay, minutes, seconds, milliseconds)
   if (year >= 0 && year < 100) date.setFullYear(year)
   const exists = date.getFullYear() === year

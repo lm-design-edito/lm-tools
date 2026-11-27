@@ -264,18 +264,15 @@ export const Lightbox: FunctionComponent<Props> = ({
   const openGroup = storeState.openGroup
   const openGroupSize = isOn && openGroup !== null ? getGroupLightboxes(openGroup).length : 0
 
-  // Fx. dep. id, groupsKey - Joins the store, which is what lets another lightbox of
-  // the group reach this one. `getElement` rather than the element itself: the store
-  // reads it when it needs to order the group, and never holds it.
+  // Fx. dep. id, groupsKey - Joins the store, which is what lets another lightbox of the
+  // group reach this one. `getElement`, so the store reads it and never holds it.
   useEffect(() => {
     registerLightbox({ id, groups, getElement: () => rootRef.current })
     return () => unregisterLightbox(id)
   }, [id, groupsKey])
 
-  // Keeps the last size the content had in place, so the placeholder can hold it once
-  // the content is gone. Measured while closed only, on render rather than through a
-  // standing observer: the content of a lightbox rarely resizes, and one observer per
-  // image on a page is a cost with no return.
+  // Keeps the last size the content had, so the placeholder can hold it once the content
+  // is gone. On render rather than through one standing observer per image on a page.
   useLayoutEffect(() => {
     if (isOn) return
     const root = rootRef.current
@@ -311,10 +308,8 @@ export const Lightbox: FunctionComponent<Props> = ({
     if (isControlled || !isDisclosed) return
     openLightbox(primaryGroup, id)
   }, [isControlled, isDisclosed, primaryGroup, id])
-  // Closing and walking reach the store, which holds whichever group is open and knows
-  // nothing of who called. A lightbox that is not the open one would therefore shut or
-  // move a sibling — and it has the controls to do it, since all four are rendered at
-  // all times.
+  // Closing and walking reach the store, which knows nothing of who called — and every
+  // lightbox renders all four controls, so a closed one could shut or move a sibling.
   const requestClose = useCallback((): void => {
     if (isControlled || !isOn) return
     closeLightbox()
@@ -363,9 +358,8 @@ export const Lightbox: FunctionComponent<Props> = ({
     requestClose()
   }
 
-  // Fx. dep. exitOnEscape, isOn, requestClose, onEscapePressed, surrender - Escape closes the
-  // lightbox. Listens only while open, so a page of closed lightboxes holds no
-  // listener.
+  // Fx. dep. exitOnEscape, isOn, requestClose, onEscapePressed, surrender - Escape closes
+  // the lightbox, listening only while open.
   useEffect(() => {
     if (exitOnEscape !== true || !isOn) return
     const handleKeyDown = (e: KeyboardEvent): void => {
@@ -378,10 +372,8 @@ export const Lightbox: FunctionComponent<Props> = ({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [exitOnEscape, isOn, requestClose, onEscapePressed, surrender])
 
-  // Fx. dep. navOnArrowKeys, isOn, openGroupSize, onPrevArrowPressed,
-  // onNextArrowPressed, requestGroupNavigation - The arrow keys walk the open group. Bound only while the
-  // lightbox is open and the group holds someone else, so the keys stay the page's the
-  // rest of the time.
+  // Fx. dep. navOnArrowKeys, isOn, openGroupSize, onPrevArrowPressed, onNextArrowPressed,
+  // requestGroupNavigation - The arrows walk the open group, bound only while they can.
   useEffect(() => {
     if (navOnArrowKeys !== true || !isOn || openGroupSize < 2) return
     const handleKeyDown = (e: KeyboardEvent): void => {
@@ -404,10 +396,8 @@ export const Lightbox: FunctionComponent<Props> = ({
     requestGroupNavigation
   ])
 
-  // Fx. dep. hasAppliedDefault, isControlled, defaultIsOn, isDisclosed, primaryGroup,
-  // id - An uncontrolled lightbox asked to start open says so once, and never again: the
-  // registry owns the state from then on. Withheld by a disclaimer, it says nothing and
-  // waits: the once it gets is the first moment it is allowed to take it.
+  // Fx. dep. hasAppliedDefault, isControlled, defaultIsOn, isDisclosed, primaryGroup, id -
+  // Said once, then the registry owns it; withheld, the once waits for consent.
   useEffect(() => {
     if (hasAppliedDefault || isControlled || !defaultIsOn || !isDisclosed) return
     setHasAppliedDefault(true)
@@ -425,12 +415,8 @@ export const Lightbox: FunctionComponent<Props> = ({
     visible: isVisible === true
   }), className)
   const size = sizeRef.current
-  // Nothing here is conditional. React reconciles by position, so a branch that
-  // appears and disappears shifts what follows it - and moving `children` between two
-  // positions would unmount and remount them, the very thing this component exists to
-  // avoid. Which control is reachable, and when, is the stylesheet's business: the
-  // root carries a modifier per state, and `:empty` tells a control with no content
-  // from one that has some.
+  // Nothing here is conditional: React reconciles by position, and moving `children`
+  // between two would unmount them, the very thing this component exists to avoid.
   return <div
     {...compIdAttribute(compId)}
     className={rootClss}

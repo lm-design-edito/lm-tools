@@ -47,9 +47,8 @@ function toDividerRatio (pointerRatio: number): number {
  * Plus the visibility triggers of {@link VisibilityProps} — `whenVisible`, `whenHidden`
  * and the five `visibility*` settings.
  */
-// What this layer owns rather than forwards. `isVisible` is measured here, and `rootRef`
-// is how it reaches an element it does not render itself — plumbing between the two
-// files, never a way in.
+// What this layer owns rather than forwards. `rootRef` reaches an element it does not
+// render: plumbing between the two files, never a way in.
 export type Props = {
   defaultRatio?: number
   onRatioChanged?: (ratio: number) => void
@@ -104,9 +103,8 @@ export const BeforeAfter: FunctionComponent<Props> = ({
   onRatioChanged,
   ...controlledProps
 }) => {
-  // The id is resolved here and handed down, so the two layers share one rather than
-  // minting one each. The ref goes the same way: this layer observes a root rendered
-  // below, so it mints the box and hands it down.
+  // The id is resolved here and handed down, so the two layers share one. The ref goes
+  // the same way: this layer observes a root rendered below.
   const compId = useCompId(givenCompId)
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -126,7 +124,7 @@ export const BeforeAfter: FunctionComponent<Props> = ({
   })
 
   // Commands
-  //
+
   // Annotated with this component's vocabulary: the layer takes any name, so the
   // annotation is what keeps a misspelled domain from compiling.
   const surrender: (domain: BeforeAfterActionDomain) => void = useCommandSurrender(

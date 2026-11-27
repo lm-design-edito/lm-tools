@@ -320,9 +320,8 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   const [partialBoundingRect, setPartialBoundingRect] = useState<ScreenRect>()
   const [visibleZone, setVisibleZone] = useState<VisibleZoneRect>()
 
-  // Scroll tracking. Everything the per-frame pass reads lives in a ref: it is
-  // registered once with the shared scroll listener, and writes straight to the DOM
-  // rather than through state, which would re-render the whole sequence per frame.
+  // Scroll tracking. Everything the per-frame pass reads lives in a ref and writes
+  // straight to the DOM: through state it would re-render the whole sequence per frame.
   const rootRef = useRef<HTMLDivElement>(null)
   const subscriptionIdRef = useRef(randomHash(8))
   const pageElementsRef = useRef<HTMLElement[]>([])
@@ -356,9 +355,8 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   // Tracked blocks, keyed the same way their wrappers are
   const displayZones = blockDisplayZones(pages)
   const trackedBlocks = new Map<string, TrackedBlock>()
-  // A handler asks for tracking as surely as the flag does, so one of the two is enough:
-  // a block written before the flag existed keeps working, and a block that only wants
-  // the custom properties no longer has to hand over a callback it has no use for.
+  // A handler asks for tracking as surely as the flag does, so either is enough — and a
+  // block wanting only the custom properties hands over no callback it cannot use.
   const isTracked = (block: PropsBlock): boolean => block.trackScroll === true
     || block.onScrolled !== undefined
   for (const [blockId, block] of stickyBlocks) {
@@ -426,9 +424,8 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     for (const [key, block] of trackedBlocks) {
       if (block.displayZone.includes(currentPage)) pending.push([key, block, currentPage])
     }
-    // A block that just left the current page gets one last pass, on the page it was
-    // on: its progressions are clamped, so it lands on the edge it crossed instead of
-    // freezing part-way.
+    // A block that just left the current page gets one last pass on the page it was on,
+    // its progressions clamped, so it lands on the edge it crossed.
     for (const [key, lastContext] of lastContexts) {
       const block = trackedBlocks.get(key)
       if (block === undefined) { lastContexts.delete(key); continue }
@@ -477,10 +474,8 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     return () => unsubscribe(subscriptionId)
   }, [hasTrackedBlocks, handleScrolled])
 
-  // Fx. dep. isOnScreen, readVisibleZone - Catch what the probe's ResizeObserver
-  // cannot: a restyle that moves the visible zone without resizing it, say a top
-  // offset traded for an equal bottom one. Only runs while the component is on
-  // screen, and only touches state when the zone actually moved.
+  // Fx. dep. isOnScreen, readVisibleZone - Catches what the probe's ResizeObserver cannot:
+  // a restyle moving the visible zone without resizing it. Only while on screen.
   const isOnScreen = topVisible || contentVisible || bottomVisible
   useEffect(() => {
     if (!isOnScreen) return
