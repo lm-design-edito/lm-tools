@@ -1,3 +1,5 @@
+// [WIP] 1/ this function seem not to work all the time
+// [WIP] 2/ this function is obsolete now that String.replaceAll is widely supported
 
 /**
  * Replaces all occurrences of a pattern in a string.

@@ -2,6 +2,7 @@
 import { unknownToString } from '../../errors/unknown-to-string/index.js'
 import * as Outcome from '../outcome/index.js'
 
+// [WIP] maybe get rid of this homemade assert lib and rely on jset or playwright
 
 type Assertion = (() => boolean) | (() => Promise<boolean>) | boolean
 

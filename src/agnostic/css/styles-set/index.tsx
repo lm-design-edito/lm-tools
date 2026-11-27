@@ -5,6 +5,8 @@ import {
 } from 'react-dom/client'
 import { randomHash } from '../../random/uuid/index.js'
 
+// [WIP] no jsdoc here + maybe wrong idea ?
+// [WIP] should at least use crossenv window
 
 export type StylesSetItem = {
   type: 'string' | 'url'

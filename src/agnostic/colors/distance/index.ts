@@ -63,6 +63,7 @@ function distanceCiede2000 (c1: Laba, c2: Laba): number {
   )
 }
 
+// [WIP] maybe other implementations too (cie76, cie94, cmc, euclidean), but the output range can be different, so maybe should we normalize the output to 0-100?
 /**
  * Calculates the perceptual distance between two colors using the specified method.
  *

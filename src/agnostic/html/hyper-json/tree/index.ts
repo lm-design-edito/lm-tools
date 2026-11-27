@@ -77,6 +77,7 @@ import { totext } from '../smart-tags/coalesced/totext/index.js'
 import { transformselected } from '../smart-tags/coalesced/transformselected/index.js'
 import { trim } from '../smart-tags/coalesced/trim/index.js'
 
+// [WIP] eventually just export the Tree class here
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Tree {
   export class Tree {
@@ -322,6 +323,7 @@ export namespace Tree {
       return currentTree
     }
 
+    // [WIP] variablesStore is actually only used on root Tree
     variablesStore = new Map<string, Types.Tree.Serialized>()
 
     setVariable (name: string, value: Types.Tree.RestingValue): void {

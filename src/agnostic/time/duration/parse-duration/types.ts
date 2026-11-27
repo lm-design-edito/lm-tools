@@ -10,6 +10,8 @@ import type { DurationTypeShort } from '../index.js'
  * **A value, not just a union**: a consumer validating what an article wrote needs the
  * list at runtime, and a type has nothing to hand a validator.
  */
+// [WIP] No frame unit: nothing in the DOM exposes a media's frame rate, so `456f` could
+// only resolve against a rate declared by hand — 20% off on a 30fps file at the usual 25.
 export const DURATION_SUFFIXES = [
   'mth',
   'sec',

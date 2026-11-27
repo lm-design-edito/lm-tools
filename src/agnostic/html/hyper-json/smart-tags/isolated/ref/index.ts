@@ -30,6 +30,7 @@ export const func: Types.Transformations.Function<Main, Args, Output> = (main, _
   const evaluated = resolved.evaluate()
   const { getType } = Utils.Tree.TypeChecks
   if (getType(evaluated) === 'transformer') {
+    // [WIP] implemented this without thinking of what it means to reference a transformer node
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- getType(evaluated) === 'transformer' was checked just above
     const transformer = evaluated as Types.Tree.TransformerValue
     return makeSuccess(transformer.toMethod())

@@ -13,6 +13,7 @@ function contrastWcag (c1: Rgba, c2: Rgba): number {
   return ratio
 }
 
+// [WIP] maybe contrast weber, michelson, rms, etc...
 
 /**
  * Calculates the contrast ratio between two colors using the specified method.

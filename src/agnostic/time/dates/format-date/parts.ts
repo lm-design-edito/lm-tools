@@ -92,4 +92,7 @@ export function getDateParts (date: Date, locale = 'en'): DateParts {
   }
 }
 
+// [WIP] timezone tokens were removed since JavaScript's Date object doesn't hold
+// timezone data — those templates would only reflect the current client's
+// timezone, no matter what the input Date obj was
 

@@ -42,6 +42,9 @@ export const getproperty = SmartTags.makeSmartTag<Main, Args, Output>({
   }
 })
 
+// [WIP] maybe it's own util in @design-edito/tools
+// [WIP] setproperty has been edited in order to work
+// on a broader type range than Record, this should match the behavior
 export function deepGetProperty (
   record: Types.Tree.RestingRecordValue,
   pathString: string

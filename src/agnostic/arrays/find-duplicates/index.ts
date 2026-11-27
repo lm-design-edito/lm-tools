@@ -1,3 +1,4 @@
+// [WIP] could provide an equality check optional function for checking mor complex objects
 
 /**
  * Finds duplicate elements in an array.
