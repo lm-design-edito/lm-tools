@@ -4,6 +4,10 @@ Notable changes to `@design-edito/tools`, newest first. Paths are the ones a con
 imports; what never reaches the published package is left out. Sections before
 `0.5.44` were reconstructed from the commits between two version bumps.
 
+## [latest]
+
+- fixed - **components/Scrllgngn** - a block whose `onScrolled` appears after the first measuring pass is now handed the last known context at once, where it used to hear nothing until the next scroll — the equality guard having no reason to re-emit while the reader sat still. It bit a callback registered late, typically from a dynamically imported consumer, on a block already inside its display zone.
+
 ## [0.10.0] — 2026-11-27
 
 - added - **components/Drawer** - `toggleOnBar`, `false` by default. Set, a click anywhere in the bar toggles too; the toggler stays the only focusable control, and a click on it is not counted twice.

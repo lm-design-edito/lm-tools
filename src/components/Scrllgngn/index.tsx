@@ -329,6 +329,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   const trackedBlocksRef = useRef(new Map<string, TrackedBlock>())
   const trackedWrappersRef = useRef(new Map<string, HTMLElement>())
   const lastContextsRef = useRef(new Map<string, TrackedBlockContext>())
+  const lastOnScrolledRef = useRef(new Map<string, TrackedBlock['onScrolled']>())
   const currentPagePosRef = useRef(currentPagePos)
   const visibleZoneRef = useRef(visibleZone)
   const probeRef = useRef<Element | null>(null)
@@ -387,6 +388,23 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     trackedBlocksRef.current = trackedBlocks
     currentPagePosRef.current = currentPagePos
     visibleZoneRef.current = visibleZone
+  })
+
+  // Fx. no dep. - A callback appearing after the measuring pass would hear nothing until
+  // the next scroll. It replays the last context, without storing it: the guard below
+  // must keep comparing against what was last measured.
+  useEffect(() => {
+    const lastOnScrolled = lastOnScrolledRef.current
+    for (const [key, block] of trackedBlocks) {
+      const previous = lastOnScrolled.get(key)
+      lastOnScrolled.set(key, block.onScrolled)
+      if (block.onScrolled === undefined || block.onScrolled === previous) continue
+      const lastContext = lastContextsRef.current.get(key)
+      if (lastContext !== undefined) block.onScrolled(lastContext)
+    }
+    for (const key of lastOnScrolled.keys()) {
+      if (!trackedBlocks.has(key)) lastOnScrolled.delete(key)
+    }
   })
 
   // Re-reads the probe, and only disturbs the render if the zone actually moved.

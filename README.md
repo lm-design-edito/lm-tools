@@ -188,11 +188,17 @@ Ce n'est **pas** un problème hors zone d'affichage : là, il n'y a rien de vrai
 l'entrée en zone déclenche un dispatch garanti, `lastContexts` n'ayant pas d'entrée pour
 le bloc.
 
-Une piste existe et n'est pas instruite : la projection DOM du contexte — les trois
-propriétés personnalisées et les cinq attributs `data-` — est un **état** qui reste
-lisible à tout moment, là où l'événement est un front qui passe une fois. Avec
-`postInit`, qui donne au module un élément attaché, elle rendrait sa naissance
-indifférente à l'heure. À trancher.
+**Réglé côté bloc le 2026-11-27** : un effet compare, à chaque rendu, l'identité des
+`onScrolled` déclarés à celle du rendu précédent, et rejoue le dernier contexte connu à
+celui qui vient d'apparaître. Le contexte rejoué n'est pas réécrit dans `lastContexts`,
+sans quoi le garde cesserait de comparer à ce qui a été réellement mesuré.
+
+**Ce qui reste, et c'est l'autre moitié** : un module qui naît dans un bloc déjà abonné.
+Le bloc, lui, a bien reçu son contexte ; c'est `UIModule` qui n'avait personne à qui le
+passer. La projection DOM du contexte — les trois propriétés personnalisées et les cinq
+attributs `data-` — est un **état** lisible à tout moment, là où l'événement est un front
+qui passe une fois, et `postInit` est le moment où un module tient un élément attaché.
+C'est là que ça se règle, et ce n'est pas fait.
 
 ### Ce que la mise en conformité d'`UIModule` a réglé, et ce qu'elle n'a pas réglé
 
