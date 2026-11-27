@@ -86,10 +86,10 @@ and with `do--init` when it is hidden, which is what replays an animation that a
 
 ## Où en est la bibliothèque
 
-**Rien de bloquant en attente sur les composants**, mais deux sujets ouverts qui les
-traversent : « Le trou de synchronisation des événements de `Scrllgngn` » et
-« Les payloads de handlers — ce qui reste ouvert » plus bas. Aucun des deux ne bloque la
-première publication de lm-link. La passe
+**Rien de bloquant en attente sur les composants**, et un seul sujet ouvert qui les
+traverse : « Les payloads de handlers — ce qui reste ouvert » plus bas. Il ne bloque pas
+la première publication de lm-link. Le trou de synchronisation des événements de
+`Scrllgngn` est clos, ses deux moitiés traitées le 2026-11-27. La passe
 d'alignement, la reprise de `Subtitles`, celle de `Video`, le chantier `Scrllgngn` et
 la mise en conformité d'`UIModule` sont faits ; les états internes remontent tous en
 modifieurs de classe racine.
@@ -193,12 +193,18 @@ le bloc.
 celui qui vient d'apparaître. Le contexte rejoué n'est pas réécrit dans `lastContexts`,
 sans quoi le garde cesserait de comparer à ce qui a été réellement mesuré.
 
-**Ce qui reste, et c'est l'autre moitié** : un module qui naît dans un bloc déjà abonné.
-Le bloc, lui, a bien reçu son contexte ; c'est `UIModule` qui n'avait personne à qui le
-passer. La projection DOM du contexte — les trois propriétés personnalisées et les cinq
-attributs `data-` — est un **état** lisible à tout moment, là où l'événement est un front
-qui passe une fois, et `postInit` est le moment où un module tient un élément attaché.
-C'est là que ça se règle, et ce n'est pas fait.
+**L'autre moitié est close sans code, le 2026-11-27.** Elle visait un module qui naît
+dans un bloc déjà abonné : le bloc a bien reçu son contexte, mais le consommateur assis
+derrière son `onScrolled` n'existait pas encore. Rien n'est dû ici — `Scrllgngn` appelle
+la prop qui lui est passée, et ce que le consommateur fait de l'appel lui appartient. Côté
+lm-link, c'est déjà réglé : le bus garde le dernier payload par nom d'événement et le
+rejoue à l'abonnement, donc un module importé tard est servi dès sa première ligne.
+
+Reste la remarque qui vaut pour qui consomme la bibliothèque sans lm-link : la projection
+DOM du contexte — les trois propriétés personnalisées et les cinq attributs `data-` — est
+un **état** lisible à tout moment, là où l'événement est un front qui passe une fois. Un
+consommateur arrivé en retard a donc de quoi se resynchroniser seul, et `postInit` est le
+moment où un module tient un élément attaché pour le faire.
 
 ### Ce que la mise en conformité d'`UIModule` a réglé, et ce qu'elle n'a pas réglé
 
