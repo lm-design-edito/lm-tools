@@ -488,12 +488,14 @@ export const Scrllgngn: FunctionComponent<Props> = ({
     return () => window.clearInterval(interval)
   }, [isOnScreen, readVisibleZone])
 
-  // Handlers
+  // State dispatch
   useStateChangeDispatch(currentPagePos, pagePos => onPageChanged?.({
     currentPagePos: pagePos,
     pageData: pages?.[pagePos]
   }))
   useStateChangeDispatch(contentVisible, onContentVisibilityChanged)
+
+  // User action handlers
   const handleTopBoundDetect: IOCompProps['onIntersected'] = e => setTopVis(e.ioEntry?.isIntersecting ?? false)
   const handleCntDetect: IOCompProps['onIntersected'] = e => setCntVis(e.ioEntry?.isIntersecting ?? false)
   const handleBtmBoundDetect: IOCompProps['onIntersected'] = e => setBtmVis(e.ioEntry?.isIntersecting ?? false)

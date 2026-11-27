@@ -298,7 +298,7 @@ export const Video: FunctionComponent<Props> = ({
     visibilityOffAfterMs
   })
 
-  // Intrisic event handlers
+  // Intrinsic event handlers
   const handleOnPlayEvent: ReactEventHandler<HTMLVideoElement> = useCallback((e) => {
     controlledProps.onPlay?.(e)
     setInternalPlay(true)
@@ -339,7 +339,7 @@ export const Video: FunctionComponent<Props> = ({
     controlledProps.onLoadedMetadata?.(e)
   }, [controlledProps.onLoadedMetadata, controlledProps.muted])
 
-  // User actions
+  // User action handlers
   const handlePlayButtonClick = useCallback<NonNullable<Props['onPlayButtonClicked']>>(payload => {
     onPlayButtonClicked?.(payload)
     surrender('playback')
@@ -416,7 +416,7 @@ export const Video: FunctionComponent<Props> = ({
     if (controlledProps.autoPlay === true) setInternalPlay(true)
   }, [isDisclosed])
 
-  // Render
+  // Rendering
   //
   // **The `<figure>` is the root, and there is nothing above it.** A wrapper would take
   // the outer position — the one a consumer lays out — and leave `className` naming an

@@ -300,7 +300,7 @@ export const Gallery: FunctionComponent<Props> = ({
     }
   })
 
-  // User actions handlers
+  // User action handlers
   const handlePrevClick = (): void => {
     onPrevClicked?.(activeIndex)
     surrender('position')
