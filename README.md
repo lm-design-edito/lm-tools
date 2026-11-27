@@ -245,6 +245,103 @@ now. Nothing has shipped against the old shape, lm-link never having been deploy
 the break is theoretical, but it is a behaviour change for module authors and the next
 version number should say so.
 
+## `Icon` — the concept, and where the discussion stands
+
+Opened on 2026-11-27, and the component folder is still the empty `_WIP_Icon`. Nothing
+is written yet, on purpose: the roadmap row says a concept is owed before anything is
+drawn, and this is it. **Two things block it**, both answered by the CSP test format
+drafted in lm-formats — see the workspace roadmap's first row.
+
+### What the API should look like
+
+```tsx
+<Icon
+  registryRootUrl='https://some-icons-root.com'
+  name='left-arrow'
+  size={24} />
+```
+
+The registry is a flat set of files reachable by convention:
+`<root>/<name>.<size>.svg`, so `left-arrow.24.svg`. Every icon is a square and an SVG,
+no exception. lm-link hands each `Icon` the root URL, which an article never writes —
+it comes from a global `config` rule.
+
+**The size scale, to settle**: 8 `xxs`, 12 `xs`, 16 `s`, 24 `m`, 32 `l`, 48 `xl`,
+64 `xxl`. It matches the ladders the library already uses, and `size` should accept both
+spellings — `24` and `'m'`.
+
+**The registry's own contract**, which lm-link then relies on: the background is a
+`.bg` rectangle spanning the `viewBox`; shapes carry no `stroke`, ever; and a shape wears
+one of `.fill-1`, `.fill-2`, `.fill-3` — three colours per icon at most, which is
+enough. Whether a plain `background-color` on the `<svg>` could replace the `.bg` rect is
+open, but the rect stays for now: a background fills the element box where the rect fills
+the `viewBox`, and the two diverge as soon as `preserveAspectRatio` leaves padding.
+
+### The mechanism, and what was argued against
+
+The starting point is new-app's `components/Svg`: `fetch` the file, parse it, render it as
+DOM nodes. Four things were argued, and the second and third are the ones that change the
+design.
+
+**A manifest rather than a probing walk.** Looking for `left-arrow.24.svg`, then `.32`,
+then the bare name is up to seven requests and six 404s per missing icon. One `index.json`
+at the registry root — name to available sizes — fetched once turns resolution into a
+lookup, and fails loudly on a name that does not exist where a walk ends silently on a
+generic.
+
+**Per-size files are an optical feature, not a technical one.** An SVG scales for free, so
+a dedicated `.12.svg` only earns its place when the drawing is redesigned small — fewer
+details, a thicker bar — and `stroke` being banned removes half of what usually needs
+that. So the size-less file is the normal case and `.NN.svg` the exception, which is the
+opposite of the first sketch. `size` is then the rendered box, not a file selector.
+
+**Which removes the measuring machinery.** Without `size`, let CSS size it and render the
+generic file: no preload-then-swap, no `ResizeObserver` per instance, and no
+stretch-but-not-shrink rule to document. That mechanism costs an observer per icon, a
+second request on most of them and a visible swap after layout, to choose between two
+files that are identical on nearly every icon. A caller who knows the box says so with
+`size`.
+
+**A sanitizer, because « we control the source » is not a defence.** Injected markup gets
+DOM privileges: `onload=` on a shape, `<foreignObject>`, an `xlink:href="javascript:"`, a
+`<use>` pointing elsewhere. One bad deploy or one stale ACL on the bucket and that is
+arbitrary script inside every article. So `DOMParser`, a whitelist walk over element and
+attribute names — no `on*`, no `href` — and the nodes imported rather than handed to
+`dangerouslySetInnerHTML`. Forty testable lines, in the agnostic layer, and while it is
+there it can enforce the registry contract: warn on a `stroke`, warn on a shape carrying
+none of the three fill classes.
+
+**On performance, one of the three worries is real and it is small.** Fifty inline SVGs of
+a few nodes each are nothing beside one editorial page's images. The usual dedupe — a
+sprite plus `<use>` — cannot be repainted per instance from outside, so inline duplication
+is exactly the price of theming, and it is the right price. The other two go with the
+measuring.
+
+### The CSP question, and why it is no longer the blocker
+
+The route is `fetch`, which answers to the host page's `connect-src` — not to CORS, which
+is the bucket's own say, and not to `img-src`, which is why images from anywhere always
+worked. new-app's `Svg` still carries the workaround: `07d2570`, 2023-06-10, « quick fix
+for loading svgs via `data-img:` pattern (cf content security policy) », shipped in
+`v0.1.18.0`. A `data:` URI carries the file's text in the URL and is decoded in JS, so
+there is no request and no directive to violate — which is why it worked, and why it is
+bundling done by hand.
+
+**That origin is reachable today.** Several published formats call
+`fetch('https://assets-decodeurs.lemonde.fr/sheets/…')`, and `2407-dec-legislatives`'s
+`snippet-full.html` does it from inside a lemonde.fr page. The scrllgngn modules prove
+less than it looks — a dynamic `import()` answers to `script-src` — but the sheets calls
+are `connect-src`, in production. So the 2023 failure was most likely an older CSP since
+relaxed, or a missing `Access-Control-Allow-Origin` on the bucket, which fails a `fetch`
+the same way.
+
+So the registry stands, and bundling the set into lm-link — eight kilobytes for twenty
+icons, no network, no CSP, no loading state — stays the fallback rather than the
+recommendation. What the test format has to come back with: whether an `.svg` under
+`assets-decodeurs` can be fetched from a published article, what headers the bucket serves
+on it (`access-control-allow-origin`, and `content-type: image/svg+xml` rather than
+`application/octet-stream`), and what the console says when it refuses.
+
 ## Les payloads de handlers — ce qui reste ouvert
 
 **La règle est tenue : les 79 handlers prennent exactement un argument**, nommé dès
