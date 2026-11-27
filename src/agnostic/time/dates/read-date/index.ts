@@ -126,10 +126,8 @@ export function readDate (
   if (ops.length === 0 && deferred.length === 0) return null
   const date = new Date(options.reference ?? new Date())
   for (const op of ops) op.apply(date, null)
-  // What the right-hand side named is the period the left-hand side counts in, so it is
-  // collapsed first — `of july` means July from its first instant. Truncating again at
-  // the end would undo what the left-hand side then did, so the second pass only reaches
-  // as deep as that side itself named.
+  // The right-hand side is the period the left counts in, so it collapses first; the
+  // second pass stops at the left side's own depth, or it would undo its work.
   const scopeDepth = finestOf(ops)
   // A period named outright wins over the one a precision implies: `of next month` is a
   // month even though a calendar step collapses nothing, and `of july at 6pm` is July.
@@ -137,9 +135,8 @@ export function readDate (
   if (scopeDepth !== -1) truncate(date, scopeDepth)
   if (deferred.length > 0) {
     for (const op of deferred) op.apply(date, scope)
-    // Truncating to the whole string's depth would undo what the deferred side did on a
-    // coarser field — `2 days after july` is not July 1st again. A clock the other side
-    // named still has to survive, and collapsing below an hour never moves a day.
+    // Truncating to the whole string's depth would undo the deferred side's coarser work
+    // — `2 days after july` is not July 1st again — and a named clock must survive.
     const depth = Math.max(finestOf(deferred), finestTimeOf(ops))
     if (depth !== -1) truncate(date, depth)
   }
@@ -218,9 +215,8 @@ const DAY_ANCHORS: Record<string, number> = {
   tomorrow: 1
 }
 
-// Arbitrary, and owned as such: a time of day is a range and this is the hour it reads
-// as. `tonight` is in here rather than among the day anchors because today is already
-// where the cursor starts.
+// Arbitrary, and owned as such: a time of day is a range and this is the hour it
+// reads as. `tonight` sits here because today is already where the cursor starts.
 const NAMED_TIMES: Record<string, number> = {
   midnight: 0,
   morning: 8,
@@ -369,9 +365,8 @@ const SEEK_WORDS: Record<string, Direction> = {
   this: 0
 }
 
-// A sign arms the quantities that follow it and stays armed, so one `in` carries a whole
-// sentence: `in 2 days and 3 hours` is both. A postfix sign reaches the other way, over
-// the quantities read before it — `2 days and 3 hours ago` is also both.
+// A sign stays armed over everything that follows, so one `in` carries a whole
+// sentence; a postfix sign reaches the other way, over what was read before it.
 const PREFIX_SIGNS: Record<string, number> = { in: 1, plus: 1, '+': 1, minus: -1, '-': -1 }
 const POSTFIX_SIGNS: Record<string, number> = { ago: -1, later: 1, hence: 1 }
 
@@ -388,14 +383,11 @@ const ARTICLES = ['a', 'an', 'the']
 const NOISE = [...ARTICLES, 'and', 'oclock', 't']
 
 const CLOCK = /^(\d{1,2}):(\d{2})(?::(\d{2})(?:[.,](\d{1,3}))?)?$/v
-// `9h`, `9h30`, `9h30min`, `9h30min20`, `9h30min20sec` — the form a clock takes when the
-// colon is dropped. A bare `9h` is the only ambiguous one: `in 9h` is nine hours and
-// `at 9h` is nine o'clock, which the fold settles on the sign rather than here.
+// The form a clock takes when the colon is dropped. A bare `9h` is ambiguous — nine
+// hours or nine o'clock — and the fold settles it on the sign rather than here.
 const COMPACT_CLOCK = /^(\d{1,2})h(?:(\d{1,2})(?:min(?:(\d{1,2})(?:sec)?)?)?)?$/v
-// A date in three parts, the same separator twice — `2026-03-14`, `14/03/2026`,
-// `14.03.26`. A four-digit head is a year and the order is the one it opens; anything
-// else is read day first, which is the order most of the world writes and the only one
-// a locale could not settle.
+// Three parts, the same separator twice. A four-digit head is a year and sets the
+// order; anything else reads day first, the one order a locale could not settle.
 const NUMERIC_DATE = /^(\d{1,4})([\-\/.])(\d{1,2})\2(\d{1,4})$/v
 // The same date with nothing between its parts, as a machine or a form field writes it.
 const COMPACT_DATE = /^(?:\d{6}|\d{8})$/v
@@ -410,10 +402,8 @@ const DECIMAL = /^\d+\.\d+$/v
 const ZONE = /^[+\-](?:\d{2}:\d{2}|\d{4})$/v
 const MERIDIEM = /^([ap])m$/v
 
-// Compound shapes first, so a clock, a numeric date, an ordinal and a decimal survive a
-// split that drops every separator. Everything else is a run of digits, a run of letters
-// or a lone sign, and whatever falls between them — spaces, commas, dashes — is a
-// separator. A trailing `(?!\d)` keeps a shape from biting into the digits behind it.
+// Compound shapes first, so a clock, a date, an ordinal and a decimal survive a split
+// that drops every separator; the trailing `(?!\d)` stops one biting into the next.
 const ATOM = new RegExp([
   /\d{1,2}:\d{2}(?::\d{2}(?:[.,]\d{1,3})?)?/v,
   /\d{1,2}h(?:\d{1,2}(?:min(?:\d{1,2}(?:sec)?)?)?)?/v,
@@ -765,9 +755,8 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
   /** An offset when the quantity has a unit — signed now, or parked until a sign comes. */
   function takeQuantity (amount: number, text: string): boolean {
     const ahead = unitAhead(index)
-    // `an hour and a half`: a fraction with no unit of its own is counted in the one the
-    // quantity before it used. A whole number never is, since `in 2 days 3` is not three
-    // of anything.
+    // A fraction with no unit of its own counts in the one before it — `an hour and a
+    // half`. A whole number never does: `in 2 days 3` is not three of anything.
     if (ahead === null) {
       if (amount >= 1 || lastUnit === null) return false
       const held = lastUnit
@@ -799,9 +788,8 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
     const phrase = ops.splice(phraseStart)
     if (phrase.length === 0) return false
     deferred.unshift(...phrase)
-    // What the operator set aside is counted from whatever its right-hand side places,
-    // so a week named on the left scopes nothing: `2 weeks from monday` is two weeks off
-    // the Monday ahead, not off the Monday of this week.
+    // What the operator set aside counts from where its right-hand side lands, so a week
+    // named on the left scopes nothing: `2 weeks from monday` runs off the Monday ahead.
     weekStep.read = false
     phraseStart = ops.length
     return true
@@ -1108,22 +1096,16 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
     if (weekday !== undefined) {
       const direction = seek
       seek = null
-      // A weekday is not a field anyone can set, so it is always a seek. With no date
-      // established yet it is the coming one, today included — `monday` and `on monday`
-      // both mean the Monday ahead. Once another token has established a date, the
-      // cursor is somewhere we travelled to rather than now, and the weekday scopes to
-      // that week: `the 6th, on monday` is the Monday of the 6th's week.
-      // `the friday before the 20th` looks back from the 20th, so an operator about to
-      // set the anchor also says which way its weekday reads.
+      // A weekday is always a seek, forward from today until something else has placed the
+      // date, and scoped to that date's week afterwards.
       const toward = INFIX_SIGNS[atoms[index] ?? '']
       if (direction === null && toward !== undefined) {
         const strict = toward < 0 ? -1 : 1
         ops.push({ precision: 'day', apply: date => { seekWeekday(date, weekday, strict) } })
         continue
       }
-      // `the last friday of july` counts inside July, so a weekday standing in front of
-      // `of` is resolved within the period that follows rather than from the cursor —
-      // and an ordinal just before it says which occurrence, instead of a day number.
+      // A weekday in front of `of` resolves inside the period that follows, not from the
+      // cursor, and an ordinal before it then counts occurrences rather than days.
       if (atoms[index] === 'of') {
         let nth: number | null = null
         if (ordinal !== null && ordinal.at === ops.length - 1) {
@@ -1158,9 +1140,8 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
       const direction = seek
       seek = null
       const period = UNIT_PERIODS[unit]
-      // `the last day of july` is July's end, not a day off its start — a direction on a
-      // bare `day` in front of `of` names one end of the period. Coarser units have no
-      // such reading here, and keep the calendar step below.
+      // A direction on a bare `day` in front of `of` names one end of the period — `the
+      // last day of july` is its end. Coarser units keep the calendar step below.
       if (direction !== null && atoms[index] === 'of' && unit === 'days') {
         const fromEnd = direction === -1
         ops.push({
@@ -1240,9 +1221,8 @@ function fold (atoms: string[], locale: string, firstDay: number): { ops: Op[], 
     if (!NOISE.includes(atom)) ignored.push(atom)
   }
 
-  // A quantity nobody ever signed says nothing about which three days it means, so it
-  // is dropped — and reported, since dropping it silently is how `21h30` used to read
-  // as the 30th.
+  // An unsigned quantity says nothing about which three days it means, so it is
+  // dropped — and reported, since dropping it silently made `21h30` read as the 30th.
   for (const held of waiting) ignored.push(...held.atoms)
 
   return { ops, deferred, ignored }
