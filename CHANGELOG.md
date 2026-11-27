@@ -6,6 +6,9 @@ imports; what never reaches the published package is left out. Sections before
 
 ## [latest]
 
+- added - **styles** - a scale of durations on `:root, :host`, seven steps each doubling the one before: `--duration-xxs` at 50ms, `-xs` 100, `-s` 200, `-m` 400, `-l` 800, `-xl` 1600 and `-xxl` 3200. The same xxs–xxl ladder the borders, radii and shadows already use.
+- changed - **styles** - the eleven `do-*` effects read the scale instead of writing their own numbers: `--do-<name>-delay` is `var(--duration-s)`, the 200ms it already was, and `--do-<name>-duration` is `var(--duration-l)`, **800ms where it was 1s** — the nearest step, so an animation left on its default is now a fifth shorter. Setting the input by hand is unaffected.
+
 - fixed - **components/Scrllgngn** - a block whose `onScrolled` appears after the first measuring pass is now handed the last known context at once, where it used to hear nothing until the next scroll — the equality guard having no reason to re-emit while the reader sat still. It bit a callback registered late, typically from a dynamically imported consumer, on a block already inside its display zone.
 
 ## [0.10.0] — 2026-11-27

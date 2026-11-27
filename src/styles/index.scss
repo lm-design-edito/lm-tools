@@ -1334,6 +1334,17 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 :root, :host {
+  /* Durations */
+  --duration-xxs: 50ms;
+  --duration-xs: 100ms;
+  --duration-s: 200ms;
+  --duration-m: 400ms;
+  --duration-l: 800ms;
+  --duration-xl: 1600ms;
+  --duration-xxl: 3200ms;
+}
+
+:root, :host {
   /* Sine */
   --ease-in-sine: cubic-bezier(0.12, 0, 0.39, 0);
   --ease-out-sine: cubic-bezier(0.61, 1, 0.88, 1);
@@ -1379,8 +1390,8 @@
 :root, :host {
   --do-fade-from: 0;
   --do-fade-to: 1;
-  --do-fade-duration: 1s;
-  --do-fade-delay: 200ms;
+  --do-fade-duration: var(--duration-l);
+  --do-fade-delay: var(--duration-s);
   --do-fade-ease: var(--ease-out-circ);
   --do-fade-count: 1;
   --do-fade-direction: normal;
@@ -1412,8 +1423,8 @@
 :root, :host {
   --do-pulse-from: 0;
   --do-pulse-to: 1;
-  --do-pulse-duration: 1s;
-  --do-pulse-delay: 200ms;
+  --do-pulse-duration: var(--duration-l);
+  --do-pulse-delay: var(--duration-s);
   --do-pulse-ease: linear;
   --do-pulse-count: infinite;
   --do-pulse-direction: alternate;
@@ -1445,8 +1456,8 @@
 :root, :host {
   --do-transform-from: translateY(100px);
   --do-transform-to: none;
-  --do-transform-duration: 1s;
-  --do-transform-delay: 200ms;
+  --do-transform-duration: var(--duration-l);
+  --do-transform-delay: var(--duration-s);
   --do-transform-ease: var(--ease-out-circ);
   --do-transform-count: 1;
   --do-transform-direction: normal;
@@ -1478,8 +1489,8 @@
 :root, :host {
   --do-slide-up-from: translateY(100px);
   --do-slide-up-to: none;
-  --do-slide-up-duration: 1s;
-  --do-slide-up-delay: 200ms;
+  --do-slide-up-duration: var(--duration-l);
+  --do-slide-up-delay: var(--duration-s);
   --do-slide-up-ease: var(--ease-out-circ);
   --do-slide-up-count: 1;
   --do-slide-up-direction: normal;
@@ -1508,8 +1519,8 @@
 :root, :host {
   --do-slide-down-from: translateY(-100px);
   --do-slide-down-to: none;
-  --do-slide-down-duration: 1s;
-  --do-slide-down-delay: 200ms;
+  --do-slide-down-duration: var(--duration-l);
+  --do-slide-down-delay: var(--duration-s);
   --do-slide-down-ease: var(--ease-out-circ);
   --do-slide-down-count: 1;
   --do-slide-down-direction: normal;
@@ -1538,8 +1549,8 @@
 :root, :host {
   --do-slide-left-from: translateX(100px);
   --do-slide-left-to: none;
-  --do-slide-left-duration: 1s;
-  --do-slide-left-delay: 200ms;
+  --do-slide-left-duration: var(--duration-l);
+  --do-slide-left-delay: var(--duration-s);
   --do-slide-left-ease: var(--ease-out-circ);
   --do-slide-left-count: 1;
   --do-slide-left-direction: normal;
@@ -1568,8 +1579,8 @@
 :root, :host {
   --do-slide-right-from: translateX(-100px);
   --do-slide-right-to: none;
-  --do-slide-right-duration: 1s;
-  --do-slide-right-delay: 200ms;
+  --do-slide-right-duration: var(--duration-l);
+  --do-slide-right-delay: var(--duration-s);
   --do-slide-right-ease: var(--ease-out-circ);
   --do-slide-right-count: 1;
   --do-slide-right-direction: normal;
@@ -1598,8 +1609,8 @@
 :root, :host {
   --do-scale-up-from: scale(0);
   --do-scale-up-to: none;
-  --do-scale-up-duration: 1s;
-  --do-scale-up-delay: 200ms;
+  --do-scale-up-duration: var(--duration-l);
+  --do-scale-up-delay: var(--duration-s);
   --do-scale-up-ease: var(--ease-out-circ);
   --do-scale-up-count: 1;
   --do-scale-up-direction: normal;
@@ -1628,8 +1639,8 @@
 :root, :host {
   --do-scale-down-from: scale(3);
   --do-scale-down-to: none;
-  --do-scale-down-duration: 1s;
-  --do-scale-down-delay: 200ms;
+  --do-scale-down-duration: var(--duration-l);
+  --do-scale-down-delay: var(--duration-s);
   --do-scale-down-ease: var(--ease-out-circ);
   --do-scale-down-count: 1;
   --do-scale-down-direction: normal;
@@ -1658,8 +1669,8 @@
 :root, :host {
   --do-rotate-from: rotate(-90deg);
   --do-rotate-to: none;
-  --do-rotate-duration: 1s;
-  --do-rotate-delay: 200ms;
+  --do-rotate-duration: var(--duration-l);
+  --do-rotate-delay: var(--duration-s);
   --do-rotate-ease: var(--ease-out-circ);
   --do-rotate-count: 1;
   --do-rotate-direction: normal;
@@ -1688,8 +1699,8 @@
 :root, :host {
   --do-spin-from: rotate(-360deg);
   --do-spin-to: none;
-  --do-spin-duration: 1s;
-  --do-spin-delay: 200ms;
+  --do-spin-duration: var(--duration-l);
+  --do-spin-delay: var(--duration-s);
   --do-spin-ease: linear;
   --do-spin-count: infinite;
   --do-spin-direction: normal;
