@@ -80,11 +80,14 @@ reader. Everything that is **not** JSDoc follows « Comments » in the root
 [`../CLAUDE.md`](../CLAUDE.md): one or two lines, and rarely.
 
 - Document exported symbols. Internal helpers don't need it.
-- **Forty lines is a hard ceiling for one block**, and only a genuinely complex component
-  may approach it; most symbols are done in three. A block that outgrows it is not dense
-  documentation, it is a README section written in the wrong file — move the rationale out
-  and leave the contract: what a caller passes, what comes back, the class names they can
-  target. The test is whether a reader at the call site needs the sentence *there*.
+- **Length is allowed for contract, never for rationale.** Most symbols are done in
+  three lines, and a block past forty is worth looking at — but the number is a signal,
+  not the rule. What decides is what the lines hold. A grammar a caller cannot infer from
+  the signature belongs at the call site whatever it costs: `readDate` runs to a hundred
+  lines because « a bare weekday means the one ahead » is the API, not a comment on it.
+  Narration — why the implementation went this way, what was considered and dropped — is
+  a README section written in the wrong file, and goes, whether the block is fifty lines
+  or six. The test is whether a reader at the call site needs the sentence *there*.
 - One precise sentence beats an exhaustive paragraph. Say *why* and *when*, never
   restate what the types already say, and never repeat a type inside a tag
   (`@param {string} name`).
@@ -142,6 +145,27 @@ types. When the two disagree, Preact wins.
 - A controlled field only snaps back if something re-renders — Preact restores it
   from the diff where React restores it from the event — so a parent that rejects an
   input without changing state leaves the typed characters on screen.
+
+### Sections
+
+**A component is read in sections, and they are marked.** One `//` line, in this order,
+naming the ones the component actually has:
+
+```
+// State
+// Commands
+// State dispatch
+// User action handlers
+// Rendering
+```
+
+These are the exception to « Comments » in the root `../CLAUDE.md`, and a deliberate one:
+they say *where you are* in a file that always runs the same way, which is what lets a
+reader find the command table or the dispatch block at a glance. A component may add one
+of its own where it has a real section the five do not name — `Actuators` on `Lightbox`,
+`The numbers` on `Sequencer` — and a component small enough to have no sections carries
+none. What they must not become is a sentence: the moment a marker explains something it
+is a comment, and the rules above apply to it.
 
 ### Naming
 
