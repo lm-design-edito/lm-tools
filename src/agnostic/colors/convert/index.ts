@@ -34,8 +34,6 @@ import { unknownToString } from '../../errors/unknown-to-string/index.js'
  * * * * * * * * * * * * * * * * * */
 
 // RGB ↔ Hex
-// [WIP] maybe use absoluteModulo where needed?
-// needs rewrite, hex char checks, etc
 function _hex2rgb (hex: Hex): Rgba {
   if (!isHex(hex)) throw new Error(`invalid hex color ${unknownToString(hex)}`)
   let hexString: string = hex

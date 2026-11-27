@@ -161,7 +161,6 @@ export namespace Utils {
   }
 
   export const toHyperJson = (value: Types.Tree.Value): Element | Text => {
-    // [WIP] finish this
     const { document, Element, Text, NodeList } = Window.get()
     if (value instanceof Text) {
       const elt = document.createElement('text')

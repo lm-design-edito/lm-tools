@@ -228,7 +228,6 @@ export enum OpName {
   FLATTEN = 'flatten',
   FLIP = 'flip',
   FLOP = 'flop',
-  // [WIP] Frame ?
   HUE = 'hue',
   LEVEL = 'level',
   LIGHTEN = 'lighten',

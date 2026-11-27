@@ -1302,6 +1302,39 @@ redécouverts par surprise, pas pour être traités.
   means `git checkout 10d22be^ -- demo`, and then that drift to pay off.
 
 
+## Les `[WIP]` sortis du code
+
+Vingt-quatre modules portaient une note `[WIP]` en commentaire. Elles disent toutes la
+même chose — un doute, une idée, une dette — et aucune n'est une des trois formes de
+commentaire autorisées. Elles sont ici, telles qu'elles étaient écrites, le 2026-11-27.
+
+| module | ce qui était noté |
+| --- | --- |
+| `agnostic/arrays/find-duplicates` | could provide an equality check optional function for checking more complex objects |
+| `agnostic/colors/contrast` | maybe contrast weber, michelson, rms, etc. |
+| `agnostic/colors/convert` | maybe use `absoluteModulo` where needed ; needs rewrite, hex char checks, etc. |
+| `agnostic/colors/distance` | maybe other implementations too (cie76, cie94, cmc, euclidean), but the output range differs — normalize to 0–100? |
+| `agnostic/css/styles-set` | no jsdoc, and maybe the wrong idea ; should at least use crossenv window |
+| `agnostic/html/hyper-json` | missing jsdoc in all of it ; get rid of namespaces ; write tests |
+| `agnostic/html/hyper-json/smart-tags/coalesced/at` | maybe more details here |
+| `agnostic/html/hyper-json/smart-tags/coalesced/getproperty` | maybe its own util ; `setproperty` was edited to work on a broader type range than `Record`, this should match |
+| `agnostic/html/hyper-json/smart-tags/coalesced/setproperty` | this logic could probably be shared with `getProperty` |
+| `agnostic/html/hyper-json/smart-tags/coalesced/transformselected` | maybe a custom `makeSubTransformationError` and `makeBadTransformationOutputError` |
+| `agnostic/html/hyper-json/smart-tags/isolated/ref` | implemented without thinking of what referencing a transformer node means |
+| `agnostic/html/hyper-json/tree` | eventually just export the `Tree` class ; `variablesStore` is only used on the root `Tree` |
+| `agnostic/html/hyper-json/utils` | finish this |
+| `agnostic/html/placeholders` | maybe not that useful ; should return `Node`s, not strings |
+| `agnostic/misc/assert` | maybe drop the homemade assert lib and rely on the test runner |
+| `agnostic/misc/cast` | not so sure about this one |
+| `agnostic/misc/logs/logger` | not sure about this |
+| `agnostic/objects/validation` | has all keys from / has extra keys from / has same keys from ; has equal, extra, same properties than — shallow only? |
+| `agnostic/strings/replace-all` | seems not to work all the time ; obsolete now that `String.replaceAll` is widely supported |
+| `agnostic/time/dates/format-date/parts` | timezone tokens were removed: a `Date` holds no zone, so those templates would only reflect the current client's |
+| `agnostic/time/duration` | why only `toMs` and no other shorthands ; a flat 30 days and 365 with no way to ask otherwise, where `format-duration` and `parse-duration` both take `useApproximateMonthAndYear` |
+| `agnostic/time/duration/parse-duration/types` | no frame unit: nothing in the DOM exposes a media's frame rate, so `456f` could only resolve against a rate declared by hand |
+| `components/IntersectionObserver` | the only component with neither visibility triggers nor verbs. `whenVisible` here would mean a second observer on the box this one already watches, and the two would disagree — a thought for the generalized `when*` family |
+| `node/images/types` | frame? |
+
 ## Coverage roadmap
 
 Prioritised backlog of missing tests in `agnostic` and `node`, ranked by real usage in the main consumer (`lm-publisher-composer` + its critical `modules/lm-publisher`, an HTTP/API server) crossed with server-side risk. `components` tests are intentionally out of scope for now.

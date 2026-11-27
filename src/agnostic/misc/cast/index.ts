@@ -75,7 +75,6 @@ export function toArray (value: unknown): unknown[] {
   return [value]
 }
 
-// [WIP] not so sure about this one
 /**
  * Converts a value to an array of numbers.
  *

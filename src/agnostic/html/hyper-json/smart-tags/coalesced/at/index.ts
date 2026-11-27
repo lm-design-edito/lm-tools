@@ -42,7 +42,6 @@ export const at = SmartTags.makeSmartTag<Main, Args, Output>({
     }
     if (found === undefined) return makeFailure(makeTransformationError({
       message: 'Property does not exist'
-      // [WIP] maybe more details here ?
     }))
     return makeSuccess(found)
   }

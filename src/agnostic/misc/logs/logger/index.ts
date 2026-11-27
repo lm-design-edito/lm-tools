@@ -37,7 +37,6 @@ type ConsoleMethodsParams = {
   warn: Parameters<typeof console.warn>
 }
 
-// [WIP] not sure about this
 const logsTimeOrigin = new Date()
 
 class Log<T extends ConsoleMethod = ConsoleMethod> {

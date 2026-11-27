@@ -45,7 +45,6 @@ export const transformselected = SmartTags.makeSmartTag<Main, Args, Output>({
         const transformer = method.transformer
         const applied = transformer.apply(value)
         if (!applied.success) return makeFailure(makeTransformationError({
-          // [WIP] maybe a custom makeSubTransformationError ?
           message: 'Subtransformation failure.',
           onSelected: selected,
           onTransformed: value,
@@ -59,7 +58,6 @@ export const transformselected = SmartTags.makeSmartTag<Main, Args, Output>({
     for (const [selected, transformed] of Array.from(transformationMap)) {
       const transformedChecked = typeCheck(transformed, 'element', 'nodelist', 'text', 'string', 'number', 'boolean', 'null')
       if (!transformedChecked.success) return makeFailure(makeTransformationError({
-        // [WIP] maybe a custom makeBadTransformationOutputError ?
         message: 'Bad transformation output',
         onSelected: selected,
         onTransformed: transformed,

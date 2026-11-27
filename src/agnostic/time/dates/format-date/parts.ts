@@ -92,33 +92,4 @@ export function getDateParts (date: Date, locale = 'en'): DateParts {
   }
 }
 
-// [WIP] timezone tokens were removed since JavaScript's Date object doesn't hold
-// timezone data — those templates would only reflect the current client's
-// timezone, no matter what the input Date obj was
 
-// 'ZZ': () => {
-//   const timezoneOffset = date.getTimezoneOffset()
-//   const offsetHours = Math.floor(Math.abs(timezoneOffset) / 60)
-//   const offsetMinutes = Math.abs(timezoneOffset) % 60
-//   const sign = timezoneOffset > 0 ? '-' : '+'
-//   return `${sign}${String(offsetHours).padStart(2, '0')}:${String(offsetMinutes).padStart(2, '0')}`
-// },
-// 'Z': () => {
-//   const timezoneOffset = date.getTimezoneOffset()
-//   if (timezoneOffset === 0) return 'Z'
-//   const offsetHours = Math.floor(Math.abs(timezoneOffset) / 60)
-//   const offsetMinutes = Math.abs(timezoneOffset) % 60
-//   const sign = timezoneOffset > 0 ? '-' : '+'
-//   return `${sign}${String(offsetHours).padStart(2, '0')}:${String(offsetMinutes).padStart(2, '0')}`
-// },
-// 'z': () => {
-//   return Intl.DateTimeFormat(locale, { timeZoneName: 'short' })
-//     .formatToParts(date)
-//     .find(part => part.type === 'timeZoneName')?.value || ''
-// },
-// 'zz': () => {
-//   return Intl.DateTimeFormat(locale, { timeZoneName: 'long' })
-//     .formatToParts(date)
-//     .find(part => part.type === 'timeZoneName')?.value || ''
-// },
-// 'tz': () => Intl.DateTimeFormat().resolvedOptions().timeZone || ''

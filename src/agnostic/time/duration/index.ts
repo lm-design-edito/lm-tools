@@ -48,7 +48,6 @@ export class Duration {
     else { this.type = 'milliseconds' } // defaults to milliseconds
   }
 
-  // [WIP] why only toMs and no other shorthands ?
   toMilliseconds (): number {
     if (this.type === 'milliseconds') return this.value
     if (this.type === 'seconds') return this.value * 1000
@@ -56,8 +55,6 @@ export class Duration {
     if (this.type === 'hours') return this.value * 1000 * 60 * 60
     if (this.type === 'days') return this.value * 1000 * 60 * 60 * 24
     if (this.type === 'weeks') return this.value * 1000 * 60 * 60 * 24 * 7
-    // [WIP] A flat 30 days and 365, with no way to ask for anything else — where
-    // `format-duration` and `parse-duration` both take `useApproximateMonthAndYear`.
     if (this.type === 'months') return this.value * 1000 * 60 * 60 * 24 * 30
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (this.type === 'years') return this.value * 1000 * 60 * 60 * 24 * 365

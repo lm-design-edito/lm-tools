@@ -172,7 +172,6 @@ export function deepSetProperty (
 
     // NOT LAST PATH CHUNK, select child and go deeper
     } else {
-      // [WIP] this logic could probably be shared with getProperty smart-tag logic
       if (typeof currentItem === 'string'
         || typeof currentItem === 'number'
         || typeof currentItem === 'boolean'
