@@ -1279,6 +1279,26 @@ What the pass has to do, in order of how clear-cut it is:
 the next line says, which the rules call noise, but they are consistent across every
 component and are what makes a 600-line `Video` scannable. One ruling for the set.
 
+## Les notes `[WIP]` — une passe globale, après la bascule
+
+Trente-trois notes dans vingt et un fichiers, inventoriées le 2026-11-27 et laissées en
+place : une note `[WIP]` est une des quatre formes de commentaire autorisées, et elle vaut
+mieux posée sur le code qu'elle concerne que rangée dans une liste. Ce qui est owed, c'est
+de les relire d'un coup une fois lm-link publié, et de trancher chacune — tenue, faite,
+ou périmée.
+
+Ce que l'inventaire a déjà montré :
+
+- **Treize sont dans `agnostic/html/hyper-json`**, soit la moitié. Trois d'entre elles —
+  pas de jsdoc, pas de tests, se débarrasser des namespaces — ne sont pas des notes mais
+  un chantier, qui n'a de ligne nulle part.
+- **Certaines sont périmées** : `misc/assert` parle de « jset or playwright » là où le
+  dépôt tourne sous vitest.
+- **Certaines ne disent pas la question** : « not sure about this », « not so sure about
+  this one », « Frame ? ». Elles gagnent une phrase ou elles partent.
+- **Une pointe du travail vivant** : celle d'`IntersectionObserver` renvoie à la famille
+  `when*`, qui est au tableau de la racine avant la publication.
+
 ## En sommeil
 
 Aucun des trois n'a d'importance à court terme. Ils sont ici pour ne pas être
