@@ -1,9 +1,0 @@
-.threshold {
-  position: fixed;
-  left: 0px;
-  right: 0px;
-  height: 0px;
-  user-select: none;
-  pointer-events: none;
-  z-index: -9999;
-}
