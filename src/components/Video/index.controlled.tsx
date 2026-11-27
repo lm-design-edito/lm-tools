@@ -265,8 +265,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
   subtitlesBtnContent,
   play,
   fullscreen,
-  // Les sous-titres sont montrés tant que personne n'a dit le contraire : un article qui
-  // en fournit veut qu'on les lise.
+  // Subtitles show until something says otherwise: a caller that provides them wants
+  // them read.
   subtitlesOn = true,
   mute,
   muted,
@@ -462,9 +462,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     'fullscreen-off': !isFullscreen,
     'loud': isLoud,
     'muted': !isLoud,
-    // Rien des deux quand aucun sous-titre n'est fourni : l'absence n'est pas un état
-    // caché, c'est l'absence d'un état. Une feuille qui veut viser ce cas le reconnaît à
-    // ce qu'aucun des deux modifieurs n'est là.
+    // Neither modifier when no subtitle is given: absence is not a hidden state, it is
+    // the absence of one, and a stylesheet recognises the case by neither being there.
     'subtitles-on': subtitles !== undefined && subtitlesOn,
     'subtitles-off': subtitles !== undefined && !subtitlesOn,
     // A capability rather than a state, and it is here for the same reason the lightbox
