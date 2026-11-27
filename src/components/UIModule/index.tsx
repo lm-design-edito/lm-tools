@@ -246,9 +246,8 @@ export const UIModule: FunctionComponent<Props> = ({
     if (loadedModule instanceof Error) console.error(loadedModule)
   }, [loadedModule])
 
-  // Fx. dep. `moduleTarget` - append the element the module built, then hand it back
-  // attached. `init` ran on a detached node, so this is the first point a module can
-  // measure its own box or reach an ancestor.
+  // Fx. dep. `moduleTarget` - Append the element the module built, then hand it back
+  // attached: `init` ran detached, so this is the first point it can measure itself.
   useEffect(() => {
     if (moduleTarget === null) return
     if (rootRef.current === null) return
@@ -260,9 +259,8 @@ export const UIModule: FunctionComponent<Props> = ({
     if (typeof cleanup === 'function') liveInstance.cleanup = cleanup
   }, [moduleTarget])
 
-  // Fx. dep. `props` - hand a props change to a module that is already live. Compared
-  // by reference: the component knows nothing of the values, so it leaves the call to
-  // the consumer's reference discipline and the module's own reading of what changed.
+  // Fx. dep. `props` - Hand a props change to a live module, compared by reference: the
+  // component knows nothing of the values.
   useEffect(() => {
     const liveInstance = liveInstanceRef.current
     if (liveInstance === null) return

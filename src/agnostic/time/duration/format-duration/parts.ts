@@ -102,10 +102,8 @@ export function getDurationParts (
   usedUnits.forEach((unit, pos) => {
     const isSmallest = pos === usedUnits.length - 1
     const exact = remaining / lengths[unit]
-    // Math.round, not Math.floor, and deliberately so: the truncation already
-    // happened above, on the whole duration, so this value is a whole one by
-    // now. Rounding only clears the floating-point dust the divisions leave —
-    // flooring here would turn a 29.999999999 that means 30 into a 29.
+    // `Math.round`, not `Math.floor`: the truncation already happened on the whole duration,
+    // so this only clears floating-point dust — flooring would turn 29.999999999 into 29.
     const value = isSmallest
       ? (floorSmallestUnit ? Math.round(exact) : exact)
       : Math.floor(exact)

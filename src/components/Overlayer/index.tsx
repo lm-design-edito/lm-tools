@@ -139,11 +139,8 @@ export const Overlayer: FunctionComponent<Props> = ({
       else if (justify === 'left') { computedTranslateX = '0%' }
       else if (justify === 'right') { computedTranslateX = '-100%' }
       else { computedTranslateX = '-50%' }
-      // Written out in full, one literal per line: they are this component's public API,
-      // a consumer greps for the exact string, and it has to exist in the source they
-      // read. Public and not `--PRV-`, because they are a conversion of props an
-      // article wrote — three numbers given back as percentages — and not a mechanism
-      // this component keeps to itself.
+      // Written out in full, one literal per line: a consumer greps the exact string. Public
+      // and not `--PRV-`, being a conversion of props an article wrote.
       const overlayCustomProps: Record<string, string> = {
         '--lm-overlayer-anchor-x': `${xPercent}%`,
         '--lm-overlayer-anchor-y': `${yPercent}%`,

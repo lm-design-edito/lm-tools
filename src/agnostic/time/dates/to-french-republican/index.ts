@@ -1,15 +1,8 @@
-// French Republican calendar conversion.
-//
-// Rule: the calendar as it was actually applied (1792–1805). A Republican year
-// begins on the civil day, at the Paris meridian, during which the true autumnal
-// (September) equinox occurs. We simply extrapolate that same rule to any date.
-//
-// Year N starts on the September equinox of Gregorian year (1791 + N):
-//   An I -> equinox of 1792 (22 September 1792).
-//
-// The gap between two consecutive equinox-based new years is 365 or 366 days, so
-// the number of complementary days (5 or 6) falls out automatically — no separate
-// leap-year rule is needed.
+// The calendar as it was applied, 1792–1805: a Republican year begins on the civil day,
+// at the Paris meridian, holding the true September equinox — year N at equinox 1791+N.
+
+// The gap between two equinoxes being 365 or 366 days, the count of complementary days
+// falls out on its own and no leap rule is needed.
 
 import type { FrenchRepublicanDate } from './types.js'
 import {
@@ -41,9 +34,8 @@ export function toFrenchRepublican (date: Date): FrenchRepublicanDate {
   const day = date.getDate()
   const jdn = gregorianToJdn(year, month, day)
 
-  // The Republican year that contains this date started at the equinox of some
-  // Gregorian year g. Guess g = the date's Gregorian year, then step back if the
-  // date falls before that year's new year (i.e. it's in Jan..Sep).
+  // Guess the equinox year as the date's own Gregorian year, then step back when the date
+  // falls before that year's new year — January to September.
   let g = year
   let startJdn = republicanYearStartJdn(g)
   if (jdn < startJdn) {

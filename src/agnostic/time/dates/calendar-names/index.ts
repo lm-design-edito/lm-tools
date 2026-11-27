@@ -6,9 +6,8 @@ function resolveLocale (locale: string): string {
   return Intl.DateTimeFormat.supportedLocalesOf(locale).length === 0 ? 'en' : locale
 }
 
-// What a locale calls its months does not change, and building the formatter is the
-// expensive part — a formatter and a dozen `format` calls, which `readDate` and
-// `parseDate` would otherwise pay on every string they read.
+// What a locale calls its months does not change, and the formatter is the expensive
+// part — one `readDate` or `parseDate` would otherwise pay on every string.
 const tables = new Map<string, string[]>()
 
 function cached (key: string, build: () => string[]): string[] {

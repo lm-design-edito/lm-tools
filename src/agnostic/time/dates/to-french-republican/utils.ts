@@ -9,9 +9,8 @@ export const COMPLEMENTARY_DAY_NAMES = Object.values(ComplementaryDay)
 /** The ten décade day names, indexed by 0-based day-of-décade index. */
 export const DECADE_DAY_NAMES = Object.values(DecadeDay)
 
-// Paris Observatory meridian: 2°20'14" E ≈ +9m21s, expressed in days.
-// The Republican astronomers used the Paris meridian to decide which civil day
-// hosts the equinox, so we keep using it for every year.
+// Paris Observatory meridian, 2°20'14" E ≈ +9m21s in days: the Republican astronomers
+// used it to decide which civil day hosts the equinox, so it is kept.
 const PARIS_MERIDIAN_OFFSET_DAYS = (2 + 20 / 60 + 14 / 3600) / 360
 
 const DEG_TO_RAD = Math.PI / 180
@@ -77,9 +76,8 @@ function septemberEquinoxJde (year: number): number {
   return jde0 + (0.00001 * s) / deltaLambda
 }
 
-// TD - UT, in seconds. Espenak & Meeus (2006) polynomial approximations,
-// covering the range that matters here (18th–22nd century) with a parabolic
-// fallback outside it.
+// TD − UT in seconds, Espenak & Meeus (2006), covering the 18th to 22nd century with a
+// parabolic fallback outside it.
 function deltaTSeconds (year: number): number {
   let t: number
   if (year >= 2005 && year < 2050) {

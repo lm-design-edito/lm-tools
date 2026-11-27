@@ -179,7 +179,7 @@ export const Drawer: FunctionComponent<Props> = ({
   })
 
   // Commands
-  //
+
   // Annotated with this component's vocabulary: the layer takes any name, so the
   // annotation is what keeps a misspelled domain from compiling.
   const surrender: (domain: DrawerActionDomain) => void = useCommandSurrender(

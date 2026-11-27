@@ -384,9 +384,8 @@ export const ControlledVideo: FunctionComponent<Props> = ({
     onPlayButtonClicked?.({ event: e, isPlaying: wasPlaying, videoElement: videoRef.current })
   }, [onPlayButtonClicked])
 
-  // The picture as a play/pause surface, reporting only: the layer above owns the state.
-  // The listener sits on the element, not the `<figure>`, or a click on pause would
-  // toggle twice.
+  // The picture as a play/pause surface, reporting only. The listener sits on the element,
+  // not the `<figure>`, or a click on pause would toggle twice.
 
   // No `role` and no `tabIndex`: this is a second way to do what the play button does,
   // and a focus stop would put the same action twice in the tab order.

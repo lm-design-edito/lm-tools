@@ -44,13 +44,11 @@ export type Props = {
   after?: ReactNode
   onDragged?: (payload: { xRatio: number, yRatio: number }) => void
   onClicked?: (payload: { xRatio: number, yRatio: number }) => void
-  // The root handed back to whoever renders this component. It exists for the hybrid
-  // `BeforeAfter` above it, which observes that element rather than wrapping it in a box
-  // of its own — hence a readable ref and not a callback one.
+  // The root handed back to whoever renders this. The hybrid above observes that element
+  // rather than wrapping it, hence a readable ref and not a callback one.
   rootRef?: RefObject<HTMLDivElement | null>
-  // Whether the component has settled into view, as the layer above measures it. Only
-  // the `--visible` modifier comes of it here; `undefined` while nothing asks about
-  // visibility, which is why it never appears unasked.
+  // Whether the component has settled into view, as the layer above measures it.
+  // `undefined` while nothing asks, which is why the modifier never appears unasked.
   isVisible?: boolean
 }
   & ChildrenProps

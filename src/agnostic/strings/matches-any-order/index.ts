@@ -25,8 +25,8 @@
  * // => false — only two `s` to give
  */
 export function matchesAnyOrder (candidate: string, query: string): boolean {
-  // Matched one code point at a time against `query`'s own code points; a candidate
-  // built of complex grapheme clusters is already outside what this function is for.
+  // Matched one code point at a time: a candidate built of complex grapheme clusters is
+  // already outside what this function is for.
   // eslint-disable-next-line @typescript-eslint/no-misused-spread
   const pool = [...candidate]
   for (const character of query) {

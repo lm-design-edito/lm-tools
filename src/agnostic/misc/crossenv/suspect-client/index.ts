@@ -98,9 +98,8 @@ const browserBrandDataNames = new Map<string, BrowserBrandName>([
   ['duckduckgo', BrowserBrandName.DUCKDUCKGO]
 ])
 
-// Every brand impersonates the ones before it, so the order is most specific
-// first: `wv` leads because an Android webview also carries a `Chrome/` token, and
-// Safari closes the list demanding its `Version/` pair, which an iOS webview lacks.
+// Every brand impersonates the ones before it, so most specific first: `wv` leads, and
+// Safari closes the list demanding the `Version/` pair an iOS webview lacks.
 const browserBrandUserAgentTokens: Array<[RegExp, BrowserBrandName]> = [
   [/;\s*wv\)/v, BrowserBrandName.ANDROID_WEBVIEW],
   [/Edg(?:iOS|A)?\//v, BrowserBrandName.EDGE],

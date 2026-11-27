@@ -115,9 +115,8 @@ export function formatDate (
 // Everything below is internal. The functions are hoisted and the tables are only ever
 // read from inside a call, so the entry point reads first and the machinery after it.
 
-// Alternation is ordered, and the first branch that fits wins — so the longest
-// tokens come first. `MM` ahead of `MMMM` would only work by backtracking off the
-// closing braces, which is true but not something a reader should have to derive.
+// Alternation is ordered and the first fit wins, so the longest tokens come first:
+// `MM` ahead of `MMMM` works only by backtracking, which no reader should derive.
 const tokenRegexp = /\{\{(MMMM|YYYY|dddd|MMM|ddd|DD|dd|MM|YY|HH|hh|mm|ss|th|ms|D|d|M|H|h|m|s|A|a)\}\}/gv
 
 // An optional group, dropped whole when a token inside it has nothing to render. Not

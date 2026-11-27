@@ -164,9 +164,8 @@ export const Paginator: FunctionComponent<Props> = ({
   const pagesCount = childrenArr.length
   const thresholdPercent = toThresholdPercent(thresholdOffsetPercent)
 
-  // Fx. dep. thresholdOffsetPercent, thresholdPercent - Says it once per offending
-  // value rather than on every render. Clamping without a word would turn a caller's
-  // bug into a scrolling glitch, hunted for somewhere else entirely.
+  // Fx. dep. thresholdOffsetPercent, thresholdPercent - Said once per offending value:
+  // clamping without a word turns a caller's bug into a glitch hunted elsewhere.
   useEffect(() => {
     if (thresholdOffsetPercent === undefined) return
     if (thresholdPercent === thresholdOffsetPercent) return
@@ -216,9 +215,8 @@ export const Paginator: FunctionComponent<Props> = ({
     onPageElementsChanged?.(pages.filter(page => page instanceof HTMLElement))
   }, [pagesCount])
 
-  // Detect active pages with Intersection Observer
-  // Fx. dep. thresholdPercent, pagesCount - Same reasoning: rebuilding one observer
-  // per page on every render would cost a full measurement pass for an unchanged set.
+  // Fx. dep. thresholdPercent, pagesCount - Rebuilding one observer per page on every
+  // render would cost a full measurement pass for an unchanged set.
   useEffect(() => {
     if (pagesRef.current === null) return
     const pages = Array.from(pagesRef.current.children)

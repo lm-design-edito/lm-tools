@@ -389,8 +389,7 @@ export const Scrllgngn: FunctionComponent<Props> = ({
   })
 
   // Fx. no dep. - A callback appearing after the measuring pass would hear nothing until
-  // the next scroll. It replays the last context, without storing it: the guard below
-  // must keep comparing against what was last measured.
+  // the next scroll, so it replays the last context — without storing it.
   useEffect(() => {
     const lastOnScrolled = lastOnScrolledRef.current
     for (const [key, block] of trackedBlocks) {

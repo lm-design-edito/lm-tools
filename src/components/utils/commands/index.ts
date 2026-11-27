@@ -155,9 +155,8 @@ export function useCommands (
   // Through a ref, so a table rebuilt on every render doesn't resubscribe.
   const actionsRef = useRef(actions)
   actionsRef.current = actions
-  // The disclosure goes through a ref for the same reason: the subscription is keyed on
-  // the id alone, and a reader accepting a disclaimer must not tear it down and rebuild
-  // it.
+  // The disclosure goes through a ref because the subscription is keyed on the id alone:
+  // a reader accepting a disclaimer must not tear it down and rebuild it.
   const { isDisclosed } = useDisclosure()
   const isDisclosedRef = useRef(isDisclosed)
   isDisclosedRef.current = isDisclosed

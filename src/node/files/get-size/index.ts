@@ -91,9 +91,8 @@ export async function getSize (target: PathLike, options: GetSizeOptions = {}): 
   }
 }
 
-// Builds an abort signal that fires after `timeoutMs`, merged with a caller
-// signal when provided. Aborting either aborts the returned one. `dispose`
-// clears the timer and detaches the listener.
+// An abort signal firing after `timeoutMs`, merged with a caller's when given.
+// `dispose` clears the timer and detaches the listener.
 function createTimeoutSignal (
   timeoutMs: number,
   userSignal: AbortSignal | undefined
@@ -180,9 +179,8 @@ function handleError (error: unknown, target: string, options: ResolvedOptions):
   return 0
 }
 
-// Global concurrency limiter: at most `max` wrapped calls run at once. Wrapped
-// calls must be leaf operations (single fs syscalls) that never await another
-// wrapped call, so the recursive traversal cannot deadlock on slots.
+// At most `max` wrapped calls at once. They must be leaf operations that never await
+// another wrapped call, or the recursive traversal would deadlock on slots.
 function createLimiter (max: number): <T>(fn: () => Promise<T>) => Promise<T> {
   let active = 0
   const waiters: Array<() => void> = []

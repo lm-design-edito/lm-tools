@@ -208,10 +208,8 @@ export const ScrollTracker: FunctionComponent<Props> = ({
     setScrollDirection(y > previous ? 'down' : 'up')
   }, [scrollState])
 
-  // Fx. dep. `isTracking` - the subscription follows the state, and nothing else opens
-  // or closes it. The measurements are left on their last values when it closes: a
-  // stylesheet reading `--lm-scroll-tracker-scroll-y` must not see it drop to zero
-  // because the element went off screen.
+  // Fx. dep. `isTracking` - The subscription follows the state, and the measurements stay
+  // on their last values when it closes rather than dropping to zero.
   useEffect(() => {
     if (!isTracking) return
     subscribe(subscriberId, { rootRef, onScrollStateChange: setScrollState })

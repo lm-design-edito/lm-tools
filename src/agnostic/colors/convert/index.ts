@@ -63,9 +63,8 @@ function _rgb2hex (rgb: Rgba): Hex {
   const aHex = Math.round(a * 255).toString(16).padStart(2, '0')
   const returned: Hex = `#${rHex}${gHex}${bHex}${aHex}`
   if (!isHex(returned)) {
-    // Here typescript says returned is 'never' but this is because
-    // isHex function is more strict than Hex type, so technically
-    // isHex(hex) can return false, for instance if hex === '#zzz'
+    // TypeScript reads the return as `never` because `isHex` is stricter than the `Hex`
+    // type: it can still return false, on `'#zzz'` for instance.
     throw new Error(`invalid hex color output ${unknownToString(returned)}`)
   }
   return returned
