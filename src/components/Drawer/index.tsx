@@ -2,8 +2,6 @@ import {
   type MouseEvent,
   type FunctionComponent,
   type ReactNode,
-  type RefObject,
-  useLayoutEffect,
   useRef,
   useState
 } from 'react'
@@ -39,27 +37,22 @@ import {
 /**
  * Props for the {@link Drawer} component.
  *
- * @property openerContent - Content rendered inside the opener control. Not
- * necessarily a button: a command is a bar, and most consumers put a title *and* a
- * toggle in it — hence `openerContent` rather than `openerBtnContent`.
- * @property closerContent - Content rendered inside the closer control. Defaults to
- * `openerContent`, so a bar written once serves both states and CSS tells them apart
- * through the root modifiers. Pass `null` to render an empty closer.
- * @property openerBtnSelector - CSS selector picking the toggle *inside*
- * `openerContent`. Without it the whole bar opens the drawer; with it, only a click
- * landing inside a matching descendant does. Whatever it points at receives the
- * `opener-btn` class, so CSS can reach the toggle too. An invalid selector falls back
- * to the whole bar.
- * @property closerBtnSelector - Same, for the closer. Defaults to
- * `openerBtnSelector`, like the content it goes with.
+ * @property titleContent - Content rendered in the bar beside the toggler. Left out,
+ * the block renders empty and a stylesheet fills it — which is also how a title that
+ * differs between the two states is written, CSS having no way to swap an injected node.
+ * @property togglerContent - Content rendered inside the toggler. Left out, the button
+ * renders empty and a stylesheet fills it.
+ * @property toggleOnBar - Whether a click anywhere in the bar toggles, not only one on
+ * the toggler. `false` by default, so the component has a single click target. The
+ * toggler stays the only focusable control either way, so this adds a pointer shortcut
+ * and never a second way in.
  * @property defaultIsOpened - Initial open state in uncontrolled mode.
  * Ignored when `isOpened` is provided. Defaults to `false`.
  * @property isOpened - Controlled open state. When defined, the component
  * behaves as a controlled component and internal state is never updated.
- * @property onOpenerClicked - Called when the opener is clicked, before the
- * drawer reacts, with the open state as it was.
- * @property onCloserClicked - Called when the closer is clicked, before the
- * drawer reacts, with the open state as it was.
+ * @property onTogglerClicked - Called when the toggler is clicked, before the drawer
+ * reacts, with the open state as it was — so the direction it is about to take is its
+ * negation.
  * @property onIsOpenedChanged - Called after the open state changed, with the
  * new value.
  * @property onContentResized - Called after the measured content size changed,
@@ -71,14 +64,12 @@ import {
  * and the five `visibility*` settings.
  */
 export type Props = {
-  openerContent?: ReactNode
-  closerContent?: ReactNode
-  openerBtnSelector?: string
-  closerBtnSelector?: string
+  titleContent?: ReactNode
+  togglerContent?: ReactNode
+  toggleOnBar?: boolean
   defaultIsOpened?: boolean
   isOpened?: boolean
-  onOpenerClicked?: (isOpened: boolean) => void
-  onCloserClicked?: (isOpened: boolean) => void
+  onTogglerClicked?: (isOpened: boolean) => void
   onIsOpenedChanged?: (isOpened: boolean) => void
   onContentResized?: (dimensions: { width: number, height: number }) => void
 }
@@ -86,43 +77,6 @@ export type Props = {
   & ClassNameProps
   & CompIdProps
   & VisibilityProps
-
-// A `…BtnSelector` names which descendant of the bar is clickable — the title stays
-// inert, the chevron opens. It resolves here into the public `-btn` class, the single
-// answer both `isToggleHit` and a stylesheet read. `content` is a dependency because this
-// writes into DOM React owns: a re-render of the bar takes the hand-written class with it.
-//
-// [WIP] Naming a child through a CSS selector is this component's idea alone — worth a
-// second look before anything copies it.
-function useToggleMarking (
-  barRef: RefObject<HTMLDivElement | null>,
-  selector: string | undefined,
-  btnClassName: string,
-  content: ReactNode
-): void {
-  useLayoutEffect(() => {
-    const bar = barRef.current
-    if (bar === null) return
-    bar.querySelectorAll(`.${btnClassName}`).forEach(node => { node.classList.remove(btnClassName) })
-    if (selector === undefined) return
-    bar.classList.remove(btnClassName)
-    try {
-      bar.querySelectorAll(selector).forEach(node => { node.classList.add(btnClassName) })
-    } catch (err) {
-      bar.classList.add(btnClassName)
-    }
-  }, [barRef, selector, btnClassName, content])
-}
-
-// Did the click land inside a marked element — never the selector itself, which
-// `useToggleMarking` has already resolved. `contains` on top of `closest`, since a
-// marked element could in principle sit outside this bar.
-function isToggleHit (event: MouseEvent<HTMLDivElement>, btnClassName: string): boolean {
-  const { target, currentTarget } = event
-  if (!(target instanceof Element)) return false
-  const hit = target.closest(`.${btnClassName}`)
-  return hit !== null && currentTarget.contains(hit)
-}
 
 /**
  * Drawer component supporting controlled and uncontrolled usage.
@@ -149,12 +103,11 @@ function isToggleHit (event: MouseEvent<HTMLDivElement>, btnClassName: string): 
  * - `--measured` — the content has been measured, so the properties below are set.
  *
  * ### CSS elements
- * - `opener`
- * - `closer`
+ * - `bar` — the row, rendered in both states; `opened` / `closed` on the root is what
+ *   tells them apart.
+ * - `title` — the fillable block inside the bar.
+ * - `toggler` — the control, a real `<button>`, always rendered.
  * - `content`
- * - `opener-btn` / `closer-btn` — the toggle. On the bar itself when the whole bar is
- *   clickable, on whatever `openerBtnSelector` / `closerBtnSelector` point at otherwise.
- *   Always present, so a stylesheet has one place to look.
  *
  * ### CSS custom properties on the root element
  * - `--lm-drawer-content-width` / `--lm-drawer-content-width-raw`
@@ -167,23 +120,21 @@ function isToggleHit (event: MouseEvent<HTMLDivElement>, btnClassName: string): 
  *
  * @param props - Component properties.
  * @see {@link Props}
- * @returns A root `<div>` holding the opener, the closer and the measured content.
+ * @returns A root `<div>` holding the bar and the measured content.
  *
  * @remarks
  * - In controlled mode (`isOpened` defined), the open state is fully driven by
  *   the parent. The internal state goes on following the component's own controls, so
  *   a parent that stops providing the prop lands on what the reader last did.
- * - `onOpenerClicked` and `onCloserClicked` fire in both modes — a controlled
- *   parent needs them to know a click happened at all.
+ * - `onTogglerClicked` fires in both modes — a controlled parent needs it to know a
+ *   click happened at all.
  * - `onIsOpenedChanged` fires in both modes too, and never on mount.
- * - **A command is a bar, not a button.** Both content props take whatever the consumer
- *   puts in the row — most often a title and a toggle — and `closerContent` /
- *   `closerBtnSelector` default to their opener counterpart, so that bar is written
- *   once. What tells the two states apart is CSS, through the root modifiers.
- * - **`…BtnSelector` narrows the click, it does not move it.** The handler stays on the
- *   bar; the selector only decides which descendants carry the `-btn` class, and the
- *   handler asks that class. So the consumer keeps full control of what the row
- *   contains, and a stylesheet reaches the toggle without knowing the selector.
+ * - **One bar serves both states.** The same elements render open and closed, and the
+ *   root's `opened` / `closed` modifiers are what a stylesheet reads to tell them
+ *   apart — including to write two different titles, which an injected node cannot do.
+ * - **The toggler is the control, the bar is at most a shortcut.** `toggleOnBar` adds a
+ *   handler on the row for pointer convenience; the button remains the only focusable
+ *   way in, and a click on it is ignored by the bar rather than counted twice.
  */
 export const Drawer: FunctionComponent<Props> = ({
   compId: givenCompId,
@@ -195,14 +146,12 @@ export const Drawer: FunctionComponent<Props> = ({
   visibilityRootMargin,
   visibilityOnAfterMs,
   visibilityOffAfterMs,
-  openerContent,
-  closerContent,
-  openerBtnSelector,
-  closerBtnSelector,
+  titleContent,
+  togglerContent,
+  toggleOnBar = false,
   defaultIsOpened = false,
   isOpened: isOpenedProp,
-  onOpenerClicked,
-  onCloserClicked,
+  onTogglerClicked,
   onIsOpenedChanged,
   onContentResized,
   className,
@@ -217,8 +166,6 @@ export const Drawer: FunctionComponent<Props> = ({
     height: number
   }>()
   const rootRef = useRef<HTMLDivElement>(null)
-  const openerRef = useRef<HTMLDivElement | null>(null)
-  const closerRef = useRef<HTMLDivElement | null>(null)
   const isOpened = isOpenedProp ?? internalIsOpened
   const isVisible = useVisibilityTriggers(compId, rootRef, {
     whenVisible,
@@ -243,23 +190,8 @@ export const Drawer: FunctionComponent<Props> = ({
     open: () => { if (isOpenedProp === undefined) setInternalIsOpened(true) },
     close: () => { if (isOpenedProp === undefined) setInternalIsOpened(false) }
   })
-  // Une barre écrite une fois sert les deux états : le plus souvent un titre et une
-  // bascule, identiques ouverts et fermés, que les modifieurs de la racine suffisent à
-  // distinguer en CSS. `undefined` seul retombe — un `null` explicite reste un closer
-  // vide, et le consommateur garde le moyen de n'en rendre aucun.
-  const resolvedCloserContent = closerContent === undefined ? openerContent : closerContent
-  const resolvedCloserBtnSelector = closerBtnSelector ?? openerBtnSelector
-
-  // Class names
-  // Le `-btn` désigne la bascule, et il existe dans tous les cas : posé ici quand la
-  // barre entière en tient lieu, posé sur les descendants par {@link useToggleMarking}
-  // quand un sélecteur la rétrécit. Une feuille n'a donc qu'un endroit où regarder, et
-  // le gestionnaire de clic qu'une question à poser.
   const c = clss(publicClassName, { cssModule })
-  const openerBtnClss = c('opener-btn')
-  const closerBtnClss = c('closer-btn')
-  useToggleMarking(openerRef, openerBtnSelector, openerBtnClss, openerContent)
-  useToggleMarking(closerRef, resolvedCloserBtnSelector, closerBtnClss, resolvedCloserContent)
+  const togglerClss = c('toggler')
 
   // State dispatch
   useStateChangeDispatch(isOpened, onIsOpenedChanged)
@@ -270,17 +202,17 @@ export const Drawer: FunctionComponent<Props> = ({
   )
 
   // User action handlers
-  const handleOpenerClick = (event: MouseEvent<HTMLDivElement>): void => {
-    if (!isToggleHit(event, openerBtnClss)) return
-    onOpenerClicked?.(isOpened)
+  const toggle = (): void => {
+    onTogglerClicked?.(isOpened)
     surrender('opening')
-    setInternalIsOpened(true)
+    setInternalIsOpened(!isOpened)
   }
-  const handleCloserClick = (event: MouseEvent<HTMLDivElement>): void => {
-    if (!isToggleHit(event, closerBtnClss)) return
-    onCloserClicked?.(isOpened)
-    surrender('opening')
-    setInternalIsOpened(false)
+  // The bar's own handler must ignore a click that came from the toggler, which already
+  // toggled and whose event bubbles up through here.
+  const handleBarClick = (event: MouseEvent<HTMLDivElement>): void => {
+    const { target } = event
+    if (target instanceof Element && target.closest(`.${togglerClss}`) !== null) return
+    toggle()
   }
   const handleContentResized: ResizeObserverProps['onResized'] = ({ entry }): void => {
     const { width, height } = entry.contentRect
@@ -294,12 +226,8 @@ export const Drawer: FunctionComponent<Props> = ({
     'measured': contentDimensions !== undefined,
     'visible': isVisible === true
   }), className)
-  const openerClss = openerBtnSelector === undefined
-    ? mergeClassNames(c('opener'), openerBtnClss)
-    : c('opener')
-  const closerClss = resolvedCloserBtnSelector === undefined
-    ? mergeClassNames(c('closer'), closerBtnClss)
-    : c('closer')
+  const barClss = c('bar')
+  const titleClss = c('title')
   const contentClss = c('content')
   let dataAttributes: Record<string, string> = {}
   let customCssProps: Record<string, string> = {}
@@ -323,13 +251,14 @@ export const Drawer: FunctionComponent<Props> = ({
     {...dataAttributes}
     style={{ ...customCssProps }}>
     <div
-      ref={openerRef}
-      className={openerClss}
-      onClick={handleOpenerClick}>{openerContent}</div>
-    <div
-      ref={closerRef}
-      className={closerClss}
-      onClick={handleCloserClick}>{resolvedCloserContent}</div>
+      className={barClss}
+      onClick={toggleOnBar ? handleBarClick : undefined}>
+      <div className={titleClss}>{titleContent}</div>
+      <button
+        type='button'
+        className={togglerClss}
+        onClick={toggle}>{togglerContent}</button>
+    </div>
     <div className={contentClss}>
       <ResizeObserverComponent onResized={handleContentResized}>
         {children}
